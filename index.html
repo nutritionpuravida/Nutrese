@@ -2509,15 +2509,15 @@ function updateWeightSuggestion(age, sex, heightCm){
   const note=document.getElementById('weight-suggestion-note');
   if(!weightEl) return;
   const ibw=calcDevineIbw(heightCm, sex);
-  const canSuggest=!!(age && ibw && !weightEl.value && !S.weightSuggestionLocked);
+  const canSuggest=!!(ibw && !weightEl.value && !S.weightSuggestionLocked);
   if(canSuggest){
-    weightEl.placeholder=ibw.toFixed(1);
+    weightEl.placeholder=`Ideal ${ibw.toFixed(1)}`;
     weightEl.classList.add('weight-suggested');
     if(note) note.textContent=`Ideal / estimated: ${ibw.toFixed(1)} kg (Devine). Enter measured weight to override.`;
   } else {
-    weightEl.placeholder='70';
+    weightEl.placeholder=ibw && !weightEl.value ? `Ideal ${ibw.toFixed(1)}` : 'Enter measured weight';
     weightEl.classList.remove('weight-suggested');
-    if(note) note.textContent='';
+    if(note) note.textContent=ibw && !weightEl.value ? `Ideal / estimated: ${ibw.toFixed(1)} kg (Devine). Enter measured weight to override.` : '';
   }
 }
 
