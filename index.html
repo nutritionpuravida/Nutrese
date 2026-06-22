@@ -216,6 +216,36 @@ tr:hover td { background: var(--bg-hover); }
 .bnav-item .bnav-badge { position: relative; }
 .bnav-item .bnav-badge::after { content: "!"; position: absolute; top: -4px; right: -8px; background: var(--red-badge); color: #fff; font-size: 8px; font-weight: 900; padding: 0 3px; border-radius: 6px; }
 
+/* ─── APPOINTMENTS ─── */
+.calendar-shell { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 14px; align-items: start; }
+.calendar-toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.calendar-title { font-size: 17px; font-weight: 800; color: var(--text-primary); margin-right: auto; }
+.view-toggle { display: inline-flex; border: 1px solid var(--border-strong); border-radius: 8px; overflow: hidden; background: var(--bg-input); }
+.view-toggle button { border: none; border-right: 1px solid var(--border-strong); background: transparent; padding: 7px 11px; cursor: pointer; font-weight: 700; color: var(--text-secondary); }
+.view-toggle button:last-child { border-right: none; }
+.view-toggle button.active { background: var(--teal-50); color: var(--text-active); }
+.calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; background: var(--bg-surface); }
+.calendar-weekday { padding: 8px; background: var(--bg-page); border-right: 1px solid var(--border); font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; }
+.calendar-weekday:nth-child(7n) { border-right: none; }
+.calendar-day { min-height: 118px; padding: 8px; border-right: 1px solid var(--border); border-top: 1px solid var(--border); cursor: pointer; background: var(--bg-surface); }
+.calendar-day:nth-child(7n) { border-right: none; }
+.calendar-day:hover { background: var(--bg-hover); }
+.calendar-day.muted { color: var(--text-muted); background: var(--bg-page); }
+.calendar-day.today { box-shadow: inset 0 0 0 2px var(--teal-400); }
+.calendar-day-number { font-size: 12px; font-weight: 800; margin-bottom: 6px; }
+.calendar-day.week { min-height: 360px; }
+.appointment-block { display: block; width: 100%; border: none; border-radius: 6px; padding: 5px 6px; margin-bottom: 5px; color: #fff; cursor: pointer; text-align: left; font-size: 11px; line-height: 1.25; overflow: hidden; }
+.appointment-block strong { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.appt-first { background: var(--teal-600); }
+.appt-follow { background: #1971C2; }
+.appt-online { background: #7950F2; }
+.appt-phone { background: #E67700; }
+.appointment-form-panel { position: sticky; top: 12px; }
+.appointment-list-item { display: flex; gap: 10px; align-items: flex-start; padding: 9px 0; border-bottom: 1px solid var(--border); }
+.appointment-list-item:last-child { border-bottom: none; }
+.appointment-dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+.appointment-time { font-weight: 800; min-width: 52px; }
+
 /* ─── PRINT ─── */
 @media print {
   /* Default: portrait A4 for client report (clean, readable handout) */
@@ -362,6 +392,8 @@ tr:hover td { background: var(--bg-hover); }
   .metrics-grid { grid-template-columns: 1fr 1fr; }
   .two-col { grid-template-columns: 1fr; }
   .form-grid.three { grid-template-columns: 1fr 1fr; }
+  .calendar-shell { grid-template-columns: 1fr; }
+  .appointment-form-panel { position: static; }
 }
 
 /* ─── RESPONSIVE — MOBILE ─── */
@@ -383,6 +415,10 @@ tr:hover td { background: var(--bg-hover); }
   th, td { padding: 7px 8px; }
   .card-body { padding: 12px; }
   .card-header { padding: 11px 13px; }
+  .calendar-day { min-height: 92px; padding: 6px; }
+  .calendar-day.week { min-height: 180px; }
+  .calendar-title { width: 100%; margin-right: 0; }
+  .appointment-block { font-size: 10px; padding: 4px 5px; }
 }
 
 </style>
@@ -470,9 +506,11 @@ tr:hover td { background: var(--bg-hover); }
   <button class="nav-item" onclick="nav('report')">📄 Client Report</button>
   <button class="nav-item" onclick="nav('tracking')">📈 Progress Tracking</button>
   <button class="nav-item" onclick="nav('equivalents')">📖 Equivalents Guide</button>
-<div class="nav-group-label">Clinical</div>
+  <div class="nav-group-label">Practice</div>
+  <button class="nav-item" onclick="nav('appointments')">📅 Appointments</button>
+  <div class="nav-group-label">Clinical</div>
   <button class="nav-item" onclick="nav('account')">💳 Account / Subscription</button>
-  <div class="sidebar-footer">NutriFlow v1 · Fingerprint <span id="build-date-sidebar" style="font-family:monospace">—</span><br>Opened: <span id="opened-date-sidebar">—</span><br>Fill green inputs · Avoid overwriting formulas</div>
+  <div class="sidebar-footer">NutriFlow v1 · Your clinical nutrition tool</div>
 </nav>
 
 <div class="main">
@@ -507,12 +545,16 @@ tr:hover td { background: var(--bg-hover); }
     </div>
     <div class="two-col">
       <div class="card">
-        <div class="card-header"><span class="card-title">⚙️ Safety checks</span></div>
+        <div class="card-header"><span class="card-title">🛡️ Safety checks</span></div>
         <div class="card-body" id="dash-engine-checks"><div style="color:var(--gray-400);font-size:13px">Fill client profile to run checks</div></div>
       </div>
       <div class="card">
         <div class="card-header"><span class="card-title">🎯 Macro distribution</span><span class="card-action" onclick="nav('macros')">Edit →</span></div>
         <div class="card-body" id="dash-macros"></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">📅 Today's appointments</span><span class="card-action" onclick="nav('appointments')">Calendar →</span></div>
+        <div class="card-body" id="dash-appointments"><div style="color:var(--text-muted);font-size:13px">No appointments today.</div></div>
       </div>
     </div>
     <div class="card">
@@ -764,15 +806,18 @@ tr:hover td { background: var(--bg-hover); }
         <div class="card-header"><span class="card-title">📊 Clinical Macro Suggestions</span></div>
         <div class="card-body">
           <table><thead><tr><th>Condition</th><th>Carb</th><th>Prot</th><th>Fat</th></tr></thead><tbody>
-            <tr><td>Weight Loss</td><td>40%</td><td>25%</td><td>35%</td></tr>
-            <tr><td>Maintenance</td><td>45%</td><td>20%</td><td>35%</td></tr>
-            <tr><td>Muscle Gain</td><td>50%</td><td>25%</td><td>25%</td></tr>
-            <tr><td>Diabetes / PCOS</td><td>35%</td><td>25%</td><td>40%</td></tr>
-            <tr><td>Elderly / Clinical</td><td>40%</td><td>30%</td><td>30%</td></tr>
-            <tr><td>Hemodialysis</td><td>45%</td><td>30%</td><td>25%</td></tr>
-            <tr><td>CKD (non-dialysis)</td><td>50%</td><td>15%</td><td>35%</td></tr>
-            <tr><td>GERD</td><td>50%</td><td>20%</td><td>30%</td></tr>
-            <tr><td>IBS</td><td>45%</td><td>25%</td><td>30%</td></tr>
+            <tr><td>Weight Management</td><td>40%</td><td>25%</td><td>35%</td></tr>
+            <tr><td>Diabetes Type 2</td><td>40%</td><td>25%</td><td>35%</td></tr>
+            <tr><td>High Cholesterol</td><td>45%</td><td>20%</td><td>35%</td></tr>
+            <tr><td>Hypertension</td><td>45%</td><td>20%</td><td>35%</td></tr>
+            <tr><td>PCOS</td><td>40%</td><td>25%</td><td>35%</td></tr>
+            <tr><td>Hypothyroidism / Hashimoto's</td><td>45%</td><td>20%</td><td>35%</td></tr>
+            <tr><td>IBS / Digestive Issues</td><td>45%</td><td>25%</td><td>30%</td></tr>
+            <tr><td>Food Intolerances / Allergies</td><td>45%</td><td>20%</td><td>35%</td></tr>
+            <tr><td>Pregnancy</td><td>45%</td><td>20%</td><td>35%</td></tr>
+            <tr><td>Menopause</td><td>40%</td><td>25%</td><td>35%</td></tr>
+            <tr><td>Sports Nutrition / Performance</td><td>50%</td><td>25%</td><td>25%</td></tr>
+            <tr><td>Healthy Eating</td><td>45%</td><td>20%</td><td>35%</td></tr>
           </tbody></table>
         </div>
       </div>
@@ -912,24 +957,6 @@ tr:hover td { background: var(--bg-hover); }
   </div>
 
 
-  <!-- ENGINE -->
-  <div class="page" id="page-engine">
-    <div class="card">
-      <div class="card-header"><span class="card-title">⚙️ ENGINE CONTROL — Live Safety & Integrity Checks</span></div>
-      <div class="card-body">
-        <div class="alert warn">⚠️ Print plans only after all checks are READY or reviewed by the clinician. This does not replace clinical judgement.</div>
-        <div id="cap-conflict-banner"></div>
-        <table><thead><tr><th>Check</th><th>Live Value</th><th>Status</th><th>Why this matters</th></tr></thead><tbody id="engine-table"></tbody></table>
-        <div class="section-label" style="margin-top:16px">OVERALL STATUS</div>
-        <div id="engine-overall"></div>
-        <div class="section-label">MEAL REALISM CAPS</div>
-        <div id="engine-realism"></div>
-        <div class="section-label">CLINICAL CALORIE GAP</div>
-        <div id="engine-gap"></div>
-      </div>
-    </div>
-  </div>
-
   <!-- BLOOD ANALYSIS -->
   <div class="page" id="page-labs">
     <div class="card">
@@ -1012,6 +1039,58 @@ tr:hover td { background: var(--bg-hover); }
       </div>
     </div>
   </div>
+
+  <!-- APPOINTMENTS -->
+  <div class="page" id="page-appointments">
+    <div class="card">
+      <div class="card-header"><span class="card-title">📅 Appointments</span><span class="card-action" onclick="openAppointmentForm(todayISO())">+ New appointment</span></div>
+      <div class="card-body">
+        <div class="calendar-toolbar">
+          <div class="calendar-title" id="calendar-title">Appointments</div>
+          <button class="btn" onclick="moveCalendar(-1)">←</button>
+          <button class="btn" onclick="goTodayCalendar()">Today</button>
+          <button class="btn" onclick="moveCalendar(1)">→</button>
+          <div class="view-toggle" aria-label="Calendar view">
+            <button id="calendar-view-month" class="active" onclick="setCalendarView('month')">Month</button>
+            <button id="calendar-view-week" onclick="setCalendarView('week')">Week</button>
+          </div>
+        </div>
+        <div class="calendar-shell">
+          <div>
+            <div id="appointments-calendar"></div>
+          </div>
+          <div class="card appointment-form-panel" style="margin:0">
+            <div class="card-header"><span class="card-title" id="appointment-form-title">New appointment</span></div>
+            <div class="card-body">
+              <input type="hidden" id="appt-id">
+              <div class="form-field" style="margin-bottom:10px"><label>Date</label><input type="date" id="appt-date"></div>
+              <div class="form-field" style="margin-bottom:10px"><label>Client name</label><input type="text" id="appt-client" placeholder="Client name"></div>
+              <div class="form-grid" style="margin-bottom:10px">
+                <div class="form-field"><label>Time</label><input type="time" id="appt-time" value="10:00"></div>
+                <div class="form-field"><label>Duration</label><select id="appt-duration"><option>30</option><option selected>45</option><option>60</option><option>90</option></select></div>
+              </div>
+              <div class="form-field" style="margin-bottom:10px"><label>Type</label>
+                <select id="appt-type">
+                  <option>First consultation</option>
+                  <option>Follow-up</option>
+                  <option>Online</option>
+                  <option>Phone</option>
+                </select>
+              </div>
+              <div class="form-field" style="margin-bottom:12px"><label>Notes</label><textarea id="appt-notes" rows="4" placeholder="Notes for this appointment" style="resize:vertical"></textarea></div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button class="btn primary" onclick="saveAppointmentFromForm()">Save</button>
+                <button class="btn" id="appt-delete-btn" onclick="deleteAppointmentFromForm()" style="display:none">Delete</button>
+                <button class="btn" onclick="clearAppointmentForm()">Clear</button>
+              </div>
+              <div class="field-note" id="appointments-save-note" style="margin-top:10px">Saved to Supabase when signed in; local fallback is used if offline.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ACCOUNT / SUBSCRIPTION -->
   <div class="page" id="page-account">
     <div class="card">
@@ -1038,6 +1117,8 @@ tr:hover td { background: var(--bg-hover); }
   <button class="bnav-item" onclick="nav('profile');setBnav(this)"><span>👤</span><span>Profile</span></button>
   <button class="bnav-item" onclick="nav('exchanges');setBnav(this)"><span>🔄</span><span>Exchanges</span></button>
   <button class="bnav-item" onclick="nav('oneday');setBnav(this)"><span>☀️</span><span>1-Day</span></button>
+  <button class="bnav-item" onclick="nav('labs');setBnav(this)"><span>🩸</span><span>Labs</span></button>
+  <button class="bnav-item" onclick="nav('recipes');setBnav(this)"><span>🍲</span><span>Recipes</span></button>
   <button class="bnav-item" onclick="nav('account');setBnav(this)"><span>💳</span><span>Account</span></button>
 </nav>
 <script>
@@ -1050,7 +1131,7 @@ const S = {
   exAuto:{starch:true,protein:true,fat:true},
   exMeta:null, lastDairyType:'Moderate-fat', lastMeatType:'Lean',
   bc:{bf:null,water:null,fatmass:null,muscle:null,metage:null,visceral:null},
-  tracking:[],intake:{},notes:{},labValues:{},foodResults:[],recipes:[],recipeDraft:[],mealLanguage:'GR',reportOptions:{oneDay:true,sevenDay:true},
+  tracking:[],intake:{},notes:{},labValues:{},foodResults:[],recipes:[],recipeDraft:[],appointments:[],mealLanguage:'GR',reportOptions:{oneDay:true,sevenDay:true},
   mealSel:{breakfast:'BRK_TOAST',lunch:'LUN_CHICKEN_RICE',dinner:'DIN_FISH_POTATO',snack1Extras:[],snack2Extras:[],sleepExtras:[]}
 };
 
@@ -1200,6 +1281,13 @@ sb.auth.onAuthStateChange(async (event, session)=>{
     setEl('user-email', currentUser.email);
     await refreshSubscriptionGate();
     if(subscriptionState.active && document.getElementById('page-clients')?.classList.contains('active')) renderClientList();
+    if(subscriptionState.active){
+      appointmentsLoadedFor=null;
+      loadAppointments(true).then(()=>{
+        renderDashboardAppointments();
+        if(document.getElementById('page-appointments')?.classList.contains('active')) renderAppointments();
+      });
+    }
     if(subscriptionState.active && recoveringSession){
       // Restore whatever was being worked on before the unexpected sign-out
       tryRestoreAutosave();
@@ -1215,6 +1303,7 @@ sb.auth.onAuthStateChange(async (event, session)=>{
       recoveringSession=true;
     }
     hadSession = false;
+    appointmentsLoadedFor=null;
     showAuthScreen();
     if(recoveringSession) setAuthMessage('Your session expired — please sign in again. Your in-progress work has been saved and will be restored.','error');
   }
@@ -2227,7 +2316,7 @@ const PAGE_INFO = {
   recipes:{title:'Recipes',sub:'Custom recipes · Auto-calculated nutrition'},
   report:{title:'Client Report (Print)',sub:'PRINT — Κλινική Αναφορά Διατροφής'},
   tracking:{title:'Progress Tracking',sub:'Body composition history · Visit log'},
-  engine:{title:'Engine Control',sub:'Live safety & integrity checks — review before printing'},
+  appointments:{title:'Appointments',sub:'Monthly and weekly practice calendar'},
   account:{title:'Account / Subscription',sub:'Billing status · Stripe subscription'},
   labs:{title:'Blood Analysis',sub:'Lab values with reference ranges · Suggested vitamins & minerals'},
   equivalents:{title:'Equivalents Guide',sub:'Printable food exchange list for clients — EN / GR'},
@@ -2247,6 +2336,7 @@ function nav(id) {
   if(id==='equivalents') buildEquivalents();
   if(id==='labs') renderLabsTable();
   if(id==='recipes') { renderRecipeDraft(); loadRecipes(); }
+  if(id==='appointments') { loadAppointments().then(renderAppointments); }
   if(id==='profile') calcBodyComp();
   if(id==='exchanges') renderExchanges();
   // Always sync exchange inputs → S.ex before building meal plans
@@ -2259,7 +2349,6 @@ function nav(id) {
   if(id==='oneday') buildOneDayPlan();
   if(id==='sevenday') buildSevenDay();
   if(id==='report') buildReport();
-  if(id==='engine') renderEngine();
   if(id==='tracking') renderTracking();
 }
 
@@ -2290,13 +2379,15 @@ function calcAll() {
   }
   const calAdjEl=document.getElementById('p-cal-adj');
   const calAdjFieldRaw=v('p-cal-adj');
+  const profileComplete = !!(age && h && w);
   const isUntouched = calAdjFieldRaw==='' || parseFloat(calAdjFieldRaw)===S.calAdjAutoValue;
-  if(isUntouched && calAdjEl){
+  if(profileComplete && isUntouched && calAdjEl){
     calAdjEl.value = autoAdj;
     S.calAdjAutoValue = autoAdj;
   }
+  if(!profileComplete) S.calAdjAutoValue = undefined;
   const calAdj=parseFloat(v('p-cal-adj'))||0;
-  const calAdjIsManual = !isUntouched;
+  const calAdjIsManual = profileComplete && !isUntouched;
 
   Object.assign(S,{age,sex,height:h,weight:w,activity:act,conditions,condition:conditions[0]||'General',goal,meatType,dairyType,calAdj,name});
 
@@ -2374,6 +2465,9 @@ function calcAll() {
           : `Suggested (editable): ${autoAdj>0?'+':''}${autoAdj} kcal for "${goal}". Edit the number above for a different adjustment.`;
       }
     }
+  } else {
+    const noteEl=document.getElementById('cal-adj-note');
+    if(noteEl) noteEl.textContent = 'Auto suggestion appears after age, height and weight are filled. Manual entries are preserved.';
   }
   setEl('r-bmi',bmi?bmi.toFixed(1):'—'); setEl('r-bmi-cat',bmiCat||'—');
   setEl('r-bmr',bmr?Math.round(bmr):'—'); setEl('r-tdee',tdee?Math.round(tdee):'—');
@@ -3158,12 +3252,12 @@ function updateDashMetrics(){
   const alerts=[];
   if(incomplete) alerts.push('Client profile incomplete — fill all required fields before printing.');
   if(lowKcal) alerts.push('⚠ Goal calories very low ('+Math.round(S.goalKcal)+' kcal) — clinical review needed.');
-  if(anyCapped) alerts.push('Macro target exceeds realistic food portions — review the safety checks and adjust the exchange targets if needed.');
+  if(anyCapped) alerts.push('Macro target exceeds realistic food portions — review Macro Targets and Exchange System for safer adjustment options.');
   const dashAlert=document.getElementById('dash-alert');
   if(dashAlert) dashAlert.innerHTML=alerts.map(a=>`<div class="alert warn">⚠️ ${a}</div>`).join('');
 }
 
-function renderDashboard(){ updateDashMetrics(); buildOneDayPlan(); }
+function renderDashboard(){ updateDashMetrics(); buildOneDayPlan(); loadAppointments().then(renderDashboardAppointments); }
 
 function addTracking(){
   S.tracking.unshift({date:v('t-date')||new Date().toLocaleDateString('el-GR'),weight:v('t-weight'),bf:v('t-bf'),muscle:v('t-muscle'),visceral:v('t-visceral'),notes:v('t-notes')});
@@ -3690,6 +3784,203 @@ function renderRecipesList(){
 }
 
 // ═══════════════════════════════════════════
+//  APPOINTMENTS CALENDAR
+// ═══════════════════════════════════════════
+let calendarCursor = new Date();
+let calendarView = 'month';
+let appointmentsLoadedFor = null;
+
+function safeHtml(value){
+  return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+function pad2(n){ return String(n).padStart(2,'0'); }
+function dateToISO(d){ return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; }
+function todayISO(){ return dateToISO(new Date()); }
+function parseISODate(iso){
+  const parts=String(iso||todayISO()).split('-').map(Number);
+  return new Date(parts[0]||new Date().getFullYear(), (parts[1]||1)-1, parts[2]||1);
+}
+function startOfWeek(d){
+  const out=new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const day=(out.getDay()+6)%7;
+  out.setDate(out.getDate()-day);
+  return out;
+}
+function appointmentStorageKey(){
+  return 'nutriflow_appointments_' + (currentUser ? currentUser.id : 'local');
+}
+function normalizeAppointment(row){
+  return {
+    id: row.id || ('appt_'+Date.now()+'_'+Math.random().toString(16).slice(2)),
+    user_id: row.user_id || (currentUser && currentUser.id) || null,
+    client_name: row.client_name || row.clientName || '',
+    date: row.date || todayISO(),
+    time: row.time || '10:00',
+    duration: Number(row.duration || 45),
+    type: row.type || 'Follow-up',
+    notes: row.notes || '',
+    updated_at: row.updated_at || new Date().toISOString(),
+    localOnly: !!row.localOnly
+  };
+}
+function persistAppointmentsLocal(){
+  try{ localStorage.setItem(appointmentStorageKey(), JSON.stringify(S.appointments||[])); }catch(e){}
+}
+function loadAppointmentsLocal(){
+  try{ return (JSON.parse(localStorage.getItem(appointmentStorageKey())||'[]')||[]).map(normalizeAppointment); }catch(e){ return []; }
+}
+async function loadAppointments(force=false){
+  const scope=currentUser ? currentUser.id : 'local';
+  if(!force && appointmentsLoadedFor===scope && Array.isArray(S.appointments)) return S.appointments;
+  if(currentUser){
+    const {data,error}=await sb.from('appointments').select('*').eq('user_id',currentUser.id).order('date',{ascending:true}).order('time',{ascending:true});
+    if(!error && data){
+      S.appointments=data.map(normalizeAppointment);
+      appointmentsLoadedFor=scope;
+      persistAppointmentsLocal();
+      renderDashboardAppointments();
+      return S.appointments;
+    }
+  }
+  S.appointments=loadAppointmentsLocal();
+  appointmentsLoadedFor=scope;
+  renderDashboardAppointments();
+  return S.appointments;
+}
+function appointmentClass(type){
+  if(type==='First consultation') return 'appt-first';
+  if(type==='Online') return 'appt-online';
+  if(type==='Phone') return 'appt-phone';
+  return 'appt-follow';
+}
+function appointmentsForDate(iso){
+  return (S.appointments||[]).filter(a=>a.date===iso).sort((a,b)=>String(a.time).localeCompare(String(b.time)));
+}
+function renderAppointments(){
+  const el=document.getElementById('appointments-calendar'); if(!el) return;
+  document.getElementById('calendar-view-month')?.classList.toggle('active', calendarView==='month');
+  document.getElementById('calendar-view-week')?.classList.toggle('active', calendarView==='week');
+  const weekdays=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const title=document.getElementById('calendar-title');
+  const today=todayISO();
+  let dates=[];
+  if(calendarView==='week'){
+    const start=startOfWeek(calendarCursor);
+    for(let i=0;i<7;i++){ const d=new Date(start); d.setDate(start.getDate()+i); dates.push(d); }
+    if(title) title.textContent = dates[0].toLocaleDateString(undefined,{month:'short',day:'numeric'})+' - '+dates[6].toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
+  } else {
+    const first=new Date(calendarCursor.getFullYear(), calendarCursor.getMonth(), 1);
+    const gridStart=startOfWeek(first);
+    for(let i=0;i<42;i++){ const d=new Date(gridStart); d.setDate(gridStart.getDate()+i); dates.push(d); }
+    if(title) title.textContent = calendarCursor.toLocaleDateString(undefined,{month:'long',year:'numeric'});
+  }
+  const head=weekdays.map(w=>`<div class="calendar-weekday">${w}</div>`).join('');
+  const cells=dates.map(d=>{
+    const iso=dateToISO(d);
+    const muted=calendarView==='month' && d.getMonth()!==calendarCursor.getMonth();
+    const items=appointmentsForDate(iso);
+    const blocks=items.map(a=>`<button class="appointment-block ${appointmentClass(a.type)}" onclick="event.stopPropagation();openAppointmentForm('${iso}','${safeHtml(a.id)}')" title="${safeHtml(a.type)} · ${safeHtml(a.notes)}"><strong>${safeHtml(a.time)} ${safeHtml(a.client_name||'Unnamed')}</strong><span>${safeHtml(a.type)} · ${a.duration} min</span></button>`).join('');
+    return `<div class="calendar-day ${muted?'muted':''} ${iso===today?'today':''} ${calendarView==='week'?'week':''}" onclick="openAppointmentForm('${iso}')">
+      <div class="calendar-day-number">${d.getDate()}</div>
+      ${blocks}
+    </div>`;
+  }).join('');
+  el.innerHTML=`<div class="calendar-grid">${head}${cells}</div>`;
+  renderDashboardAppointments();
+}
+function setCalendarView(view){
+  calendarView=view==='week'?'week':'month';
+  renderAppointments();
+}
+function moveCalendar(delta){
+  if(calendarView==='week') calendarCursor.setDate(calendarCursor.getDate()+(delta*7));
+  else calendarCursor.setMonth(calendarCursor.getMonth()+delta);
+  calendarCursor=new Date(calendarCursor);
+  renderAppointments();
+}
+function goTodayCalendar(){
+  calendarCursor=new Date();
+  renderAppointments();
+}
+function openAppointmentForm(date, id=''){
+  const appt=id ? (S.appointments||[]).find(a=>String(a.id)===String(id)) : null;
+  const formTitle=document.getElementById('appointment-form-title');
+  const delBtn=document.getElementById('appt-delete-btn');
+  if(formTitle) formTitle.textContent = appt ? 'Edit appointment' : 'New appointment';
+  if(delBtn) delBtn.style.display = appt ? 'inline-flex' : 'none';
+  const activeDate=appt?.date || date || todayISO();
+  const activeTime=appt?.time || (new Date().toTimeString().slice(0,5));
+  document.getElementById('appt-id').value = appt?.id || '';
+  document.getElementById('appt-date').value = activeDate;
+  document.getElementById('appt-client').value = appt?.client_name || v('p-name') || '';
+  document.getElementById('appt-time').value = activeTime;
+  document.getElementById('appt-duration').value = appt?.duration || '45';
+  document.getElementById('appt-type').value = appt?.type || 'Follow-up';
+  document.getElementById('appt-notes').value = appt?.notes || '';
+}
+function clearAppointmentForm(){
+  openAppointmentForm(todayISO());
+}
+async function saveAppointmentFromForm(){
+  const clientName=(v('appt-client')||'').trim();
+  if(!clientName){ alert('Enter a client name.'); return; }
+  const id=v('appt-id') || ('appt_'+Date.now());
+  const appt=normalizeAppointment({
+    id,
+    user_id: currentUser && currentUser.id,
+    client_name: clientName,
+    date: v('appt-date') || todayISO(),
+    time: v('appt-time') || '10:00',
+    duration: parseInt(v('appt-duration')||'45',10),
+    type: v('appt-type') || 'Follow-up',
+    notes: v('appt-notes') || '',
+    updated_at: new Date().toISOString()
+  });
+  let saved=appt;
+  if(currentUser){
+    const row={user_id:currentUser.id,client_name:appt.client_name,date:appt.date,time:appt.time,duration:appt.duration,type:appt.type,notes:appt.notes,updated_at:appt.updated_at};
+    let result;
+    if(String(id).startsWith('appt_')){
+      result=await sb.from('appointments').insert(row).select().maybeSingle();
+    } else {
+      result=await sb.from('appointments').update(row).eq('id',id).eq('user_id',currentUser.id).select().maybeSingle();
+    }
+    if(!result.error && result.data) saved=normalizeAppointment(result.data);
+    else saved.localOnly=true;
+  }
+  S.appointments=[saved,...(S.appointments||[]).filter(a=>String(a.id)!==String(id))].sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
+  persistAppointmentsLocal();
+  appointmentsLoadedFor=currentUser ? currentUser.id : 'local';
+  document.getElementById('appt-id').value=saved.id;
+  renderAppointments();
+}
+async function deleteAppointment(id){
+  const appt=(S.appointments||[]).find(a=>String(a.id)===String(id));
+  if(!appt) return;
+  if(!confirm('Delete this appointment?')) return;
+  if(currentUser && !String(id).startsWith('appt_')) await sb.from('appointments').delete().eq('id',id).eq('user_id',currentUser.id);
+  S.appointments=(S.appointments||[]).filter(a=>String(a.id)!==String(id));
+  persistAppointmentsLocal();
+  clearAppointmentForm();
+  renderAppointments();
+}
+function deleteAppointmentFromForm(){
+  const id=v('appt-id');
+  if(id) deleteAppointment(id);
+}
+function renderDashboardAppointments(){
+  const el=document.getElementById('dash-appointments'); if(!el) return;
+  const today=todayISO();
+  const items=appointmentsForDate(today);
+  if(!items.length){ el.innerHTML='<div style="color:var(--text-muted);font-size:13px">No appointments today.</div>'; return; }
+  el.innerHTML=items.map(a=>`<div class="appointment-list-item">
+    <span class="appointment-dot ${appointmentClass(a.type)}"></span>
+    <div class="appointment-time">${safeHtml(a.time)}</div>
+    <div style="flex:1"><strong>${safeHtml(a.client_name||'Unnamed')}</strong><div style="font-size:12px;color:var(--text-muted)">${safeHtml(a.type)} · ${a.duration} min</div></div>
+  </div>`).join('');
+}
+
+// ═══════════════════════════════════════════
 //  CLIENT SAVE / LOAD / PERSISTENCE
 // ═══════════════════════════════════════════
 const SAVE_FIELD_IDS = [
@@ -4054,6 +4345,8 @@ window.onload=function(){
 
   document.getElementById('p-date').value=new Date().toISOString().split('T')[0];
   document.getElementById('t-date').value=new Date().toISOString().split('T')[0];
+  const apptDateEl=document.getElementById('appt-date'); if(apptDateEl) apptDateEl.value=todayISO();
+  const apptTimeEl=document.getElementById('appt-time'); if(apptTimeEl) apptTimeEl.value=new Date().toTimeString().slice(0,5);
   document.getElementById('s-breakfast').innerHTML=mealOptionsHtml(filteredMealOptions(BREAKFAST_OPTIONS,v('p-diet')||'Omnivore'),'BRK_TOAST');
   document.getElementById('s-lunch').innerHTML=mealOptionsHtml(filteredMealOptions(LUNCH_OPTIONS,v('p-diet')||'Omnivore'),'LUN_CHICKEN_RICE');
   document.getElementById('s-dinner').innerHTML=mealOptionsHtml(filteredMealOptions(DINNER_OPTIONS,v('p-diet')||'Omnivore'),'DIN_FISH_POTATO');
@@ -4061,6 +4354,7 @@ window.onload=function(){
   document.getElementById('s-snack2').innerHTML=snackExtrasHtml();
   document.getElementById('s-sleep').innerHTML=snackExtrasHtml();
   calcAll(); calcMacros(); renderDashboard();
+  loadAppointments().then(renderDashboardAppointments);
   tryRestoreAutosave();
   // Auto-save on any input/change anywhere in the form
   document.addEventListener('input', scheduleAutosave);
