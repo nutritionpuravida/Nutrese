@@ -203,6 +203,13 @@ tr:hover td { background: var(--bg-hover); }
 .meal-time { font-size: 12px; font-weight: 700; color: var(--text-muted); padding-top: 2px; }
 .meal-desc { color: var(--text-primary); font-size: 13px; }
 .meal-tag { display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: 10px; font-weight: 700; background: var(--teal-50); color: var(--text-active); margin-top: 3px; }
+.extra-foods { margin-top: 7px; padding-top: 7px; border-top: 1px dashed var(--border-strong); font-size: 11px; color: var(--text-secondary); }
+.extra-food-title { font-weight: 700; color: var(--teal-600); margin-bottom: 4px; }
+.extra-food-row { display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; margin-top: 3px; line-height: 1.35; }
+.extra-food-macros { color: var(--text-muted); font-size: 10px; white-space: nowrap; }
+.food-add-panel { margin-top: 6px; padding: 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-page); display: none; min-width: 230px; }
+.food-add-panel.open { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.food-add-panel input, .food-add-panel select { font-size: 11px; padding: 5px 6px; }
 
 /* ─── MOBILE DRAWER OVERLAY ─── */
 .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 99; }
@@ -296,6 +303,8 @@ tr:hover td { background: var(--bg-hover); }
   .report-week-table tbody tr:nth-child(odd) td { background: #f8fffe !important; }
   .report-week-table tbody tr:nth-child(even) td { background: #f0faf6 !important; }
   .report-week-table tbody tr:last-child td { background: #e1f5ee !important; font-weight: 700 !important; border-top: 2px solid #0f6e56 !important; }
+  .report-clinical-box { background: #fff8e1 !important; color: #1f2937 !important; border: 1px solid #f3d27a !important; border-left: 4px solid #d97706 !important; }
+  .report-clinical-box * { color: #1f2937 !important; }
 
   /* ── ALL PAGES: base table styles for print ── */
   table { font-size: 10px !important; table-layout: auto !important;
@@ -913,25 +922,29 @@ tr:hover td { background: var(--bg-hover); }
   <div class="page" id="page-report">
     <div class="card no-print" style="border:2px solid var(--teal-600)">
       <div class="card-header" style="background:var(--teal-50)">
-        <span class="card-title">⚙️ Report Options — Choose what to print</span>
+        <span class="card-title" id="report-options-title">⚙️ Report Options — Choose what to print</span>
       </div>
       <div class="card-body">
         <div style="display:flex;flex-wrap:wrap;gap:24px;align-items:center">
+          <div style="display:flex;gap:8px;margin-right:auto">
+            <button class="btn primary" id="meal-lang-gr-report" onclick="setMealLanguage('GR')">GR</button>
+            <button class="btn" id="meal-lang-en-report" onclick="setMealLanguage('EN')">EN</button>
+          </div>
           <label style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;cursor:pointer">
             <input type="checkbox" id="rep-include-1day" checked onchange="onReportOptionsChange()" style="width:18px;height:18px;accent-color:var(--teal-600)">
-            ☀️ Include 1-Day Meal Plan
+            <span id="report-include-1day-label">☀️ Include 1-Day Meal Plan</span>
           </label>
           <label style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;cursor:pointer">
             <input type="checkbox" id="rep-include-7day" checked onchange="onReportOptionsChange()" style="width:18px;height:18px;accent-color:var(--teal-600)">
-            📅 Include 7-Day Meal Plan
+            <span id="report-include-7day-label">📅 Include 7-Day Meal Plan</span>
           </label>
-          <button class="btn primary" onclick="printPage()">🖨️ Print / Save PDF</button>
+          <button class="btn primary" onclick="printPage()" id="report-print-btn">🖨️ Print / Save PDF</button>
         </div>
-        <div class="field-note" style="margin-top:8px">Check/uncheck to choose which meal plan appears in the printed report. Use Print / Save PDF and choose “Save as PDF” in the browser print dialog.</div>
+        <div class="field-note" id="report-options-note" style="margin-top:8px">Check/uncheck to choose which meal plan appears in the printed report. Use Print / Save PDF and choose “Save as PDF” in the browser print dialog.</div>
       </div>
     </div>
     <div class="card">
-      <div class="card-header"><span class="card-title">📄 PRINT — Κλινική Αναφορά Διατροφής</span></div>
+      <div class="card-header"><span class="card-title" id="report-print-title">📄 PRINT — Κλινική Αναφορά Διατροφής</span></div>
       <div class="card-body" id="report-body"><div style="color:var(--gray-400)">Navigate here after filling client profile to generate report.</div></div>
     </div>
   </div>
@@ -1134,7 +1147,7 @@ const S = {
   exAuto:{starch:true,protein:true,fat:true},
   exMeta:null, lastDairyType:'Moderate-fat', lastMeatType:'Lean',
   bc:{bf:null,water:null,fatmass:null,muscle:null,metage:null,visceral:null},
-  tracking:[],intake:{},notes:{},labValues:{},foodResults:[],recipes:[],recipeDraft:[],appointments:[],mealLanguage:'GR',reportOptions:{oneDay:true,sevenDay:true},
+  tracking:[],intake:{},notes:{},labValues:{},foodResults:[],recipes:[],recipeDraft:[],extraFoods:[],appointments:[],mealLanguage:'GR',reportOptions:{oneDay:true,sevenDay:true},
   mealSel:{breakfast:'BRK_TOAST',lunch:'LUN_CHICKEN_RICE',dinner:'DIN_FISH_POTATO',snack1Extras:[],snack2Extras:[],sleepExtras:[]}
 };
 
@@ -1289,7 +1302,7 @@ sb.auth.onAuthStateChange(async (event, session)=>{
     setEl('user-email', currentUser.email);
     await refreshSubscriptionGate();
     if(subscriptionState.active && document.getElementById('page-clients')?.classList.contains('active')) renderClientList();
-    if(subscriptionState.active){
+    if(currentUser){
       appointmentsLoadedFor=null;
       loadAppointments(true).then(()=>{
         renderDashboardAppointments();
@@ -1525,6 +1538,78 @@ function exchangesToKcal(composition, portions, fruitOverride, dairyOverride){
 
 // Calculates a full day's exchange usage and kcal breakdown from the
 // current meal + snack selections and portions
+const EXTRA_FOOD_DAYS=[
+  {v:'all',label:'All days'},
+  {v:'0',label:'Monday'},
+  {v:'1',label:'Tuesday'},
+  {v:'2',label:'Wednesday'},
+  {v:'3',label:'Thursday'},
+  {v:'4',label:'Friday'},
+  {v:'5',label:'Saturday'},
+  {v:'6',label:'Sunday'},
+];
+const EXTRA_FOOD_SLOTS=[
+  {v:'brk',label:'Breakfast'},
+  {v:'snk1',label:'Snack 1'},
+  {v:'lun',label:'Lunch'},
+  {v:'snk2',label:'Snack 2'},
+  {v:'din',label:'Dinner'},
+  {v:'sleep',label:'Before sleep'},
+];
+function extraFoodDayOptionsHtml(){
+  return EXTRA_FOOD_DAYS.map(d=>`<option value="${d.v}">${d.label}</option>`).join('');
+}
+function extraFoodSlotOptionsHtml(){
+  return EXTRA_FOOD_SLOTS.map(s=>`<option value="${s.v}">${s.label}</option>`).join('');
+}
+function extraFoodTotalsForItem(food){
+  const grams=foodNumber(food.grams)||100;
+  const factor=grams/100;
+  return {
+    kcal:(foodNumber(food.kcal100)||0)*factor,
+    carbs:(foodNumber(food.carbs100)||0)*factor,
+    protein:(foodNumber(food.protein100)||0)*factor,
+    fat:(foodNumber(food.fat100)||0)*factor,
+  };
+}
+function getExtraFoodsForSlot(slot, dayIndex=null){
+  return (S.extraFoods||[]).filter(food=>{
+    if(food.slot!==slot) return false;
+    if(dayIndex===null) return food.day==='all';
+    return food.day==='all' || String(food.day)===String(dayIndex);
+  });
+}
+function extraFoodsTotals(slot, dayIndex=null){
+  return getExtraFoodsForSlot(slot, dayIndex).reduce((acc,food)=>{
+    const t=extraFoodTotalsForItem(food);
+    acc.kcal+=t.kcal; acc.carbs+=t.carbs; acc.protein+=t.protein; acc.fat+=t.fat;
+    return acc;
+  },{kcal:0,carbs:0,protein:0,fat:0});
+}
+function extraKcal(slot, dayIndex=null){
+  return Math.round(extraFoodsTotals(slot, dayIndex).kcal||0);
+}
+function renderExtraFoodsForSlot(slot, dayIndex=null, opts={}){
+  const foods=getExtraFoodsForSlot(slot, dayIndex);
+  if(!foods.length) return '';
+  const title=opts.title || (S.mealLanguage==='EN'?'Extra foods':'Επιπλέον τρόφιμα');
+  const rows=foods.map(food=>{
+    const t=extraFoodTotalsForItem(food);
+    const grams=foodNumber(food.grams)||100;
+    const macros=`${Math.round(t.kcal)} kcal · C ${formatFoodNumber(t.carbs,'g')} · P ${formatFoodNumber(t.protein,'g')} · F ${formatFoodNumber(t.fat,'g')}`;
+    const removeBtn=opts.showRemove===false ? '' : `<button class="btn" style="padding:0 5px;font-size:10px;line-height:1.4" onclick="removeExtraFood('${food.id}')">×</button>`;
+    return `<div class="extra-food-row">
+      <div><strong>${safeHtml(food.name||'Food')}</strong><div style="font-size:10px;color:var(--text-muted)">${grams}g${food.brand?' · '+safeHtml(food.brand):''}</div></div>
+      <div style="display:flex;gap:5px;align-items:flex-start"><span class="extra-food-macros">${macros}</span>${removeBtn}</div>
+    </div>`;
+  }).join('');
+  return `<div class="extra-foods"><div class="extra-food-title">${title}</div>${rows}</div>`;
+}
+function refreshMealPlanViews(){
+  buildOneDayPlan();
+  buildSevenDay();
+  if(document.getElementById('page-report')?.classList.contains('active')) buildReport();
+}
 function calcDayTotals(){
   const portions = getMealPortions();
   const ms = S.mealSel;
@@ -1536,12 +1621,12 @@ function calcDayTotals(){
   const snk2Built = buildSlotSnack('snk2', ms.snack2Extras || []);
   const sleepBuilt = buildSlotSnack('sleep', ms.sleepExtras || []);
 
-  const brkKcal  = exchangesToKcal(brkComp, null);
-  const lunKcal  = exchangesToKcal(lunComp, FIXED_COMPOSITION_MEALS.has(ms.lunch) ? null : portions.lunch);
-  const dinKcal  = exchangesToKcal(dinComp, FIXED_COMPOSITION_MEALS.has(ms.dinner) ? null : portions.dinner);
-  const snk1Kcal = exchangesToKcal(snk1Built.exch, null);
-  const snk2Kcal = exchangesToKcal(snk2Built.exch, null);
-  const slpKcal  = exchangesToKcal(sleepBuilt.exch, null);
+  const brkKcal  = exchangesToKcal(brkComp, null) + extraKcal('brk', null);
+  const lunKcal  = exchangesToKcal(lunComp, FIXED_COMPOSITION_MEALS.has(ms.lunch) ? null : portions.lunch) + extraKcal('lun', null);
+  const dinKcal  = exchangesToKcal(dinComp, FIXED_COMPOSITION_MEALS.has(ms.dinner) ? null : portions.dinner) + extraKcal('din', null);
+  const snk1Kcal = exchangesToKcal(snk1Built.exch, null) + extraKcal('snk1', null);
+  const snk2Kcal = exchangesToKcal(snk2Built.exch, null) + extraKcal('snk2', null);
+  const slpKcal  = exchangesToKcal(sleepBuilt.exch, null) + extraKcal('sleep', null);
   const totalKcal = brkKcal + lunKcal + dinKcal + snk1Kcal + snk2Kcal + slpKcal;
   const target = Math.round(S.goalKcal||0);
   const gap = totalKcal - target;
@@ -1937,9 +2022,13 @@ const SNACK_EXTRAS = [
 ];
 
 // Renders the checkbox group HTML for a snack slot's extras
+function snackExtraLabel(extra, lang){
+  const key=(lang||S.mealLanguage)==='EN' ? 'en' : 'gr';
+  return extra[key] || extra.gr || extra.en || extra.l || '';
+}
 function snackExtrasHtml(){
-  const lang=S.mealLanguage==='EN' ? 'en' : 'gr';
-  return SNACK_EXTRAS.map(e=>`<label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap"><input type="checkbox" value="${e.v}" style="width:auto"> ${e[lang]}</label>`).join('');
+  const lang=S.mealLanguage||'GR';
+  return SNACK_EXTRAS.map(e=>`<label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap"><input type="checkbox" value="${e.v}" style="width:auto"> ${snackExtraLabel(e, lang)}</label>`).join('');
 }
 
 function refreshSnackExtrasLabels(){
@@ -2011,12 +2100,18 @@ function setMealLanguage(lang){
 }
 function updateMealLanguageButtons(){
   const isEn=S.mealLanguage==='EN';
-  ['1day','7day'].forEach(scope=>{
+  ['1day','7day','report'].forEach(scope=>{
     const gr=document.getElementById(`meal-lang-gr-${scope}`);
     const en=document.getElementById(`meal-lang-en-${scope}`);
     if(gr){ gr.classList.toggle('primary', !isEn); }
     if(en){ en.classList.toggle('primary', isEn); }
   });
+  setEl('report-options-title', isEn ? '⚙️ Report Options — Choose what to print' : '⚙️ Επιλογές Αναφοράς — Επιλέξτε τι θα εκτυπωθεί');
+  setEl('report-include-1day-label', isEn ? '☀️ Include 1-Day Meal Plan' : '☀️ Συμπερίληψη ημερήσιου πλάνου');
+  setEl('report-include-7day-label', isEn ? '📅 Include 7-Day Meal Plan' : '📅 Συμπερίληψη εβδομαδιαίου πλάνου');
+  setEl('report-print-btn', isEn ? '🖨️ Print / Save PDF' : '🖨️ Εκτύπωση / Αποθήκευση PDF');
+  setEl('report-options-note', isEn ? 'Check/uncheck to choose which meal plan appears in the printed report. Use Print / Save PDF and choose “Save as PDF” in the browser print dialog.' : 'Επιλέξτε ποιο πλάνο γευμάτων θα εμφανίζεται στην εκτυπώσιμη αναφορά. Χρησιμοποιήστε Εκτύπωση / Αποθήκευση PDF και επιλέξτε “Save as PDF”.');
+  setEl('report-print-title', isEn ? '📄 PRINT — Clinical Nutrition Report' : '📄 PRINT — Κλινική Αναφορά Διατροφής');
 }
 
 // Base default macro values per exchange (g CHO / g PRO / g FAT per exchange).
@@ -2165,6 +2260,31 @@ const GENERAL_HEALTH_RULES = [
   'Ύπνος: 7–9 ώρες/βράδυ — ο ανεπαρκής ύπνος σχετίζεται με αυξημένη όρεξη και δυσκολία διαχείρισης βάρους.',
   'Περιορισμός πρόσθετων σακχάρων και υπερ-επεξεργασμένων τροφίμων — προτίμηση σε φρέσκα/ελάχιστα επεξεργασμένα τρόφιμα στις περισσότερες περιπτώσεις.',
 ];
+const GENERAL_HEALTH_RULES_EN = [
+  'Adequate hydration: 6-8 glasses (about 1.5-2 litres) of water per day, more in heat or exercise.',
+  'Regular meals every 3-4 hours to support stable appetite and blood glucose.',
+  'Alcohol: if consumed, keep moderate. Avoid alcohol completely during pregnancy.',
+  'Physical activity: at least 150 minutes of moderate exercise per week plus strength training twice weekly, if medically appropriate.',
+  'Fibre: aim for 25-30g/day from vegetables, fruit, pulses and whole grains.',
+  'Salt: limit to <5g/day and watch processed/ready foods where sodium is often hidden.',
+  'Sleep: aim for 7-9 hours/night; inadequate sleep can increase appetite and make weight management harder.',
+  'Limit added sugars and ultra-processed foods; prefer fresh or minimally processed foods most of the time.',
+];
+
+const REPORT_CONDITION_EN = {
+  General:{name:'Healthy Eating', main:'Balanced exchange-based plan with Mediterranean-style food quality.', prefer:'Vegetables, fruit, olive oil, quality protein and consistent starch distribution.', avoid:'Extreme restriction and unrealistic meal combinations.'},
+  Obesity:{name:'Weight Management', main:'Use a mild, sustainable calorie deficit with emphasis on minimally processed, Mediterranean/DASH-style foods.', prefer:'Vegetables, pulses, whole grains, lean protein for satiety and water instead of sweet drinks.', avoid:'Ultra-processed foods, sweet drinks, fast food and excess alcohol.'},
+  Diabetes:{name:'Diabetes Type 2', main:'Individualise meal timing and carbohydrate distribution. Focus on high-fibre carbohydrates, unsaturated fats and consistent meals.', prefer:'Whole grains, pulses, vegetables, moderate fruit, olive oil, fish and lean protein.', avoid:'Sweet drinks/juice, highly refined foods and excess alcohol.'},
+  Dyslipidemia:{name:'High Cholesterol', main:'Mediterranean-style eating pattern with focus on fibre and unsaturated fats.', prefer:'Oily fish, olive oil, nuts, pulses, oats, fruit and vegetables.', avoid:'Trans fats, excess saturated fats, processed meats and ultra-processed snacks.'},
+  Hypertension:{name:'Hypertension', main:'DASH-style pattern with sodium awareness and high intake of potassium-rich foods where clinically appropriate.', prefer:'Vegetables, fruit, whole grains, low-fat dairy, fish/poultry, pulses and nuts.', avoid:'Salty foods, processed foods, excess alcohol and high saturated-fat foods.'},
+  PCOS:{name:'PCOS', main:'Aim for sustainable weight management where needed and stable glycaemic load.', prefer:'Vegetables, fruit, whole grains, lean protein, low-fat dairy and regular activity.', avoid:'Excess refined carbohydrates and added sugar.'},
+  Thyroid:{name:"Hypothyroidism / Hashimoto's", main:'Nutrition supports thyroid health but does not replace prescribed medication. Separate levothyroxine from calcium/iron/dairy as advised.', prefer:'Mediterranean-style eating, selenium/zinc/iron/vitamin D adequacy and moderate iodine intake.', avoid:'Excess iodine/kelp supplements unless medically directed.'},
+  IBS:{name:'IBS / Digestive Issues', main:'Symptoms should be individualised. Low-FODMAP can be considered in phases with dietitian guidance if symptoms persist.', prefer:'Tolerated grains, vegetables, proteins and lactose-free options where needed.', avoid:'Known personal triggers; avoid unnecessary long-term restriction without review.'},
+  FoodIntolerance:{name:'Food Intolerances / Allergies', main:'Avoid confirmed triggers while preserving variety and nutritional adequacy.', prefer:'Safe alternatives, label reading and cross-contamination awareness for allergies.', avoid:'Unnecessary exclusion of whole food groups without clinical reason.'},
+  Pregnancy:{name:'Pregnancy', main:'No weight-loss energy restriction unless medically indicated. Support folate, iron, calcium, iodine, choline and omega-3 needs.', prefer:'Fully cooked proteins, pasteurised dairy, low-mercury fish and folate-rich foods.', avoid:'Alcohol, raw/undercooked animal foods, unpasteurised dairy and high-mercury fish.'},
+  Menopause:{name:'Menopause', main:'Focus on cardiometabolic health, weight management, muscle mass and bone health.', prefer:'Protein spread through the day, calcium/vitamin D adequacy, vegetables, pulses, fish, olive oil and resistance exercise.', avoid:'Excess alcohol, ultra-processed foods and very low-calorie approaches that compromise muscle mass.'},
+  Sports:{name:'Sports Nutrition / Performance', main:'Support adequate energy, carbohydrate timing around training, protein for recovery and hydration.', prefer:'Carbohydrates matched to training load, protein across 3-5 meals, recovery snacks and electrolytes when sweating heavily.', avoid:'Under-fuelling, extreme carbohydrate restriction during heavy training and unverified supplements.'},
+};
 
 // Shown when Pregnancy is selected, in addition to the combined guidance above
 const PREGNANCY_TRIMESTER_NOTES = {
@@ -2358,7 +2478,7 @@ function nav(id) {
   if(id==='equivalents') buildEquivalents();
   if(id==='labs') renderLabsTable();
   if(id==='recipes') { renderRecipeDraft(); loadRecipes(); }
-  if(id==='appointments') { loadAppointments().then(renderAppointments); }
+  if(id==='appointments') { loadAppointments(true).then(renderAppointments); }
   if(id==='profile') calcBodyComp();
   if(id==='exchanges') renderExchanges();
   // Always sync exchange inputs → S.ex before building meal plans
@@ -2790,18 +2910,18 @@ function buildOneDayPlan(){
   const snk2Built=buildSlotSnack('snk2', snk2Extras, lang);
   const sleepBuilt=buildSlotSnack('sleep', sleepExtras, lang);
   const meals=[
-    {time:lang==='EN'?'Breakfast':'Πρωινό',      en:'Breakfast',     text:mealText(brk,null,lang),              kcal:day.brkKcal},
-    {time:lang==='EN'?'Snack 1':'Σνακ 1',        en:'Snack 1',       text:snk1Built.text,                       kcal:day.snk1Kcal},
-    {time:lang==='EN'?'Lunch':'Μεσημεριανό',     en:'Lunch',         text:mealText(lun,portions.lunch,lang),    kcal:day.lunKcal},
-    {time:lang==='EN'?'Snack 2':'Σνακ 2',        en:'Snack 2',       text:snk2Built.text,                       kcal:day.snk2Kcal},
-    {time:lang==='EN'?'Dinner':'Βραδινό',        en:'Dinner',        text:mealText(din,portions.dinner,lang),   kcal:day.dinKcal},
-    {time:lang==='EN'?'Before sleep':'Πριν τον ύπνο',en:'Before sleep', text:sleepBuilt.text,                   kcal:day.slpKcal},
+    {slot:'brk', time:lang==='EN'?'Breakfast':'Πρωινό',      en:'Breakfast',     text:mealText(brk,null,lang),              kcal:day.brkKcal},
+    {slot:'snk1', time:lang==='EN'?'Snack 1':'Σνακ 1',        en:'Snack 1',       text:snk1Built.text,                       kcal:day.snk1Kcal},
+    {slot:'lun', time:lang==='EN'?'Lunch':'Μεσημεριανό',     en:'Lunch',         text:mealText(lun,portions.lunch,lang),    kcal:day.lunKcal},
+    {slot:'snk2', time:lang==='EN'?'Snack 2':'Σνακ 2',        en:'Snack 2',       text:snk2Built.text,                       kcal:day.snk2Kcal},
+    {slot:'din', time:lang==='EN'?'Dinner':'Βραδινό',        en:'Dinner',        text:mealText(din,portions.dinner,lang),   kcal:day.dinKcal},
+    {slot:'sleep', time:lang==='EN'?'Before sleep':'Πριν τον ύπνο',en:'Before sleep', text:sleepBuilt.text,                   kcal:day.slpKcal},
   ];
   const planEl=document.getElementById('oneday-plan');
   if(planEl) planEl.innerHTML=meals.filter(m=>m.text&&m.text!=='—').map(m=>
     `<div class="meal-row">
       <div class="meal-time">${m.time}<div style="font-size:10px;color:var(--text-muted);font-weight:400;margin-top:2px">${m.kcal} kcal</div></div>
-      <div class="meal-desc">${m.text}<br><span class="meal-tag">${lang==='EN'?'EN':'GR'}</span></div>
+      <div class="meal-desc">${m.text}${renderExtraFoodsForSlot(m.slot, null)}<br><span class="meal-tag">${lang==='EN'?'EN':'GR'}</span></div>
     </div>`).join('');
   const gapAbs=Math.abs(day.gap);
   const gapOk=gapAbs<=100;
@@ -2864,7 +2984,7 @@ function buildOneDayPlan(){
 // (used by 7-Day plan, where each day can have its own breakfast/lunch/
 // dinner AND its own snack1/snack2/sleep selection — true per-day variety,
 // per dietitian feedback after real client testing).
-function calcDayTotalsForPlan(dayPlan, lang='GR'){
+function calcDayTotalsForPlan(dayPlan, lang='GR', dayIndex=0){
   const portions=getMealPortions();
   const brkComp  = MEAL_EXCHANGES[dayPlan.brk] || {};
   const lunComp  = MEAL_EXCHANGES[dayPlan.lun] || {};
@@ -2873,12 +2993,12 @@ function calcDayTotalsForPlan(dayPlan, lang='GR'){
   const snk2Built = buildSlotSnack('snk2', dayPlan.snk2Extras || [], lang);
   const sleepBuilt = buildSlotSnack('sleep', dayPlan.sleepExtras || [], lang);
 
-  const brkKcal  = exchangesToKcal(brkComp, null);
-  const lunKcal  = exchangesToKcal(lunComp, FIXED_COMPOSITION_MEALS.has(dayPlan.lun) ? null : portions.lunch);
-  const dinKcal  = exchangesToKcal(dinComp, FIXED_COMPOSITION_MEALS.has(dayPlan.din) ? null : portions.dinner);
-  const snk1Kcal = exchangesToKcal(snk1Built.exch, null);
-  const snk2Kcal = exchangesToKcal(snk2Built.exch, null);
-  const slpKcal  = exchangesToKcal(sleepBuilt.exch, null);
+  const brkKcal  = exchangesToKcal(brkComp, null) + extraKcal('brk', dayIndex);
+  const lunKcal  = exchangesToKcal(lunComp, FIXED_COMPOSITION_MEALS.has(dayPlan.lun) ? null : portions.lunch) + extraKcal('lun', dayIndex);
+  const dinKcal  = exchangesToKcal(dinComp, FIXED_COMPOSITION_MEALS.has(dayPlan.din) ? null : portions.dinner) + extraKcal('din', dayIndex);
+  const snk1Kcal = exchangesToKcal(snk1Built.exch, null) + extraKcal('snk1', dayIndex);
+  const snk2Kcal = exchangesToKcal(snk2Built.exch, null) + extraKcal('snk2', dayIndex);
+  const slpKcal  = exchangesToKcal(sleepBuilt.exch, null) + extraKcal('sleep', dayIndex);
   const totalKcal= brkKcal+lunKcal+dinKcal+snk1Kcal+snk2Kcal+slpKcal;
   const target   = Math.round(S.goalKcal||0);
   const gap      = totalKcal-target;
@@ -2914,12 +3034,12 @@ function buildSevenDay(){
   const portions=getMealPortions();
   const sel=(key,di,opts,cur)=>`<select style="width:100%;font-size:10px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--bg-page);color:var(--text-secondary);margin-bottom:3px" onchange="updateWeekPlan(${di},'${key}',this.value)">${mealOptionsHtml(opts,cur)}</select>`;
   // Compact checkbox-extras group for a snack slot on a given day
-  const extrasGroup=(slotKey,di,checked)=>`<div class="snack-extras-group" style="display:flex;flex-direction:column;gap:1px;margin-bottom:3px">${SNACK_EXTRAS.map(e=>`<label style="display:flex;align-items:center;gap:3px;font-size:9px;cursor:pointer;white-space:nowrap"><input type="checkbox" style="width:auto;transform:scale(0.8)" ${checked.includes(e.v)?'checked':''} onchange="toggleWeekPlanExtra(${di},'${slotKey}','${e.v}',this.checked)"> ${e.l}</label>`).join('')}</div>`;
+  const extrasGroup=(slotKey,di,checked)=>`<div class="snack-extras-group" style="display:flex;flex-direction:column;gap:1px;margin-bottom:3px">${SNACK_EXTRAS.map(e=>`<label style="display:flex;align-items:center;gap:3px;font-size:9px;cursor:pointer;white-space:nowrap"><input type="checkbox" style="width:auto;transform:scale(0.8)" ${checked.includes(e.v)?'checked':''} onchange="toggleWeekPlanExtra(${di},'${slotKey}','${e.v}',this.checked)"> ${snackExtraLabel(e, lang)}</label>`).join('')}</div>`;
 
   let html='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr>';
   html+=`<th style="background:var(--teal-600);color:#fff;padding:8px;min-width:90px">${lang==='EN'?'Meal':'Γεύμα'}</th>`;
   S.weekPlans.forEach((p,di)=>{
-    const dt=calcDayTotalsForPlan(p, lang);
+    const dt=calcDayTotalsForPlan(p, lang, di);
     const gapOk=Math.abs(dt.gap)<=100;
     const dayLabel=lang==='EN' ? ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][di] : p.day;
     html+=`<th style="background:var(--teal-600);color:#fff;padding:8px;min-width:170px;text-align:center">
@@ -2942,21 +3062,21 @@ function buildSevenDay(){
     html+=`<tr style="background:${ri%2===0?'var(--bg-surface)':'var(--bg-page)'}">`;
     html+=`<td style="padding:8px;font-weight:700;color:var(--text-secondary);font-size:11px;border:1px solid var(--border)">${row.label}</td>`;
     S.weekPlans.forEach((p,di)=>{
-      const dt=calcDayTotalsForPlan(p, lang);
+      const dt=calcDayTotalsForPlan(p, lang, di);
       const gapOk=Math.abs(dt.gap)<=100;
       let cell='';
       if(row.key==='brk'){
-        cell=sel('brk',di,filteredBrk,p.brk)+`<div style="color:var(--text-primary);font-size:11px;font-weight:500">${mealText(p.brk,null,lang)}</div><div style="font-size:10px;color:var(--teal-600)">${dt.brkKcal} kcal</div>`;
+        cell=sel('brk',di,filteredBrk,p.brk)+`<div style="color:var(--text-primary);font-size:11px;font-weight:500">${mealText(p.brk,null,lang)}${renderExtraFoodsForSlot('brk', di)}</div><div style="font-size:10px;color:var(--teal-600)">${dt.brkKcal} kcal</div>`;
       } else if(row.key==='snk1'){
-        cell=extrasGroup('snk1Extras',di,p.snk1Extras)+`<div style="color:var(--text-primary);font-size:11px;font-weight:500">${dt.snk1Text}</div><div style="font-size:10px;color:var(--teal-600)">${dt.snk1Kcal} kcal</div>`;
+        cell=extrasGroup('snk1Extras',di,p.snk1Extras)+`<div style="color:var(--text-primary);font-size:11px;font-weight:500">${dt.snk1Text}${renderExtraFoodsForSlot('snk1', di)}</div><div style="font-size:10px;color:var(--teal-600)">${dt.snk1Kcal} kcal</div>`;
       } else if(row.key==='lun'){
-        cell=sel('lun',di,filteredLun,p.lun)+`<div style="color:var(--text-primary);font-size:11px;font-weight:500">${mealText(p.lun,portions.lunch,lang)}</div><div style="font-size:10px;color:var(--teal-600)">${dt.lunKcal} kcal</div>`;
+        cell=sel('lun',di,filteredLun,p.lun)+`<div style="color:var(--text-primary);font-size:11px;font-weight:500">${mealText(p.lun,portions.lunch,lang)}${renderExtraFoodsForSlot('lun', di)}</div><div style="font-size:10px;color:var(--teal-600)">${dt.lunKcal} kcal</div>`;
       } else if(row.key==='snk2'){
-        cell=extrasGroup('snk2Extras',di,p.snk2Extras)+`<div style="color:var(--text-primary);font-size:11px;font-weight:500">${dt.snk2Text}</div><div style="font-size:10px;color:var(--teal-600)">${dt.snk2Kcal} kcal</div>`;
+        cell=extrasGroup('snk2Extras',di,p.snk2Extras)+`<div style="color:var(--text-primary);font-size:11px;font-weight:500">${dt.snk2Text}${renderExtraFoodsForSlot('snk2', di)}</div><div style="font-size:10px;color:var(--teal-600)">${dt.snk2Kcal} kcal</div>`;
       } else if(row.key==='din'){
-        cell=sel('din',di,filteredDin,p.din)+`<div style="color:var(--text-primary);font-size:11px;font-weight:500">${mealText(p.din,portions.dinner,lang)}</div><div style="font-size:10px;color:var(--teal-600)">${dt.dinKcal} kcal</div>`;
+        cell=sel('din',di,filteredDin,p.din)+`<div style="color:var(--text-primary);font-size:11px;font-weight:500">${mealText(p.din,portions.dinner,lang)}${renderExtraFoodsForSlot('din', di)}</div><div style="font-size:10px;color:var(--teal-600)">${dt.dinKcal} kcal</div>`;
       } else if(row.key==='sleep'){
-        cell=extrasGroup('sleepExtras',di,p.sleepExtras)+`<div style="color:var(--text-primary);font-size:11px;font-weight:500">${dt.slpText}</div><div style="font-size:10px;color:var(--teal-600)">${dt.slpKcal} kcal</div>`;
+        cell=extrasGroup('sleepExtras',di,p.sleepExtras)+`<div style="color:var(--text-primary);font-size:11px;font-weight:500">${dt.slpText}${renderExtraFoodsForSlot('sleep', di)}</div><div style="font-size:10px;color:var(--teal-600)">${dt.slpKcal} kcal</div>`;
       } else if(row.key==='kcal'){
         cell=`<div style="font-weight:700;font-size:12px">${dt.totalKcal} kcal</div>
           <div style="font-size:10px;color:var(--text-muted)">Target: ${dt.target}</div>
@@ -3001,22 +3121,38 @@ function onReportOptionsChange(){
 }
 
 function buildReport(){
+  updateMealLanguageButtons();
   const ex=S.ex;
   const portions=getMealPortions();
   const lang=S.mealLanguage||'GR';
   const isEn=lang==='EN';
   const condList=(S.conditions&&S.conditions.length)?S.conditions:['General'];
-  const condNames=condList.map(c=>(COND_GUIDANCE[c]||COND_GUIDANCE.General).gr).join(', ');
+  const showClinicalBox=!(condList.length===1 && condList[0]==='General');
+  const reportCondName=c=>isEn ? ((REPORT_CONDITION_EN[c]||REPORT_CONDITION_EN.General).name) : ((COND_GUIDANCE[c]||COND_GUIDANCE.General).gr);
+  const reportCond=c=>isEn ? (REPORT_CONDITION_EN[c]||REPORT_CONDITION_EN.General) : (COND_GUIDANCE[c]||COND_GUIDANCE.General);
+  const condNames=condList.map(reportCondName).join(', ');
   const today=new Date().toLocaleDateString('el-GR');
   const n=S.notes, intake=S.intake;
-  const brkText=mealText(S.mealSel.breakfast,null,lang)||'—';
-  const lunText=mealText(S.mealSel.lunch,portions.lunch,lang)||'—';
-  const dinText=mealText(S.mealSel.dinner,portions.dinner,lang)||'—';
-  const snk1Text=buildSlotSnack('snk1', S.mealSel.snack1Extras||[], lang).text;
-  const snk2Text=buildSlotSnack('snk2', S.mealSel.snack2Extras||[], lang).text;
-  const sleepText=buildSlotSnack('sleep', S.mealSel.sleepExtras||[], lang).text;
+  const brkText=(mealText(S.mealSel.breakfast,null,lang)||'—')+renderExtraFoodsForSlot('brk', null, {showRemove:false});
+  const lunText=(mealText(S.mealSel.lunch,portions.lunch,lang)||'—')+renderExtraFoodsForSlot('lun', null, {showRemove:false});
+  const dinText=(mealText(S.mealSel.dinner,portions.dinner,lang)||'—')+renderExtraFoodsForSlot('din', null, {showRemove:false});
+  const snk1Text=buildSlotSnack('snk1', S.mealSel.snack1Extras||[], lang).text+renderExtraFoodsForSlot('snk1', null, {showRemove:false});
+  const snk2Text=buildSlotSnack('snk2', S.mealSel.snack2Extras||[], lang).text+renderExtraFoodsForSlot('snk2', null, {showRemove:false});
+  const sleepText=buildSlotSnack('sleep', S.mealSel.sleepExtras||[], lang).text+renderExtraFoodsForSlot('sleep', null, {showRemove:false});
   const day=calcDayTotals();
   const gapOk=Math.abs(day.gap)<=100;
+  const reportRules=isEn ? GENERAL_HEALTH_RULES_EN : GENERAL_HEALTH_RULES;
+  const goalLabel=isEn?'Goal':'Στόχος';
+  const dayUnit=isEn?'kcal/day':'kcal/ημέρα';
+  const conditionGuidanceHtml=condList.map(c=>{
+    const g=reportCond(c);
+    return `<div style="margin-top:8px">
+      <strong>${reportCondName(c)}</strong>
+      <div style="margin-top:4px">${g.main||''}</div>
+      <div style="margin-top:4px"><strong>${isEn?'Prefer':'Προτίμηση'}:</strong> ${g.prefer||''}</div>
+      <div style="margin-top:4px"><strong>${isEn?'Limit / avoid':'Περιορισμός / αποφυγή'}:</strong> ${g.avoid||''}</div>
+    </div>`;
+  }).join('');
   setEl('report-body',`<div style="width:100%;font-family:Arial,sans-serif;font-size:13px">
 
     <!-- HEADER -->
@@ -3028,26 +3164,30 @@ function buildReport(){
       <div style="text-align:right;font-size:12px;color:var(--text-muted)">
         <div><strong>${S.name||'—'}</strong></div>
         <div>${today}</div>
-        <div>Στόχος: ${S.goalKcal?Math.round(S.goalKcal)+' kcal/ημέρα':'—'}</div>
+        <div>${goalLabel}: ${S.goalKcal?Math.round(S.goalKcal)+' '+dayUnit:'—'}</div>
       </div>
     </div>
 
     <!-- CLIENT SUMMARY ROW -->
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">
       ${[
-        ['Βάρος',S.weight?S.weight+'kg':'—'],
+        [isEn?'Weight':'Βάρος',S.weight?S.weight+'kg':'—'],
         ['BMI',S.bmi?S.bmi.toFixed(1)+' ('+S.bmiCat+')':'—'],
-        ['Στόχος',S.goal],
-        ['Πρωτεΐνη',Math.round(S.protG)+'g/ημέρα'],
+        [goalLabel,S.goal],
+        [isEn?'Protein':'Πρωτεΐνη',Math.round(S.protG)+(isEn?'g/day':'g/ημέρα')],
       ].map(([l,v])=>`<div style="background:var(--teal-50);border-radius:6px;padding:6px 8px;font-size:11px"><div style="color:var(--text-muted)">${l}</div><div style="font-weight:700;font-size:13px">${v}</div></div>`).join('')}
     </div>
 
-    ${condNames!=='General'?`
-    <div style="background:#fff8e1;border-left:3px solid #f59e0b;padding:8px 12px;border-radius:4px;font-size:12px;margin-bottom:14px">
-      <strong>⚕️ Παθήσεις:</strong> ${condNames}
-      ${n.diagnoses?'<br><strong>Διαγνώσεις:</strong> '+n.diagnoses:''}
-      ${n.medication?'<br><strong>Φαρμακευτική αγωγή:</strong> '+n.medication:''}
+    ${showClinicalBox?`
+    <div class="report-clinical-box" style="background:#fff8e1;color:#1f2937;border:1px solid #f3d27a;border-left:4px solid #d97706;padding:10px 12px;border-radius:6px;font-size:12px;margin-bottom:14px;line-height:1.55">
+      <strong>⚕️ ${isEn?'Clinical condition':'Κλινική κατάσταση'}:</strong> ${condNames}
+      ${n.diagnoses?'<br><strong>'+(isEn?'Diagnoses':'Διαγνώσεις')+':</strong> '+n.diagnoses:''}
+      ${n.medication?'<br><strong>'+(isEn?'Medication':'Φαρμακευτική αγωγή')+':</strong> '+n.medication:''}
+      ${conditionGuidanceHtml}
     </div>`:''}
+    <div style="background:${gapOk?'var(--green-bg)':'var(--amber-bg)'};color:${gapOk?'var(--green-text)':'var(--amber-text)'};border:1px solid ${gapOk?'var(--green-border)':'var(--amber-border)'};border-radius:6px;padding:8px 10px;margin-bottom:12px;font-size:12px">
+      <strong>${isEn?'Plan check':'Έλεγχος πλάνου'}:</strong> ${gapOk?(isEn?'Daily plan is within the kcal tolerance.':'Το ημερήσιο πλάνο είναι εντός αποδεκτής απόκλισης kcal.'):(isEn?'Review kcal gap and clinical realism before printing.':'Χρειάζεται έλεγχος απόκλισης kcal και ρεαλισμού πριν την εκτύπωση.')}
+    </div>
     ${(S.reportOptions?.oneDay!==false) ? `
     <div style="font-size:14px;font-weight:700;color:var(--teal-800);margin:14px 0 6px;border-bottom:2px solid var(--teal-600);padding-bottom:4px">☀️ ${isEn?'DAILY MEAL PLAN':'ΗΜΕΡΗΣΙΟ ΠΛΑΝΟ ΓΕΥΜΑΤΩΝ'}</div>
     <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">${isEn?'Total':'Σύνολο'}: <strong>${day.totalKcal} kcal</strong> | ${isEn?'Target':'Στόχος'}: ${day.target} kcal ${gapOk?'✅':''}</div>
@@ -3090,17 +3230,17 @@ function buildReport(){
       </tr></thead>
       <tbody>
       ${(S.weekPlans||WEEK_PLANS).map((p,i)=>{
-        const dt=calcDayTotalsForPlan(p, lang);
+        const dt=calcDayTotalsForPlan(p, lang, i);
         const ok=Math.abs(dt.gap)<=100;
         const dayLabel=isEn ? ({'Δευτέρα':'Monday','Τρίτη':'Tuesday','Τετάρτη':'Wednesday','Πέμπτη':'Thursday','Παρασκευή':'Friday','Σάββατο':'Saturday','Κυριακή':'Sunday'}[p.day]||p.day) : p.day;
         return `<tr style="background:${i%2===0?'var(--bg-surface)':'var(--teal-50)'};border-bottom:1px solid var(--border)">
           <td style="padding:4px;font-weight:700;word-wrap:break-word">${dayLabel}</td>
-          <td style="padding:4px;word-wrap:break-word">${mealText(p.brk,null,lang)}</td>
-          <td style="padding:4px;word-wrap:break-word">${dt.snk1Text}</td>
-          <td style="padding:4px;word-wrap:break-word">${mealText(p.lun,portions.lunch,lang)}</td>
-          <td style="padding:4px;word-wrap:break-word">${dt.snk2Text}</td>
-          <td style="padding:4px;word-wrap:break-word">${mealText(p.din,portions.dinner,lang)}</td>
-          <td style="padding:4px;word-wrap:break-word">${dt.slpText}</td>
+          <td style="padding:4px;word-wrap:break-word">${mealText(p.brk,null,lang)}${renderExtraFoodsForSlot('brk', i, {showRemove:false})}</td>
+          <td style="padding:4px;word-wrap:break-word">${dt.snk1Text}${renderExtraFoodsForSlot('snk1', i, {showRemove:false})}</td>
+          <td style="padding:4px;word-wrap:break-word">${mealText(p.lun,portions.lunch,lang)}${renderExtraFoodsForSlot('lun', i, {showRemove:false})}</td>
+          <td style="padding:4px;word-wrap:break-word">${dt.snk2Text}${renderExtraFoodsForSlot('snk2', i, {showRemove:false})}</td>
+          <td style="padding:4px;word-wrap:break-word">${mealText(p.din,portions.dinner,lang)}${renderExtraFoodsForSlot('din', i, {showRemove:false})}</td>
+          <td style="padding:4px;word-wrap:break-word">${dt.slpText}${renderExtraFoodsForSlot('sleep', i, {showRemove:false})}</td>
           <td style="padding:4px;text-align:right;font-weight:700;white-space:nowrap;color:${ok?'#0f6e56':'#b45309'}">${dt.totalKcal}</td>
         </tr>`;
       }).join('')}
@@ -3112,18 +3252,18 @@ function buildReport(){
     </table>` : ''}
 
     <!-- GENERAL HEALTH RULES - compact for client -->
-    <div style="font-size:14px;font-weight:700;color:var(--teal-800);margin:16px 0 6px;border-bottom:2px solid var(--teal-600);padding-bottom:4px">📋 ΓΕΝΙΚΕΣ ΟΔΗΓΙΕΣ</div>
+    <div style="font-size:14px;font-weight:700;color:var(--teal-800);margin:16px 0 6px;border-bottom:2px solid var(--teal-600);padding-bottom:4px">📋 ${isEn?'GENERAL GUIDANCE':'ΓΕΝΙΚΕΣ ΟΔΗΓΙΕΣ'}</div>
     <div style="columns:2;column-gap:20px;font-size:12px;line-height:1.7">
-      ${GENERAL_HEALTH_RULES.map(r=>`<div style="break-inside:avoid;margin-bottom:4px">✔ ${r}</div>`).join('')}
+      ${reportRules.map(r=>`<div style="break-inside:avoid;margin-bottom:4px">✔ ${r}</div>`).join('')}
     </div>
 
     ${n.clinician_notes?`
-    <div style="font-size:14px;font-weight:700;color:var(--teal-800);margin:14px 0 6px;border-bottom:2px solid var(--teal-600);padding-bottom:4px">📝 ΣΗΜΕΙΩΣΕΙΣ ΔΙΑΙΤΟΛΟΓΟΥ</div>
+    <div style="font-size:14px;font-weight:700;color:var(--teal-800);margin:14px 0 6px;border-bottom:2px solid var(--teal-600);padding-bottom:4px">📝 ${isEn?'DIETITIAN NOTES':'ΣΗΜΕΙΩΣΕΙΣ ΔΙΑΙΤΟΛΟΓΟΥ'}</div>
     <div style="font-size:13px;padding:10px;background:var(--teal-50);border-radius:6px">${n.clinician_notes}</div>`:''}
 
     <!-- FOOTER -->
     <div style="margin-top:20px;padding-top:10px;border-top:1px solid #ddd;font-size:10px;color:#aaa;text-align:center">
-      NutriFlow · Smart nutrition software · ${today} · Για κλινική χρήση μόνο · Συντάχθηκε από εγκεκριμένο διαιτολόγο
+      NutriFlow · Smart nutrition software · ${today} · ${isEn?'For clinical use only · Prepared by a registered dietitian':'Για κλινική χρήση μόνο · Συντάχθηκε από εγκεκριμένο διαιτολόγο'}
     </div>
   </div>`);
 }
@@ -3641,16 +3781,61 @@ async function searchFoodDatabase(){
 function renderFoodResults(products){
   const el=document.getElementById('fooddb-results'); if(!el) return;
   if(!products || !products.length){ el.innerHTML=''; return; }
-  el.innerHTML=`<table><thead><tr><th>Food</th><th>Serving</th><th>kcal/100g</th><th>Carb</th><th>Protein</th><th>Fat</th><th>Recipe</th></tr></thead><tbody>${products.map((p,i)=>`
+  el.innerHTML=`<table><thead><tr><th>Food</th><th>Serving</th><th>kcal/100g</th><th>Carb</th><th>Protein</th><th>Fat</th><th>Actions</th></tr></thead><tbody>${products.map((p,i)=>`
     <tr>
-      <td><strong>${p.name}</strong><div style="font-size:11px;color:var(--text-muted)">${p.brand||'Open Food Facts'}</div></td>
-      <td>${p.serving||'—'}</td>
+      <td><strong>${safeHtml(p.name)}</strong><div style="font-size:11px;color:var(--text-muted)">${safeHtml(p.brand||'Open Food Facts')}</div></td>
+      <td>${safeHtml(p.serving||'—')}</td>
       <td>${formatFoodNumber(p.kcal100,'')}</td>
       <td>${formatFoodNumber(p.carbs100,'g')}</td>
       <td>${formatFoodNumber(p.protein100,'g')}</td>
       <td>${formatFoodNumber(p.fat100,'g')}</td>
-      <td><button class="btn" style="padding:4px 8px;font-size:11px" onclick="addFoodResultToRecipe(${i})">+ Add</button></td>
+      <td>
+        <div style="display:flex;gap:5px;flex-wrap:wrap">
+          <button class="btn" style="padding:4px 8px;font-size:11px" onclick="addFoodResultToRecipe(${i})">+ Recipe</button>
+          <button class="btn primary" style="padding:4px 8px;font-size:11px" onclick="toggleFoodAddPanel(${i})">+ Meal plan</button>
+        </div>
+        <div class="food-add-panel" id="food-add-panel-${i}">
+          <select id="food-add-day-${i}">${extraFoodDayOptionsHtml()}</select>
+          <select id="food-add-slot-${i}">${extraFoodSlotOptionsHtml()}</select>
+          <input id="food-add-grams-${i}" type="number" min="1" step="1" value="100" placeholder="grams">
+          <button class="btn primary" style="padding:5px 8px;font-size:11px" onclick="addFoodResultToMealPlan(${i})">Add food</button>
+        </div>
+      </td>
     </tr>`).join('')}</tbody></table>`;
+}
+function toggleFoodAddPanel(index){
+  const panel=document.getElementById(`food-add-panel-${index}`);
+  if(!panel) return;
+  panel.classList.toggle('open');
+}
+function addFoodResultToMealPlan(index){
+  const p=S.foodResults && S.foodResults[index];
+  if(!p){ alert('Food result not found.'); return; }
+  const grams=foodNumber(v(`food-add-grams-${index}`))||100;
+  const food={
+    id:'xf_'+Date.now()+'_'+Math.random().toString(16).slice(2),
+    day:v(`food-add-day-${index}`)||'all',
+    slot:v(`food-add-slot-${index}`)||'brk',
+    name:p.name||'Food',
+    brand:p.brand||'Open Food Facts',
+    grams,
+    kcal100:foodNumber(p.kcal100)||0,
+    carbs100:foodNumber(p.carbs100)||0,
+    protein100:foodNumber(p.protein100)||0,
+    fat100:foodNumber(p.fat100)||0,
+  };
+  if(!S.extraFoods) S.extraFoods=[];
+  S.extraFoods.push(food);
+  const panel=document.getElementById(`food-add-panel-${index}`);
+  if(panel) panel.classList.remove('open');
+  refreshMealPlanViews();
+  const dayLabel=(EXTRA_FOOD_DAYS.find(d=>d.v===String(food.day))||EXTRA_FOOD_DAYS[0]).label;
+  const slotLabel=(EXTRA_FOOD_SLOTS.find(s=>s.v===food.slot)||EXTRA_FOOD_SLOTS[0]).label;
+  setEl('fooddb-status', `${safeHtml(food.name)} added to ${dayLabel} / ${slotLabel} as an extra food. Meal-plan kcal now include this item.`);
+}
+function removeExtraFood(id){
+  S.extraFoods=(S.extraFoods||[]).filter(food=>food.id!==id);
+  refreshMealPlanViews();
 }
 
 // ═══════════════════════════════════════════
@@ -3872,7 +4057,7 @@ async function loadAppointments(force=false){
   const scope=currentUser ? currentUser.id : 'local';
   if(!force && appointmentsLoadedFor===scope && Array.isArray(S.appointments)) return S.appointments;
   if(currentUser){
-    const {data,error}=await sb.from('appointments').select('*').eq('user_id',currentUser.id).order('date',{ascending:true}).order('time',{ascending:true});
+    const {data,error}=await sb.from('appointments').select('id,user_id,client_name,date,time,duration,type,notes,updated_at').eq('user_id',currentUser.id).order('date',{ascending:true}).order('time',{ascending:true});
     if(!error && data){
       S.appointments=data.map(normalizeAppointment);
       appointmentsLoadedFor=scope;
@@ -4052,7 +4237,7 @@ return {
     fields, conditions,
     ex:S.ex, exAuto:S.exAuto, exMeta:S.exMeta, tracking:S.tracking, mealSel:S.mealSel,
     weekPlans:S.weekPlans, mealLanguage:S.mealLanguage, reportOptions:S.reportOptions,
-    intake:S.intake, notes:S.notes, labValues:S.labValues,
+    intake:S.intake, notes:S.notes, labValues:S.labValues, extraFoods:S.extraFoods,
     savedAt:new Date().toISOString()
   };
 }
@@ -4088,6 +4273,7 @@ function applyState(state){
     }
   });
   if(state.weekPlans) S.weekPlans=state.weekPlans;
+  S.extraFoods=Array.isArray(state.extraFoods)?state.extraFoods:[];
   if(state.mealLanguage) S.mealLanguage=state.mealLanguage;
   if(state.reportOptions){
     S.reportOptions=state.reportOptions;
@@ -4129,7 +4315,7 @@ function resetForm(){
   S.exAuto={starch:true,protein:true,fat:true};
   S.exMeta=makeExMeta();
   S.lastDairyType='Moderate-fat'; S.lastMeatType='Lean';
-  S.tracking=[]; S.intake={}; S.notes={}; S.labValues={};
+  S.tracking=[]; S.intake={}; S.notes={}; S.labValues={}; S.extraFoods=[];
   S.mealSel={breakfast:'BRK_TOAST',lunch:'LUN_CHICKEN_RICE',dinner:'DIN_FISH_POTATO',snack1Extras:[],snack2Extras:[],sleepExtras:[]};
   S.weekPlans=WEEK_PLANS.map(p=>({...p}));
   S.mealLanguage='GR';
