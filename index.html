@@ -3440,6 +3440,7 @@ function buildReport(){
   const reportRules=isEn ? GENERAL_HEALTH_RULES_EN : GENERAL_HEALTH_RULES;
   const goalLabel=isEn?'Goal':'Στόχος';
   const dayUnit=isEn?'kcal/day':'kcal/ημέρα';
+  const abnormalLabsHtml=reportAbnormalLabsHtml(isEn);
   setEl('report-body',`<div style="width:100%;font-family:Arial,sans-serif;font-size:13px">
 
     <!-- HEADER -->
@@ -3477,6 +3478,7 @@ function buildReport(){
       ${n.diagnoses?'<br><strong>'+(isEn?'Diagnoses':'Διαγνώσεις')+':</strong> '+n.diagnoses:''}
       ${n.medication?'<br><strong>'+(isEn?'Medication':'Φαρμακευτική αγωγή')+':</strong> '+n.medication:''}
     </div>`:''}
+    ${abnormalLabsHtml}
     ${(S.reportOptions?.oneDay!==false) ? `
     <div class="report-day-section">
     <div style="font-size:14px;font-weight:700;color:var(--teal-800);margin:14px 0 6px;border-bottom:2px solid var(--teal-600);padding-bottom:4px">☀️ ${isEn?'DAILY MEAL PLAN':'ΗΜΕΡΗΣΙΟ ΠΛΑΝΟ ΓΕΥΜΑΤΩΝ'}</div>
@@ -3925,6 +3927,35 @@ function labStatusNote(test,status){
   if(status==='high') return test.highMsg||'Above reference range';
   return '';
 }
+function abnormalLabRows(){
+  return LAB_TESTS.map(t=>{
+    const val=S.labValues[t.key];
+    const status=labStatus(t,val);
+    if(status!=='low' && status!=='high') return null;
+    return {test:t, value:val, status, note:labStatusNote(t,status)};
+  }).filter(Boolean);
+}
+function reportAbnormalLabsHtml(isEn){
+  const rows=abnormalLabRows();
+  if(!rows.length) return '';
+  return `<div class="report-labs-section">
+    <div style="font-size:14px;font-weight:700;color:var(--teal-800);margin:14px 0 6px;border-bottom:2px solid var(--teal-600);padding-bottom:4px">🩸 ${isEn?'BLOOD ANALYSIS SUMMARY':'ΣΥΝΟΨΗ ΑΙΜΑΤΟΛΟΓΙΚΟΥ ΕΛΕΓΧΟΥ'}</div>
+    <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:12px">
+      <thead><tr style="background:var(--teal-600);color:#fff">
+        <th style="padding:5px;text-align:left">${isEn?'Test':'Εξέταση'}</th>
+        <th style="padding:5px;text-align:left">${isEn?'Value':'Τιμή'}</th>
+        <th style="padding:5px;text-align:left">${isEn?'Status':'Κατάσταση'}</th>
+        <th style="padding:5px;text-align:left">${isEn?'Clinical note':'Κλινική σημείωση'}</th>
+      </tr></thead>
+      <tbody>${rows.map(r=>`<tr style="border-bottom:1px solid #eee">
+        <td style="padding:5px"><strong>${isEn?r.test.en:r.test.gr}</strong></td>
+        <td style="padding:5px">${r.value} ${r.test.unit}</td>
+        <td style="padding:5px;color:${r.status==='low'?'#b45309':'#b91c1c'};font-weight:700">${r.status==='low'?(isEn?'Low':'Χαμηλό'):(isEn?'High':'Υψηλό')}</td>
+        <td style="padding:5px">${r.note||'—'}</td>
+      </tr>`).join('')}</tbody>
+    </table>
+  </div>`;
+}
 
 // Called on every keystroke in the Blood Analysis table
 function onLabInput(key){
@@ -4039,6 +4070,32 @@ function normalizeFoodProduct(product){
     fat100:foodNumber(nutr.fat_100g),
   };
 }
+function normalizeRecipeFoodResult(recipe){
+  const ingredients=recipe.ingredients||[];
+  const total=recipe.nutrition||recipeTotals(ingredients);
+  const totalGrams=ingredients.reduce((sum,ing)=>sum+(foodNumber(ing.grams)||0),0);
+  const servings=Math.max(1, recipe.servings||1);
+  const servingGrams=totalGrams>0 ? Math.round(totalGrams/servings) : 100;
+  const divisor=totalGrams>0 ? totalGrams : 100;
+  return {
+    source:'recipe',
+    recipeId:recipe.id,
+    name:recipe.name||'Recipe',
+    brand:'My Recipe',
+    serving:servingGrams ? `${servingGrams} g / serving` : '1 serving',
+    defaultGrams:servingGrams||100,
+    kcal100:(foodNumber(total.kcal)||0)/divisor*100,
+    carbs100:(foodNumber(total.carbs)||0)/divisor*100,
+    protein100:(foodNumber(total.protein)||0)/divisor*100,
+    fat100:(foodNumber(total.fat)||0)/divisor*100,
+  };
+}
+function recipeFoodResultsForQuery(query){
+  const q=String(query||'').trim().toLowerCase();
+  return (S.recipes||[])
+    .filter(r=>!q || String(r.name||'').toLowerCase().includes(q))
+    .map(normalizeRecipeFoodResult);
+}
 async function fetchWithRetryOnce(url, options={}, delayMs=2000){
   try{
     return await fetch(url, options);
@@ -4052,6 +4109,8 @@ async function searchFoodDatabase(){
   if(!query){ setEl('fooddb-status','Enter a food name to search.'); return; }
   setEl('fooddb-status','Searching Open Food Facts...');
   setEl('fooddb-results','');
+  await loadRecipes();
+  const recipeResults=recipeFoodResultsForQuery(query);
   const params=new URLSearchParams({
     search_terms:query,
     search_simple:'1',
@@ -4070,13 +4129,16 @@ async function searchFoodDatabase(){
     if(!res.ok) throw new Error(`Open Food Facts returned HTTP ${res.status}`);
     const data=await res.json();
     const products=(data.products||[]).map(normalizeFoodProduct).filter(p=>p.name && (p.kcal100!==null || p.carbs100!==null || p.protein100!==null || p.fat100!==null));
-    S.foodResults=products;
-    renderFoodResults(products);
-    setEl('fooddb-status', products.length ? `${products.length} foods found. Nutrition shown per 100g.` : `No nutrition-labelled foods found for "${query}". Try a broader term such as oats, yogurt, or chicken.`);
+    S.foodResults=[...recipeResults, ...products];
+    renderFoodResults(S.foodResults);
+    const total=S.foodResults.length;
+    setEl('fooddb-status', total ? `${total} foods found (${recipeResults.length} saved recipe${recipeResults.length===1?'':'s'}). Nutrition shown per 100g.` : `No nutrition-labelled foods found for "${query}". Try a broader term such as oats, yogurt, or chicken.`);
   }catch(err){
-    S.foodResults=[];
-    setEl('fooddb-results','');
-    setEl('fooddb-status', `Food search failed because the Open Food Facts API could not be reached or returned an error. Details: ${err.message}`);
+    S.foodResults=recipeResults;
+    renderFoodResults(S.foodResults);
+    setEl('fooddb-status', recipeResults.length
+      ? `${recipeResults.length} saved recipe${recipeResults.length===1?'':'s'} shown. Open Food Facts could not be reached. Details: ${err.message}`
+      : `Food search failed because the Open Food Facts API could not be reached or returned an error. Details: ${err.message}`);
   }
 }
 function renderFoodResults(products){
@@ -4084,7 +4146,7 @@ function renderFoodResults(products){
   if(!products || !products.length){ el.innerHTML=''; return; }
   el.innerHTML=`<table><thead><tr><th>Food</th><th>Serving</th><th>kcal/100g</th><th>Carb</th><th>Protein</th><th>Fat</th><th>Actions</th></tr></thead><tbody>${products.map((p,i)=>`
     <tr>
-      <td><strong>${safeHtml(p.name)}</strong><div style="font-size:11px;color:var(--text-muted)">${safeHtml(p.brand||'Open Food Facts')}</div></td>
+      <td><strong>${safeHtml(p.name)}</strong> ${p.source==='recipe'?'<span class="badge ok" style="margin-left:6px">My Recipe</span>':''}<div style="font-size:11px;color:var(--text-muted)">${safeHtml(p.brand||'Open Food Facts')}</div></td>
       <td>${safeHtml(p.serving||'—')}</td>
       <td>${formatFoodNumber(p.kcal100,'')}</td>
       <td>${formatFoodNumber(p.carbs100,'g')}</td>
@@ -4098,7 +4160,7 @@ function renderFoodResults(products){
         <div class="food-add-panel" id="food-add-panel-${i}">
           <select id="food-add-day-${i}">${extraFoodDayOptionsHtml()}</select>
           <select id="food-add-slot-${i}">${extraFoodSlotOptionsHtml()}</select>
-          <input id="food-add-grams-${i}" type="number" min="1" step="1" value="100" placeholder="grams">
+          <input id="food-add-grams-${i}" type="number" min="1" step="1" value="${Math.round(p.defaultGrams||100)}" placeholder="grams">
           <button class="btn primary" style="padding:5px 8px;font-size:11px" onclick="addFoodResultToMealPlan(${i})">Add food</button>
         </div>
       </td>
@@ -4112,7 +4174,7 @@ function toggleFoodAddPanel(index){
 function addFoodResultToMealPlan(index){
   const p=S.foodResults && S.foodResults[index];
   if(!p){ alert('Food result not found.'); return; }
-  const grams=foodNumber(v(`food-add-grams-${index}`))||100;
+  const grams=foodNumber(v(`food-add-grams-${index}`))||p.defaultGrams||100;
   const food={
     id:'xf_'+Date.now()+'_'+Math.random().toString(16).slice(2),
     day:v(`food-add-day-${index}`)||'all',
@@ -4315,9 +4377,64 @@ function renderRecipesList(){
       <td><strong>${safeHtml(r.name||'Recipe')}</strong><div style="font-size:11px;color:var(--text-muted)">${(r.ingredients||[]).length} ingredients</div></td>
       <td>${servings}</td>
       <td>${Math.round(total.kcal/servings)} kcal · ${formatFoodNumber(total.carbs/servings,'g')} C · ${formatFoodNumber(total.protein/servings,'g')} P · ${formatFoodNumber(total.fat/servings,'g')} F</td>
-      <td><button class="btn" style="padding:4px 8px;font-size:11px" onclick="loadRecipeIntoDraft('${r.id}')">Edit copy</button> <button class="btn" style="padding:4px 8px;font-size:11px" onclick="deleteRecipe('${r.id}')">Delete</button></td>
+      <td><button class="btn" style="padding:4px 8px;font-size:11px" onclick="loadRecipeIntoDraft('${r.id}')">Edit copy</button> <button class="btn" style="padding:4px 8px;font-size:11px" onclick="printRecipe('${r.id}')">Print Recipe</button> <button class="btn" style="padding:4px 8px;font-size:11px" onclick="deleteRecipe('${r.id}')">Delete</button></td>
     </tr>`;
   }).join('')}</tbody></table>`;
+}
+function printRecipe(id){
+  const r=(S.recipes||[]).find(x=>String(x.id)===String(id));
+  if(!r) return;
+  const ingredients=r.ingredients||[];
+  const servings=Math.max(1,r.servings||1);
+  const total=r.nutrition||recipeTotals(ingredients);
+  const per={kcal:total.kcal/servings, carbs:total.carbs/servings, protein:total.protein/servings, fat:total.fat/servings};
+  const oldTitle=document.title;
+  const oldPrintArea=document.getElementById('recipe-print-area');
+  if(oldPrintArea) oldPrintArea.remove();
+  const area=document.createElement('div');
+  area.id='recipe-print-area';
+  area.innerHTML=`<div style="font-family:Arial,sans-serif;color:#111;padding:18px">
+    <div style="border-bottom:3px solid #0f6e56;padding-bottom:10px;margin-bottom:14px">
+      <div style="font-size:22px;font-weight:800;color:#0f6e56">${safeHtml(r.name||'Recipe')}</div>
+      <div style="font-size:12px;color:#555">NutriFlow Recipe Card · ${servings} serving${servings===1?'':'s'}</div>
+    </div>
+    <div style="font-size:15px;font-weight:700;margin:10px 0 6px">Ingredients</div>
+    <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:14px">
+      <thead><tr style="background:#0f6e56;color:#fff"><th style="padding:6px;text-align:left">Ingredient</th><th style="padding:6px;text-align:right">Grams</th></tr></thead>
+      <tbody>${ingredients.map(ing=>`<tr style="border-bottom:1px solid #ddd"><td style="padding:6px">${safeHtml(ing.name||'Ingredient')}</td><td style="padding:6px;text-align:right">${formatFoodNumber(ing.grams,'g')}</td></tr>`).join('')}</tbody>
+    </table>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <div style="border:1px solid #ddd;border-radius:6px;padding:10px">
+        <div style="font-weight:800;color:#0f6e56;margin-bottom:6px">Total nutrition</div>
+        <div>kcal: ${Math.round(total.kcal||0)}</div>
+        <div>Carbs: ${formatFoodNumber(total.carbs,'g')}</div>
+        <div>Protein: ${formatFoodNumber(total.protein,'g')}</div>
+        <div>Fat: ${formatFoodNumber(total.fat,'g')}</div>
+      </div>
+      <div style="border:1px solid #ddd;border-radius:6px;padding:10px">
+        <div style="font-weight:800;color:#0f6e56;margin-bottom:6px">Per serving</div>
+        <div>kcal: ${Math.round(per.kcal||0)}</div>
+        <div>Carbs: ${formatFoodNumber(per.carbs,'g')}</div>
+        <div>Protein: ${formatFoodNumber(per.protein,'g')}</div>
+        <div>Fat: ${formatFoodNumber(per.fat,'g')}</div>
+      </div>
+    </div>
+    <div style="margin-top:18px;border-top:1px solid #ddd;padding-top:8px;font-size:11px;color:#777;text-align:center">NutriFlow · Smart Nutrition Software</div>
+  </div>`;
+  document.body.appendChild(area);
+  let styleEl=document.getElementById('recipe-print-style');
+  if(!styleEl){ styleEl=document.createElement('style'); styleEl.id='recipe-print-style'; document.head.appendChild(styleEl); }
+  styleEl.textContent=`@media print {
+    @page { size: A4 portrait; margin: 1cm; }
+    body > *:not(#recipe-print-area) { display:none !important; }
+    #recipe-print-area { display:block !important; }
+  }
+  @media screen { #recipe-print-area { display:none; } }`;
+  document.title=`NutriFlow - Recipe - ${r.name||'Recipe'}`;
+  setTimeout(()=>{
+    window.print();
+    setTimeout(()=>{ document.title=oldTitle; area.remove(); }, 500);
+  }, 200);
 }
 
 // ═══════════════════════════════════════════
