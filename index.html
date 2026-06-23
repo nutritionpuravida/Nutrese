@@ -966,16 +966,25 @@ tr:hover td { background: var(--bg-hover); }
             <button class="btn primary" id="meal-lang-gr-report" onclick="setMealLanguage('GR')">GR</button>
             <button class="btn" id="meal-lang-en-report" onclick="setMealLanguage('EN')">EN</button>
           </div>
-          <label style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;cursor:pointer">
-            <input type="checkbox" id="rep-include-1day" checked onchange="onReportOptionsChange()" style="width:18px;height:18px;accent-color:var(--teal-600)">
-            <span id="report-include-1day-label">☀️ Include 1-Day Meal Plan</span>
-          </label>
-          <label style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;cursor:pointer">
-            <input type="checkbox" id="rep-include-7day" checked onchange="onReportOptionsChange()" style="width:18px;height:18px;accent-color:var(--teal-600)">
-            <span id="report-include-7day-label">📅 Include 7-Day Meal Plan</span>
-          </label>
-          <button class="btn primary" onclick="printPage()" id="report-print-btn">🖨️ Print Full Report</button>
-          <button class="btn" onclick="printReportSevenDayLandscape()">🖨️ Print 7-Day Plan (Landscape)</button>
+          <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+            <span style="font-size:13px;font-weight:800;color:var(--text-secondary)">Full Report includes:</span>
+            <label style="display:flex;align-items:center;gap:7px;font-size:13px;font-weight:700;cursor:pointer">
+              <input type="radio" name="report-plan-mode" value="7day" checked onchange="onReportOptionsChange()" style="width:16px;height:16px;accent-color:var(--teal-600)">
+              <span id="report-mode-7day-label">7-Day Meal Plan only</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:7px;font-size:13px;font-weight:700;cursor:pointer">
+              <input type="radio" name="report-plan-mode" value="1day" onchange="onReportOptionsChange()" style="width:16px;height:16px;accent-color:var(--teal-600)">
+              <span id="report-mode-1day-label">1-Day Meal Plan only</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:7px;font-size:13px;font-weight:700;cursor:pointer">
+              <input type="radio" name="report-plan-mode" value="both" onchange="onReportOptionsChange()" style="width:16px;height:16px;accent-color:var(--teal-600)">
+              <span id="report-mode-both-label">Both plans</span>
+            </label>
+          </div>
+          <div class="field-note" style="width:100%;margin:2px 0 0">Tip: for the 7-day plan, landscape fits better on one page.</div>
+          <button class="btn primary" onclick="printPage()" id="report-print-btn">🖨️ Print Full Report (Landscape)</button>
+          <button class="btn" onclick="printReportSevenDayLandscape()">🖨️ Print 7-Day Plan only (Landscape)</button>
+          <button class="btn" onclick="printReportOneDayPortrait()">🖨️ Print 1-Day Plan only (Portrait)</button>
         </div>
         <div class="field-note" id="report-options-note" style="margin-top:8px">Check/uncheck to choose which meal plan appears in the printed report. Use Print / Save PDF and choose “Save as PDF” in the browser print dialog.</div>
       </div>
@@ -1186,7 +1195,7 @@ const S = {
   exAuto:{starch:true,protein:true,fat:true},
   exMeta:null, lastDairyType:'Moderate-fat', lastMeatType:'Lean', weightSuggestionLocked:false,
   bc:{bf:null,water:null,fatmass:null,muscle:null,metage:null,visceral:null},
-  tracking:[],intake:{},notes:{},labValues:{},foodResults:[],recipes:[],recipeDraft:[],extraFoods:[],appointments:[],mealLanguage:'GR',reportOptions:{oneDay:true,sevenDay:true},
+  tracking:[],intake:{},notes:{},labValues:{},foodResults:[],recipes:[],recipeDraft:[],extraFoods:[],appointments:[],mealLanguage:'GR',reportOptions:{oneDay:false,sevenDay:true},
   mealSel:{breakfast:'BRK_TOAST',lunch:'LUN_CHICKEN_RICE',dinner:'DIN_FISH_POTATO',snack1Extras:[],snack2Extras:[],sleepExtras:[]}
 };
 
@@ -1883,8 +1892,11 @@ function printPage(){
   if(!styleEl){ styleEl=document.createElement('style'); styleEl.id='print-orientation-override'; document.head.appendChild(styleEl); }
 
   if(isReport || isEquivalents){
-    // Portrait: client-facing documents
-    styleEl.textContent = '@media print { @page { size: A4 portrait; margin: 1cm; } }';
+    const reportHasSevenDay = isReport && S.reportOptions?.sevenDay!==false;
+    // Report rule: any 7-day table prints landscape; otherwise portrait.
+    styleEl.textContent = reportHasSevenDay
+      ? '@media print { @page { size: A4 landscape; margin: 8mm 10mm; } }'
+      : '@media print { @page { size: A4 portrait; margin: 1cm; } }';
     if(isReport){ buildReport(); }
     if(isEquivalents){ buildEquivalents(); }
     if(isReport) document.title = `NutriFlow - Client Report - ${S.name||'Client'}`;
@@ -1929,6 +1941,36 @@ function printReportSevenDayLandscape(){
     #report-body .report-week-table th, #report-body .report-week-table td { display:table-cell !important; white-space:normal !important; overflow-wrap:break-word !important; }
   }`;
   document.title = `NutriFlow - 7-Day Plan - ${S.name||'Client'}`;
+  setTimeout(()=>{
+    window.print();
+    setTimeout(()=>{
+      S.reportOptions=oldOptions;
+      buildReport();
+      document.title=oldTitle;
+    }, 500);
+  }, 300);
+}
+function printReportOneDayPortrait(){
+  const oldTitle=document.title;
+  const oldOptions={...(S.reportOptions||{})};
+  S.reportOptions={oneDay:true,sevenDay:false};
+  nav('report');
+  buildReport();
+  let styleEl = document.getElementById('print-orientation-override');
+  if(!styleEl){ styleEl=document.createElement('style'); styleEl.id='print-orientation-override'; document.head.appendChild(styleEl); }
+  styleEl.textContent = `@media print {
+    @page { size: A4 portrait; margin: 1cm; }
+    #page-report .card:first-child { display:none !important; }
+    #page-report .card-header { display:none !important; }
+    #report-body > div > * { display:none !important; }
+    #report-body .report-day-section { display:block !important; }
+    #report-body .report-day-section * { display:revert !important; }
+    #report-body .report-day-section table { display:table !important; width:100% !important; border-collapse:collapse !important; }
+    #report-body .report-day-section tbody { display:table-row-group !important; }
+    #report-body .report-day-section tr { display:table-row !important; }
+    #report-body .report-day-section td { display:table-cell !important; }
+  }`;
+  document.title = `NutriFlow - 1-Day Plan - ${S.name||'Client'}`;
   setTimeout(()=>{
     window.print();
     setTimeout(()=>{
@@ -2244,7 +2286,7 @@ function buildSlotSnack(slot, extras, lang='GR'){
     exch.fruit += fruitCount;
     parts.push(useDriedFruit
       ? (lang==='EN'
-        ? `${fruitCount} serving${fruitCount>1?'s':''} dried fruit (e.g. 2 tbsp raisins or 3 dried apricots per serving; see Equivalents Guide)`
+        ? `${fruitCount} serving${fruitCount>1?'s':''} dried fruit (see Equivalents Guide)`
         : `${fruitCount} μερίδ${fruitCount>1?'ες':'α'} αποξηραμένων φρούτων (π.χ. 2 κ.σ. σταφίδες ή 3 αποξηραμένα βερίκοκα ανά μερίδα, βλ. Οδηγό Ισοδυναμιών)`)
       : (lang==='EN' ? `${fruitCount} fruit${fruitCount>1?'s':''} (see Equivalents Guide)` : `${fruitCount} φρούτ${fruitCount>1?'α':'ο'} (βλ. Οδηγό Ισοδυναμιών)`));
   }
@@ -2281,10 +2323,14 @@ function updateMealLanguageButtons(){
     if(en){ en.classList.toggle('primary', isEn); }
   });
   setEl('report-options-title', isEn ? '⚙️ Report Options — Choose what to print' : '⚙️ Επιλογές Αναφοράς — Επιλέξτε τι θα εκτυπωθεί');
-  setEl('report-include-1day-label', isEn ? '☀️ Include 1-Day Meal Plan' : '☀️ Συμπερίληψη ημερήσιου πλάνου');
-  setEl('report-include-7day-label', isEn ? '📅 Include 7-Day Meal Plan' : '📅 Συμπερίληψη εβδομαδιαίου πλάνου');
-  setEl('report-print-btn', isEn ? '🖨️ Print Full Report' : '🖨️ Εκτύπωση πλήρους αναφοράς');
-  setEl('report-options-note', isEn ? 'Choose which meal plan appears in the full report, or print only the 7-day plan with the landscape button.' : 'Επιλέξτε ποιο πλάνο γευμάτων θα εμφανίζεται στην πλήρη αναφορά ή εκτυπώστε μόνο το 7ήμερο πλάνο με το κουμπί landscape.');
+  setEl('report-mode-7day-label', isEn ? '7-Day Meal Plan only' : 'Μόνο εβδομαδιαίο πλάνο');
+  setEl('report-mode-1day-label', isEn ? '1-Day Meal Plan only' : 'Μόνο ημερήσιο πλάνο');
+  setEl('report-mode-both-label', isEn ? 'Both plans' : 'Και τα δύο πλάνα');
+  const fullPrintLabel = (S.reportOptions?.sevenDay!==false)
+    ? (isEn ? '🖨️ Print Full Report (Landscape)' : '🖨️ Εκτύπωση πλήρους αναφοράς (Landscape)')
+    : (isEn ? '🖨️ Print Full Report (Portrait)' : '🖨️ Εκτύπωση πλήρους αναφοράς (Portrait)');
+  setEl('report-print-btn', fullPrintLabel);
+  setEl('report-options-note', isEn ? 'Choose what the full report includes. 7-day plan prints in landscape automatically; 1-day only prints in portrait.' : 'Επιλέξτε τι θα περιλαμβάνει η πλήρης αναφορά. Το 7ήμερο πλάνο εκτυπώνεται αυτόματα landscape· μόνο ημερήσιο πλάνο εκτυπώνεται portrait.');
   setEl('report-print-title', isEn ? '📄 PRINT — Clinical Nutrition Report' : '📄 PRINT — Κλινική Αναφορά Διατροφής');
 }
 
@@ -3347,16 +3393,30 @@ function toggleWeekPlanExtra(dayIndex, extrasKey, extraValue, checked){
   buildSevenDay();
 }
 
+function reportModeFromOptions(){
+  const one=S.reportOptions?.oneDay!==false;
+  const seven=S.reportOptions?.sevenDay!==false;
+  if(one && seven) return 'both';
+  if(one) return '1day';
+  return '7day';
+}
+function syncReportModeControls(){
+  const mode=reportModeFromOptions();
+  document.querySelectorAll('input[name="report-plan-mode"]').forEach(r=>{ r.checked = r.value===mode; });
+}
 function onReportOptionsChange(){
+  const mode=document.querySelector('input[name="report-plan-mode"]:checked')?.value || '7day';
   S.reportOptions = {
-    oneDay: document.getElementById('rep-include-1day').checked,
-    sevenDay: document.getElementById('rep-include-7day').checked,
+    oneDay: mode==='1day' || mode==='both',
+    sevenDay: mode==='7day' || mode==='both',
   };
+  updateMealLanguageButtons();
   buildReport();
 }
 
 function buildReport(){
   updateMealLanguageButtons();
+  syncReportModeControls();
   const ex=S.ex;
   const portions=getMealPortions();
   const lang=S.mealLanguage||'GR';
@@ -3418,6 +3478,7 @@ function buildReport(){
       ${n.medication?'<br><strong>'+(isEn?'Medication':'Φαρμακευτική αγωγή')+':</strong> '+n.medication:''}
     </div>`:''}
     ${(S.reportOptions?.oneDay!==false) ? `
+    <div class="report-day-section">
     <div style="font-size:14px;font-weight:700;color:var(--teal-800);margin:14px 0 6px;border-bottom:2px solid var(--teal-600);padding-bottom:4px">☀️ ${isEn?'DAILY MEAL PLAN':'ΗΜΕΡΗΣΙΟ ΠΛΑΝΟ ΓΕΥΜΑΤΩΝ'}</div>
     <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">${isEn?'Total':'Σύνολο'}: <strong>${day.totalKcal} kcal</strong> | ${isEn?'Target':'Στόχος'}: ${day.target} kcal ${gapOk?'✅':''}</div>
     <table style="width:100%;border-collapse:collapse;font-size:13px">
@@ -3438,7 +3499,8 @@ function buildReport(){
         <td colspan="3" style="padding:6px 4px">${isEn?'Daily total':'Σύνολο ημέρας'}</td>
         <td style="padding:6px 4px;text-align:right">${day.totalKcal} kcal</td>
       </tr>
-    </table>` : ''}
+    </table>
+    </div>` : ''}
 
     ${(S.reportOptions?.sevenDay!==false) ? `
     <div class="report-week-section">
@@ -4173,11 +4235,11 @@ function renderRecipeDraft(){
   }).join('');
   el.innerHTML=`<table><thead><tr><th>Ingredient</th><th>g used</th><th>kcal</th><th>Carb</th><th>Protein</th><th>Fat</th><th></th></tr></thead><tbody>${rows||'<tr><td colspan="7" style="color:var(--text-muted);text-align:center;padding:16px">No ingredients yet.</td></tr>'}</tbody></table>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:12px">
-      <div class="metric"><span class="metric-label">Total kcal</span><span class="metric-value">${Math.round(total.kcal)}</span></div>
-      <div class="metric"><span class="metric-label">Per serving kcal</span><span class="metric-value">${Math.round(per.kcal)}</span></div>
-      <div class="metric"><span class="metric-label">Per serving carbs</span><span class="metric-value">${formatFoodNumber(per.carbs,'g')}</span></div>
-      <div class="metric"><span class="metric-label">Per serving protein</span><span class="metric-value">${formatFoodNumber(per.protein,'g')}</span></div>
-      <div class="metric"><span class="metric-label">Per serving fat</span><span class="metric-value">${formatFoodNumber(per.fat,'g')}</span></div>
+      <div class="metric"><span class="metric-label">Total kcal:</span> <span class="metric-value">${Math.round(total.kcal)}</span></div>
+      <div class="metric"><span class="metric-label">Per serving kcal:</span> <span class="metric-value">${Math.round(per.kcal)}</span></div>
+      <div class="metric"><span class="metric-label">Per serving carbs:</span> <span class="metric-value">${formatFoodNumber(per.carbs,'g')}</span></div>
+      <div class="metric"><span class="metric-label">Per serving protein:</span> <span class="metric-value">${formatFoodNumber(per.protein,'g')}</span></div>
+      <div class="metric"><span class="metric-label">Per serving fat:</span> <span class="metric-value">${formatFoodNumber(per.fat,'g')}</span></div>
     </div>`;
 }
 function persistRecipesLocal(){
@@ -4561,9 +4623,7 @@ function applyState(state){
   if(state.mealLanguage) S.mealLanguage=state.mealLanguage;
   if(state.reportOptions){
     S.reportOptions=state.reportOptions;
-    const e1=document.getElementById('rep-include-1day'), e7=document.getElementById('rep-include-7day');
-    if(e1) e1.checked=S.reportOptions.oneDay!==false;
-    if(e7) e7.checked=S.reportOptions.sevenDay!==false;
+    syncReportModeControls();
   }
   if(state.intake){ S.intake=state.intake; }
   if(state.notes){ S.notes=state.notes; }
@@ -4604,7 +4664,8 @@ function resetForm(){
   S.mealSel={breakfast:'BRK_TOAST',lunch:'LUN_CHICKEN_RICE',dinner:'DIN_FISH_POTATO',snack1Extras:[],snack2Extras:[],sleepExtras:[]};
   S.weekPlans=WEEK_PLANS.map(p=>({...p}));
   S.mealLanguage='GR';
-  S.reportOptions={oneDay:true,sevenDay:true};
+  S.reportOptions={oneDay:false,sevenDay:true};
+  syncReportModeControls();
   if(document.getElementById('page-labs')?.classList.contains('active')) renderLabsTable();
   try{localStorage.removeItem('nutriflow_autosave');}catch(e){}
   calcAll(); calcBodyComp(); calcMacros();
