@@ -482,6 +482,7 @@ tr:hover td { background: var(--bg-hover); }
       <input type="password" id="auth-password" placeholder="••••••••" autocomplete="current-password">
     </div>
     <button class="auth-submit" id="auth-submit-btn" onclick="handleAuthSubmit()">Sign In</button>
+    <button class="auth-submit secondary" id="resend-confirmation-btn" onclick="resendConfirmationEmail()" style="display:none;margin-top:8px">Resend confirmation email</button>
   </div>
 </div>
 
@@ -1190,6 +1191,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 const SUBSCRIPTION_REQUIRED = true;
 const STRIPE_CHECKOUT_FUNCTION = 'create-checkout-session';
 const STRIPE_PORTAL_FUNCTION = 'create-customer-portal-session';
+const AUTH_EMAIL_REDIRECT_URL = 'https://nutritionpuravida.github.io/NutriFlow';
 
 let currentUser = null;
 let authTab = 'signin';
@@ -1200,11 +1202,20 @@ function setAuthTab(tab){
   document.getElementById('tab-signin').classList.toggle('active', tab==='signin');
   document.getElementById('tab-signup').classList.toggle('active', tab==='signup');
   document.getElementById('auth-submit-btn').textContent = tab==='signin' ? 'Sign In' : 'Create Account';
+  const resendBtn=document.getElementById('resend-confirmation-btn');
+  if(resendBtn) resendBtn.style.display='none';
   setEl('auth-message','');
 }
 
 function setAuthMessage(text, type){
   setEl('auth-message', text ? `<div class="auth-msg ${type}">${text}</div>` : '');
+}
+function friendlyAuthError(error){
+  const msg=(error?.message || String(error || '')).toLowerCase();
+  if(msg.includes('rate limit') || msg.includes('too many') || msg.includes('email rate limit')){
+    return 'Too many attempts. Please wait a few minutes and try again.';
+  }
+  return error?.message || String(error || 'Authentication error.');
 }
 
 async function handleAuthSubmit(){
@@ -1216,14 +1227,38 @@ async function handleAuthSubmit(){
   btn.disabled=true; btn.textContent='Please wait…';
   if(authTab==='signin'){
     const {error} = await sb.auth.signInWithPassword({email, password});
-    if(error){ setAuthMessage(error.message,'error'); btn.disabled=false; btn.textContent='Sign In'; return; }
+    if(error){ setAuthMessage(friendlyAuthError(error),'error'); btn.disabled=false; btn.textContent='Sign In'; return; }
     // onAuthStateChange handles hiding the auth screen
   } else {
-    const {error} = await sb.auth.signUp({email, password});
-    if(error){ setAuthMessage(error.message,'error'); btn.disabled=false; btn.textContent='Create Account'; return; }
+    const {error} = await sb.auth.signUp({
+      email,
+      password,
+      options:{emailRedirectTo:AUTH_EMAIL_REDIRECT_URL}
+    });
+    if(error){ setAuthMessage(friendlyAuthError(error),'error'); btn.disabled=false; btn.textContent='Create Account'; return; }
     setAuthMessage('✅ Account created! Check your email to confirm, then sign in.','success');
+    const resendBtn=document.getElementById('resend-confirmation-btn');
+    if(resendBtn) resendBtn.style.display='block';
     btn.disabled=false; btn.textContent='Create Account';
   }
+}
+
+async function resendConfirmationEmail(){
+  const email=document.getElementById('auth-email').value.trim();
+  const btn=document.getElementById('resend-confirmation-btn');
+  if(!email){ setAuthMessage('Please enter your email first.','error'); return; }
+  if(btn){ btn.disabled=true; btn.textContent='Sending…'; }
+  const {error}=await sb.auth.resend({
+    type:'signup',
+    email,
+    options:{emailRedirectTo:AUTH_EMAIL_REDIRECT_URL}
+  });
+  if(error){
+    setAuthMessage(friendlyAuthError(error),'error');
+  } else {
+    setAuthMessage('✅ Confirmation email sent. Please check your inbox and spam folder.','success');
+  }
+  if(btn){ btn.disabled=false; btn.textContent='Resend confirmation email'; btn.style.display='block'; }
 }
 
 async function handleSignOut(){
