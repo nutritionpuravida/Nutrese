@@ -986,9 +986,7 @@ tr:hover td { background: var(--bg-hover); }
             <input type="checkbox" id="rep-include-blood" checked onchange="onReportOptionsChange()" style="width:16px;height:16px;accent-color:var(--teal-600)">
             <span id="report-include-blood-label">Include Blood Analysis summary</span>
           </label>
-          <button class="btn primary" onclick="printPage()" id="report-print-btn">🖨️ Print Full Report (Landscape)</button>
-          <button class="btn" onclick="printReportSevenDayLandscape()">🖨️ Print 7-Day Plan only (Landscape)</button>
-          <button class="btn" onclick="printReportOneDayPortrait()">🖨️ Print 1-Day Plan only (Portrait)</button>
+          <button class="btn primary" onclick="printPage()" id="report-print-btn">🖨️ Print Full Report</button>
         </div>
         <div class="field-note" id="report-options-note" style="margin-top:8px">Check/uncheck to choose which meal plan appears in the printed report. Use Print / Save PDF and choose “Save as PDF” in the browser print dialog.</div>
       </div>
@@ -1067,7 +1065,7 @@ tr:hover td { background: var(--bg-hover); }
           <div class="form-field"><label>Food search</label><input type="text" id="food-search" placeholder="e.g. oats, yogurt, halloumi" onkeydown="if(event.key==='Enter') searchFoodDatabase()"></div>
           <div class="form-field" style="display:flex;align-items:flex-end"><button class="btn primary" onclick="searchFoodDatabase()">Search foods</button></div>
         </div>
-        <div class="field-note" style="margin-top:-6px;margin-bottom:10px">Search tip: use specific terms like 'chicken breast' or 'grilled chicken' for better results.</div>
+        <div class="field-note" style="margin-top:10px;margin-bottom:10px">Search tip: use specific terms like 'chicken breast' or 'grilled chicken' for better results.</div>
         <div id="fooddb-status" class="field-note"></div>
         <div id="fooddb-results"></div>
       </div>
@@ -1079,6 +1077,7 @@ tr:hover td { background: var(--bg-hover); }
       <div class="card-header"><span class="card-title">🍲 Recipes</span></div>
       <div class="card-body">
         <div class="alert info">ℹ️ Build custom recipes from manual ingredients or foods found in Open Food Facts. Nutrition is calculated from kcal/carbs/protein/fat per 100g.</div>
+        <h3 style="margin:4px 0 14px;font-size:16px;color:var(--text-primary)">Create New Recipe</h3>
         <div class="form-grid two">
           <div class="form-field"><label>Recipe name</label><input type="text" id="recipe-name" placeholder="e.g. Chicken rice bowl" oninput="renderRecipeDraft()"></div>
           <div class="form-field"><label>Servings</label><input type="number" id="recipe-servings" min="1" step="1" value="1" oninput="renderRecipeDraft()"></div>
@@ -1102,7 +1101,8 @@ tr:hover td { background: var(--bg-hover); }
           <button class="btn" onclick="loadRecipes()">↻ Refresh recipes</button>
         </div>
         <div id="recipe-save-status" class="field-note"></div>
-        <div class="section-label">Saved recipes</div>
+        <hr style="border:0;border-top:1px solid var(--border);margin:22px 0 16px">
+        <h3 style="margin:0 0 12px;font-size:16px;color:var(--text-primary)">Saved Recipes</h3>
         <div id="recipes-list"></div>
       </div>
     </div>
@@ -2352,10 +2352,7 @@ function updateMealLanguageButtons(){
   setEl('report-mode-1day-label', isEn ? '1-Day Meal Plan only' : 'Μόνο ημερήσιο πλάνο');
   setEl('report-mode-both-label', isEn ? 'Both plans' : 'Και τα δύο πλάνα');
   setEl('report-include-blood-label', isEn ? 'Include Blood Analysis summary' : 'Συμπερίληψη σύνοψης αιματολογικού ελέγχου');
-  const fullPrintLabel = (S.reportOptions?.sevenDay!==false)
-    ? (isEn ? '🖨️ Print Full Report (Landscape)' : '🖨️ Εκτύπωση πλήρους αναφοράς (Landscape)')
-    : (isEn ? '🖨️ Print Full Report (Portrait)' : '🖨️ Εκτύπωση πλήρους αναφοράς (Portrait)');
-  setEl('report-print-btn', fullPrintLabel);
+  setEl('report-print-btn', isEn ? '🖨️ Print Full Report' : '🖨️ Εκτύπωση πλήρους αναφοράς');
   setEl('report-options-note', isEn ? 'Choose what the full report includes. 7-day plan prints in landscape automatically; 1-day only prints in portrait.' : 'Επιλέξτε τι θα περιλαμβάνει η πλήρης αναφορά. Το 7ήμερο πλάνο εκτυπώνεται αυτόματα landscape· μόνο ημερήσιο πλάνο εκτυπώνεται portrait.');
   setEl('report-print-title', isEn ? '📄 PRINT — Clinical Nutrition Report' : '📄 PRINT — Κλινική Αναφορά Διατροφής');
 }
@@ -4395,12 +4392,15 @@ async function saveRecipe(){
   if(currentUser){
     try{
       const row={user_id:currentUser.id,name:recipe.name,servings:recipe.servings,ingredients:recipe.ingredients,nutrition:recipe.nutrition,updated_at:recipe.updated_at};
-      const query = editingId && !String(editingId).startsWith('recipe_')
-        ? sb.from('recipes').update(row).eq('id',editingId).eq('user_id',currentUser.id).select().maybeSingle()
-        : sb.from('recipes').insert(row).select().maybeSingle();
-      const {data,error}=await query;
-      if(error) throw error;
-      if(data){ recipe.id=data.id; savedToCloud=true; }
+      if(editingId && !String(editingId).startsWith('recipe_')){
+        const {data,error}=await sb.from('recipes').update(row).eq('id',editingId).eq('user_id',currentUser.id).select().maybeSingle();
+        if(error) throw error;
+        if(data){ recipe.id=data.id; savedToCloud=true; }
+      } else if(!editingId){
+        const {data,error}=await sb.from('recipes').insert(row).select().maybeSingle();
+        if(error) throw error;
+        if(data){ recipe.id=data.id; savedToCloud=true; }
+      }
     }catch(e){
       console.error('[NutriFlow recipes] Supabase save failed', e);
     }
