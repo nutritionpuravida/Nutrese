@@ -497,6 +497,17 @@ tr:hover td { background: var(--bg-hover); }
     <div class="subscription-plan">
       <strong>NutriFlow Professional</strong>
       <div style="font-size:13px;color:var(--text-muted);line-height:1.5">Client profiles, exchange system, 1-day and 7-day plans, blood analysis, tracking, recipes, and reports for your dietetic practice.</div>
+      <div style="margin-top:12px;display:grid;gap:8px">
+        <div style="display:flex;justify-content:space-between;gap:12px;padding:9px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg-surface)">
+          <span style="font-weight:700;color:var(--text-primary)">Monthly</span>
+          <span style="font-weight:800;color:var(--teal-800)">€29/month</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;gap:12px;padding:9px 10px;border:1px solid var(--border);border-radius:6px;background:var(--teal-50)">
+          <span style="font-weight:700;color:var(--text-primary)">Yearly</span>
+          <span style="font-weight:800;color:var(--teal-800)">€249/year <span style="font-size:11px;color:var(--teal-600);font-weight:700">(save €99)</span></span>
+        </div>
+        <div style="font-size:12px;color:var(--amber-600);font-weight:700;line-height:1.4">First 10 founding members get 50% off forever</div>
+      </div>
     </div>
     <button class="auth-submit" onclick="startStripeCheckout()">Subscribe to continue</button>
     <button class="auth-submit secondary" onclick="openBillingPortal()">Manage billing</button>
@@ -1243,8 +1254,15 @@ function subscriptionIsActive(row){
   const dateOk=!periodEnd || new Date(periodEnd).getTime() > Date.now();
   return ['active','trialing'].includes(status) && dateOk;
 }
+const OWNER_ADMIN_EMAIL = 'nutrition.puravida@gmail.com';
+function isOwnerAdminUser(){
+  return (currentUser?.email || '').trim().toLowerCase() === OWNER_ADMIN_EMAIL;
+}
 async function fetchSubscriptionStatus(){
   if(!currentUser) return {status:'signed_out', active:false};
+  if(isOwnerAdminUser()){
+    return {status:'Owner admin access', active:true, ownerBypass:true};
+  }
   let {data, error} = await sb.from('profiles')
     .select('subscription_status,current_period_end,stripe_customer_id')
     .eq('id', currentUser.id)
