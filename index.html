@@ -208,9 +208,9 @@ tr:hover td { background: var(--bg-hover); }
 .meal-time { font-size: 12px; font-weight: 700; color: var(--text-muted); padding-top: 2px; }
 .meal-desc { color: var(--text-primary); font-size: 13px; }
 .meal-tag { display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: 10px; font-weight: 700; background: var(--teal-50); color: var(--text-active); margin-top: 3px; }
-.extra-foods { margin-top: 7px; padding-top: 7px; border-top: 1px dashed var(--border-strong); font-size: 11px; color: var(--text-secondary); }
+.extra-foods { margin-top: 4px; padding-top: 0; border-top: 0; font-size: 11px; color: var(--text-secondary); }
 .extra-food-title { font-weight: 700; color: var(--teal-600); margin-bottom: 4px; }
-.extra-food-row { display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; margin-top: 3px; line-height: 1.35; }
+.extra-food-row { display: block; margin-top: 2px; line-height: 1.35; }
 .extra-food-macros { color: var(--text-muted); font-size: 10px; white-space: nowrap; }
 .extra-food-db-note { margin-top: 4px; font-size: 10px; color: var(--text-muted); font-style: italic; }
 #page-report .report-extra-foods { border-top: 0; padding-top: 3px; margin-top: 3px; }
@@ -975,6 +975,7 @@ tr:hover td { background: var(--bg-hover); }
             <span id="report-include-7day-label">📅 Include 7-Day Meal Plan</span>
           </label>
           <button class="btn primary" onclick="printPage()" id="report-print-btn">🖨️ Print / Save PDF</button>
+          <button class="btn" onclick="printReportSevenDayLandscape()">🖨️ Print 7-Day Plan (Landscape)</button>
         </div>
         <div class="field-note" id="report-options-note" style="margin-top:8px">Check/uncheck to choose which meal plan appears in the printed report. Use Print / Save PDF and choose “Save as PDF” in the browser print dialog.</div>
       </div>
@@ -1053,6 +1054,7 @@ tr:hover td { background: var(--bg-hover); }
           <div class="form-field"><label>Food search</label><input type="text" id="food-search" placeholder="e.g. oats, yogurt, halloumi" onkeydown="if(event.key==='Enter') searchFoodDatabase()"></div>
           <div class="form-field" style="display:flex;align-items:flex-end"><button class="btn primary" onclick="searchFoodDatabase()">Search foods</button></div>
         </div>
+        <div class="field-note" style="margin-top:-6px;margin-bottom:10px">Search tip: use specific terms like 'chicken breast' or 'grilled chicken' for better results.</div>
         <div id="fooddb-status" class="field-note"></div>
         <div id="fooddb-results"></div>
       </div>
@@ -1070,8 +1072,8 @@ tr:hover td { background: var(--bg-hover); }
         </div>
         <div class="section-label">Add ingredient manually</div>
         <div class="form-grid six">
-          <div class="form-field"><label>Food</label><input type="text" id="ing-name" placeholder="Ingredient"></div>
-          <div class="form-field"><label>Grams used</label><input type="number" id="ing-grams" min="0" step="1" placeholder="g"></div>
+          <div class="form-field"><label>Food</label><input type="text" id="ing-name" placeholder="Ingredient" onkeydown="if(event.key==='Enter') addManualIngredient()"></div>
+          <div class="form-field"><label>Grams used in recipe</label><input type="number" id="ing-grams" min="0" step="1" placeholder="e.g. 100" onkeydown="if(event.key==='Enter') addManualIngredient()"><div class="field-note">Enter the ingredient weight in grams.</div></div>
           <div class="form-field"><label>kcal / 100g</label><input type="number" id="ing-kcal" min="0" step="0.1"></div>
           <div class="form-field"><label>Carb / 100g</label><input type="number" id="ing-carbs" min="0" step="0.1"></div>
           <div class="form-field"><label>Protein / 100g</label><input type="number" id="ing-protein" min="0" step="0.1"></div>
@@ -1086,6 +1088,7 @@ tr:hover td { background: var(--bg-hover); }
           <button class="btn primary" onclick="saveRecipe()">💾 Save recipe</button>
           <button class="btn" onclick="loadRecipes()">↻ Refresh recipes</button>
         </div>
+        <div id="recipe-save-status" class="field-note"></div>
         <div class="section-label">Saved recipes</div>
         <div id="recipes-list"></div>
       </div>
@@ -1555,14 +1558,14 @@ const MEALS_EN = {
   LUN_FASOLAKIA_PORK: (ex,p) => 'Green beans + pork' + mealSuffixEn(ex,p,'green beans + salad',null,'potato','pork'),
   LUN_TUNA_POTATO:    (ex,p) => 'Tuna + potato' + mealSuffixEn(ex,p,'salad',null,'potato','tuna',true),
   LUN_PASTA_MINCE:    (ex,p) => 'Pasta + mince' + mealSuffixEn(ex,p,'salad',null,'pasta','mince'),
-  LUN_BIFTEKI_BULGUR: (ex,p) => 'Bifteki + bulgur' + mealSuffixEn(ex,p,'salad',null,'bulgur','bifteki'),
+  LUN_BIFTEKI_BULGUR: (ex,p) => 'Burger + bulgur' + mealSuffixEn(ex,p,'salad',null,'bulgur','burger'),
   DIN_CHICKEN_RICE:   (ex,p) => 'Chicken + rice' + mealSuffixEn(ex,p,'salad',null,'rice'),
   DIN_FISH_POTATO:    (ex,p) => 'Fish + potato' + mealSuffixEn(ex,p,'salad',null,'potato','fish',true),
   DIN_OMELETTE:       (ex,p) => 'Omelette (2 eggs) + 1 slice bread - boiled vegetables (2 cups)',
   DIN_TUNA_POTATO:    (ex,p) => 'Tuna + potato' + mealSuffixEn(ex,p,'salad',null,'potato','tuna',true),
   DIN_PASTA_MINCE:    (ex,p) => 'Pasta + mince' + mealSuffixEn(ex,p,'salad',null,'pasta','mince'),
   DIN_SOUVLAKI_PITA:  (ex,p) => 'Chicken souvlaki + Cypriot pita - salad (2 cups)',
-  DIN_BIFTEKI_BULGUR: (ex,p) => 'Bifteki + bulgur' + mealSuffixEn(ex,p,'salad',null,'bulgur','bifteki'),
+  DIN_BIFTEKI_BULGUR: (ex,p) => 'Burger + bulgur' + mealSuffixEn(ex,p,'salad',null,'bulgur','burger'),
   LUN_LENTILS_RICE:   (ex,p) => 'Lentil stew + rice' + mealSuffixEn(ex,p,'salad', n=>`${n} lentil serving${n>1?'s':''} (1/2 cup cooked per serving)`, 'rice'),
   LUN_CHICKPEA_STEW:  (ex,p) => 'Chickpea stew + wholegrain bread - salad (2 cups)',
   LUN_TOFU_RICE:      (ex,p) => 'Tofu stir-fry with vegetables + rice' + mealSuffixEn(ex,p,'salad', n=>`${n*30}g firm tofu`, 'rice'),
@@ -1731,23 +1734,12 @@ function extraKcal(slot, dayIndex=null){
 function renderExtraFoodsForSlot(slot, dayIndex=null, opts={}){
   const foods=getExtraFoodsForSlot(slot, dayIndex);
   if(!foods.length) return '';
-  const title=opts.title || (S.mealLanguage==='EN'?'Extra foods':'Επιπλέον τρόφιμα');
-  const hideTitle=opts.hideTitle===true;
-  const showDbNote=opts.showDbNote!==false && opts.showRemove!==false;
   const rows=foods.map(food=>{
-    const t=extraFoodTotalsForItem(food);
     const grams=foodNumber(food.grams)||100;
-    const macros=`${Math.round(t.kcal)} kcal · C ${formatFoodNumber(t.carbs,'g')} · P ${formatFoodNumber(t.protein,'g')} · F ${formatFoodNumber(t.fat,'g')}`;
     const removeBtn=opts.showRemove===false ? '' : `<button class="btn" style="padding:0 5px;font-size:10px;line-height:1.4" onclick="removeExtraFood('${food.id}')">×</button>`;
-    const meta=opts.reportMode ? `${grams}g` : `${grams}g${food.brand?' · '+safeHtml(food.brand):''}`;
-    const macroHtml=opts.reportMode ? '' : `<div style="display:flex;gap:5px;align-items:flex-start"><span class="extra-food-macros">${macros}</span>${removeBtn}</div>`;
-    return `<div class="extra-food-row">
-      <div><strong>${safeHtml(food.name||'Food')}</strong><div style="font-size:10px;color:var(--text-muted)">${meta}</div></div>
-      ${macroHtml}
-    </div>`;
+    return `<div class="extra-food-row"><span>${safeHtml(food.name||'Food')} (${grams}g)</span>${removeBtn}</div>`;
   }).join('');
-  const note=showDbNote ? `<div class="extra-food-db-note">Added from food database — shown in original language</div>` : '';
-  return `<div class="extra-foods ${opts.reportMode?'report-extra-foods':''}">${hideTitle?'':`<div class="extra-food-title">${title}</div>`}${rows}${note}</div>`;
+  return `<div class="extra-foods ${opts.reportMode?'report-extra-foods':''}">${rows}</div>`;
 }
 function refreshMealPlanViews(){
   buildOneDayPlan();
@@ -1913,6 +1905,37 @@ function printPage(){
   setTimeout(()=>{
     window.print();
     setTimeout(()=>{ document.title=oldTitle; }, 500);
+  }, 300);
+}
+function printReportSevenDayLandscape(){
+  const oldTitle=document.title;
+  const oldOptions={...(S.reportOptions||{})};
+  S.reportOptions={oneDay:false,sevenDay:true};
+  nav('report');
+  buildReport();
+  let styleEl = document.getElementById('print-orientation-override');
+  if(!styleEl){ styleEl=document.createElement('style'); styleEl.id='print-orientation-override'; document.head.appendChild(styleEl); }
+  styleEl.textContent = `@media print {
+    @page { size: A4 landscape; margin: 8mm 10mm; }
+    #page-report .card:first-child { display:none !important; }
+    #page-report .card-header { display:none !important; }
+    #report-body > div > * { display:none !important; }
+    #report-body .report-week-section { display:block !important; page:auto !important; break-before:auto !important; page-break-before:auto !important; }
+    #report-body .report-week-section * { display:revert !important; }
+    #report-body .report-week-table { display:table !important; table-layout:fixed !important; width:100% !important; font-size:10px !important; }
+    #report-body .report-week-table thead { display:table-header-group !important; }
+    #report-body .report-week-table tbody { display:table-row-group !important; }
+    #report-body .report-week-table tr { display:table-row !important; }
+    #report-body .report-week-table th, #report-body .report-week-table td { display:table-cell !important; white-space:normal !important; overflow-wrap:break-word !important; }
+  }`;
+  document.title = `NutriFlow - 7-Day Plan - ${S.name||'Client'}`;
+  setTimeout(()=>{
+    window.print();
+    setTimeout(()=>{
+      S.reportOptions=oldOptions;
+      buildReport();
+      document.title=oldTitle;
+    }, 500);
   }, 300);
 }
 
@@ -3357,15 +3380,6 @@ function buildReport(){
   const reportRules=isEn ? GENERAL_HEALTH_RULES_EN : GENERAL_HEALTH_RULES;
   const goalLabel=isEn?'Goal':'Στόχος';
   const dayUnit=isEn?'kcal/day':'kcal/ημέρα';
-  const conditionGuidanceHtml=condList.map(c=>{
-    const g=reportCond(c);
-    return `<div style="margin-top:8px">
-      <strong>${reportCondName(c)}</strong>
-      <div style="margin-top:4px">${g.main||''}</div>
-      <div style="margin-top:4px"><strong>${isEn?'Prefer':'Προτίμηση'}:</strong> ${g.prefer||''}</div>
-      <div style="margin-top:4px"><strong>${isEn?'Limit / avoid':'Περιορισμός / αποφυγή'}:</strong> ${g.avoid||''}</div>
-    </div>`;
-  }).join('');
   setEl('report-body',`<div style="width:100%;font-family:Arial,sans-serif;font-size:13px">
 
     <!-- HEADER -->
@@ -3399,10 +3413,9 @@ function buildReport(){
 
     ${showClinicalBox?`
     <div class="report-clinical-box" style="background:#fff8e1;color:#1f2937;border:1px solid #f3d27a;border-left:4px solid #d97706;padding:10px 12px;border-radius:6px;font-size:12px;margin-bottom:14px;line-height:1.55">
-      <strong>⚕️ ${isEn?'Clinical condition':'Κλινική κατάσταση'}:</strong> ${condNames}
+      <strong>⚕️ ${isEn?'Primary condition':'Κύρια κατάσταση'}:</strong> ${condNames}
       ${n.diagnoses?'<br><strong>'+(isEn?'Diagnoses':'Διαγνώσεις')+':</strong> '+n.diagnoses:''}
       ${n.medication?'<br><strong>'+(isEn?'Medication':'Φαρμακευτική αγωγή')+':</strong> '+n.medication:''}
-      ${conditionGuidanceHtml}
     </div>`:''}
     ${(S.reportOptions?.oneDay!==false) ? `
     <div style="font-size:14px;font-weight:700;color:var(--teal-800);margin:14px 0 6px;border-bottom:2px solid var(--teal-600);padding-bottom:4px">☀️ ${isEn?'DAILY MEAL PLAN':'ΗΜΕΡΗΣΙΟ ΠΛΑΝΟ ΓΕΥΜΑΤΩΝ'}</div>
@@ -4057,7 +4070,7 @@ function addFoodResultToMealPlan(index){
   refreshMealPlanViews();
   const dayLabel=(EXTRA_FOOD_DAYS.find(d=>d.v===String(food.day))||EXTRA_FOOD_DAYS[0]).label;
   const slotLabel=(EXTRA_FOOD_SLOTS.find(s=>s.v===food.slot)||EXTRA_FOOD_SLOTS[0]).label;
-  setEl('fooddb-status', `${safeHtml(food.name)} added to ${dayLabel} / ${slotLabel} as an extra food. Meal-plan kcal now include this item.`);
+  setEl('fooddb-status', `${safeHtml(food.name)} added to ${dayLabel} / ${slotLabel}. Meal-plan kcal now include this item.`);
 }
 function removeExtraFood(id){
   S.extraFoods=(S.extraFoods||[]).filter(food=>food.id!==id);
@@ -4072,7 +4085,7 @@ function recipeStorageKey(){
 }
 function blankIngredientFromInputs(){
   return {
-    name:(v('ing-name')||'Ingredient').trim(),
+    name:(v('ing-name')||'').trim(),
     grams:foodNumber(v('ing-grams'))||0,
     kcal100:foodNumber(v('ing-kcal'))||0,
     carbs100:foodNumber(v('ing-carbs'))||0,
@@ -4097,13 +4110,18 @@ function recipeTotals(ingredients){
   },{kcal:0,carbs:0,protein:0,fat:0});
 }
 function addManualIngredient(){
+  if(!Array.isArray(S.recipeDraft)) S.recipeDraft=[];
   const ing=blankIngredientFromInputs();
   if(!ing.name || ing.grams<=0){ alert('Enter an ingredient name and grams used.'); return; }
   S.recipeDraft.push(ing);
   ['ing-name','ing-grams','ing-kcal','ing-carbs','ing-protein','ing-fat'].forEach(id=>{const el=document.getElementById(id); if(el) el.value='';});
   renderRecipeDraft();
+  setEl('recipe-save-status', `${safeHtml(ing.name)} added. Add the next ingredient or save the recipe.`);
+  const nameEl=document.getElementById('ing-name');
+  if(nameEl) nameEl.focus();
 }
 function addFoodResultToRecipe(index){
+  if(!Array.isArray(S.recipeDraft)) S.recipeDraft=[];
   const p=S.foodResults && S.foodResults[index];
   if(!p){ alert('Food result not found.'); return; }
   S.recipeDraft.push({
@@ -4131,17 +4149,20 @@ function clearRecipeDraft(){
   const n=document.getElementById('recipe-name'), s=document.getElementById('recipe-servings');
   if(n) n.value='';
   if(s) s.value='1';
+  ['ing-name','ing-grams','ing-kcal','ing-carbs','ing-protein','ing-fat'].forEach(id=>{const el=document.getElementById(id); if(el) el.value='';});
+  setEl('recipe-save-status','');
   renderRecipeDraft();
 }
 function renderRecipeDraft(){
   const el=document.getElementById('recipe-draft'); if(!el) return;
+  if(!Array.isArray(S.recipeDraft)) S.recipeDraft=[];
   const servings=Math.max(1, parseInt(v('recipe-servings')||'1',10)||1);
   const total=recipeTotals(S.recipeDraft);
   const per={kcal:total.kcal/servings, carbs:total.carbs/servings, protein:total.protein/servings, fat:total.fat/servings};
   const rows=(S.recipeDraft||[]).map((ing,i)=>{
     const t=ingredientTotals(ing);
     return `<tr>
-      <td><input type="text" value="${ing.name||''}" oninput="updateRecipeIngredient(${i},'name',this.value)" style="min-width:140px"></td>
+      <td><input type="text" value="${safeHtml(ing.name||'')}" oninput="updateRecipeIngredient(${i},'name',this.value)" style="min-width:140px"></td>
       <td><input type="number" value="${ing.grams||0}" oninput="updateRecipeIngredient(${i},'grams',this.value)" style="width:80px"></td>
       <td>${formatFoodNumber(t.kcal,'')}</td>
       <td>${formatFoodNumber(t.carbs,'g')}</td>
@@ -4167,11 +4188,17 @@ function loadRecipesLocal(){
 }
 async function loadRecipes(){
   if(currentUser){
-    const {data,error}=await sb.from('recipes').select('*').eq('user_id',currentUser.id).order('updated_at',{ascending:false});
-    if(!error && data){
-      S.recipes=data.map(r=>({id:r.id,name:r.name,servings:r.servings||1,ingredients:r.ingredients||[],nutrition:r.nutrition||recipeTotals(r.ingredients||[])}));
-      renderRecipesList();
-      return;
+    try{
+      const {data,error}=await sb.from('recipes').select('*').eq('user_id',currentUser.id).order('updated_at',{ascending:false});
+      if(error) throw error;
+      if(data){
+        S.recipes=data.map(r=>({id:r.id,name:r.name,servings:r.servings||1,ingredients:r.ingredients||[],nutrition:r.nutrition||recipeTotals(r.ingredients||[]),updated_at:r.updated_at}));
+        persistRecipesLocal();
+        renderRecipesList();
+        return;
+      }
+    }catch(e){
+      console.error('[NutriFlow recipes] Supabase load failed', e);
     }
   }
   S.recipes=loadRecipesLocal();
@@ -4183,15 +4210,22 @@ async function saveRecipe(){
   if(!name){ alert('Enter a recipe name.'); return; }
   if(!S.recipeDraft.length){ alert('Add at least one ingredient.'); return; }
   const recipe={id:`recipe_${Date.now()}`,name,servings,ingredients:S.recipeDraft.map(x=>({...x})),nutrition:recipeTotals(S.recipeDraft),updated_at:new Date().toISOString()};
+  let savedToCloud=false;
   if(currentUser){
-    const row={user_id:currentUser.id,name:recipe.name,servings:recipe.servings,ingredients:recipe.ingredients,nutrition:recipe.nutrition,updated_at:recipe.updated_at};
-    const {data,error}=await sb.from('recipes').insert(row).select().maybeSingle();
-    if(!error && data){ recipe.id=data.id; }
+    try{
+      const row={user_id:currentUser.id,name:recipe.name,servings:recipe.servings,ingredients:recipe.ingredients,nutrition:recipe.nutrition,updated_at:recipe.updated_at};
+      const {data,error}=await sb.from('recipes').insert(row).select().maybeSingle();
+      if(error) throw error;
+      if(data){ recipe.id=data.id; savedToCloud=true; }
+    }catch(e){
+      console.error('[NutriFlow recipes] Supabase save failed', e);
+    }
   }
   S.recipes=[recipe,...(S.recipes||[])];
   persistRecipesLocal();
   renderRecipesList();
-  alert('Recipe saved.');
+  setEl('recipe-save-status', savedToCloud ? 'Recipe saved to Supabase.' : 'Recipe saved locally. Supabase recipes table may not be configured yet.');
+  alert(savedToCloud ? 'Recipe saved.' : 'Recipe saved locally.');
 }
 async function deleteRecipe(id){
   if(!confirm('Delete this recipe?')) return;
@@ -4216,7 +4250,7 @@ function renderRecipesList(){
     const total=r.nutrition||recipeTotals(r.ingredients||[]);
     const servings=Math.max(1,r.servings||1);
     return `<tr>
-      <td><strong>${r.name}</strong><div style="font-size:11px;color:var(--text-muted)">${(r.ingredients||[]).length} ingredients</div></td>
+      <td><strong>${safeHtml(r.name||'Recipe')}</strong><div style="font-size:11px;color:var(--text-muted)">${(r.ingredients||[]).length} ingredients</div></td>
       <td>${servings}</td>
       <td>${Math.round(total.kcal/servings)} kcal · ${formatFoodNumber(total.carbs/servings,'g')} C · ${formatFoodNumber(total.protein/servings,'g')} P · ${formatFoodNumber(total.fat/servings,'g')} F</td>
       <td><button class="btn" style="padding:4px 8px;font-size:11px" onclick="loadRecipeIntoDraft('${r.id}')">Edit copy</button> <button class="btn" style="padding:4px 8px;font-size:11px" onclick="deleteRecipe('${r.id}')">Delete</button></td>
