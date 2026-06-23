@@ -982,6 +982,10 @@ tr:hover td { background: var(--bg-hover); }
             </label>
           </div>
           <div class="field-note" style="width:100%;margin:2px 0 0">Tip: for the 7-day plan, landscape fits better on one page.</div>
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;cursor:pointer">
+            <input type="checkbox" id="rep-include-blood" checked onchange="onReportOptionsChange()" style="width:16px;height:16px;accent-color:var(--teal-600)">
+            <span id="report-include-blood-label">Include Blood Analysis summary</span>
+          </label>
           <button class="btn primary" onclick="printPage()" id="report-print-btn">🖨️ Print Full Report (Landscape)</button>
           <button class="btn" onclick="printReportSevenDayLandscape()">🖨️ Print 7-Day Plan only (Landscape)</button>
           <button class="btn" onclick="printReportOneDayPortrait()">🖨️ Print 1-Day Plan only (Portrait)</button>
@@ -1195,7 +1199,7 @@ const S = {
   exAuto:{starch:true,protein:true,fat:true},
   exMeta:null, lastDairyType:'Moderate-fat', lastMeatType:'Lean', weightSuggestionLocked:false,
   bc:{bf:null,water:null,fatmass:null,muscle:null,metage:null,visceral:null},
-  tracking:[],intake:{},notes:{},labValues:{},foodResults:[],recipes:[],recipeDraft:[],extraFoods:[],appointments:[],mealLanguage:'GR',reportOptions:{oneDay:false,sevenDay:true},
+  tracking:[],intake:{},notes:{},labValues:{},foodResults:[],recipes:[],recipeDraft:[],extraFoods:[],appointments:[],mealLanguage:'GR',reportOptions:{oneDay:false,sevenDay:true,includeBlood:true},
   mealSel:{breakfast:'BRK_TOAST',lunch:'LUN_CHICKEN_RICE',dinner:'DIN_FISH_POTATO',snack1Extras:[],snack2Extras:[],sleepExtras:[]}
 };
 
@@ -2326,6 +2330,7 @@ function updateMealLanguageButtons(){
   setEl('report-mode-7day-label', isEn ? '7-Day Meal Plan only' : 'Μόνο εβδομαδιαίο πλάνο');
   setEl('report-mode-1day-label', isEn ? '1-Day Meal Plan only' : 'Μόνο ημερήσιο πλάνο');
   setEl('report-mode-both-label', isEn ? 'Both plans' : 'Και τα δύο πλάνα');
+  setEl('report-include-blood-label', isEn ? 'Include Blood Analysis summary' : 'Συμπερίληψη σύνοψης αιματολογικού ελέγχου');
   const fullPrintLabel = (S.reportOptions?.sevenDay!==false)
     ? (isEn ? '🖨️ Print Full Report (Landscape)' : '🖨️ Εκτύπωση πλήρους αναφοράς (Landscape)')
     : (isEn ? '🖨️ Print Full Report (Portrait)' : '🖨️ Εκτύπωση πλήρους αναφοράς (Portrait)');
@@ -2699,6 +2704,7 @@ function nav(id) {
   if(id==='clients') renderClientList();
   if(id==='equivalents') buildEquivalents();
   if(id==='labs') renderLabsTable();
+  if(id==='fooddb') { loadRecipes({render:false, mergeLocal:true}); }
   if(id==='recipes') { renderRecipeDraft(); loadRecipes(); }
   if(id==='appointments') { loadAppointments(true).then(renderAppointments); }
   if(id==='profile') calcBodyComp();
@@ -3403,12 +3409,15 @@ function reportModeFromOptions(){
 function syncReportModeControls(){
   const mode=reportModeFromOptions();
   document.querySelectorAll('input[name="report-plan-mode"]').forEach(r=>{ r.checked = r.value===mode; });
+  const blood=document.getElementById('rep-include-blood');
+  if(blood) blood.checked = S.reportOptions?.includeBlood!==false;
 }
 function onReportOptionsChange(){
   const mode=document.querySelector('input[name="report-plan-mode"]:checked')?.value || '7day';
   S.reportOptions = {
     oneDay: mode==='1day' || mode==='both',
     sevenDay: mode==='7day' || mode==='both',
+    includeBlood: document.getElementById('rep-include-blood')?.checked !== false,
   };
   updateMealLanguageButtons();
   buildReport();
@@ -3440,7 +3449,7 @@ function buildReport(){
   const reportRules=isEn ? GENERAL_HEALTH_RULES_EN : GENERAL_HEALTH_RULES;
   const goalLabel=isEn?'Goal':'Στόχος';
   const dayUnit=isEn?'kcal/day':'kcal/ημέρα';
-  const abnormalLabsHtml=reportAbnormalLabsHtml(isEn);
+  const abnormalLabsHtml=S.reportOptions?.includeBlood!==false ? reportAbnormalLabsHtml(isEn) : '';
   setEl('report-body',`<div style="width:100%;font-family:Arial,sans-serif;font-size:13px">
 
     <!-- HEADER -->
@@ -4091,10 +4100,7 @@ function normalizeRecipeFoodResult(recipe){
   };
 }
 function recipeFoodResultsForQuery(query){
-  const q=String(query||'').trim().toLowerCase();
-  return (S.recipes||[])
-    .filter(r=>!q || String(r.name||'').toLowerCase().includes(q))
-    .map(normalizeRecipeFoodResult);
+  return (S.recipes||[]).map(normalizeRecipeFoodResult);
 }
 async function fetchWithRetryOnce(url, options={}, delayMs=2000){
   try{
@@ -4109,7 +4115,7 @@ async function searchFoodDatabase(){
   if(!query){ setEl('fooddb-status','Enter a food name to search.'); return; }
   setEl('fooddb-status','Searching Open Food Facts...');
   setEl('fooddb-results','');
-  await loadRecipes();
+  await loadRecipes({render:false, mergeLocal:true});
   const recipeResults=recipeFoodResultsForQuery(query);
   const params=new URLSearchParams({
     search_terms:query,
@@ -4248,9 +4254,10 @@ function addFoodResultToRecipe(index){
   if(!Array.isArray(S.recipeDraft)) S.recipeDraft=[];
   const p=S.foodResults && S.foodResults[index];
   if(!p){ alert('Food result not found.'); return; }
+  const grams=foodNumber(p.defaultGrams)||100;
   S.recipeDraft.push({
-    name:p.name,
-    grams:100,
+    name:p.name||'Food',
+    grams,
     kcal100:p.kcal100||0,
     carbs100:p.carbs100||0,
     protein100:p.protein100||0,
@@ -4258,6 +4265,7 @@ function addFoodResultToRecipe(index){
   });
   nav('recipes');
   renderRecipeDraft();
+  setEl('recipe-save-status', `${safeHtml(p.name||'Food')} added from Food Database. Adjust grams if needed.`);
 }
 function updateRecipeIngredient(index, field, value){
   if(!S.recipeDraft[index]) return;
@@ -4287,7 +4295,7 @@ function renderRecipeDraft(){
     const t=ingredientTotals(ing);
     return `<tr>
       <td><strong>${safeHtml(ing.name||'Ingredient')}</strong></td>
-      <td>${formatFoodNumber(ing.grams,'g')}</td>
+      <td><input type="number" value="${ing.grams||0}" min="0" step="1" oninput="updateRecipeIngredient(${i},'grams',this.value)" style="width:88px;padding:5px;text-align:right;border:1px solid var(--border-strong);border-radius:5px;background:var(--bg-input);color:var(--text-primary)"> g</td>
       <td>${formatFoodNumber(t.kcal,'')}</td>
       <td>${formatFoodNumber(t.carbs,'g')}</td>
       <td>${formatFoodNumber(t.protein,'g')}</td>
@@ -4310,23 +4318,29 @@ function persistRecipesLocal(){
 function loadRecipesLocal(){
   try{ return JSON.parse(localStorage.getItem(recipeStorageKey())||'[]')||[]; }catch(e){ return []; }
 }
-async function loadRecipes(){
+async function loadRecipes(options={}){
+  const shouldRender=options.render!==false;
+  const mergeLocal=options.mergeLocal!==false;
+  const localRecipes=mergeLocal ? loadRecipesLocal() : [];
   if(currentUser){
     try{
       const {data,error}=await sb.from('recipes').select('*').eq('user_id',currentUser.id).order('updated_at',{ascending:false});
       if(error) throw error;
       if(data){
-        S.recipes=data.map(r=>({id:r.id,name:r.name,servings:r.servings||1,ingredients:r.ingredients||[],nutrition:r.nutrition||recipeTotals(r.ingredients||[]),updated_at:r.updated_at}));
+        const remote=data.map(r=>({id:r.id,name:r.name,servings:r.servings||1,ingredients:r.ingredients||[],nutrition:r.nutrition||recipeTotals(r.ingredients||[]),updated_at:r.updated_at}));
+        const remoteKeys=new Set(remote.map(r=>String(r.id)));
+        S.recipes=[...remote, ...localRecipes.filter(r=>!remoteKeys.has(String(r.id)))]
+          .sort((a,b)=>String(b.updated_at||'').localeCompare(String(a.updated_at||'')));
         persistRecipesLocal();
-        renderRecipesList();
+        if(shouldRender) renderRecipesList();
         return;
       }
     }catch(e){
       console.error('[NutriFlow recipes] Supabase load failed', e);
     }
   }
-  S.recipes=loadRecipesLocal();
-  renderRecipesList();
+  S.recipes=localRecipes;
+  if(shouldRender) renderRecipesList();
 }
 async function saveRecipe(){
   const name=(v('recipe-name')||'').trim();
@@ -4739,7 +4753,7 @@ function applyState(state){
   S.extraFoods=Array.isArray(state.extraFoods)?state.extraFoods:[];
   if(state.mealLanguage) S.mealLanguage=state.mealLanguage;
   if(state.reportOptions){
-    S.reportOptions=state.reportOptions;
+    S.reportOptions={includeBlood:true,...state.reportOptions};
     syncReportModeControls();
   }
   if(state.intake){ S.intake=state.intake; }
@@ -4781,7 +4795,7 @@ function resetForm(){
   S.mealSel={breakfast:'BRK_TOAST',lunch:'LUN_CHICKEN_RICE',dinner:'DIN_FISH_POTATO',snack1Extras:[],snack2Extras:[],sleepExtras:[]};
   S.weekPlans=WEEK_PLANS.map(p=>({...p}));
   S.mealLanguage='GR';
-  S.reportOptions={oneDay:false,sevenDay:true};
+  S.reportOptions={oneDay:false,sevenDay:true,includeBlood:true};
   syncReportModeControls();
   if(document.getElementById('page-labs')?.classList.contains('active')) renderLabsTable();
   try{localStorage.removeItem('nutriflow_autosave');}catch(e){}
