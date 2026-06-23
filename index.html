@@ -974,7 +974,7 @@ tr:hover td { background: var(--bg-hover); }
             <input type="checkbox" id="rep-include-7day" checked onchange="onReportOptionsChange()" style="width:18px;height:18px;accent-color:var(--teal-600)">
             <span id="report-include-7day-label">📅 Include 7-Day Meal Plan</span>
           </label>
-          <button class="btn primary" onclick="printPage()" id="report-print-btn">🖨️ Print / Save PDF</button>
+          <button class="btn primary" onclick="printPage()" id="report-print-btn">🖨️ Print Full Report</button>
           <button class="btn" onclick="printReportSevenDayLandscape()">🖨️ Print 7-Day Plan (Landscape)</button>
         </div>
         <div class="field-note" id="report-options-note" style="margin-top:8px">Check/uncheck to choose which meal plan appears in the printed report. Use Print / Save PDF and choose “Save as PDF” in the browser print dialog.</div>
@@ -2283,8 +2283,8 @@ function updateMealLanguageButtons(){
   setEl('report-options-title', isEn ? '⚙️ Report Options — Choose what to print' : '⚙️ Επιλογές Αναφοράς — Επιλέξτε τι θα εκτυπωθεί');
   setEl('report-include-1day-label', isEn ? '☀️ Include 1-Day Meal Plan' : '☀️ Συμπερίληψη ημερήσιου πλάνου');
   setEl('report-include-7day-label', isEn ? '📅 Include 7-Day Meal Plan' : '📅 Συμπερίληψη εβδομαδιαίου πλάνου');
-  setEl('report-print-btn', isEn ? '🖨️ Print / Save PDF' : '🖨️ Εκτύπωση / Αποθήκευση PDF');
-  setEl('report-options-note', isEn ? 'Check/uncheck to choose which meal plan appears in the printed report. Use Print / Save PDF and choose “Save as PDF” in the browser print dialog.' : 'Επιλέξτε ποιο πλάνο γευμάτων θα εμφανίζεται στην εκτυπώσιμη αναφορά. Χρησιμοποιήστε Εκτύπωση / Αποθήκευση PDF και επιλέξτε “Save as PDF”.');
+  setEl('report-print-btn', isEn ? '🖨️ Print Full Report' : '🖨️ Εκτύπωση πλήρους αναφοράς');
+  setEl('report-options-note', isEn ? 'Choose which meal plan appears in the full report, or print only the 7-day plan with the landscape button.' : 'Επιλέξτε ποιο πλάνο γευμάτων θα εμφανίζεται στην πλήρη αναφορά ή εκτυπώστε μόνο το 7ήμερο πλάνο με το κουμπί landscape.');
   setEl('report-print-title', isEn ? '📄 PRINT — Clinical Nutrition Report' : '📄 PRINT — Κλινική Αναφορά Διατροφής');
 }
 
@@ -4162,8 +4162,8 @@ function renderRecipeDraft(){
   const rows=(S.recipeDraft||[]).map((ing,i)=>{
     const t=ingredientTotals(ing);
     return `<tr>
-      <td><input type="text" value="${safeHtml(ing.name||'')}" oninput="updateRecipeIngredient(${i},'name',this.value)" style="min-width:140px"></td>
-      <td><input type="number" value="${ing.grams||0}" oninput="updateRecipeIngredient(${i},'grams',this.value)" style="width:80px"></td>
+      <td><strong>${safeHtml(ing.name||'Ingredient')}</strong></td>
+      <td>${formatFoodNumber(ing.grams,'g')}</td>
       <td>${formatFoodNumber(t.kcal,'')}</td>
       <td>${formatFoodNumber(t.carbs,'g')}</td>
       <td>${formatFoodNumber(t.protein,'g')}</td>
