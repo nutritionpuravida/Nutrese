@@ -265,6 +265,8 @@ tr:hover td { background: var(--bg-hover); }
   @page { size: A4 portrait; margin: 1cm; }
   /* Clinical pages override: landscape A4 */
   @page landscape-page { size: A4 landscape; margin: 8mm 10mm; }
+  /* Weekly plan inside the client report needs wider columns. */
+  @page report-week-landscape { size: landscape; margin: 1cm; }
 
   /* ── Hide all UI chrome ── */
   .sidebar, .topbar, .topbar-actions, .bottom-nav, .hamburger,
@@ -310,11 +312,12 @@ tr:hover td { background: var(--bg-hover); }
   #page-report .extra-foods { margin-top: 3px !important; padding-top: 3px !important; border-top: 0 !important; font-size: inherit !important; color: inherit !important; }
   #page-report .extra-food-row { display: block !important; margin-top: 2px !important; line-height: 1.3 !important; overflow-wrap: break-word !important; word-break: normal !important; white-space: normal !important; }
   #page-report .extra-food-row strong { font-weight: 600 !important; overflow-wrap: break-word !important; white-space: normal !important; }
-  #page-report .extra-food-macros { display: block !important; white-space: normal !important; font-size: 9px !important; color: #6b7280 !important; }
+  #page-report .extra-food-macros { display: none !important; }
   .report-week-table th { background: #0f6e56 !important; color: #fff !important; }
   .report-week-table tbody tr:nth-child(odd) td { background: #f8fffe !important; }
   .report-week-table tbody tr:nth-child(even) td { background: #f0faf6 !important; }
   .report-week-table tbody tr:last-child td { background: #e1f5ee !important; font-weight: 700 !important; border-top: 2px solid #0f6e56 !important; }
+  .report-week-section { page: report-week-landscape; break-before: page; page-break-before: always; }
   .report-clinical-box { background: #fff8e1 !important; color: #1f2937 !important; border: 1px solid #f3d27a !important; border-left: 4px solid #d97706 !important; }
   .report-clinical-box * { color: #1f2937 !important; }
 
@@ -1613,9 +1616,11 @@ function renderExtraFoodsForSlot(slot, dayIndex=null, opts={}){
     const grams=foodNumber(food.grams)||100;
     const macros=`${Math.round(t.kcal)} kcal · C ${formatFoodNumber(t.carbs,'g')} · P ${formatFoodNumber(t.protein,'g')} · F ${formatFoodNumber(t.fat,'g')}`;
     const removeBtn=opts.showRemove===false ? '' : `<button class="btn" style="padding:0 5px;font-size:10px;line-height:1.4" onclick="removeExtraFood('${food.id}')">×</button>`;
+    const meta=opts.reportMode ? `${grams}g` : `${grams}g${food.brand?' · '+safeHtml(food.brand):''}`;
+    const macroHtml=opts.reportMode ? '' : `<div style="display:flex;gap:5px;align-items:flex-start"><span class="extra-food-macros">${macros}</span>${removeBtn}</div>`;
     return `<div class="extra-food-row">
-      <div><strong>${safeHtml(food.name||'Food')}</strong><div style="font-size:10px;color:var(--text-muted)">${grams}g${food.brand?' · '+safeHtml(food.brand):''}</div></div>
-      <div style="display:flex;gap:5px;align-items:flex-start"><span class="extra-food-macros">${macros}</span>${removeBtn}</div>
+      <div><strong>${safeHtml(food.name||'Food')}</strong><div style="font-size:10px;color:var(--text-muted)">${meta}</div></div>
+      ${macroHtml}
     </div>`;
   }).join('');
   const note=showDbNote ? `<div class="extra-food-db-note">Added from food database — shown in original language</div>` : '';
@@ -1878,7 +1883,7 @@ const EQUIVALENTS_DATA = [
       {gr:'2 μικρά ροδάκινα ή βερίκοκα', en:'2 small peaches or apricots'},
       {gr:'1 μικρό αχλάδι ή 1 ακτινίδιο μεγάλο', en:'1 small pear or 1 large kiwi'},
       {gr:'½ μεγάλο γκρέιπφρουτ', en:'½ large grapefruit'},
-      {gr:'6 κομμάτια αποξηραμένα φρούτα (σταφίδες, αποξ. βερίκοκο)', en:'6 pieces dried fruit (raisins, dried apricot)'},
+      {gr:'2 κ.σ. σταφίδες ή 3 αποξηραμένα βερίκοκα (βλ. Οδηγό Ισοδυναμιών)', en:'2 tbsp raisins or 3 dried apricots (see Equivalents Guide)'},
       {gr:'3 δαμάσκηνα φρέσκα', en:'3 fresh plums'},
     ]},
   { key:'veg', icon:'🥗', gr:'Λαχανικά (1 μερίδα)', en:'Vegetables (1 exchange)',
@@ -2092,7 +2097,9 @@ function buildSlotSnack(slot, extras, lang='GR'){
   if(fruitCount>0){
     exch.fruit += fruitCount;
     parts.push(useDriedFruit
-      ? (lang==='EN' ? `${fruitCount>1?fruitCount+'x ':''}6 pieces dried fruit` : `${fruitCount>1?fruitCount+'x ':''}6 κομμάτια αποξηραμένα φρούτα`)
+      ? (lang==='EN'
+        ? `${fruitCount} serving${fruitCount>1?'s':''} dried fruit (e.g. 2 tbsp raisins or 3 dried apricots per serving; see Equivalents Guide)`
+        : `${fruitCount} μερίδ${fruitCount>1?'ες':'α'} αποξηραμένων φρούτων (π.χ. 2 κ.σ. σταφίδες ή 3 αποξηραμένα βερίκοκα ανά μερίδα, βλ. Οδηγό Ισοδυναμιών)`)
       : (lang==='EN' ? `${fruitCount} fruit${fruitCount>1?'s':''} (see Equivalents Guide)` : `${fruitCount} φρούτ${fruitCount>1?'α':'ο'} (βλ. Οδηγό Ισοδυναμιών)`));
   }
   if(dairyCount>0){
@@ -3298,6 +3305,7 @@ function buildReport(){
     </table>` : ''}
 
     ${(S.reportOptions?.sevenDay!==false) ? `
+    <div class="report-week-section">
     <div style="font-size:14px;font-weight:700;color:var(--teal-800);margin:16px 0 6px;border-bottom:2px solid var(--teal-600);padding-bottom:4px">📅 ${isEn?'WEEKLY PLAN':'ΕΒΔΟΜΑΔΙΑΙΟ ΠΛΑΝΟ'}</div>
     <table class="report-week-table" style="width:100%;table-layout:fixed;border-collapse:collapse;font-size:10px;background:var(--bg-surface);border:1px solid var(--border)">
       <colgroup>
@@ -3335,7 +3343,8 @@ function buildReport(){
         <td style="padding:5px;text-align:right">${Math.round(S.goalKcal||0)} kcal</td>
       </tr>
       </tbody>
-    </table>` : ''}
+    </table>
+    </div>` : ''}
 
     <!-- GENERAL HEALTH RULES - compact for client -->
     <div style="font-size:14px;font-weight:700;color:var(--teal-800);margin:16px 0 6px;border-bottom:2px solid var(--teal-600);padding-bottom:4px">📋 ${isEn?'GENERAL GUIDANCE':'ΓΕΝΙΚΕΣ ΟΔΗΓΙΕΣ'}</div>
@@ -4180,7 +4189,8 @@ function appointmentClass(type){
   return 'appt-follow';
 }
 function appointmentsForDate(iso){
-  return (S.appointments||[]).filter(a=>a.date===iso).sort((a,b)=>String(a.time).localeCompare(String(b.time)));
+  const target=String(iso||'').slice(0,10);
+  return (S.appointments||[]).filter(a=>String(a.date||'').slice(0,10)===target).sort((a,b)=>String(a.time).localeCompare(String(b.time)));
 }
 function renderAppointments(){
   const el=document.getElementById('appointments-calendar'); if(!el) return;
@@ -4205,6 +4215,7 @@ function renderAppointments(){
     const iso=dateToISO(d);
     const muted=calendarView==='month' && d.getMonth()!==calendarCursor.getMonth();
     const items=appointmentsForDate(iso);
+    if(items.length || iso===today) console.log('[NutriFlow appointments] render day', iso, items);
     const blocks=items.map(a=>`<button class="appointment-block ${appointmentClass(a.type)}" onclick="event.stopPropagation();openAppointmentForm('${iso}','${safeHtml(a.id)}')" title="${safeHtml(a.type)} · ${safeHtml(a.notes)}"><strong>${safeHtml(a.time)} ${safeHtml(a.client_name||'Unnamed')}</strong><span>${safeHtml(a.type)} · ${a.duration} min</span></button>`).join('');
     return `<div class="calendar-day ${muted?'muted':''} ${iso===today?'today':''} ${calendarView==='week'?'week':''}" onclick="openAppointmentForm('${iso}')">
       <div class="calendar-day-number">${d.getDate()}</div>
@@ -4281,18 +4292,25 @@ async function saveAppointmentFromForm(){
         result=await sb.from('appointments').update(row).eq('id',id).eq('user_id',currentUser.id).select().maybeSingle();
       }
       if(!result.error && result.data) saved=normalizeAppointment(result.data);
-      else saved.localOnly=true;
+      else {
+        console.error('[NutriFlow appointments] Supabase save failed', result.error);
+        saved.localOnly=true;
+      }
     }catch(e){
+      console.error('[NutriFlow appointments] Supabase save exception', e);
       saved.localOnly=true;
     }
   }
   S.appointments=[saved,...(S.appointments||[]).filter(a=>String(a.id)!==String(id))].sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
+  console.log('[NutriFlow appointments] saved appointment', saved);
+  console.log('[NutriFlow appointments] S.appointments after save', S.appointments);
   persistAppointmentsLocal();
   appointmentsLoadedFor=currentUser ? currentUser.id : 'local';
   calendarCursor=parseISODate(saved.date);
   clearAppointmentForm();
   const note=document.getElementById('appointments-save-note');
   if(note) note.textContent = saved.localOnly ? 'Appointment saved locally. Supabase appointments storage is unavailable.' : 'Appointment saved';
+  console.log('[NutriFlow appointments] calling renderAppointments after save');
   renderAppointments();
   renderDashboardAppointments();
 }
@@ -4435,6 +4453,52 @@ function resetForm(){
   calcAll(); calcBodyComp(); calcMacros();
 }
 
+function clientStorageKey(){
+  return 'nutriflow_clients_' + (currentUser ? currentUser.id : 'local');
+}
+function normalizeClientRow(row){
+  const data=row?.data || row?.state || {};
+  const clientRef=row?.client_ref || row?.clientRef || data?.inputs?.['p-id'] || '';
+  return {
+    id: row?.id || ('local_'+(clientRef||Date.now())),
+    user_id: row?.user_id || (currentUser && currentUser.id) || null,
+    client_ref: clientRef,
+    name: row?.name || data?.inputs?.['p-name'] || 'Unnamed client',
+    data,
+    updated_at: row?.updated_at || new Date().toISOString(),
+    localOnly: !!row?.localOnly || String(row?.id||'').startsWith('local_')
+  };
+}
+function loadLocalClients(){
+  try{
+    const scoped=localStorage.getItem(clientStorageKey());
+    const fallback=localStorage.getItem('nutriflow_clients_local');
+    const parsed=JSON.parse(scoped || fallback || '[]');
+    return Array.isArray(parsed) ? parsed.map(normalizeClientRow) : [];
+  }catch(e){
+    console.error('[NutriFlow clients] local load failed', e);
+    return [];
+  }
+}
+function saveLocalClients(clients){
+  try{
+    const rows=(clients||[]).map(normalizeClientRow);
+    localStorage.setItem(clientStorageKey(), JSON.stringify(rows));
+    localStorage.setItem('nutriflow_clients_local', JSON.stringify(rows));
+  }catch(e){
+    console.error('[NutriFlow clients] local save failed', e);
+  }
+}
+function upsertLocalClient(row){
+  const normalized=normalizeClientRow(row);
+  const key=normalized.client_ref || normalized.id;
+  const clients=loadLocalClients().filter(c=>(c.client_ref||c.id)!==key && String(c.id)!==String(normalized.id));
+  const saved={...normalized, localOnly:true, updated_at:new Date().toISOString()};
+  clients.unshift(saved);
+  saveLocalClients(clients);
+  return saved;
+}
+
 function newClient(){
   if(!confirm('Start a new client? Unsaved changes to the current client will be lost (use "Save Client" first if needed).')) return;
   resetForm();
@@ -4444,26 +4508,41 @@ function newClient(){
 // Saves (or updates) the current client into the cloud (Supabase),
 // scoped to the signed-in user via Row Level Security
 async function saveCurrentClient(){
-  if(!currentUser){ alert('Please sign in to save clients.'); return; }
   const name=v('p-name')||'Unnamed client';
   let id=v('p-id');
   if(!id){ id='c'+Date.now(); document.getElementById('p-id').value=id; }
   const state=captureState();
+  const localRow={id:'local_'+id, client_ref:id, name, data:state, updated_at:new Date().toISOString(), localOnly:true};
+  if(!currentUser){
+    upsertLocalClient(localRow);
+    S_isDirty=false;
+    alert('✅ Client saved locally: '+name+'\n\nFind it anytime under "My Clients".');
+    await renderClientList();
+    return;
+  }
   let error=null;
+  let savedRemote=null;
   try{
     const existingResult = await sb.from('clients').select('id').eq('user_id',currentUser.id).eq('client_ref',id).maybeSingle();
+    if(existingResult.error) throw existingResult.error;
     const existing=existingResult.data;
     if(existing){
-      ({error} = await sb.from('clients').update({name, data:state, updated_at:new Date().toISOString()}).eq('id',existing.id));
+      const result = await sb.from('clients').update({name, data:state, updated_at:new Date().toISOString()}).eq('id',existing.id).select().maybeSingle();
+      error=result.error; savedRemote=result.data;
     } else {
-      ({error} = await sb.from('clients').insert({user_id:currentUser.id, client_ref:id, name, data:state}));
+      const result = await sb.from('clients').insert({user_id:currentUser.id, client_ref:id, name, data:state}).select().maybeSingle();
+      error=result.error; savedRemote=result.data;
     }
   }catch(e){
     error=e;
   }
   if(error){
-    alert('⚠️ Could not save: '+(error.message||error));
+    console.error('[NutriFlow clients] Supabase save failed', error);
+    upsertLocalClient(localRow);
+    S_isDirty=false;
+    alert('✅ Client saved locally: '+name+'\n\nSupabase clients table is unavailable or not configured yet: '+(error.message||error));
   } else {
+    if(savedRemote) upsertLocalClient({...savedRemote, localOnly:false});
     S_isDirty=false; // changes are now safely in the cloud
     alert('✅ Client saved: '+name+'\n\nFind it anytime under "My Clients" in the sidebar.');
   }
@@ -4477,8 +4556,20 @@ async function loadClientById(rowId){
   if(currentName && currentName.trim()!==''){
     if(!confirm(`Switch to a different client?\n\nAny unsaved changes to "${currentName}" will be lost. Click "💾 Save Client" first if you want to keep them.`)) return;
   }
-  const {data, error} = await sb.from('clients').select('*').eq('id',rowId).single();
-  if(error || !data) return;
+  let data=null;
+  if(String(rowId).startsWith('local_') || !currentUser){
+    data=loadLocalClients().find(c=>String(c.id)===String(rowId));
+  } else {
+    try{
+      const result = await sb.from('clients').select('*').eq('id',rowId).single();
+      if(result.error) throw result.error;
+      data=result.data;
+    }catch(e){
+      console.error('[NutriFlow clients] Supabase load failed', e);
+      data=loadLocalClients().find(c=>String(c.id)===String(rowId));
+    }
+  }
+  if(!data) return;
   applyState(data.data);
   S_isDirty=false; // freshly loaded from cloud, nothing unsaved yet
   nav('dashboard');
@@ -4486,23 +4577,44 @@ async function loadClientById(rowId){
 
 async function deleteClientById(rowId){
   if(!confirm('Delete this client permanently? This cannot be undone.')) return;
-  await sb.from('clients').delete().eq('id',rowId);
+  saveLocalClients(loadLocalClients().filter(c=>String(c.id)!==String(rowId)));
+  if(currentUser && !String(rowId).startsWith('local_')){
+    try{
+      const {error}=await sb.from('clients').delete().eq('id',rowId).eq('user_id',currentUser.id);
+      if(error) console.error('[NutriFlow clients] Supabase delete failed', error);
+    }catch(e){
+      console.error('[NutriFlow clients] Supabase delete exception', e);
+    }
+  }
   renderClientList();
 }
 
 async function renderClientList(){
   const el=document.getElementById('clients-table');
   if(!el) return;
-  if(!currentUser){ el.innerHTML='<div style="color:var(--text-muted);text-align:center;padding:24px">Please sign in to see your clients.</div>'; return; }
-  el.innerHTML='<div style="color:var(--text-muted);text-align:center;padding:24px">Loading…</div>';
-  const {data:clients, error} = await sb.from('clients').select('*').eq('user_id',currentUser.id).order('updated_at',{ascending:false});
-  if(error){ el.innerHTML='<div class="alert err">⚠️ Could not load clients: '+error.message+'</div>'; return; }
+  const localClients=loadLocalClients();
   // Cache the full list so the search box can filter instantly client-side
   // without a new fetch on every keystroke.
-  S.clientListCache = clients||[];
+  S.clientListCache = localClients;
   const searchEl=document.getElementById('client-search');
   if(searchEl) searchEl.value='';
   renderClientListRows(S.clientListCache);
+  if(!currentUser) return;
+  try{
+    const {data:clients, error} = await sb.from('clients').select('*').eq('user_id',currentUser.id).order('updated_at',{ascending:false});
+    if(error) throw error;
+    const remote=(clients||[]).map(normalizeClientRow);
+    const remoteRefs=new Set(remote.map(c=>c.client_ref||c.id));
+    S.clientListCache=[...remote, ...localClients.filter(c=>c.localOnly && !remoteRefs.has(c.client_ref||c.id))]
+      .sort((a,b)=>String(b.updated_at).localeCompare(String(a.updated_at)));
+    renderClientListRows(S.clientListCache);
+  }catch(e){
+    console.error('[NutriFlow clients] Supabase list failed', e);
+    if(!localClients.length){
+      S.clientListCache=[];
+      renderClientListRows([]);
+    }
+  }
 }
 
 // Renders the client table for a given (possibly filtered) list of clients.
@@ -4518,9 +4630,11 @@ function renderClientListRows(clients){
   }
   el.innerHTML='<table><thead><tr><th>Name</th><th>Client ID</th><th>Last saved</th><th></th></tr></thead><tbody>'+
     clients.map(c=>{
-      const cond=(c.data.conditions||[]).map(conditionLabel).join(', ')||'Healthy Eating';
-      const savedAt=new Date(c.updated_at).toLocaleString('el-GR');
-      return `<tr><td><strong>${c.name}</strong><div style="font-size:11px;color:var(--text-muted)">${cond}</div></td><td>${c.client_ref||'—'}</td><td>${savedAt}</td>
+      const data=c.data||{};
+      const cond=(data.conditions||[]).map(conditionLabel).join(', ')||'Healthy Eating';
+      const savedAt=c.updated_at ? new Date(c.updated_at).toLocaleString('el-GR') : '—';
+      const badge=c.localOnly ? '<div style="font-size:10px;color:var(--amber-600);font-weight:700">Saved locally</div>' : '';
+      return `<tr><td><strong>${safeHtml(c.name||'Unnamed client')}</strong>${badge}<div style="font-size:11px;color:var(--text-muted)">${safeHtml(cond)}</div></td><td>${safeHtml(c.client_ref||'—')}</td><td>${savedAt}</td>
         <td style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn primary" style="padding:5px 10px;font-size:12px" onclick="loadClientById('${c.id}')">📂 Load</button><button class="btn" style="padding:5px 10px;font-size:12px" onclick="deleteClientById('${c.id}')">🗑️ Delete</button></td></tr>`;
     }).join('')+
     '</tbody></table>';
