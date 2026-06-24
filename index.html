@@ -1211,6 +1211,7 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
 });
+window.supabaseClient = supabaseClient;
 
 const SUBSCRIPTION_REQUIRED = true;
 const STRIPE_CHECKOUT_FUNCTION = 'create-checkout-session';
@@ -1343,6 +1344,11 @@ async function restoreExistingSessionOnLoad(){
       console.warn('[NutriFlow auth] Could not inspect localStorage auth keys', e);
     }
     console.log('[NutriFlow auth] localStorage auth keys', authKeys);
+    console.log('[NutriFlow auth] supabaseClient defined?', typeof supabaseClient);
+    if(typeof supabaseClient === 'undefined' || !supabaseClient || !supabaseClient.auth){
+      console.error('[NutriFlow auth] supabaseClient is not ready; skipping page-load session restore');
+      return;
+    }
     console.log('[NutriFlow auth] calling getSession');
     const {data, error}=await supabaseClient.auth.getSession();
     if(error){
