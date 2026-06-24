@@ -1409,10 +1409,12 @@ async function refreshSubscriptionGate(){
   updateTrialBanner();
 }
 async function refreshAccountSubscriptionPage(){
+  console.log('[NutriFlow account] refreshAccountSubscriptionPage called');
   try{
     const {data, error}=await supabaseClient.auth.getSession();
     if(error) console.error('[NutriFlow account] getSession failed', error);
     const session=data&&data.session;
+    console.log('[NutriFlow account] getSession result', {hasSession:!!session, email:session?.user?.email || null});
     currentUser = session ? session.user : currentUser;
     if(!currentUser){
       subscriptionState = {status:'signed_out', active:false, currentPeriodEnd:null, trialDaysRemaining:null, trialActive:false, trialExpired:false};
@@ -1473,6 +1475,13 @@ async function openBillingPortal(){
   setEl('subscription-message','Billing portal function did not return a URL.');
 }
 function updateAccountPage(){
+  console.log('[NutriFlow account] account DOM fields', {
+    emailField:!!document.getElementById('acct-email'),
+    statusField:!!document.getElementById('acct-subscription'),
+    detailField:!!document.getElementById('account-subscription-detail'),
+    currentUserEmail:currentUser?.email || null,
+    subscriptionState
+  });
   const emailEl=document.getElementById('acct-email'); if(emailEl) emailEl.value=currentUser?currentUser.email:'';
   const statusEl=document.getElementById('acct-subscription');
   if(statusEl){
@@ -2784,7 +2793,7 @@ function nav(id) {
   if(id==='fooddb') { loadRecipes({render:false, mergeLocal:true}); }
   if(id==='recipes') { renderRecipeDraft(); loadRecipes(); }
   if(id==='appointments') { loadAppointments(true).then(renderAppointments); }
-  if(id==='account') { refreshAccountSubscriptionPage(); }
+  if(id==='account') { setTimeout(()=>refreshAccountSubscriptionPage().catch(err=>console.error('[NutriFlow account] deferred refresh failed', err)), 0); }
   if(id==='profile') calcBodyComp();
   if(id==='exchanges') renderExchanges();
   // Always sync exchange inputs → S.ex before building meal plans
