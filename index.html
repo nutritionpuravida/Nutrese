@@ -1292,11 +1292,39 @@ async function resendConfirmationEmail(){
 async function handleSignOut(){
   if(!confirm('Sign out?')) return;
   intentionalSignOut = true;
+  console.log('[NutriFlow auth] Sign out requested');
   const { error } = await supabaseClient.auth.signOut();
   if(error){
     intentionalSignOut = false;
     setAuthMessage(friendlyAuthError(error), 'error');
+    console.error('[NutriFlow auth] Sign out failed', error);
+    return;
   }
+  clearLocalStorageAfterSignOut();
+  completeSignedOutUi(true);
+  intentionalSignOut = false;
+}
+
+function clearLocalStorageAfterSignOut(){
+  try{
+    Object.keys(localStorage).forEach(key=>{
+      if(key.startsWith('nutriflow_') || key.startsWith('sb-')) localStorage.removeItem(key);
+    });
+  }catch(e){
+    console.warn('[NutriFlow auth] Could not clear local storage after sign out', e);
+  }
+}
+
+function completeSignedOutUi(wasIntentionalSignOut=false){
+  currentUser=null;
+  hideSubscriptionScreen();
+  subscriptionState = {status:'signed_out', active:false, currentPeriodEnd:null, trialDaysRemaining:null, trialActive:false, trialExpired:false};
+  updateTrialBanner();
+  hadSession = false;
+  appointmentsLoadedFor=null;
+  if(wasIntentionalSignOut) recoveringSession=false;
+  showAuthScreen();
+  if(wasIntentionalSignOut) setAuthMessage('You have been signed out successfully.','success');
 }
 
 function showAuthScreen(){
@@ -1559,22 +1587,15 @@ supabaseClient.auth.onAuthStateChange(async (event, session)=>{
   } else {
     const wasIntentionalSignOut = intentionalSignOut;
     intentionalSignOut = false;
-    hideSubscriptionScreen();
-    subscriptionState = {status:'signed_out', active:false, currentPeriodEnd:null, trialDaysRemaining:null, trialActive:false, trialExpired:false};
-    updateTrialBanner();
     if(hadSession && !wasIntentionalSignOut){
       // Unexpected sign-out mid-session (e.g. token refresh failure) —
       // save current work locally before showing the login screen again,
       // so nothing typed is lost when the user signs back in.
       autosaveSession();
       recoveringSession=true;
-    } else if(wasIntentionalSignOut){
-      recoveringSession=false;
     }
-    hadSession = false;
-    appointmentsLoadedFor=null;
-    showAuthScreen();
-    if(wasIntentionalSignOut) setAuthMessage('You have been signed out successfully.','success');
+    if(wasIntentionalSignOut) clearLocalStorageAfterSignOut();
+    completeSignedOutUi(wasIntentionalSignOut);
   }
 });
 
