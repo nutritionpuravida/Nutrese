@@ -1407,6 +1407,10 @@ async function refreshSubscriptionGate(){
     showSubscriptionScreen(msg);
   }
   updateTrialBanner();
+  if(document.getElementById('page-account')?.classList.contains('active')){
+    requestAnimationFrame(updateAccountPage);
+    setTimeout(updateAccountPage, 50);
+  }
 }
 async function refreshAccountSubscriptionPage(){
   console.log('[NutriFlow account] refreshAccountSubscriptionPage called');
@@ -1427,6 +1431,8 @@ async function refreshAccountSubscriptionPage(){
     if(userChip) userChip.style.display='flex';
     subscriptionState = await fetchSubscriptionStatus();
     updateAccountPage();
+    requestAnimationFrame(updateAccountPage);
+    setTimeout(updateAccountPage, 50);
     updateTrialBanner();
   }catch(err){
     console.error('[NutriFlow account] refresh failed', err);
@@ -1482,13 +1488,22 @@ function updateAccountPage(){
     currentUserEmail:currentUser?.email || null,
     subscriptionState
   });
-  const emailEl=document.getElementById('acct-email'); if(emailEl) emailEl.value=currentUser?currentUser.email:'';
+  const emailValue=currentUser?currentUser.email:'';
+  const statusValue = subscriptionState.ownerBypass ? 'Owner admin access'
+    : subscriptionState.trialActive ? `Trial (${subscriptionState.trialDaysRemaining} days remaining)`
+    : subscriptionState.active ? 'Active'
+    : (subscriptionState.status||'No active subscription');
+  const emailEl=document.getElementById('acct-email');
+  if(emailEl){
+    emailEl.value=emailValue;
+    emailEl.defaultValue=emailValue;
+    emailEl.setAttribute('value', emailValue);
+  }
   const statusEl=document.getElementById('acct-subscription');
   if(statusEl){
-    statusEl.value = subscriptionState.ownerBypass ? 'Owner admin access'
-      : subscriptionState.trialActive ? `Trial (${subscriptionState.trialDaysRemaining} days remaining)`
-      : subscriptionState.active ? 'Active'
-      : (subscriptionState.status||'No active subscription');
+    statusEl.value = statusValue;
+    statusEl.defaultValue = statusValue;
+    statusEl.setAttribute('value', statusValue);
   }
   const detail=document.getElementById('account-subscription-detail');
   if(detail){
