@@ -1291,7 +1291,12 @@ async function resendConfirmationEmail(){
 
 async function handleSignOut(){
   if(!confirm('Sign out?')) return;
-  await supabaseClient.auth.signOut();
+  intentionalSignOut = true;
+  const { error } = await supabaseClient.auth.signOut();
+  if(error){
+    intentionalSignOut = false;
+    setAuthMessage(friendlyAuthError(error), 'error');
+  }
 }
 
 function showAuthScreen(){
@@ -1529,6 +1534,7 @@ function updateAccountPage(){
 
 let hadSession = false; // tracks whether a session existed before, to detect unexpected sign-outs
 let recoveringSession = false; // true if we just had an unexpected sign-out and need to restore on next sign-in
+let intentionalSignOut = false; // true only when the user deliberately clicks Sign out
 supabaseClient.auth.onAuthStateChange(async (event, session)=>{
   currentUser = session ? session.user : null;
   if(currentUser){
@@ -1551,20 +1557,24 @@ supabaseClient.auth.onAuthStateChange(async (event, session)=>{
       recoveringSession=false;
     }
   } else {
+    const wasIntentionalSignOut = intentionalSignOut;
+    intentionalSignOut = false;
     hideSubscriptionScreen();
     subscriptionState = {status:'signed_out', active:false, currentPeriodEnd:null, trialDaysRemaining:null, trialActive:false, trialExpired:false};
     updateTrialBanner();
-    if(hadSession){
+    if(hadSession && !wasIntentionalSignOut){
       // Unexpected sign-out mid-session (e.g. token refresh failure) —
       // save current work locally before showing the login screen again,
       // so nothing typed is lost when the user signs back in.
       autosaveSession();
       recoveringSession=true;
+    } else if(wasIntentionalSignOut){
+      recoveringSession=false;
     }
     hadSession = false;
     appointmentsLoadedFor=null;
     showAuthScreen();
-    if(recoveringSession) setAuthMessage('Your session expired — please sign in again. Your in-progress work has been saved and will be restored.','error');
+    if(wasIntentionalSignOut) setAuthMessage('You have been signed out successfully.','success');
   }
 });
 
