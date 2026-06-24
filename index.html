@@ -1349,8 +1349,17 @@ async function restoreExistingSessionOnLoad(){
       console.error('[NutriFlow auth] supabaseClient is not ready; skipping page-load session restore');
       return;
     }
-    console.log('[NutriFlow auth] calling getSession');
-    const {data, error}=await supabaseClient.auth.getSession();
+    console.log('[NutriFlow auth] calling getSession with 5s timeout');
+    const sessionResult = await Promise.race([
+      supabaseClient.auth.getSession().then(result=>({...result, _path:'getSession'})),
+      new Promise(resolve=>setTimeout(()=>resolve({
+        data:{session:null},
+        error:new Error('getSession timeout'),
+        _path:'timeout'
+      }), 5000))
+    ]);
+    const {data, error}=sessionResult;
+    console.log('[NutriFlow auth] getSession path', sessionResult._path);
     if(error){
       console.error('[NutriFlow auth] page-load getSession failed', error);
     }
@@ -1358,7 +1367,7 @@ async function restoreExistingSessionOnLoad(){
     console.log('[NutriFlow auth] page-load session check', {hasSession:!!session, email:session?.user?.email || null});
     let restoredUser=session?.user || null;
     if(!restoredUser){
-      console.log('[NutriFlow auth] calling getUser fallback');
+      console.log('[NutriFlow auth] calling getUser fallback after', sessionResult._path);
       const {data:userData, error:userError}=await supabaseClient.auth.getUser();
       if(userError) console.error('[NutriFlow auth] page-load getUser fallback failed', userError);
       restoredUser=userData?.user || null;
