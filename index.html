@@ -1255,8 +1255,29 @@ async function handleAuthSubmit(){
   if(password.length<6){ setAuthMessage('Password must be at least 6 characters.','error'); return; }
   btn.disabled=true; btn.textContent='Please wait…';
   if(authTab==='signin'){
-    const {error} = await supabaseClient.auth.signInWithPassword({email, password});
-    if(error){ setAuthMessage(friendlyAuthError(error),'error'); btn.disabled=false; btn.textContent='Sign In'; return; }
+    try{
+      const result = await Promise.race([
+        supabaseClient.auth.signInWithPassword({email, password}),
+        new Promise(resolve=>setTimeout(()=>resolve({
+          error:new Error('signin timeout'),
+          _path:'timeout'
+        }), 10000))
+      ]);
+      const {error}=result;
+      if(error){
+        if(error.message === 'signin timeout'){
+          console.error('[NutriFlow auth] signInWithPassword timeout');
+          setAuthMessage('Sign in is taking longer than expected. Please try again.','error');
+        } else {
+          setAuthMessage(friendlyAuthError(error),'error');
+        }
+        btn.disabled=false; btn.textContent='Sign In'; return;
+      }
+    }catch(err){
+      console.error('[NutriFlow auth] signInWithPassword failed unexpectedly', err);
+      setAuthMessage(friendlyAuthError(err),'error');
+      btn.disabled=false; btn.textContent='Sign In'; return;
+    }
     // onAuthStateChange handles hiding the auth screen
   } else {
     const {error} = await supabaseClient.auth.signUp({
