@@ -1375,7 +1375,7 @@ function trialDaysRemaining(trialStart){
   const start=new Date(trialStart).getTime();
   if(!Number.isFinite(start)) return 0;
   const elapsed=Date.now()-start;
-  return Math.max(0, Math.floor((STRIPE_TRIAL_DAYS*24*60*60*1000 - elapsed)/(24*60*60*1000)));
+  return Math.max(0, Math.ceil((STRIPE_TRIAL_DAYS*24*60*60*1000 - elapsed)/(24*60*60*1000)));
 }
 function subscriptionIsActive(row){
   if(!row) return false;
@@ -1424,7 +1424,7 @@ async function fetchSubscriptionStatus(){
   const trialEnd=data&&(data.trial_end||data.current_period_end||data.current_period_end_at);
   const trialEndMs=trialEnd ? new Date(trialEnd).getTime() : NaN;
   const days=statusLower==='trialing' && Number.isFinite(trialEndMs)
-    ? Math.max(0, Math.floor((trialEndMs-Date.now())/(24*60*60*1000)))
+    ? Math.max(0, Math.ceil((trialEndMs-Date.now())/(24*60*60*1000)))
     : null;
   const isTrialActive=statusLower==='trialing' && days>0;
   const active=subscriptionIsActive(data) || isTrialActive;
