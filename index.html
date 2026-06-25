@@ -1344,12 +1344,13 @@ async function handleSignOut(){
   clearLocalStorageAfterSignOut();
   intentionalSignOut = false;
   completeSignedOutUi(true);
-  setTimeout(()=>{ window.location.href = window.location.pathname; }, 50);
+  setTimeout(()=>{ window.location.href = window.location.pathname + '?signedout=1'; }, 50);
 }
 window.handleSignOut = handleSignOut;
 
 function clearLocalStorageAfterSignOut(){
   try{
+    localStorage.removeItem('sb-xlskjhhijpiwdkfpkezo-auth-token');
     Object.keys(window.localStorage || {}).forEach(key=>{
       if(key.startsWith('nutriflow_') || key.startsWith('sb-') || key.startsWith('supabase')) localStorage.removeItem(key);
     });
@@ -1534,6 +1535,24 @@ function handleStripeReturnRefresh(){
       })
       .catch(err=>console.error('[NutriFlow checkout] Stripe return refresh failed', err));
   }, 2000);
+}
+function handleSignedOutReturn(){
+  try{
+    const params=new URLSearchParams(window.location.search || '');
+    if(params.get('signedout') !== '1') return false;
+    console.log('[NutriFlow auth] signedout=1 detected; showing clean sign-in screen');
+    currentUser=null;
+    subscriptionState = {status:'signed_out', active:false, currentPeriodEnd:null, trialDaysRemaining:null, trialActive:false, trialExpired:false};
+    hideSubscriptionScreen();
+    updateTrialBanner();
+    showAuthScreen();
+    setAuthMessage('You have been signed out successfully.','success');
+    window.history.replaceState({}, document.title, window.location.pathname);
+    return true;
+  }catch(err){
+    console.error('[NutriFlow auth] signedout=1 handling failed', err);
+    return false;
+  }
 }
 async function refreshAccountSubscriptionPage(){
   console.log('[NutriFlow account] refreshAccountSubscriptionPage called');
@@ -5440,9 +5459,10 @@ window.onload=function(){
   document.getElementById('s-snack2').innerHTML=snackExtrasHtml();
   document.getElementById('s-sleep').innerHTML=snackExtrasHtml();
   calcAll(); calcMacros(); renderDashboard();
-  handleStripeReturnRefresh();
+  const handledSignedOutReturn = handleSignedOutReturn();
+  if(!handledSignedOutReturn) handleStripeReturnRefresh();
   loadAppointments().then(renderDashboardAppointments);
-  tryRestoreAutosave();
+  if(!handledSignedOutReturn) tryRestoreAutosave();
   // Auto-save on any input/change anywhere in the form
   document.addEventListener('input', scheduleAutosave);
   document.addEventListener('change', scheduleAutosave);
