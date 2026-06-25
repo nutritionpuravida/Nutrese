@@ -1225,6 +1225,7 @@ const AUTH_EMAIL_REDIRECT_URL = 'https://nutritionpuravida.github.io/NutriFlow';
 let currentUser = null;
 let authTab = 'signin';
 let subscriptionState = {status:'unknown', active:false, currentPeriodEnd:null, trialDaysRemaining:null, trialActive:false, trialExpired:false};
+let isIntentionalNavigation = false;
 
 function setAuthTab(tab){
   authTab = tab;
@@ -1332,6 +1333,7 @@ async function resendConfirmationEmail(){
 async function handleSignOut(){
   console.log('[NutriFlow auth] handleSignOut called');
   if(!confirm('Sign out?')) return;
+  isIntentionalNavigation = true;
   intentionalSignOut = true;
   console.log('[NutriFlow auth] Sign out requested');
   try{
@@ -1342,6 +1344,7 @@ async function handleSignOut(){
   clearLocalStorageAfterSignOut();
   intentionalSignOut = false;
   completeSignedOutUi(true);
+  setTimeout(()=>{ window.location.href = window.location.pathname; }, 50);
 }
 window.handleSignOut = handleSignOut;
 
@@ -1580,6 +1583,7 @@ async function startStripeCheckout(priceId){
     }
     if(data && data.url){
       console.log('[NutriFlow checkout] redirecting to Stripe Checkout', data.url);
+      isIntentionalNavigation = true;
       window.location.href=data.url;
       return;
     }
@@ -1597,7 +1601,7 @@ async function openBillingPortal(){
     body:{user_id:currentUser.id}
   });
   if(error){ setEl('subscription-message','Billing portal unavailable: '+error.message); return; }
-  if(data && data.url){ window.location.href=data.url; return; }
+  if(data && data.url){ isIntentionalNavigation = true; window.location.href=data.url; return; }
   setEl('subscription-message','Billing portal function did not return a URL.');
 }
 function updateAccountPage(){
@@ -5347,6 +5351,7 @@ setInterval(autosaveSession, 20000);
 // not yet pushed to the cloud via "Save Client" — local autosave still
 // protects against data loss, but the clinician should know to sync.
 window.addEventListener('beforeunload', (e)=>{
+  if(isIntentionalNavigation) return;
   const hasClient = v('p-name') && v('p-name').trim()!=='';
   if(hasClient && S_isDirty){
     e.preventDefault();
