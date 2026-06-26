@@ -3587,6 +3587,20 @@ function calcBodyComp(){
   const fatmass=bf&&w ? w*bf/100 : null;
   const ffm=fatmass!==null ? w-fatmass : null;
   const muscle=parseFloat(v('bc-muscle'))||null;
+  console.log('[NutriFlow bodycomp] calcBodyComp', {
+    S_weight:S.weight,
+    profileWeightField:v('p-weight'),
+    w,
+    bfRaw:v('bc-bf'),
+    bf,
+    fatmass,
+    ffm,
+    bcManual:S.bcManual,
+    fatmassField:v('bc-fatmass'),
+    ffmField:v('bc-ffm'),
+    shouldFillFatMass:fatmass!==null && !S.bcManual?.fatmass && !v('bc-fatmass'),
+    shouldFillFfm:ffm!==null && !S.bcManual?.ffm && !v('bc-ffm')
+  });
   S.bc={bf,water,fatmass,ffm,muscle,metage,visceral};
   if(fatmass!==null&&!S.bcManual?.fatmass&&!v('bc-fatmass')) document.getElementById('bc-fatmass').value=fatmass.toFixed(1);
   if(ffm!==null&&!S.bcManual?.ffm&&!v('bc-ffm')) document.getElementById('bc-ffm').value=ffm.toFixed(1);
@@ -3609,8 +3623,17 @@ function calcBodyComp(){
 }
 
 function onBodyCompManualInput(field){
+  console.log('[NutriFlow bodycomp] onBodyCompManualInput', {
+    field,
+    before:{...(S.bcManual||{})},
+    profileWeightField:v('p-weight'),
+    bodyFatField:v('bc-bf'),
+    fatmassField:v('bc-fatmass'),
+    ffmField:v('bc-ffm')
+  });
   S.bcManual={fatmass:false,ffm:false,muscle:false,...(S.bcManual||{})};
   if(field==='fatmass' || field==='ffm' || field==='muscle') S.bcManual[field]=true;
+  console.log('[NutriFlow bodycomp] onBodyCompManualInput after flags', {after:S.bcManual});
   calcBodyComp();
 }
 
