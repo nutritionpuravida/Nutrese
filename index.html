@@ -189,6 +189,15 @@ select option { background-color: var(--bg-surface); color: var(--text-primary);
   width: 16px; height: 16px; padding: 0; border: none; background: none;
   accent-color: var(--teal-600); flex-shrink: 0; cursor: pointer;
 }
+.form-field input[type="radio"] {
+  -webkit-appearance: radio; appearance: radio;
+  width: 16px; height: 16px; padding: 0; border: none; background: none;
+  accent-color: var(--teal-600); flex-shrink: 0; cursor: pointer;
+}
+#p-conditions label.condition-selected {
+  color: var(--text-active);
+  font-weight: 700 !important;
+}
 .form-field .field-note { font-size: 11px; color: var(--text-muted); }
 .form-field .field-note.suggested { color: var(--text-muted); font-style: italic; }
 .section-label { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .07em; margin: 16px 0 9px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
@@ -2907,22 +2916,14 @@ const PREGNANCY_TRIMESTER_NOTES = {
 };
 
 let lastConditionRadio = null;
-function debugConditionTrace(label, extra={}){
-  try{
-    console.log('[NutriFlow condition]', label, {
-      selected:getSelectedPrimaryCondition(),
-      S_condition:S.condition,
-      S_conditions:S.conditions,
-      checked:Array.from(document.querySelectorAll('#p-conditions input[name="p-condition"]:checked')).map(r=>r.value),
-      lastConditionRadio:lastConditionRadio?.value || null,
-      ...extra
-    });
-  }catch(err){
-    console.error('[NutriFlow condition] trace failed', label, err);
-  }
-}
 function getSelectedPrimaryCondition(){
   return document.querySelector('#p-conditions input[name="p-condition"]:checked')?.value || '';
+}
+function refreshConditionVisualState(){
+  document.querySelectorAll('#p-conditions label').forEach(label=>{
+    const radio=label.querySelector('input[name="p-condition"]');
+    label.classList.toggle('condition-selected', !!radio?.checked);
+  });
 }
 function syncPrimaryConditionState(){
   const selected=getSelectedPrimaryCondition();
@@ -2931,33 +2932,27 @@ function syncPrimaryConditionState(){
   lastConditionRadio = selected ? document.querySelector(`#p-conditions input[name="p-condition"][value="${selected}"]`) : null;
   const triField=document.getElementById('pregnancy-trimester-field');
   if(triField) triField.style.display = selected==='Pregnancy' ? 'block' : 'none';
-  debugConditionTrace('syncPrimaryConditionState()', {syncedSelected:selected});
+  refreshConditionVisualState();
   return selected;
 }
 function setPrimaryCondition(condition){
   const selected=condition || '';
-  debugConditionTrace('setPrimaryCondition() before', {requested:selected});
   document.querySelectorAll('#p-conditions input[name="p-condition"]').forEach(radio=>{
     radio.checked = radio.value===selected;
   });
   syncPrimaryConditionState();
-  debugConditionTrace('setPrimaryCondition() after', {requested:selected});
 }
 function onConditionRadioClick(radio){
-  debugConditionTrace('onConditionRadioClick() before', {clicked:radio?.value || null, clickedChecked:!!radio?.checked});
   if(lastConditionRadio === radio && radio.checked){
     radio.checked = false;
   }
   syncPrimaryConditionState();
   scheduleAutosave();
   calcAll();
-  debugConditionTrace('onConditionRadioClick() after', {clicked:radio?.value || null, clickedChecked:!!radio?.checked});
 }
 function onPregnancyToggle(){
-  debugConditionTrace('onPregnancyToggle() before');
   syncPrimaryConditionState();
   calcAll();
-  debugConditionTrace('onPregnancyToggle() after');
 }
 
 const COND_MACROS = {
@@ -3134,7 +3129,7 @@ function nav(id) {
   if(id==='recipes') { renderRecipeDraft(); loadRecipes(); }
   if(id==='appointments') { loadAppointments(true).then(renderAppointments); }
   if(id==='account') { setTimeout(()=>refreshAccountSubscriptionPage().catch(err=>console.error('[NutriFlow account] deferred refresh failed', err)), 0); }
-  if(id==='profile') calcBodyComp();
+  if(id==='profile') { calcBodyComp(); refreshConditionVisualState(); }
   if(id==='exchanges') renderExchanges();
   // Always sync exchange inputs → S.ex before building meal plans
   // This ensures any value typed in the Exchange System is captured
@@ -5179,7 +5174,6 @@ function captureState(){
   SAVE_FIELD_IDS.forEach(id=>{const el=document.getElementById(id); if(el) fields[id]=el.value;});
   const primaryCondition=getSelectedPrimaryCondition();
   const conditions=primaryCondition ? [primaryCondition] : [];
-  debugConditionTrace('captureState()', {primaryCondition, conditions});
 return {
     fields, conditions, primaryCondition,
     ex:S.ex, exAuto:S.exAuto, exMeta:S.exMeta, tracking:S.tracking, mealSel:S.mealSel,
@@ -5193,7 +5187,6 @@ return {
 // Restores a previously captured state into the form + app state, then recalculates everything
 function applyState(state){
   if(!state) return;
-  debugConditionTrace('applyState() before', {statePrimaryCondition:state.primaryCondition, stateConditions:state.conditions});
   Object.entries(state.fields||{}).forEach(([id,val])=>{const el=document.getElementById(id); if(el) el.value=val;});
   S.weightSuggestionLocked=state.weightSuggestionLocked!==undefined ? !!state.weightSuggestionLocked : !!(state.fields&&state.fields['p-weight']);
   S.calAdjAutoValue=state.calAdjAutoValue;
@@ -5236,12 +5229,10 @@ function applyState(state){
   S.labValues=state.labValues||{};
   if(document.getElementById('page-labs')?.classList.contains('active')) renderLabsTable();
   calcAll(); calcBodyComp(); calcMacros();
-  debugConditionTrace('applyState() after', {statePrimaryCondition:state.primaryCondition, stateConditions:state.conditions});
 }
 
 // Resets the whole form/state back to a blank "new client" template
 function resetForm(){
-  debugConditionTrace('resetForm() before');
   S.calAdjAutoValue = undefined;
   S.weightSuggestionLocked = false;
   S.bcManual = {fatmass:false,muscle:false};
@@ -5276,7 +5267,6 @@ function resetForm(){
   if(document.getElementById('page-labs')?.classList.contains('active')) renderLabsTable();
   try{localStorage.removeItem('nutriflow_autosave');}catch(e){}
   calcAll(); calcBodyComp(); calcMacros();
-  debugConditionTrace('resetForm() after');
 }
 
 function clientStorageKey(){
@@ -5316,14 +5306,12 @@ function saveLocalClients(clients){
   }
 }
 function upsertLocalClient(row){
-  debugConditionTrace('upsertLocalClient() before', {rowCondition:row?.data?.primaryCondition, rowConditions:row?.data?.conditions});
   const normalized=normalizeClientRow(row);
   const key=normalized.client_ref || normalized.id;
   const clients=loadLocalClients().filter(c=>(c.client_ref||c.id)!==key && String(c.id)!==String(normalized.id));
   const saved={...normalized, localOnly:true, updated_at:new Date().toISOString()};
   clients.unshift(saved);
   saveLocalClients(clients);
-  debugConditionTrace('upsertLocalClient() after', {savedCondition:saved?.data?.primaryCondition, savedConditions:saved?.data?.conditions});
   return saved;
 }
 
@@ -5336,22 +5324,17 @@ function newClient(){
 // Saves (or updates) the current client into the cloud (Supabase),
 // scoped to the signed-in user via Row Level Security
 async function saveCurrentClient(){
-  debugConditionTrace('saveCurrentClient() start');
   const name=v('p-name')||'Unnamed client';
   let id=v('p-id');
   if(!id){ id='c'+Date.now(); document.getElementById('p-id').value=id; }
   const state=captureState();
-  debugConditionTrace('saveCurrentClient() after captureState', {statePrimaryCondition:state.primaryCondition, stateConditions:state.conditions});
   const localRow={id:'local_'+id, client_ref:id, name, data:state, updated_at:new Date().toISOString(), localOnly:true};
   if(!currentUser){
     upsertLocalClient(localRow);
     S_isDirty=false;
-    debugConditionTrace('saveCurrentClient() local save before alert');
     alert('✅ Client saved locally: '+name+'\n\nFind it anytime under "My Clients".');
-    debugConditionTrace('saveCurrentClient() local save after alert');
-    debugConditionTrace('saveCurrentClient() before renderClientList local');
     await renderClientList();
-    debugConditionTrace('saveCurrentClient() after renderClientList local');
+    refreshConditionVisualState();
     return;
   }
   let error=null;
@@ -5374,19 +5357,14 @@ async function saveCurrentClient(){
     console.error('[NutriFlow clients] Supabase save failed', error);
     upsertLocalClient(localRow);
     S_isDirty=false;
-    debugConditionTrace('saveCurrentClient() fallback local before alert', {error:error?.message || error});
     alert('✅ Client saved locally: '+name+'\n\nSupabase clients table is unavailable or not configured yet: '+(error.message||error));
-    debugConditionTrace('saveCurrentClient() fallback local after alert');
   } else {
     if(savedRemote) upsertLocalClient({...savedRemote, localOnly:false});
     S_isDirty=false; // changes are now safely in the cloud
-    debugConditionTrace('saveCurrentClient() remote save before alert', {savedRemoteCondition:savedRemote?.data?.primaryCondition, savedRemoteConditions:savedRemote?.data?.conditions});
     alert('✅ Client saved: '+name+'\n\nFind it anytime under "My Clients" in the sidebar.');
-    debugConditionTrace('saveCurrentClient() remote save after alert');
   }
-  debugConditionTrace('saveCurrentClient() before renderClientList');
   await renderClientList();
-  debugConditionTrace('saveCurrentClient() after renderClientList');
+  refreshConditionVisualState();
 }
 
 async function loadClientById(rowId){
@@ -5430,7 +5408,6 @@ async function deleteClientById(rowId){
 }
 
 async function renderClientList(){
-  debugConditionTrace('renderClientList() start');
   const el=document.getElementById('clients-table');
   if(!el) return;
   const localClients=loadLocalClients();
@@ -5449,7 +5426,6 @@ async function renderClientList(){
     S.clientListCache=[...remote, ...localClients.filter(c=>c.localOnly && !remoteRefs.has(c.client_ref||c.id))]
       .sort((a,b)=>String(b.updated_at).localeCompare(String(a.updated_at)));
     renderClientListRows(S.clientListCache);
-    debugConditionTrace('renderClientList() after remote render', {clientCount:S.clientListCache.length});
   }catch(e){
     console.error('[NutriFlow clients] Supabase list failed', e);
     if(!localClients.length){
@@ -5457,12 +5433,10 @@ async function renderClientList(){
       renderClientListRows([]);
     }
   }
-  debugConditionTrace('renderClientList() end');
 }
 
 // Renders the client table for a given (possibly filtered) list of clients.
 function renderClientListRows(clients){
-  debugConditionTrace('renderClientListRows() start', {clientCount:(clients||[]).length});
   const el=document.getElementById('clients-table');
   if(!el) return;
   if(!clients || !clients.length){
