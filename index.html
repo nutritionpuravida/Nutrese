@@ -5315,6 +5315,31 @@ function upsertLocalClient(row){
   return saved;
 }
 
+function stateHasValue(state, fieldId){
+  const val=state?.fields?.[fieldId];
+  return val!==undefined && val!==null && String(val).trim()!=='';
+}
+function isSparseClientState(state){
+  return !stateHasValue(state,'p-age') && !stateHasValue(state,'p-weight');
+}
+function isRichExistingClientState(state){
+  if(!state) return false;
+  const fields=state.fields||{};
+  const hasCore = stateHasValue(state,'p-age') || stateHasValue(state,'p-weight') || stateHasValue(state,'p-height');
+  const hasBodyComp = ['bc-bf','bc-water','bc-fatmass','bc-muscle','bc-metage','bc-visceral'].some(id=>stateHasValue(state,id));
+  const hasClinical = !!(state.primaryCondition || (state.conditions&&state.conditions.length) || state.notes&&Object.values(state.notes).some(Boolean) || state.intake&&Object.values(state.intake).some(Boolean));
+  const hasLabs = state.labValues && Object.values(state.labValues).some(v=>v!==undefined && v!==null && String(v).trim()!=='');
+  const hasNonDefaultEx = state.ex && ['starch','protein','fat'].some(k=>Number(state.ex[k]||0)>0);
+  return hasCore || hasBodyComp || hasClinical || hasLabs || hasNonDefaultEx || Object.values(fields).filter(v=>String(v||'').trim()!=='').length>=5;
+}
+function shouldWarnRiskyClientOverwrite(currentState, existingRow){
+  const existingState=existingRow?.data || existingRow?.state || null;
+  return isSparseClientState(currentState) && isRichExistingClientState(existingState);
+}
+function existingClientDisplayName(existingRow){
+  return existingRow?.name || existingRow?.data?.fields?.['p-name'] || existingRow?.state?.fields?.['p-name'] || 'this client';
+}
+
 function newClient(){
   if(!confirm('Start a new client? Unsaved changes to the current client will be lost (use "Save Client" first if needed).')) return;
   resetForm();
@@ -5324,11 +5349,23 @@ function newClient(){
 // Saves (or updates) the current client into the cloud (Supabase),
 // scoped to the signed-in user via Row Level Security
 async function saveCurrentClient(){
-  const name=v('p-name')||'Unnamed client';
+  const name=(v('p-name')||'').trim();
+  if(!name){
+    alert('Please enter a client name before saving.');
+    nav('profile');
+    setTimeout(()=>document.getElementById('p-name')?.focus(), 50);
+    return;
+  }
   let id=v('p-id');
   if(!id){ id='c'+Date.now(); document.getElementById('p-id').value=id; }
   const state=captureState();
   const localRow={id:'local_'+id, client_ref:id, name, data:state, updated_at:new Date().toISOString(), localOnly:true};
+  const existingLocal=loadLocalClients().find(c=>(c.client_ref||c.id)===id);
+  if(existingLocal && shouldWarnRiskyClientOverwrite(state, existingLocal)){
+    const existingName=existingClientDisplayName(existingLocal);
+    const ok=confirm(`⚠️ This will overwrite the existing client "${existingName}" with blank/incomplete data. Their saved profile, body composition, exchanges, and meal plans may be lost. Continue?`);
+    if(!ok) return;
+  }
   if(!currentUser){
     upsertLocalClient(localRow);
     S_isDirty=false;
@@ -5340,10 +5377,15 @@ async function saveCurrentClient(){
   let error=null;
   let savedRemote=null;
   try{
-    const existingResult = await supabaseClient.from('clients').select('id').eq('user_id',currentUser.id).eq('client_ref',id).maybeSingle();
+    const existingResult = await supabaseClient.from('clients').select('*').eq('user_id',currentUser.id).eq('client_ref',id).maybeSingle();
     if(existingResult.error) throw existingResult.error;
     const existing=existingResult.data;
     if(existing){
+      if(!existingLocal && shouldWarnRiskyClientOverwrite(state, existing)){
+        const existingName=existingClientDisplayName(existing);
+        const ok=confirm(`⚠️ This will overwrite the existing client "${existingName}" with blank/incomplete data. Their saved profile, body composition, exchanges, and meal plans may be lost. Continue?`);
+        if(!ok) return;
+      }
       const result = await supabaseClient.from('clients').update({name, data:state, updated_at:new Date().toISOString()}).eq('id',existing.id).select().maybeSingle();
       error=result.error; savedRemote=result.data;
     } else {
