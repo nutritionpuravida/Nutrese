@@ -1908,6 +1908,9 @@ function splitExchangeAcrossSlots(total, slots){
   });
   return out;
 }
+function exchangeDistTotal(dist){
+  return Object.values(dist||{}).reduce((sum,n)=>sum+Number(n||0),0);
+}
 function snackFruitChoice(extras){
   const arr=Array.isArray(extras)?extras:[];
   if(arr.includes('driedfruit')) return 'driedfruit';
@@ -2953,6 +2956,10 @@ function getDayMealAllocation(plan=S.mealSel, lang=S.mealLanguage||'GR'){
   if(lunchScales) scalableSlots.push('lunch');
   if(dinnerScales) scalableSlots.push('dinner');
   const warnings=[];
+  const fruitGap=Number(ex?.fruit||0)-exchangeDistTotal(fruitDist);
+  if(fruitGap>0){
+    warnings.push(`${fruitGap} fruit serving(s) unallocated — adjust Exchange System or redistribute across meal slots.`);
+  }
   const dairyGap=Number(ex?.dairy||0)-Number(fixed?.dairy||0);
   if(dairyGap>0){
     warnings.push(`${dairyGap} dairy serving(s) unallocated — add Milk/Yogurt to another snack slot or adjust Exchange System.`);
@@ -3634,12 +3641,41 @@ function resetExAuto(key){
   renderExchanges();
 }
 function applySuggestedExchangeServings(){
-  S.exAuto={starch:true,protein:true,fat:true,...(S.exAuto||{})};
-  calcExchanges();
+  syncExchangeInputsToState();
+  calcMacros();
+  const ex=S.ex;
+  const m=S.exMeta || makeExMeta();
+  const caps=getEffectiveCaps(S.conditions);
+  if(!S.goalKcal || !Number.isFinite(S.carbG) || !Number.isFinite(S.protG) || !Number.isFinite(S.fatG)){
+    alert('Fill Client Profile and Macro Targets first so suggested servings can be calculated.');
+    return;
+  }
+
+  const usedCHO = ex.fruit*m.fruit.cho + ex.veg*m.veg.cho + ex.dairy*m.dairy.cho;
+  const usedPRO = ex.veg*m.veg.pro + ex.dairy*m.dairy.pro;
+  const usedFAT = ex.dairy*m.dairy.fat;
+
+  const starchNeeded = m.starch.cho>0 ? Math.round(Math.max(0, S.carbG-usedCHO)/m.starch.cho) : 0;
+  const starch = Math.max(0, Math.min(starchNeeded, caps.starchDailyMax));
+
+  const proteinNeeded = m.protein.pro>0
+    ? Math.round(Math.max(0, S.protG-usedPRO-(starch*m.starch.pro))/m.protein.pro)
+    : 0;
+  const protein = Math.max(0, Math.min(proteinNeeded, caps.proteinDailyMax));
+
+  const fatNeeded = m.fat.fat>0
+    ? Math.round(Math.max(0, S.fatG-usedFAT-(starch*m.starch.fat)-(protein*m.protein.fat))/m.fat.fat)
+    : 0;
+  const fat = Math.max(0, Math.min(fatNeeded, caps.fatDailyMax));
+
+  ex.starch=starch;
+  ex.protein=protein;
+  ex.fat=fat;
+  S.exAuto={...(S.exAuto||{}),starch:true,protein:true,fat:true};
   renderExchanges();
   refreshExchangePlansNow();
   const note=document.getElementById('exchange-check');
-  if(note) note.insertAdjacentHTML('afterbegin','<div class="alert ok">✅ Suggested servings applied within the active condition caps. Review clinically and adjust if needed.</div>');
+  if(note) note.insertAdjacentHTML('afterbegin',`<div class="alert ok">✅ Suggested servings applied: Starch ${starch}, Protein ${protein}, Fat ${fat}. Review clinically and adjust if needed.</div>`);
 }
 
 // Called on every keystroke in the Exchange System table.
@@ -3983,7 +4019,7 @@ function buildSevenDay(){
     const dayLabel=lang==='EN' ? ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][di] : p.day;
     html+=`<th style="background:var(--teal-600);color:#fff;padding:8px;min-width:190px;text-align:center">
       ${dayLabel}<div style="font-size:10px;font-weight:400;margin-top:2px;color:${gapOk?'#9FE1CB':'#FFD580'}">${dt.totalKcal} kcal ${gapOk?'✅':dt.gap>0?'▲':'▼'}</div>
-      <button class="btn" style="margin-top:5px;padding:3px 7px;font-size:10px;background:rgba(255,255,255,.14);color:#fff;border-color:rgba(255,255,255,.35)" onclick="setExpandedSevenDay(${expandedSevenDayIndex===di?'null':di})">${expandedSevenDayIndex===di?(lang==='EN'?'Collapse':'Κλείσιμο'):(lang==='EN'?'Expand':'Άνοιγμα')}</button>
+      <button type="button" class="btn" style="margin-top:5px;padding:3px 7px;font-size:10px;background:rgba(255,255,255,.14);color:#fff;border-color:rgba(255,255,255,.35)" onclick="event.preventDefault();event.stopPropagation();window.setExpandedSevenDay(${expandedSevenDayIndex===di?'null':di})">${expandedSevenDayIndex===di?(lang==='EN'?'Collapse':'Κλείσιμο'):(lang==='EN'?'Expand':'Άνοιγμα')}</button>
     </th>`;
   });
   html+='</tr></thead><tbody>';
@@ -4042,7 +4078,7 @@ function buildSevenDay(){
       [lang==='EN'?'Before sleep':'Πριν τον ύπνο', dt.slpText, dt.slpKcal],
     ];
     html+=`<div class="card" style="margin-top:14px;border-color:var(--teal-100)">
-      <div class="card-header"><span class="card-title">${lang==='EN'?'Expanded day':'Αναλυτική ημέρα'} — ${dayLabel}</span><span class="card-action" onclick="setExpandedSevenDay(null)">${lang==='EN'?'Close':'Κλείσιμο'}</span></div>
+      <div class="card-header"><span class="card-title">${lang==='EN'?'Expanded day':'Αναλυτική ημέρα'} — ${dayLabel}</span><span class="card-action" onclick="window.setExpandedSevenDay(null)">${lang==='EN'?'Close':'Κλείσιμο'}</span></div>
       <div class="card-body">
         ${detailRows.map(([label,text,kcal])=>`<div class="meal-row"><div class="meal-time">${label}<div style="font-size:11px;color:var(--text-muted)">${kcal} kcal</div></div><div class="meal-desc" style="font-size:14px;line-height:1.5">${text}</div></div>`).join('')}
         <div style="margin-top:10px;font-weight:800;color:${Math.abs(dt.gap)<=100?'var(--teal-600)':'var(--amber-text)'}">${lang==='EN'?'Daily total':'Σύνολο ημέρας'}: ${dt.totalKcal} kcal · ${lang==='EN'?'Target':'Στόχος'}: ${dt.target} · ${dt.gap>0?'+':''}${dt.gap}</div>
@@ -4057,6 +4093,7 @@ function setExpandedSevenDay(dayIndex){
   expandedSevenDayIndex = dayIndex===null ? null : Number(dayIndex);
   buildSevenDay();
 }
+window.setExpandedSevenDay=setExpandedSevenDay;
 
 // Updates one meal slot (breakfast/lunch/dinner — single dropdown value) for one day in the 7-Day Plan
 function updateWeekPlan(dayIndex, mealKey, value){
