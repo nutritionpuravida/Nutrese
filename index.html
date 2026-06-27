@@ -3732,8 +3732,8 @@ function calcBodyComp(){
   const ffm=fatmass!==null ? w-fatmass : null;
   const fatmassEl=document.getElementById('bc-fatmass');
   const ffmEl=document.getElementById('bc-ffm');
-  if(fatmass!==null && !S.bcManual?.fatmass && fatmassEl) fatmassEl.value=fatmass.toFixed(1);
-  if(ffm!==null && !S.bcManual?.ffm && ffmEl) ffmEl.value=ffm.toFixed(1);
+  if(fatmass!==null && fatmassEl && (!S.bcManual?.fatmass || !String(fatmassEl.value||'').trim())) fatmassEl.value=fatmass.toFixed(1);
+  if(ffm!==null && ffmEl && (!S.bcManual?.ffm || !String(ffmEl.value||'').trim())) ffmEl.value=ffm.toFixed(1);
   const muscle=parseFloat(v('bc-muscle'))||null;
   S.bc={bf,water,fatmass,ffm,muscle,metage,visceral};
   if(bf!==null){const lo=isMale?10:18,hi=isMale?20:28; setEl('bc-bf-note',bf<lo?'⚠ Low — review energy availability':bf>hi?'⚠ High — metabolic risk':'✅ Within normal range');}
@@ -6172,6 +6172,7 @@ updateOnlineStatus();
 
 </body>
 </html>
+
 
 
 
