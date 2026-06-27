@@ -1258,6 +1258,7 @@ tr:hover td { background: var(--bg-hover); }
   <button class="bnav-item" onclick="nav('recipes');setBnav(this)"><span>🍲</span><span>Recipes</span></button>
   <button class="bnav-item" onclick="nav('appointments');setBnav(this)"><span>📅</span><span>Appts</span></button>
   <button class="bnav-item" onclick="nav('account');setBnav(this)"><span>💳</span><span>Account</span></button>
+  <button class="bnav-item" onclick="openFeedbackModal();setBnav(this)"><span>💬</span><span>Feedback</span></button>
 </nav>
 <script>
 const S = {
@@ -2806,6 +2807,7 @@ function buildSlotSnack(slot, extras, lang='GR', breakfastKey, plan=null, fruitD
 }
 
 function autoSnackExtrasForPlan(plan){
+  const original=plan||{};
   const p=normalizeMealPlan(plan);
   const slots=[
     {key:'snack1Extras', slot:'snk1'},
@@ -2822,6 +2824,14 @@ function autoSnackExtrasForPlan(plan){
     if(i<dairySlots) keep.push(current.includes('yogurt') ? 'yogurt' : 'milk');
     p[cfg.key]=keep;
   });
+  // Keep both naming styles alive: 1-Day uses breakfast/lunch/dinner +
+  // snack1Extras, while 7-Day uses brk/lun/din + snk1Extras.
+  p.brk=p.breakfast;
+  p.lun=p.lunch;
+  p.din=p.dinner;
+  p.snk1Extras=p.snack1Extras;
+  p.snk2Extras=p.snack2Extras;
+  if(original.day) p.day=original.day;
   return p;
 }
 
@@ -3823,10 +3833,21 @@ function refreshExchangeDerived(){
   renderExchangeChecks();
   renderEngine();
   updateDashMetrics();
+  autoPopulateSnacksFromExchanges();
   // Rebuild meal plans so portions/snacks reflect the new exchange values
   if(document.getElementById('page-oneday')?.classList.contains('active')) buildOneDayPlan();
   if(document.getElementById('page-sevenday')?.classList.contains('active')) buildSevenDay();
   if(document.getElementById('page-report')?.classList.contains('active')) buildReport();
+}
+
+function missingCriticalProfileFields(){
+  const missing=[];
+  if(!S.age) missing.push('age');
+  if(!S.sex) missing.push('sex');
+  if(!S.height) missing.push('height');
+  if(!S.weight) missing.push('weight');
+  if(!S.goalKcal) missing.push('goal calories');
+  return missing;
 }
 
 function renderExchangeChecks(){
@@ -4205,7 +4226,7 @@ function openSevenDayModal(dayIndex){
         <div style="font-size:18px;font-weight:900">${safeHtml(dayLabel)}</div>
         <div style="font-size:12px;opacity:.9">${lang==='EN'?'Daily total':'Σύνολο ημέρας'}: ${dt.totalKcal} kcal · ${lang==='EN'?'Target':'Στόχος'}: ${dt.target} · ${dt.gap>0?'+':''}${dt.gap}</div>
       </div>
-      <button type="button" class="btn" style="background:#fff;color:var(--teal-700);border-color:#fff;font-size:16px;font-weight:900;padding:5px 10px" onclick="closeSevenDayModal()">×</button>
+      <button type="button" class="btn" aria-label="Close expanded day" title="Close" style="background:#ffffff!important;color:#0F6E56!important;border:2px solid #0F6E56!important;font-size:18px;font-weight:900;line-height:1;min-width:34px;height:34px;padding:4px 9px;display:flex;align-items:center;justify-content:center" onclick="closeSevenDayModal()">✕</button>
     </div>
     <div style="padding:16px;display:flex;flex-direction:column;gap:10px">
       ${rows.map(([label,text,kcal])=>`<div style="display:grid;grid-template-columns:150px 1fr;gap:12px;padding:12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-page)">
@@ -4450,14 +4471,15 @@ function renderEngine(){
   const m=S.exMeta;
   const planKcal=ex.fruit*m.fruit.kcal + ex.veg*m.veg.kcal + ex.dairy*m.dairy.kcal + ex.starch*m.starch.kcal + ex.protein*m.protein.kcal + ex.fat*m.fat.kcal;
   const macroTotal=S.carbPct+S.protPct+S.fatPct;
-  const incomplete=!S.name||!S.age||!S.height||!S.weight;
+  const missingProfile=missingCriticalProfileFields();
+  const incomplete=missingProfile.length>0;
   const lowKcal=S.goalKcal&&S.goalKcal<1200;
   const kcal=S.goalKcal||0;
   const gap=Math.round(planKcal-kcal);
   const anyCapped = gapData.starchCapped||gapData.proteinCapped||gapData.fatCapped;
 
   const checks=[
-    {label:'Client profile completeness', val:incomplete?(4-[S.name,S.age,S.height,S.weight].filter(Boolean).length)+' field(s) missing':'Complete', st:incomplete?'err':'ok', why:'Demographics, anthropometrics, goal, condition must be complete before print.'},
+    {label:'Client profile completeness', val:incomplete?missingProfile.join(', ')+' missing':'Complete', st:incomplete?'warn':'ok', why:'Complete age, sex, height, weight and goal calories for the most reliable plan.'},
     {label:'Macro split total (Carb+Pro+Fat)', val:macroTotal+'%', st:Math.abs(macroTotal-100)<=1?'ok':'err', why:'Must equal 100%.'},
     {label:'Goal calories', val:kcal?Math.round(kcal)+' kcal':'—', st:lowKcal?'err':kcal>800?'ok':'warn', why:'Extreme calorie targets need clinician review.'},
     {label:'Goal calories vs BMR', val:S.bmr?(kcal>=S.bmr*0.8?'OK — above 80% BMR':'⚠ Below BMR'):'—', st:!S.bmr?'neutral':kcal>=S.bmr*0.8?'ok':'err', why:'Plan below BMR may be too aggressive without medical supervision.'},
@@ -4555,7 +4577,8 @@ function updateDashMetrics(){
   const dCondEl=document.getElementById('d-cond');
   if(dCondEl) dCondEl.title=condList.map(conditionLabel).join(', ');
   setEl('d-goal-sub',S.goal);
-  const incomplete=!S.name||!S.age||!S.height||!S.weight;
+  const missingProfile=missingCriticalProfileFields();
+  const incomplete=missingProfile.length>0;
   const macroOk=Math.abs(S.carbPct+S.protPct+S.fatPct-100)<=1;
   const lowKcal=S.goalKcal&&S.goalKcal<1200;
   const gapData=S.exGap||{};
@@ -4581,7 +4604,7 @@ function updateDashMetrics(){
   const days=['Κυριακή','Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο'];
   setEl('dash-day',days[new Date().getDay()]);
   const alerts=[];
-  if(incomplete) alerts.push('Client profile incomplete — fill all required fields before printing.');
+  if(incomplete) alerts.push('Profile details to complete when available: '+missingProfile.join(', ')+'. Plans can be reviewed once key clinical inputs are ready.');
   if(lowKcal) alerts.push('⚠ Goal calories very low ('+Math.round(S.goalKcal)+' kcal) — clinical review needed.');
   if(anyCapped) alerts.push('Macro target exceeds realistic food portions — review Macro Targets and Exchange System for safer adjustment options.');
   const dashAlert=document.getElementById('dash-alert');
