@@ -1946,7 +1946,8 @@ function getDairyDistribution(breakfastKey=(S.mealSel && S.mealSel.breakfast) ||
     const key=slot==='snk1'?'snack1Extras':slot==='snk2'?'snack2Extras':'sleepExtras';
     return !!snackDairyChoice(p[key]);
   });
-  const dist=splitExchangeAcrossSlots(remaining, selected);
+  const backfill=['snk1','snk2','sleep'].filter(slot=>!selected.includes(slot));
+  const dist=splitExchangeAcrossSlots(remaining, [...selected, ...backfill]);
   dist.brk=brkUsesDairy;
   return dist;
 }
@@ -2952,6 +2953,10 @@ function getDayMealAllocation(plan=S.mealSel, lang=S.mealLanguage||'GR'){
   if(lunchScales) scalableSlots.push('lunch');
   if(dinnerScales) scalableSlots.push('dinner');
   const warnings=[];
+  const dairyGap=Number(ex?.dairy||0)-Number(fixed?.dairy||0);
+  if(dairyGap>0){
+    warnings.push(`${dairyGap} dairy serving(s) unallocated — add Milk/Yogurt to another snack slot or adjust Exchange System.`);
+  }
   allocateRemainingExchange('starch','starch',ex,fixed,scalableSlots,portions,caps.starchPerMealMax,warnings);
   allocateRemainingExchange('protein','prot',ex,fixed,scalableSlots,portions,caps.proteinPerMealMax,warnings);
   allocateRemainingExchange('fat','fat',ex,fixed,scalableSlots,portions,caps.fatPerMealMax,warnings);
