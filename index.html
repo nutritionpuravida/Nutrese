@@ -2776,6 +2776,43 @@ function buildSlotSnack(slot, extras, lang='GR', breakfastKey, plan=null, fruitD
   return {exch, text: parts.length ? parts.join(' + ') : '—'};
 }
 
+function autoSnackExtrasForPlan(plan){
+  const p=normalizeMealPlan(plan);
+  const slots=[
+    {key:'snack1Extras', slot:'snk1'},
+    {key:'snack2Extras', slot:'snk2'},
+    {key:'sleepExtras', slot:'sleep'},
+  ];
+  const fruitSlots=Math.min(Math.max(0, Math.round(Number(S.ex?.fruit||0))), slots.length);
+  const brkUsesDairy=(p.breakfast==='BRK_CEREAL' || p.breakfast==='BRK_OATS_VEGAN') ? 1 : 0;
+  const dairySlots=Math.min(Math.max(0, Math.round(Number(S.ex?.dairy||0)-brkUsesDairy)), slots.length);
+  slots.forEach((cfg,i)=>{
+    const current=Array.isArray(p[cfg.key]) ? p[cfg.key] : [];
+    const keep=current.filter(v=>!['fruit','driedfruit','milk','yogurt','nofruit'].includes(v));
+    if(i<fruitSlots) keep.push(current.includes('driedfruit') ? 'driedfruit' : 'fruit');
+    if(i<dairySlots) keep.push(current.includes('yogurt') ? 'yogurt' : 'milk');
+    p[cfg.key]=keep;
+  });
+  return p;
+}
+
+function syncSnackCheckboxUiFromMealSel(){
+  [['s-snack1','snack1Extras'],['s-snack2','snack2Extras'],['s-sleep','sleepExtras']].forEach(([elId,key])=>{
+    const el=document.getElementById(elId);
+    if(!el) return;
+    const selected=S.mealSel?.[key]||[];
+    el.querySelectorAll('input[type=checkbox]').forEach(cb=>{ cb.checked=selected.includes(cb.value); });
+  });
+}
+
+function autoPopulateSnacksFromExchanges(){
+  S.mealSel=autoSnackExtrasForPlan(S.mealSel);
+  syncSnackCheckboxUiFromMealSel();
+  if(S.weekPlans){
+    S.weekPlans=S.weekPlans.map(plan=>autoSnackExtrasForPlan(plan));
+  }
+}
+
 function setMealLanguage(lang){
   S.mealLanguage = lang==='EN' ? 'EN' : 'GR';
   updateMealLanguageButtons();
@@ -2847,8 +2884,8 @@ const CAPS = {
   starchPerMealMax: 4,  // ≤4 per main meal
   proteinDailyMax: 8,   // 8 exchanges/day ≈ 240g cooked meat/fish/day total
   proteinPerMealMax: 4, // ≤4 per main meal ≈ 120g cooked per meal
-  fatDailyMax: 6,       // 6 tsp oil/day total
-  fatPerMealMax: 3,     // ≤3 tsp per main meal
+  fatDailyMax: 99,      // no default condition cap; specific conditions override below
+  fatPerMealMax: 99,    // no default condition cap; specific conditions override below
 };
 
 // Split a daily exchange total across N main meals, each capped at perMealMax
@@ -3134,8 +3171,8 @@ const COND_MACROS = {
 // conditions selected, the MOST RESTRICTIVE value across all of them wins
 // for each cap — e.g. CKD + Diabetes → low-protein AND low-starch together.
 const COND_CAP_OVERRIDES = {
-  CKD:          { proteinDailyMax:6, proteinPerMealMax:3 },           // KDIGO 2024: ~0.8g/kg → realistic for avg adult
-  Hemodialysis: { proteinDailyMax:8, proteinPerMealMax:4 },           // HD needs MORE protein due to losses
+  CKD:          { proteinDailyMax:6, proteinPerMealMax:3, fatDailyMax:6, fatPerMealMax:3 }, // renal + cardiometabolic realism
+  Hemodialysis: { proteinDailyMax:8, proteinPerMealMax:4, fatDailyMax:6, fatPerMealMax:3 }, // HD needs MORE protein due to losses
   Dyslipidemia: { fatDailyMax:6, fatPerMealMax:3 },                   // Mediterranean pattern allows olive oil; focus on fat quality
   Diabetes:     { starchDailyMax:7, starchPerMealMax:3 },             // ADA 2026: moderate carb, not very low
   PCOS:         { starchDailyMax:7, starchPerMealMax:3 },             // moderate carb reduction
@@ -3716,6 +3753,7 @@ function refreshExchangePlansNow(){
   renderExchanges();
   renderEngine();
   updateDashMetrics();
+  autoPopulateSnacksFromExchanges();
   if(document.getElementById('page-oneday')) buildOneDayPlan();
   if(document.getElementById('page-sevenday')) buildSevenDay();
   if(document.getElementById('page-report')) buildReport();
@@ -3796,7 +3834,7 @@ function renderExchangeChecks(){
       }
       if(i===3){ // Fat
         if(diff<0) fix=gapData.fatCapped
-          ? `Fat capped at ${caps.fatDailyMax} tsp/day (condition limit) — need ${Math.round(Math.abs(diff)/5)} more fat ex`
+          ? (caps.fatDailyMax>=90 ? `Fat target exceeds the non-restrictive safety ceiling — review calories/macros rather than forcing extra oil` : `Fat capped at ${caps.fatDailyMax} tsp/day (condition limit) — need ${Math.round(Math.abs(diff)/5)} more fat ex`)
           : `Add ${Math.round(Math.abs(diff)/5)} fat exchange(s) (${Math.round(Math.abs(diff)/5)} tsp olive oil)`;
         else fix=`Consider reducing fat by ${Math.round(Math.abs(diff)/5)} exchange(s), or accept +${Math.abs(diff)}g if fat quality is appropriate`;
       }
@@ -4019,7 +4057,7 @@ function buildSevenDay(){
     const dayLabel=lang==='EN' ? ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][di] : p.day;
     html+=`<th style="background:var(--teal-600);color:#fff;padding:8px;min-width:190px;text-align:center">
       ${dayLabel}<div style="font-size:10px;font-weight:400;margin-top:2px;color:${gapOk?'#9FE1CB':'#FFD580'}">${dt.totalKcal} kcal ${gapOk?'✅':dt.gap>0?'▲':'▼'}</div>
-      <button type="button" class="btn" style="margin-top:5px;padding:3px 7px;font-size:10px;background:rgba(255,255,255,.14);color:#fff;border-color:rgba(255,255,255,.35)" onclick="event.preventDefault();event.stopPropagation();window.setExpandedSevenDay(${expandedSevenDayIndex===di?'null':di})">${expandedSevenDayIndex===di?(lang==='EN'?'Collapse':'Κλείσιμο'):(lang==='EN'?'Expand':'Άνοιγμα')}</button>
+      <button type="button" class="btn seven-day-expand-btn" data-day-index="${expandedSevenDayIndex===di?'':di}" style="margin-top:5px;padding:3px 7px;font-size:10px;background:rgba(255,255,255,.14);color:#fff;border-color:rgba(255,255,255,.35)">${expandedSevenDayIndex===di?(lang==='EN'?'Collapse':'Κλείσιμο'):(lang==='EN'?'Expand':'Άνοιγμα')}</button>
     </th>`;
   });
   html+='</tr></thead><tbody>';
@@ -4078,7 +4116,7 @@ function buildSevenDay(){
       [lang==='EN'?'Before sleep':'Πριν τον ύπνο', dt.slpText, dt.slpKcal],
     ];
     html+=`<div class="card" style="margin-top:14px;border-color:var(--teal-100)">
-      <div class="card-header"><span class="card-title">${lang==='EN'?'Expanded day':'Αναλυτική ημέρα'} — ${dayLabel}</span><span class="card-action" onclick="window.setExpandedSevenDay(null)">${lang==='EN'?'Close':'Κλείσιμο'}</span></div>
+      <div class="card-header"><span class="card-title">${lang==='EN'?'Expanded day':'Αναλυτική ημέρα'} — ${dayLabel}</span><span class="card-action seven-day-expand-btn" data-day-index="">${lang==='EN'?'Close':'Κλείσιμο'}</span></div>
       <div class="card-body">
         ${detailRows.map(([label,text,kcal])=>`<div class="meal-row"><div class="meal-time">${label}<div style="font-size:11px;color:var(--text-muted)">${kcal} kcal</div></div><div class="meal-desc" style="font-size:14px;line-height:1.5">${text}</div></div>`).join('')}
         <div style="margin-top:10px;font-weight:800;color:${Math.abs(dt.gap)<=100?'var(--teal-600)':'var(--amber-text)'}">${lang==='EN'?'Daily total':'Σύνολο ημέρας'}: ${dt.totalKcal} kcal · ${lang==='EN'?'Target':'Στόχος'}: ${dt.target} · ${dt.gap>0?'+':''}${dt.gap}</div>
@@ -4087,6 +4125,7 @@ function buildSevenDay(){
   }
   html+=`<div class="field-note" style="margin-top:8px">Each day shows kcal per meal and daily total vs target. ✅ = within ±100 kcal. Fruit/dairy snack choices draw from the Exchange System totals. Change any meal dropdown or snack checkbox and kcal updates live, per day.</div>`;
   setEl('sevenday-body',html);
+  bindSevenDayExpandButtons();
 }
 
 function setExpandedSevenDay(dayIndex){
@@ -4094,6 +4133,17 @@ function setExpandedSevenDay(dayIndex){
   buildSevenDay();
 }
 window.setExpandedSevenDay=setExpandedSevenDay;
+
+function bindSevenDayExpandButtons(){
+  document.querySelectorAll('#sevenday-body .seven-day-expand-btn').forEach(btn=>{
+    btn.onclick=(event)=>{
+      event.preventDefault();
+      event.stopPropagation();
+      const raw=btn.dataset.dayIndex;
+      setExpandedSevenDay(raw==='' ? null : Number(raw));
+    };
+  });
+}
 
 // Updates one meal slot (breakfast/lunch/dinner — single dropdown value) for one day in the 7-Day Plan
 function updateWeekPlan(dayIndex, mealKey, value){
@@ -4337,7 +4387,7 @@ function renderEngine(){
     {label:'Macro kcal vs exchange kcal', val:Math.abs(planKcal-kcal)<=50?'Gap ±'+Math.abs(gap)+' kcal (OK)':'Gap '+gap+' kcal', st:Math.abs(gap)<=50?'ok':'warn', why:'Exchange kcal should reconcile to goal calories (±50 kcal).'},
     {label:'Starch exchanges (cap '+caps.starchDailyMax+'/day)', val:ex.starch+' ex'+(gapData.starchCapped?' (capped)':''), st:gapData.starchCapped?'warn':'ok', why:gapData.starchCapped?`Carb target needs more than ${caps.starchDailyMax} starch exchanges/day — capped for realism${conditions.includes('Diabetes')||conditions.includes('PCOS')?' (lower cap due to Diabetes/PCOS)':''}. ~${gapData.choGap}g carbs not covered by starch alone.`:'Within realistic daily range.'},
     {label:'Protein exchanges (cap '+caps.proteinDailyMax+'/day)', val:ex.protein+' ex'+(gapData.proteinCapped?' (capped)':''), st:gapData.proteinCapped?'warn':'ok', why:gapData.proteinCapped?`Protein target needs more than ${caps.proteinDailyMax} exchanges/day (~${caps.proteinDailyMax*gramsPerEx}g cooked meat/fish) — capped at realistic portions${conditions.includes('CKD')||conditions.includes('Hemodialysis')?' (lower cap due to CKD/Hemodialysis)':''}. ~${gapData.proGap}g protein/day not covered.`:'Within realistic daily range.'},
-    {label:'Fat exchanges (cap '+caps.fatDailyMax+'/day)', val:ex.fat+' ex'+(gapData.fatCapped?' (capped)':''), st:gapData.fatCapped?'warn':'ok', why:gapData.fatCapped?`Fat target needs more than ${caps.fatDailyMax} tsp oil/day equivalent — capped${conditions.includes('Dyslipidemia')||conditions.includes('GERD')||conditions.includes('Obesity')?' (lower cap due to selected conditions)':''}. ~${gapData.fatGap}g fat/day not covered.`:'Within realistic daily range.'},
+    {label:'Fat exchanges '+(caps.fatDailyMax>=90?'(no condition cap)':'(cap '+caps.fatDailyMax+'/day)'), val:ex.fat+' ex'+(gapData.fatCapped?' (capped)':''), st:gapData.fatCapped?'warn':'ok', why:gapData.fatCapped?`Fat target needs more than ${caps.fatDailyMax} tsp oil/day equivalent — capped${conditions.includes('Dyslipidemia')||conditions.includes('CKD')||conditions.includes('Hemodialysis')?' (lower cap due to selected conditions)':''}. ~${gapData.fatGap}g fat/day not covered.`:'Within realistic daily range.'},
     {label:'Meal realism — protein cap', val:`≤${caps.proteinPerMealMax*gramsPerEx}g per main meal`, st:'ok', why:`Clinical cap for this client: ≤${caps.proteinPerMealMax} protein exchanges (≈${caps.proteinPerMealMax*gramsPerEx}g cooked meat/fish) per main meal.`},
     {label:'Meal realism — oil cap', val:`≤${caps.fatPerMealMax} tsp per main meal`, st:'ok', why:`Clinical cap for this client: ≤${caps.fatPerMealMax} tsp olive oil per main meal.`},
     {label:'Exchange kcal gap vs target', val:gap+' kcal (plan vs target)', st:Math.abs(gap)<=100?'ok':'warn', why:'Do not fill this gap automatically with protein/fat — review target instead.'},
