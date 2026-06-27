@@ -1270,7 +1270,7 @@ const S = {
   exMeta:null, lastDairyType:'Moderate-fat', lastMeatType:'Lean', weightSuggestionLocked:false, bcManual:{fatmass:false,ffm:false,muscle:false},
   bc:{bf:null,water:null,fatmass:null,ffm:null,muscle:null,metage:null,visceral:null},
   tracking:[],intake:{},notes:{},labValues:{},foodResults:[],recipes:[],recipeDraft:[],editingRecipeId:null,extraFoods:[],appointments:[],mealLanguage:'GR',reportOptions:{oneDay:false,sevenDay:true,includeBlood:true},
-  mealSel:{breakfast:'BRK_TOAST',lunch:'LUN_CHICKEN_RICE',dinner:'DIN_FISH_POTATO',snack1Extras:[],snack2Extras:[],sleepExtras:[]}
+  mealSel:{breakfast:'BRK_TOAST',lunch:'LUN_CHICKEN_RICE',dinner:'DIN_FISH_POTATO',snack1Extras:['fruit'],snack2Extras:['fruit'],sleepExtras:['fruit']}
 };
 
 // ═══════════════════════════════════════════
@@ -1898,15 +1898,30 @@ supabaseClient.auth.onAuthStateChange(async (event, session)=>{
 // snack system that has been removed (see note below) — this version has
 // no such dependency and is purely arithmetic, so it can never silently
 // break for any serving count.
-function getFruitDistribution(){
+function splitExchangeAcrossSlots(total, slots){
+  const out={brk:0,snk1:0,snk2:0,sleep:0};
+  const clean=(slots||[]).filter(Boolean);
+  if(!clean.length || !total) return out;
+  const base=Math.floor(total/clean.length);
+  let rem=total-base*clean.length;
+  clean.forEach(slot=>{
+    out[slot]=base+(rem>0?1:0);
+    if(rem>0) rem--;
+  });
+  return out;
+}
+function snackFruitSelected(extras){
+  const arr=Array.isArray(extras)?extras:[];
+  return !arr.includes('nofruit') && (arr.includes('fruit') || !arr.length || arr.some(v=>['driedfruit','yogurt','nuts','coffee'].includes(v)));
+}
+function getFruitDistribution(plan=null){
   const total = S.ex ? (S.ex.fruit||0) : 0;
-  const base = Math.floor(total/3);
-  let rem = total - base*3;
-  let snk1=base, snk2=base, sleep=base;
-  if(rem>0){ snk1++; rem--; }
-  if(rem>0){ snk2++; rem--; }
-  if(rem>0){ sleep++; rem--; }
-  return {brk:0, snk1, snk2, sleep};
+  const p=plan?normalizeMealPlan(plan):normalizeMealPlan(S.mealSel);
+  const selected=['snk1','snk2','sleep'].filter(slot=>{
+    const key=slot==='snk1'?'snack1Extras':slot==='snk2'?'snack2Extras':'sleepExtras';
+    return snackFruitSelected(p[key]);
+  });
+  return splitExchangeAcrossSlots(total, selected.length ? selected : ['snk1','snk2','sleep']);
 }
 
 // FIX (2026-06): dairy is now distributed across ALL THREE snack slots
@@ -1916,16 +1931,19 @@ function getFruitDistribution(){
 // then the remainder is split evenly across snack1/snack2/sleep, with
 // "before sleep" given the first priority serving (clinically common to
 // place dairy before bed) when the total doesn't divide evenly.
-function getDairyDistribution(breakfastKey=(S.mealSel && S.mealSel.breakfast) || 'BRK_TOAST'){
+function getDairyDistribution(breakfastKey=(S.mealSel && S.mealSel.breakfast) || 'BRK_TOAST', plan=null){
   const total = S.ex ? (S.ex.dairy||0) : 0;
   const brkUsesDairy = (breakfastKey==='BRK_CEREAL' || breakfastKey==='BRK_OATS_VEGAN') ? 1 : 0;
   const remaining = Math.max(0, total - brkUsesDairy);
-  const base = Math.floor(remaining/2);
-  let rem = remaining - base*2;
-  let sleep=0, snk1=base, snk2=base;
-  if(rem>0){ snk1++; rem--; }
-  if(rem>0){ snk2++; rem--; }
-  return {brk:brkUsesDairy, sleep, snk1, snk2};
+  const p=plan?normalizeMealPlan(plan):normalizeMealPlan(S.mealSel);
+  const preferred=['sleep','snk1','snk2'].filter(slot=>{
+    const key=slot==='snk1'?'snack1Extras':slot==='snk2'?'snack2Extras':'sleepExtras';
+    return (p[key]||[]).includes('yogurt');
+  });
+  const defaults=['snk1','snk2'].filter(slot=>!preferred.includes(slot));
+  const dist=splitExchangeAcrossSlots(remaining, preferred.length ? [...preferred, ...defaults] : defaults);
+  dist.brk=brkUsesDairy;
+  return dist;
 }
 
 const MEALS = {
@@ -2277,13 +2295,13 @@ function mealSuffixEn(ex, p, veg, proteinSource, carbName, proteinLabel, isFishP
 }
 
 const WEEK_PLANS = [
-  {day:'Δευτέρα', brk:'BRK_TOAST',  lun:'LUN_CHICKEN_RICE',   din:'DIN_FISH_POTATO',   snk1Extras:[], snk2Extras:[], sleepExtras:[]},
-  {day:'Τρίτη',   brk:'BRK_CEREAL', lun:'LUN_FISH_POTATO',    din:'DIN_CHICKEN_RICE',  snk1Extras:['yogurt'], snk2Extras:['nuts'], sleepExtras:[]},
-  {day:'Τετάρτη', brk:'BRK_TOAST',  lun:'LUN_LOUVI_TUNA',     din:'DIN_OMELETTE',      snk1Extras:[], snk2Extras:[], sleepExtras:['yogurt']},
-  {day:'Πέμπτη',  brk:'BRK_CEREAL', lun:'LUN_FASOLAKIA_PORK', din:'DIN_TUNA_POTATO',   snk1Extras:['driedfruit'], snk2Extras:['nuts'], sleepExtras:[]},
-  {day:'Παρασκευή',brk:'BRK_TOAST', lun:'LUN_TUNA_POTATO',    din:'DIN_PASTA_MINCE',   snk1Extras:[], snk2Extras:[], sleepExtras:[]},
-  {day:'Σάββατο', brk:'BRK_CEREAL', lun:'LUN_PASTA_MINCE',    din:'DIN_SOUVLAKI_PITA', snk1Extras:['yogurt'], snk2Extras:['nuts'], sleepExtras:[]},
-  {day:'Κυριακή', brk:'BRK_TOAST',  lun:'LUN_BIFTEKI_BULGUR', din:'DIN_BIFTEKI_BULGUR',snk1Extras:[], snk2Extras:[], sleepExtras:['yogurt']},
+  {day:'Δευτέρα', brk:'BRK_TOAST',  lun:'LUN_CHICKEN_RICE',   din:'DIN_FISH_POTATO',   snk1Extras:['fruit'], snk2Extras:['fruit'], sleepExtras:['fruit']},
+  {day:'Τρίτη',   brk:'BRK_CEREAL', lun:'LUN_FISH_POTATO',    din:'DIN_CHICKEN_RICE',  snk1Extras:['fruit','yogurt'], snk2Extras:['fruit','nuts'], sleepExtras:['fruit']},
+  {day:'Τετάρτη', brk:'BRK_TOAST',  lun:'LUN_LOUVI_TUNA',     din:'DIN_OMELETTE',      snk1Extras:['fruit'], snk2Extras:['fruit'], sleepExtras:['fruit','yogurt']},
+  {day:'Πέμπτη',  brk:'BRK_CEREAL', lun:'LUN_FASOLAKIA_PORK', din:'DIN_TUNA_POTATO',   snk1Extras:['fruit','driedfruit'], snk2Extras:['fruit','nuts'], sleepExtras:['fruit']},
+  {day:'Παρασκευή',brk:'BRK_TOAST', lun:'LUN_TUNA_POTATO',    din:'DIN_PASTA_MINCE',   snk1Extras:['fruit'], snk2Extras:['fruit'], sleepExtras:['fruit']},
+  {day:'Σάββατο', brk:'BRK_CEREAL', lun:'LUN_PASTA_MINCE',    din:'DIN_SOUVLAKI_PITA', snk1Extras:['fruit','yogurt'], snk2Extras:['fruit','nuts'], sleepExtras:['fruit']},
+  {day:'Κυριακή', brk:'BRK_TOAST',  lun:'LUN_BIFTEKI_BULGUR', din:'DIN_BIFTEKI_BULGUR',snk1Extras:['fruit'], snk2Extras:['fruit'], sleepExtras:['fruit','yogurt']},
 ];
 
 // Smart print: portrait for Client Report (client handout),
@@ -2658,6 +2676,7 @@ function mealOptionsHtml(options, current){
 // the same time — the two are no longer in tension the way they were in
 // either previous version.
 const SNACK_EXTRAS = [
+  {v:'fruit',      gr:'🍎 Φρούτο',                    en:'🍎 Fruit'},                         // controls where allocated fruit servings appear
   {v:'driedfruit', gr:'🍇 Αποξηραμένα αντί φρέσκα', en:'🍇 Dried fruit instead of fresh'}, // style toggle for the auto fruit serving
   {v:'yogurt',     gr:'🍦 Γιαούρτι αντί γάλα',        en:'🍦 Yogurt instead of milk'},       // style toggle for the auto dairy serving
   {v:'nuts',       gr:'🥜 + Ξηροί καρποί',            en:'🥜 + Nuts'},                       // additive extra
@@ -2671,7 +2690,7 @@ function snackExtraLabel(extra, lang){
 }
 function snackExtrasHtml(){
   const lang=S.mealLanguage||'GR';
-  return SNACK_EXTRAS.map(e=>`<label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap"><input type="checkbox" value="${e.v}" style="width:auto"> ${snackExtraLabel(e, lang)}</label>`).join('');
+  return SNACK_EXTRAS.map(e=>`<label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap"><input type="checkbox" value="${e.v}" style="width:auto" ${e.v==='fruit'?'checked':''}> ${snackExtraLabel(e, lang)}</label>`).join('');
 }
 
 function refreshSnackExtrasLabels(){
@@ -2680,8 +2699,10 @@ function refreshSnackExtrasLabels(){
     if(!el) return;
     const checked=getSnackExtras(elId);
     el.innerHTML=snackExtrasHtml();
+    const saved=S.mealSel[key]||[];
     el.querySelectorAll('input[type=checkbox]').forEach(cb=>{
-      cb.checked = checked.includes(cb.value) || (S.mealSel[key]||[]).includes(cb.value);
+      if(cb.value==='fruit') cb.checked = !saved.includes('nofruit') && (checked.includes('fruit') || saved.includes('fruit') || (!checked.length && !saved.length));
+      else cb.checked = checked.includes(cb.value) || saved.includes(cb.value);
     });
   });
 }
@@ -2690,7 +2711,11 @@ function refreshSnackExtrasLabels(){
 function getSnackExtras(elId){
   const el=document.getElementById(elId);
   if(!el) return [];
-  return Array.from(el.querySelectorAll('input[type=checkbox]:checked')).map(cb=>cb.value);
+  const boxes=Array.from(el.querySelectorAll('input[type=checkbox]'));
+  const out=boxes.filter(cb=>cb.checked).map(cb=>cb.value);
+  const fruitBox=boxes.find(cb=>cb.value==='fruit');
+  if(fruitBox && !fruitBox.checked) out.push('nofruit');
+  return out;
 }
 
 // Builds the full display text + exchange composition for a snack slot.
@@ -2698,9 +2723,9 @@ function getSnackExtras(elId){
 // for this slot. The fruit/dairy base is ALWAYS included when the
 // distribution assigns a non-zero count to this slot — completely
 // independent of which extras are ticked, so it can never be silently lost.
-function buildSlotSnack(slot, extras, lang='GR', breakfastKey){
-  const fruitDist=getFruitDistribution();
-  const dairyDist=getDairyDistribution(breakfastKey);
+function buildSlotSnack(slot, extras, lang='GR', breakfastKey, plan=null, fruitDist=null, dairyDist=null){
+  fruitDist=fruitDist||getFruitDistribution(plan);
+  dairyDist=dairyDist||getDairyDistribution(breakfastKey, plan);
   const fruitCount=fruitDist[slot]||0;
   const dairyCount=dairyDist[slot]||0;
   const useDriedFruit = (extras||[]).includes('driedfruit');
@@ -2892,9 +2917,11 @@ function getDayMealAllocation(plan=S.mealSel, lang=S.mealLanguage||'GR'){
   const brkComp=MEAL_EXCHANGES[p.breakfast]||{};
   const lunComp=MEAL_EXCHANGES[p.lunch]||{};
   const dinComp=MEAL_EXCHANGES[p.dinner]||{};
-  const snk1Built=buildSlotSnack('snk1', p.snack1Extras||[], lang, p.breakfast);
-  const snk2Built=buildSlotSnack('snk2', p.snack2Extras||[], lang, p.breakfast);
-  const sleepBuilt=buildSlotSnack('sleep', p.sleepExtras||[], lang, p.breakfast);
+  const fruitDist=getFruitDistribution(p);
+  const dairyDist=getDairyDistribution(p.breakfast, p);
+  const snk1Built=buildSlotSnack('snk1', p.snack1Extras||[], lang, p.breakfast, p, fruitDist, dairyDist);
+  const snk2Built=buildSlotSnack('snk2', p.snack2Extras||[], lang, p.breakfast, p, fruitDist, dairyDist);
+  const sleepBuilt=buildSlotSnack('sleep', p.sleepExtras||[], lang, p.breakfast, p, fruitDist, dairyDist);
   const lunchScales=!FIXED_COMPOSITION_MEALS.has(p.lunch);
   const dinnerScales=!FIXED_COMPOSITION_MEALS.has(p.dinner);
   const fixed=zeroExchangeUse();
@@ -3927,18 +3954,20 @@ function buildSevenDay(){
     if(!p.sleepExtras) p.sleepExtras=[];
   });
   const ex=S.ex;
-  const sel=(key,di,opts,cur)=>`<select style="width:100%;font-size:10px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--bg-page);color:var(--text-secondary);margin-bottom:3px" onchange="updateWeekPlan(${di},'${key}',this.value)">${mealOptionsHtml(opts,cur)}</select>`;
+  const sel=(key,di,opts,cur)=>`<select style="width:100%;font-size:11px;padding:3px 5px;border:1px solid var(--border);border-radius:4px;background:var(--bg-page);color:var(--text-secondary);margin-bottom:5px" onchange="updateWeekPlan(${di},'${key}',this.value)">${mealOptionsHtml(opts,cur)}</select>`;
   // Compact checkbox-extras group for a snack slot on a given day
-  const extrasGroup=(slotKey,di,checked)=>`<div class="snack-extras-group" style="display:flex;flex-direction:column;gap:1px;margin-bottom:3px">${SNACK_EXTRAS.map(e=>`<label style="display:flex;align-items:center;gap:3px;font-size:9px;cursor:pointer;white-space:nowrap"><input type="checkbox" style="width:auto;transform:scale(0.8)" ${checked.includes(e.v)?'checked':''} onchange="toggleWeekPlanExtra(${di},'${slotKey}','${e.v}',this.checked)"> ${snackExtraLabel(e, lang)}</label>`).join('')}</div>`;
+  const extraChecked=(checked,e)=>e.v==='fruit' ? !checked.includes('nofruit') : checked.includes(e.v);
+  const extrasGroup=(slotKey,di,checked)=>`<div class="snack-extras-group" style="display:flex;flex-direction:column;gap:2px;margin-bottom:5px">${SNACK_EXTRAS.map(e=>`<label style="display:flex;align-items:center;gap:4px;font-size:10px;cursor:pointer;white-space:nowrap"><input type="checkbox" style="width:auto;transform:scale(0.85)" ${extraChecked(checked,e)?'checked':''} onchange="toggleWeekPlanExtra(${di},'${slotKey}','${e.v}',this.checked)"> ${snackExtraLabel(e, lang)}</label>`).join('')}</div>`;
 
-  let html='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr>';
+  let html='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr>';
   html+=`<th style="background:var(--teal-600);color:#fff;padding:8px;min-width:90px">${lang==='EN'?'Meal':'Γεύμα'}</th>`;
   S.weekPlans.forEach((p,di)=>{
     const dt=calcDayTotalsForPlan(p, lang, di);
     const gapOk=Math.abs(dt.gap)<=100;
     const dayLabel=lang==='EN' ? ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][di] : p.day;
-    html+=`<th style="background:var(--teal-600);color:#fff;padding:8px;min-width:170px;text-align:center">
+    html+=`<th style="background:var(--teal-600);color:#fff;padding:8px;min-width:190px;text-align:center">
       ${dayLabel}<div style="font-size:10px;font-weight:400;margin-top:2px;color:${gapOk?'#9FE1CB':'#FFD580'}">${dt.totalKcal} kcal ${gapOk?'✅':dt.gap>0?'▲':'▼'}</div>
+      <button class="btn" style="margin-top:5px;padding:3px 7px;font-size:10px;background:rgba(255,255,255,.14);color:#fff;border-color:rgba(255,255,255,.35)" onclick="setExpandedSevenDay(${expandedSevenDayIndex===di?'null':di})">${expandedSevenDayIndex===di?(lang==='EN'?'Collapse':'Κλείσιμο'):(lang==='EN'?'Expand':'Άνοιγμα')}</button>
     </th>`;
   });
   html+='</tr></thead><tbody>';
@@ -3961,17 +3990,17 @@ function buildSevenDay(){
       const gapOk=Math.abs(dt.gap)<=100;
       let cell='';
       if(row.key==='brk'){
-        cell=sel('brk',di,filteredBrk,p.brk)+`<div style="color:var(--text-primary);font-size:11px;font-weight:500">${mealText(p.brk,null,lang)}${renderExtraFoodsForSlot('brk', di)}</div><div style="font-size:10px;color:var(--teal-600)">${dt.brkKcal} kcal</div>`;
+        cell=sel('brk',di,filteredBrk,p.brk)+`<div style="color:var(--text-primary);font-size:12px;font-weight:600;line-height:1.4">${mealText(p.brk,null,lang)}${renderExtraFoodsForSlot('brk', di)}</div><div style="font-size:11px;color:var(--teal-600);margin-top:2px">${dt.brkKcal} kcal</div>`;
       } else if(row.key==='snk1'){
-        cell=extrasGroup('snk1Extras',di,p.snk1Extras)+`<div style="color:var(--text-primary);font-size:11px;font-weight:500">${dt.snk1Text}${renderExtraFoodsForSlot('snk1', di)}</div><div style="font-size:10px;color:var(--teal-600)">${dt.snk1Kcal} kcal</div>`;
+        cell=extrasGroup('snk1Extras',di,p.snk1Extras)+`<div style="color:var(--text-primary);font-size:12px;font-weight:600;line-height:1.4">${dt.snk1Text}${renderExtraFoodsForSlot('snk1', di)}</div><div style="font-size:11px;color:var(--teal-600);margin-top:2px">${dt.snk1Kcal} kcal</div>`;
       } else if(row.key==='lun'){
-        cell=sel('lun',di,filteredLun,p.lun)+`<div style="color:var(--text-primary);font-size:11px;font-weight:500">${mealText(p.lun,dt.portions.lunch,lang)}${renderExtraFoodsForSlot('lun', di)}</div><div style="font-size:10px;color:var(--teal-600)">${dt.lunKcal} kcal</div>`;
+        cell=sel('lun',di,filteredLun,p.lun)+`<div style="color:var(--text-primary);font-size:12px;font-weight:600;line-height:1.4">${mealText(p.lun,dt.portions.lunch,lang)}${renderExtraFoodsForSlot('lun', di)}</div><div style="font-size:11px;color:var(--teal-600);margin-top:2px">${dt.lunKcal} kcal</div>`;
       } else if(row.key==='snk2'){
-        cell=extrasGroup('snk2Extras',di,p.snk2Extras)+`<div style="color:var(--text-primary);font-size:11px;font-weight:500">${dt.snk2Text}${renderExtraFoodsForSlot('snk2', di)}</div><div style="font-size:10px;color:var(--teal-600)">${dt.snk2Kcal} kcal</div>`;
+        cell=extrasGroup('snk2Extras',di,p.snk2Extras)+`<div style="color:var(--text-primary);font-size:12px;font-weight:600;line-height:1.4">${dt.snk2Text}${renderExtraFoodsForSlot('snk2', di)}</div><div style="font-size:11px;color:var(--teal-600);margin-top:2px">${dt.snk2Kcal} kcal</div>`;
       } else if(row.key==='din'){
-        cell=sel('din',di,filteredDin,p.din)+`<div style="color:var(--text-primary);font-size:11px;font-weight:500">${mealText(p.din,dt.portions.dinner,lang)}${renderExtraFoodsForSlot('din', di)}</div><div style="font-size:10px;color:var(--teal-600)">${dt.dinKcal} kcal</div>`;
+        cell=sel('din',di,filteredDin,p.din)+`<div style="color:var(--text-primary);font-size:12px;font-weight:600;line-height:1.4">${mealText(p.din,dt.portions.dinner,lang)}${renderExtraFoodsForSlot('din', di)}</div><div style="font-size:11px;color:var(--teal-600);margin-top:2px">${dt.dinKcal} kcal</div>`;
       } else if(row.key==='sleep'){
-        cell=extrasGroup('sleepExtras',di,p.sleepExtras)+`<div style="color:var(--text-primary);font-size:11px;font-weight:500">${dt.slpText}${renderExtraFoodsForSlot('sleep', di)}</div><div style="font-size:10px;color:var(--teal-600)">${dt.slpKcal} kcal</div>`;
+        cell=extrasGroup('sleepExtras',di,p.sleepExtras)+`<div style="color:var(--text-primary);font-size:12px;font-weight:600;line-height:1.4">${dt.slpText}${renderExtraFoodsForSlot('sleep', di)}</div><div style="font-size:11px;color:var(--teal-600);margin-top:2px">${dt.slpKcal} kcal</div>`;
       } else if(row.key==='kcal'){
         cell=`<div style="font-weight:700;font-size:12px">${dt.totalKcal} kcal</div>
           <div style="font-size:10px;color:var(--text-muted)">Target: ${dt.target}</div>
@@ -3984,8 +4013,33 @@ function buildSevenDay(){
   });
 
   html+='</tbody></table></div>';
+  if(expandedSevenDayIndex!==null && S.weekPlans[expandedSevenDayIndex]){
+    const p=S.weekPlans[expandedSevenDayIndex];
+    const dt=calcDayTotalsForPlan(p, lang, expandedSevenDayIndex);
+    const dayLabel=lang==='EN' ? ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][expandedSevenDayIndex] : p.day;
+    const detailRows=[
+      [lang==='EN'?'Breakfast':'Πρωινό', mealText(p.brk,null,lang), dt.brkKcal],
+      [lang==='EN'?'Snack 1':'Σνακ 1', dt.snk1Text, dt.snk1Kcal],
+      [lang==='EN'?'Lunch':'Μεσημεριανό', mealText(p.lun,dt.portions.lunch,lang), dt.lunKcal],
+      [lang==='EN'?'Snack 2':'Σνακ 2', dt.snk2Text, dt.snk2Kcal],
+      [lang==='EN'?'Dinner':'Βραδινό', mealText(p.din,dt.portions.dinner,lang), dt.dinKcal],
+      [lang==='EN'?'Before sleep':'Πριν τον ύπνο', dt.slpText, dt.slpKcal],
+    ];
+    html+=`<div class="card" style="margin-top:14px;border-color:var(--teal-100)">
+      <div class="card-header"><span class="card-title">${lang==='EN'?'Expanded day':'Αναλυτική ημέρα'} — ${dayLabel}</span><span class="card-action" onclick="setExpandedSevenDay(null)">${lang==='EN'?'Close':'Κλείσιμο'}</span></div>
+      <div class="card-body">
+        ${detailRows.map(([label,text,kcal])=>`<div class="meal-row"><div class="meal-time">${label}<div style="font-size:11px;color:var(--text-muted)">${kcal} kcal</div></div><div class="meal-desc" style="font-size:14px;line-height:1.5">${text}</div></div>`).join('')}
+        <div style="margin-top:10px;font-weight:800;color:${Math.abs(dt.gap)<=100?'var(--teal-600)':'var(--amber-text)'}">${lang==='EN'?'Daily total':'Σύνολο ημέρας'}: ${dt.totalKcal} kcal · ${lang==='EN'?'Target':'Στόχος'}: ${dt.target} · ${dt.gap>0?'+':''}${dt.gap}</div>
+      </div>
+    </div>`;
+  }
   html+=`<div class="field-note" style="margin-top:8px">Each day shows kcal per meal and daily total vs target. ✅ = within ±100 kcal. Fruit/dairy servings in each snack are always automatic and correct — the small checkboxes only restyle them (dried fruit / yogurt) or add extras (nuts / coffee). Change any meal dropdown or snack checkbox and kcal updates live, per day.</div>`;
   setEl('sevenday-body',html);
+}
+
+function setExpandedSevenDay(dayIndex){
+  expandedSevenDayIndex = dayIndex===null ? null : Number(dayIndex);
+  buildSevenDay();
 }
 
 // Updates one meal slot (breakfast/lunch/dinner — single dropdown value) for one day in the 7-Day Plan
@@ -4000,6 +4054,12 @@ function toggleWeekPlanExtra(dayIndex, extrasKey, extraValue, checked){
   if(!S.weekPlans) S.weekPlans = WEEK_PLANS.map(p=>({...p}));
   const day = S.weekPlans[dayIndex];
   if(!day[extrasKey]) day[extrasKey]=[];
+  if(extraValue==='fruit'){
+    day[extrasKey]=day[extrasKey].filter(v=>v!=='fruit' && v!=='nofruit');
+    day[extrasKey].push(checked ? 'fruit' : 'nofruit');
+    buildSevenDay();
+    return;
+  }
   if(checked){
     if(!day[extrasKey].includes(extraValue)) day[extrasKey].push(extraValue);
   } else {
@@ -5220,6 +5280,7 @@ function printRecipe(id){
 let calendarCursor = new Date();
 let calendarView = 'month';
 let appointmentsLoadedFor = null;
+let expandedSevenDayIndex = null;
 
 function safeHtml(value){
   return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -5582,7 +5643,7 @@ function resetForm(){
   S.exMeta=makeExMeta();
   S.lastDairyType='Moderate-fat'; S.lastMeatType='Lean';
   S.tracking=[]; S.intake={}; S.notes={}; S.labValues={}; S.extraFoods=[];
-  S.mealSel={breakfast:'BRK_TOAST',lunch:'LUN_CHICKEN_RICE',dinner:'DIN_FISH_POTATO',snack1Extras:[],snack2Extras:[],sleepExtras:[]};
+  S.mealSel={breakfast:'BRK_TOAST',lunch:'LUN_CHICKEN_RICE',dinner:'DIN_FISH_POTATO',snack1Extras:['fruit'],snack2Extras:['fruit'],sleepExtras:['fruit']};
   S.weekPlans=WEEK_PLANS.map(p=>({...p}));
   S.mealLanguage='GR';
   S.reportOptions={oneDay:false,sevenDay:true,includeBlood:true};
