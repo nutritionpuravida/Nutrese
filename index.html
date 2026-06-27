@@ -198,6 +198,17 @@ select option { background-color: var(--bg-surface); color: var(--text-primary);
   color: var(--text-active);
   font-weight: 700 !important;
 }
+[data-theme="dark"] #condition-guidance,
+[data-theme="dark"] #condition-guidance *,
+html[data-theme="dark"] #condition-guidance,
+html[data-theme="dark"] #condition-guidance * {
+  color: #ffffff !important;
+}
+[data-theme="dark"] #condition-guidance a,
+html[data-theme="dark"] #condition-guidance a {
+  color: #ffffff !important;
+  text-decoration: underline;
+}
 .form-field .field-note { font-size: 11px; color: var(--text-muted); }
 .form-field .field-note.suggested { color: var(--text-muted); font-style: italic; }
 .section-label { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .07em; margin: 16px 0 9px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
@@ -250,8 +261,8 @@ tr:hover td { background: var(--bg-hover); }
 .sidebar-overlay.open { display: block; }
 
 /* ─── BOTTOM NAV (mobile) ─── */
-.bottom-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-surface); border-top: 1px solid var(--border); padding: 4px 0 env(safe-area-inset-bottom, 4px); z-index: 90; justify-content: space-around; }
-.bnav-item { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 10px; cursor: pointer; border: none; background: none; color: var(--text-muted); font-size: 10px; font-weight: 600; border-radius: 8px; transition: all .12s; min-width: 52px; }
+.bottom-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-surface); border-top: 1px solid var(--border); padding: 4px 0 env(safe-area-inset-bottom, 4px); z-index: 90; justify-content: flex-start; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.bnav-item { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 10px; cursor: pointer; border: none; background: none; color: var(--text-muted); font-size: 10px; font-weight: 600; border-radius: 8px; transition: all .12s; min-width: 62px; flex: 0 0 auto; }
 .bnav-item span:first-child { font-size: 20px; line-height: 1; }
 .bnav-item.active { color: var(--teal-400); }
 .bnav-item .bnav-badge { position: relative; }
@@ -559,22 +570,20 @@ tr:hover td { background: var(--bg-hover); }
   <button class="nav-item" onclick="nav('clients')">🗂️ My Clients</button>
   <div class="nav-group-label">Workflow</div>
   <button class="nav-item active" onclick="nav('dashboard')">📊 Dashboard</button>
-  <button class="nav-item" onclick="nav('intake')">📋 Client Intake <span style="font-size:10px;color:var(--text-muted);font-weight:400">+ Notes</span></button>
   <button class="nav-item" onclick="nav('profile')">👤 Client Profile <span style="font-size:10px;color:var(--text-muted);font-weight:400">+ Body Comp</span></button>
-  <button class="nav-item" onclick="nav('labs')">🩸 Blood Analysis</button>
+  <button class="nav-item" onclick="nav('intake')">📋 Client Notes / Intake</button>
   <button class="nav-item" onclick="nav('macros')">🎯 Macro Targets</button>
-  <div class="nav-group-label">Meal Planning</div>
   <button class="nav-item" onclick="nav('exchanges')">🔄 Exchange System</button>
   <button class="nav-item" onclick="nav('oneday')">☀️ 1-Day Plan</button>
   <button class="nav-item" onclick="nav('sevenday')">📅 7-Day Plan</button>
+  <button class="nav-item" onclick="nav('report')">📄 Client Report</button>
+  <button class="nav-item" onclick="nav('labs')">🩸 Blood Analysis</button>
   <button class="nav-item" onclick="nav('fooddb')">🔎 Food Database</button>
   <button class="nav-item" onclick="nav('recipes')">🍲 Recipes</button>
+  <button class="nav-item" onclick="nav('appointments')">📅 Appointments</button>
   <div class="nav-group-label">Reports & Tracking</div>
-  <button class="nav-item" onclick="nav('report')">📄 Client Report</button>
   <button class="nav-item" onclick="nav('tracking')">📈 Progress Tracking</button>
   <button class="nav-item" onclick="nav('equivalents')">📖 Equivalents Guide</button>
-  <div class="nav-group-label">Practice</div>
-  <button class="nav-item" onclick="nav('appointments')">📅 Appointments</button>
   <div class="nav-group-label">Clinical</div>
   <button class="nav-item" onclick="nav('account')">💳 Account / Subscription</button>
   <button class="nav-item" onclick="openFeedbackModal()">💬 Feedback</button>
@@ -1238,10 +1247,16 @@ tr:hover td { background: var(--bg-hover); }
 <nav class="bottom-nav" id="bottom-nav">
   <button class="bnav-item active" onclick="nav('dashboard');setBnav(this)"><span>📊</span><span>Home</span></button>
   <button class="bnav-item" onclick="nav('profile');setBnav(this)"><span>👤</span><span>Profile</span></button>
-  <button class="bnav-item" onclick="nav('exchanges');setBnav(this)"><span>🔄</span><span>Exchanges</span></button>
+  <button class="bnav-item" onclick="nav('intake');setBnav(this)"><span>📋</span><span>Intake</span></button>
+  <button class="bnav-item" onclick="nav('macros');setBnav(this)"><span>🎯</span><span>Macros</span></button>
+  <button class="bnav-item" onclick="nav('exchanges');setBnav(this)"><span>🔄</span><span>Exchange</span></button>
   <button class="bnav-item" onclick="nav('oneday');setBnav(this)"><span>☀️</span><span>1-Day</span></button>
+  <button class="bnav-item" onclick="nav('sevenday');setBnav(this)"><span>📅</span><span>7-Day</span></button>
+  <button class="bnav-item" onclick="nav('report');setBnav(this)"><span>📄</span><span>Report</span></button>
   <button class="bnav-item" onclick="nav('labs');setBnav(this)"><span>🩸</span><span>Labs</span></button>
+  <button class="bnav-item" onclick="nav('fooddb');setBnav(this)"><span>🔎</span><span>Foods</span></button>
   <button class="bnav-item" onclick="nav('recipes');setBnav(this)"><span>🍲</span><span>Recipes</span></button>
+  <button class="bnav-item" onclick="nav('appointments');setBnav(this)"><span>📅</span><span>Appts</span></button>
   <button class="bnav-item" onclick="nav('account');setBnav(this)"><span>💳</span><span>Account</span></button>
 </nav>
 <script>
@@ -4736,7 +4751,9 @@ async function fetchUSDAFoods(query){
   const res=await fetchWithRetryOnce(url, {headers:{'Accept':'application/json'}});
   if(!res.ok) throw new Error(`USDA FoodData Central returned HTTP ${res.status}`);
   const data=await res.json();
-  return (data.foods||[]).map(normalizeUSDAFoodProduct).filter(p=>p.name && (p.kcal100!==null || p.carbs100!==null || p.protein100!==null || p.fat100!==null));
+  return (data.foods||[])
+    .map(normalizeUSDAFoodProduct)
+    .filter(p=>p.name && foodNumber(p.kcal100)!==null && foodNumber(p.kcal100)>0);
 }
 function normalizeRecipeFoodResult(recipe){
   const ingredients=recipe.ingredients||[];
