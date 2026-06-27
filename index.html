@@ -5250,7 +5250,7 @@ function normalizeAppointment(row){
     duration: Number(row.duration || 45),
     type: row.type || 'Follow-up',
     notes: row.notes || '',
-    updated_at: row.updated_at || new Date().toISOString(),
+    created_at: row.created_at || row.updated_at || new Date().toISOString(),
     localOnly: !!row.localOnly
   };
 }
@@ -5277,7 +5277,17 @@ async function loadAppointments(force=false){
   renderDashboardAppointments();
   if(currentUser){
     try{
-      const {data,error}=await supabaseClient.from('appointments').select('id,user_id,client_id,client_name,date,time,duration,type,notes,updated_at').eq('user_id',currentUser.id).order('date',{ascending:true}).order('time',{ascending:true});
+      const {data,error}=await withTimeout(
+        supabaseClient
+          .from('appointments')
+          .select('id,user_id,client_id,client_name,date,time,duration,type,notes,created_at')
+          .eq('user_id', currentUser.id)
+          .order('date', {ascending:true})
+          .order('time', {ascending:true}),
+        5000,
+        'loadAppointments'
+      );
+      if(error) console.error('[NutriFlow appointments] Supabase load failed', error);
       if(!error && data){
         const remote=data.map(normalizeAppointment);
         const localOnly=(S.appointments||[]).filter(a=>a.localOnly || String(a.id).startsWith('appt_'));
@@ -5286,13 +5296,17 @@ async function loadAppointments(force=false){
           .sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
         appointmentsLoadedFor=scope;
         persistAppointmentsLocal();
+        console.log('[NutriFlow appointments] loaded from Supabase', {user_id:currentUser.id, count:remote.length, rows:remote});
         renderDashboardAppointments();
+        if(document.getElementById('page-appointments')?.classList.contains('active')) renderAppointments();
         return S.appointments;
       }
     }catch(e){
+      console.error('[NutriFlow appointments] Supabase load exception', e);
       // local appointments are already loaded above
     }
   }
+  if(document.getElementById('page-appointments')?.classList.contains('active')) renderAppointments();
   return S.appointments;
 }
 function appointmentClass(type){
@@ -5395,17 +5409,25 @@ function appointmentClientUuid(){
     duration: parseInt(v('appt-duration')||'45',10),
     type: v('appt-type') || 'Follow-up',
     notes: v('appt-notes') || '',
-    updated_at: new Date().toISOString()
+    created_at: new Date().toISOString()
   });
   let saved=appt;
   if(currentUser){
-    const row={user_id:currentUser.id,client_id:appointmentClientUuid(),client_name:appt.client_name,date:appt.date,time:appt.time,duration:appt.duration,type:appt.type,notes:appt.notes,updated_at:appt.updated_at};
+    const row={user_id:currentUser.id,client_id:appointmentClientUuid(),client_name:appt.client_name,date:appt.date,time:appt.time,duration:appt.duration,type:appt.type,notes:appt.notes};
     try{
       let result;
       if(String(id).startsWith('appt_')){
-        result=await supabaseClient.from('appointments').insert(row).select().maybeSingle();
+        result=await withTimeout(
+          supabaseClient.from('appointments').insert(row).select('id,user_id,client_id,client_name,date,time,duration,type,notes,created_at').maybeSingle(),
+          5000,
+          'saveAppointment insert'
+        );
       } else {
-        result=await supabaseClient.from('appointments').update(row).eq('id',id).eq('user_id',currentUser.id).select().maybeSingle();
+        result=await withTimeout(
+          supabaseClient.from('appointments').update(row).eq('id',id).eq('user_id',currentUser.id).select('id,user_id,client_id,client_name,date,time,duration,type,notes,created_at').maybeSingle(),
+          5000,
+          'saveAppointment update'
+        );
       }
       if(!result.error && result.data) saved=normalizeAppointment(result.data);
       else {
