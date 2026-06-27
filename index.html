@@ -818,6 +818,7 @@ tr:hover td { background: var(--bg-hover); }
           <div class="metric"><div class="m-label">Goal Calories</div><div class="m-value" id="r-goal-kcal">—</div><div class="m-sub" id="r-goal-sub">kcal/day</div></div>
         </div>
         <div id="expected-progress-box" class="alert info" style="display:none;margin-top:-4px;margin-bottom:12px"></div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px"><button class="btn" id="meal-lang-gr-profile" onclick="setClinicalLanguage('GR')">GR</button><button class="btn" id="meal-lang-en-profile" onclick="setClinicalLanguage('EN')">EN</button></div>
         <div id="condition-guidance" style="padding:12px;background:var(--teal-50);border:1px solid var(--teal-100);border-radius:var(--radius);font-size:13px;color:var(--teal-800);margin-top:8px"></div>
         <div style="margin-top:14px;display:flex;gap:8px;">
           <button class="btn primary" onclick="nav('macros')">Continue to Macro Targets →</button>
@@ -906,6 +907,7 @@ tr:hover td { background: var(--bg-hover); }
       <div class="card-body">
         <div class="alert info">ℹ️ Enter Fruit, Vegetables, Dairy servings. Starch, Protein, Fat auto-calculate from remaining macros. Uses condition-aware clinical caps.</div>
         <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px">
+          <button class="btn" onclick="applySuggestedExchangeServings()">✨ Suggested servings</button>
           <button class="btn primary" onclick="refreshExchangePlansNow()">🔄 Apply to Meal Plans</button>
           <span style="font-size:12px;color:var(--text-muted)">Click after changing servings to push updates into 1-Day, 7-Day plan and Report</span>
         </div>
@@ -954,7 +956,7 @@ tr:hover td { background: var(--bg-hover); }
             <div id="s-sleep" style="display:flex;flex-wrap:wrap;gap:8px;padding:8px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input)" onchange="buildOneDayPlan()"></div>
           </div>
         </div>
-        <div class="field-note" style="margin-bottom:12px">Fruit/dairy servings for each snack come automatically from Exchange System and are always shown — the checkboxes above only restyle them (dried fruit instead of fresh, yogurt instead of milk) or add extras (nuts, coffee). Tick any combination.</div>
+        <div class="field-note" style="margin-bottom:12px">Fruit/dairy servings come from the Exchange System and are distributed flexibly across snacks. Before sleep is minimal by default; use checkboxes to add nuts/coffee or restyle allocated fruit/dairy where present.</div>
         <div id="oneday-plan"></div>
         <div class="section-label">EXCHANGE COVERAGE CHECK</div>
         <div id="oneday-check"></div>
@@ -1084,9 +1086,9 @@ tr:hover td { background: var(--bg-hover); }
   <!-- FOOD DATABASE -->
   <div class="page" id="page-fooddb">
     <div class="card">
-      <div class="card-header"><span class="card-title">🔎 Food Database — Open Food Facts</span></div>
+      <div class="card-header"><span class="card-title">🔎 Food Database — USDA FoodData Central</span></div>
       <div class="card-body">
-        <div class="alert info">ℹ️ Search uses the free Open Food Facts API. Values are imported from public product labels and should be reviewed clinically before use.</div>
+        <div class="alert info">ℹ️ Search uses USDA FoodData Central Foundation/SR Legacy data. Values are per 100g and should be reviewed clinically before use.</div>
         <div class="form-grid two">
           <div class="form-field"><label>Food search</label><input type="text" id="food-search" placeholder="e.g. oats, yogurt, halloumi" onkeydown="if(event.key==='Enter') searchFoodDatabase()"></div>
           <div class="form-field" style="display:flex;align-items:flex-end"><button class="btn primary" onclick="searchFoodDatabase()">Search foods</button></div>
@@ -1102,12 +1104,19 @@ tr:hover td { background: var(--bg-hover); }
     <div class="card">
       <div class="card-header"><span class="card-title">🍲 Recipes</span></div>
       <div class="card-body">
-        <div class="alert info">ℹ️ Build custom recipes from manual ingredients or foods found in Open Food Facts. Nutrition is calculated from kcal/carbs/protein/fat per 100g.</div>
+        <div class="alert info">ℹ️ Build custom recipes from manual ingredients or foods found in USDA FoodData Central. Nutrition is calculated from kcal/carbs/protein/fat per 100g.</div>
         <h3 style="margin:4px 0 14px;font-size:16px;color:var(--text-primary)">Create New Recipe</h3>
         <div class="form-grid two">
           <div class="form-field"><label>Recipe name</label><input type="text" id="recipe-name" placeholder="e.g. Chicken rice bowl" oninput="renderRecipeDraft()"></div>
           <div class="form-field"><label>Servings</label><input type="number" id="recipe-servings" min="1" step="1" value="1" oninput="renderRecipeDraft()"></div>
         </div>
+        <div class="section-label">Find ingredient from USDA</div>
+        <div class="form-grid two">
+          <div class="form-field"><label>Ingredient search</label><input type="text" id="ing-search" placeholder="e.g. chicken breast, oats, apple" onkeydown="if(event.key==='Enter') searchIngredientFoods()"><div class="field-note">Select a result to auto-fill nutrition per 100g. Manual override remains available.</div></div>
+          <div class="form-field" style="display:flex;align-items:flex-end"><button class="btn" onclick="searchIngredientFoods()">Search ingredient</button></div>
+        </div>
+        <div id="ingredient-search-status" class="field-note"></div>
+        <div id="ingredient-search-results" style="margin-bottom:12px"></div>
         <div class="section-label">Add ingredient manually</div>
         <div class="form-grid six">
           <div class="form-field"><label>Food</label><input type="text" id="ing-name" placeholder="Ingredient" onkeydown="if(event.key==='Enter') addManualIngredient()"></div>
@@ -1173,7 +1182,7 @@ tr:hover td { background: var(--bg-hover); }
               </div>
               <div class="form-field" style="margin-bottom:12px"><label>Notes</label><textarea id="appt-notes" rows="4" placeholder="Notes for this appointment" style="resize:vertical"></textarea></div>
               <div style="display:flex;gap:8px;flex-wrap:wrap">
-                <button class="btn primary" onclick="saveAppointmentFromForm()">Save</button>
+                <button class="btn primary" onclick="saveAppointmentFromForm()">Save Appointment</button>
                 <button class="btn" id="appt-delete-btn" onclick="deleteAppointmentFromForm()" style="display:none">Delete</button>
                 <button class="btn" onclick="clearAppointmentForm()">Clear</button>
               </div>
@@ -1896,10 +1905,9 @@ function getDairyDistribution(breakfastKey=(S.mealSel && S.mealSel.breakfast) ||
   const total = S.ex ? (S.ex.dairy||0) : 0;
   const brkUsesDairy = (breakfastKey==='BRK_CEREAL' || breakfastKey==='BRK_OATS_VEGAN') ? 1 : 0;
   const remaining = Math.max(0, total - brkUsesDairy);
-  const base = Math.floor(remaining/3);
-  let rem = remaining - base*3;
-  let sleep=base, snk1=base, snk2=base;
-  if(rem>0){ sleep++; rem--; }
+  const base = Math.floor(remaining/2);
+  let rem = remaining - base*2;
+  let sleep=0, snk1=base, snk2=base;
   if(rem>0){ snk1++; rem--; }
   if(rem>0){ snk2++; rem--; }
   return {brk:brkUsesDairy, sleep, snk1, snk2};
@@ -2716,13 +2724,16 @@ function setMealLanguage(lang){
   S.mealLanguage = lang==='EN' ? 'EN' : 'GR';
   updateMealLanguageButtons();
   refreshSnackExtrasLabels();
+  setEl('condition-guidance', renderCombinedGuidance(S.conditions));
+  if(document.getElementById('page-blood')?.classList.contains('active')) renderVitaminSuggestions();
   if(document.getElementById('page-oneday')?.classList.contains('active')) buildOneDayPlan();
   if(document.getElementById('page-sevenday')?.classList.contains('active')) buildSevenDay();
   if(document.getElementById('page-report')?.classList.contains('active')) buildReport();
 }
+function setClinicalLanguage(lang){ setMealLanguage(lang); }
 function updateMealLanguageButtons(){
   const isEn=S.mealLanguage==='EN';
-  ['1day','7day','report'].forEach(scope=>{
+  ['1day','7day','report','profile'].forEach(scope=>{
     const gr=document.getElementById(`meal-lang-gr-${scope}`);
     const en=document.getElementById(`meal-lang-en-${scope}`);
     if(gr){ gr.classList.toggle('primary', !isEn); }
@@ -2907,7 +2918,7 @@ function getMealPortions(plan=S.mealSel, lang=S.mealLanguage||'GR') {
 // professional guidelines — always cross-check against the latest sources
 // for your jurisdiction and the individual client's labs.
 const COND_GUIDANCE = {
-  General:     {gr:'Γενικός πληθυσμός',  main:'Ισορροπημένο πλάνο με βάση exchanges και μεσογειακή λογική.', prefer:'Λαχανικά, φρούτα, ελαιόλαδο, ποιοτική πρωτεΐνη και σωστή κατανομή αμύλου.', avoid:'Ακραίες στερήσεις και μη ρεαλιστικούς συνδυασμούς.'},
+  General:     {gr:'Υγιεινή διατροφή',  main:'Μεσογειακό πρότυπο ως βασική δομή: λαχανικά, φρούτα, όσπρια/δημητριακά ολικής, ελαιόλαδο, ψάρι και ποιοτική πρωτεΐνη. Στόχος 25–30g φυτικών ινών/ημέρα, επαρκής ενυδάτωση και τακτικά γεύματα.', prefer:'Λαχανικά, φρούτα, ελαιόλαδο, ξηρούς καρπούς, ψάρι, όσπρια, δημητριακά ολικής και επαρκή πρωτεΐνη για κορεσμό και μυϊκή μάζα.', avoid:'Ultra-processed τρόφιμα, ζαχαρούχα ποτά, ακραίες στερήσεις και μη ρεαλιστικούς συνδυασμούς.'},
   Diabetes:    {gr:'Διαβήτης (ADA 2024–25)', main:'Δεν υπάρχει ένα "καλύτερο" πρότυπο διατροφής — εξατομίκευση με βάση Μεσογειακή, DASH ή άλλη διατροφή που ο ασθενής μπορεί να ακολουθήσει μακροπρόθεσμα. Έμφαση σε τακτικά γεύματα και ποιοτικά λιπαρά (όχι μόνο "λίγους υδατάνθρακες").', prefer:'Δημητριακά ολικής άλεσης, όσπρια, λαχανικά, φρούτα με μέτρο, ελαιόλαδο/ξηροί καρποί, ψάρι και άπαχη πρωτεΐνη — μεσογειακού τύπου διατροφή.', avoid:'Ζαχαρούχα ποτά/χυμούς, πολύ επεξεργασμένα/ραφιναρισμένα τρόφιμα, υπερβολικό αλκοόλ. Περιορισμός — όχι πλήρης αποκλεισμός — υδατανθράκων, εξατομικευμένος ανάλογα με αγωγή.'},
   CKD:         {gr:'Χρόνια Νεφρική Νόσος (KDIGO 2024)', main:'Πρωτεΐνη ~0.8 g/kg σωματικού βάρους/ημέρα για στάδια G3–G5 (όχι αυστηρά χαμηλότερα χωρίς στενή παρακολούθηση)· αποφυγή υψηλής πρόσληψης πρωτεΐνης (>1.3 g/kg/ημέρα). Νάτριο <2 g/ημέρα. Κάλιο και φώσφορος εξατομικευμένα βάσει αιματολογικού ελέγχου — ΟΧΙ γενικευμένος αποκλεισμός φρούτων/λαχανικών.', prefer:'Έμφαση σε φυτικής προέλευσης τρόφιμα (όσπρια, λαχανικά, φρούτα, δημητριακά ολικής άλεσης) έναντι ζωικών πηγών πρωτεΐνης όπου είναι ασφαλές, μείωση ultra-processed τροφίμων. Φρέσκα, ανεπεξέργαστα τρόφιμα.', avoid:'Επεξεργασμένα τρόφιμα με πρόσθετα φωσφόρου (αλλαντικά, έτοιμα γεύματα, αναψυκτικά cola), υπερβολικό αλάτι, υπερβολική πρωτεΐνη. Περιορισμός συγκεκριμένων τροφών σε Κ/Φ ΜΟΝΟ όταν δείχνουν αυξημένα τα αιματολογικά (όχι προληπτικά).'},
   Hypertension:{gr:'Υπέρταση (DASH / AHA)', main:'DASH διατροφή — νάτριο <2.3 g/ημέρα (ιδανικά ~1.5 g για μεγαλύτερο όφελος), πλούσια σε κάλιο, ασβέστιο και μαγνήσιο.', prefer:'Λαχανικά, φρούτα, δημητριακά ολικής άλεσης, χαμηλά λιπαρά γαλακτοκομικά, ψάρι/πουλερικά, όσπρια και ξηροί καρποί.', avoid:'Λιπαρό κόκκινο/επεξεργασμένο κρέας, full-fat γαλακτοκομικά, τροπικά λάδια (φοίνικας/καρύδα), ζαχαρούχα ποτά, αλάτι/αλμυρά σνακ, αλκοόλ.'},
@@ -2970,7 +2981,7 @@ const GENERAL_HEALTH_RULES_EN = [
 ];
 
 const REPORT_CONDITION_EN = {
-  General:{name:'Healthy Eating', main:'Balanced exchange-based plan with Mediterranean-style food quality.', prefer:'Vegetables, fruit, olive oil, quality protein and consistent starch distribution.', avoid:'Extreme restriction and unrealistic meal combinations.'},
+  General:{name:'Healthy Eating', main:'Mediterranean diet as the core pattern: vegetables, fruit, whole grains/pulses, olive oil, fish and quality protein. Aim for 25-30g fibre/day, hydration and regular meals.', prefer:'Vegetables, fruit, olive oil, nuts, fish, pulses, whole grains and adequate protein for satiety and muscle maintenance.', avoid:'Ultra-processed foods, sweet drinks, extreme restriction and unrealistic meal combinations.'},
   Obesity:{name:'Weight Management', main:'Use a mild, sustainable calorie deficit with emphasis on minimally processed, Mediterranean/DASH-style foods.', prefer:'Vegetables, pulses, whole grains, lean protein for satiety and water instead of sweet drinks.', avoid:'Ultra-processed foods, sweet drinks, fast food and excess alcohol.'},
   Diabetes:{name:'Diabetes Type 2', main:'Individualise meal timing and carbohydrate distribution. Focus on high-fibre carbohydrates, unsaturated fats and consistent meals.', prefer:'Whole grains, pulses, vegetables, moderate fruit, olive oil, fish and lean protein.', avoid:'Sweet drinks/juice, highly refined foods and excess alcohol.'},
   Dyslipidemia:{name:'High Cholesterol', main:'Mediterranean-style eating pattern with focus on fibre and unsaturated fats.', prefer:'Oily fish, olive oil, nuts, pulses, oats, fruit and vegetables.', avoid:'Trans fats, excess saturated fats, processed meats and ultra-processed snacks.'},
@@ -3033,21 +3044,21 @@ function onPregnancyToggle(){
 
 const COND_MACROS = {
   // Sources: ADA 2026, KDIGO 2024, AHA/DASH, Monash Low-FODMAP, ESPEN
-  General:     {c:45,p:20,f:35},
+  General:     {c:40,p:25,f:35},
   Diabetes:    {c:40,p:25,f:35}, // ADA 2026: moderate carb reduction, not ultra-low
   CKD:         {c:50,p:20,f:30}, // KDIGO 2024: ~0.8g/kg protein; higher carb to spare protein
-  Hypertension:{c:45,p:20,f:35}, // DASH: no major macro change, focus on sodium/potassium
-  Dyslipidemia:{c:45,p:20,f:35}, // AHA: reduce saturated fat; total fat % not drastically changed
+  Hypertension:{c:40,p:25,f:35}, // DASH: no major macro change, focus on sodium/potassium
+  Dyslipidemia:{c:40,p:25,f:35}, // AHA: reduce saturated fat; total fat % not drastically changed
   PCOS:        {c:40,p:25,f:35}, // moderate carb reduction helps insulin resistance
-  GERD:        {c:50,p:20,f:30}, // lower fat reduces reflux triggers
+  GERD:        {c:45,p:25,f:30}, // lower fat reduces reflux triggers
   IBS:         {c:45,p:25,f:30}, // low-FODMAP focus, moderate fat
   Obesity:     {c:40,p:25,f:35}, // moderate carb reduction, higher protein for satiety
   Hemodialysis:{c:45,p:25,f:30}, // HD: higher protein needed (losses during dialysis)
-  Thyroid:     {c:45,p:20,f:35},
-  Celiac:      {c:45,p:20,f:35},
-  Thalassemia: {c:45,p:20,f:35},
-  Pregnancy:   {c:45,p:20,f:35},
-  FoodIntolerance:{c:45,p:20,f:35},
+  Thyroid:     {c:40,p:25,f:35},
+  Celiac:      {c:40,p:25,f:35},
+  Thalassemia: {c:40,p:25,f:35},
+  Pregnancy:   {c:40,p:25,f:35},
+  FoodIntolerance:{c:40,p:25,f:35},
   Menopause:   {c:40,p:25,f:35},
   Sports:      {c:50,p:25,f:25},
 };
@@ -3059,11 +3070,9 @@ const COND_MACROS = {
 const COND_CAP_OVERRIDES = {
   CKD:          { proteinDailyMax:6, proteinPerMealMax:3 },           // KDIGO 2024: ~0.8g/kg → realistic for avg adult
   Hemodialysis: { proteinDailyMax:8, proteinPerMealMax:4 },           // HD needs MORE protein due to losses
-  Dyslipidemia: { fatDailyMax:5, fatPerMealMax:2 },                   // lower saturated fat, not eliminate fat
-  GERD:         { fatDailyMax:5, fatPerMealMax:2 },                   // lower fat triggers reflux
+  Dyslipidemia: { fatDailyMax:6, fatPerMealMax:3 },                   // Mediterranean pattern allows olive oil; focus on fat quality
   Diabetes:     { starchDailyMax:7, starchPerMealMax:3 },             // ADA 2026: moderate carb, not very low
   PCOS:         { starchDailyMax:7, starchPerMealMax:3 },             // moderate carb reduction
-  Obesity:      { fatDailyMax:5, fatPerMealMax:2 },                   // calorie density control
 };
 
 // Returns CAPS adjusted to the most restrictive value across all selected
@@ -3109,29 +3118,56 @@ function getCapConflicts(conditions) {
 }
 
 // Combines clinical guidance text from all selected conditions into one panel
+const GUIDANCE_SOURCE_MAP = {
+  General:'Mediterranean diet evidence · WHO/ACSM activity guidance · Dietary Guidelines for Americans 2020-2025',
+  Obesity:'Dietary Guidelines for Americans 2020-2025 · Mediterranean/DASH weight-management evidence',
+  Diabetes:'ADA Standards of Care in Diabetes 2026',
+  Dyslipidemia:'AHA/ACC lipid guidance · Mediterranean diet evidence',
+  Hypertension:'DASH / AHA blood pressure guidance',
+  PCOS:'DASH and glycaemic-load evidence in PCOS',
+  Thyroid:'Nutrition Reviews 2025 Hashimoto thyroiditis review · NIH ODS micronutrients',
+  IBS:'Monash University Low-FODMAP framework',
+  FoodIntolerance:'Allergy label-reading and nutrition adequacy guidance',
+  Pregnancy:'ACOG · NIH ODS · Dietary Guidelines for Americans pregnancy nutrition',
+  Menopause:'Bone health and cardiometabolic menopause nutrition guidance',
+  Sports:'ACSM sports nutrition and hydration guidance',
+  CKD:'KDIGO 2024 CKD Guideline',
+  Hemodialysis:'KDOQI/KDIGO renal nutrition guidance'
+};
+function guidanceSourcesForConditions(conditions, lang=S.mealLanguage||'GR'){
+  const list=(conditions&&conditions.length)?conditions:['General'];
+  const sources=[...new Set(list.map(c=>GUIDANCE_SOURCE_MAP[c]).filter(Boolean))];
+  const prefix=lang==='EN'?'Sources':'Πηγές';
+  const suffix=lang==='EN'
+    ? 'General guidance only; individual clinical judgement is required.'
+    : 'Οι πληροφορίες είναι γενικές κατευθυντήριες γραμμές — απαιτείται πάντα κλινική κρίση και εξατομίκευση.';
+  return `${prefix}: ${sources.join(' · ')}. ${suffix}`;
+}
+
 function renderCombinedGuidance(conditions) {
+  const lang=S.mealLanguage||'GR';
+  const isEn=lang==='EN';
   const list = (conditions&&conditions.length) ? conditions : ['General'];
-  const items = list.map(c => ({key:c, ...(COND_GUIDANCE[c]||COND_GUIDANCE.General)}));
+  const items = list.map(c => ({key:c, gr:(COND_GUIDANCE[c]||COND_GUIDANCE.General).gr, ...(isEn ? (REPORT_CONDITION_EN[c]||REPORT_CONDITION_EN.General) : (COND_GUIDANCE[c]||COND_GUIDANCE.General))}));
   let html = '';
   if (list.length > 1) {
-    html += `<div class="alert warn" style="margin-bottom:10px"><span><strong>⚠ Πολλαπλές παθήσεις (${list.length})</strong> — οι παρακάτω οδηγίες συνδυάζονται. Σε πολύπλοκες περιπτώσεις (ιδίως ΧΝΝ/Αιμοκάθαρση + Διαβήτης) απαιτείται στενή κλινική παρακολούθηση και πιθανή συνεργασία με νεφρολόγο.</span></div>`;
+    html += `<div class="alert warn" style="margin-bottom:10px"><span><strong>${isEn?'Multiple conditions':'Πολλαπλές παθήσεις'} (${list.length})</strong> — ${isEn?'guidance is combined; complex cases require close clinical review.':'οι παρακάτω οδηγίες συνδυάζονται. Σε πολύπλοκες περιπτώσεις απαιτείται στενή κλινική παρακολούθηση.'}</span></div>`;
   }
   items.forEach(cg => {
     html += `<div style="margin-bottom:${items.length>1?'10px':'0'};${items.length>1?'padding-bottom:10px;border-bottom:1px solid var(--border)':''}">
-      <strong style="color:var(--text-active)">${cg.gr}</strong><br>
-      ✔ <strong>Κύρια οδηγία:</strong> ${cg.main}<br>
-      ✔ <strong>Προτίμησε:</strong> ${cg.prefer}<br>
-      ⚠ <strong>Αποφυγή:</strong> ${cg.avoid}
+      <strong style="color:var(--text-active)">${isEn?(cg.name||conditionLabel(cg.key)):cg.gr}</strong><br>
+      ✔ <strong>${isEn?'Main guidance':'Κύρια οδηγία'}:</strong> ${cg.main}<br>
+      ✔ <strong>${isEn?'Prefer':'Προτίμησε'}:</strong> ${cg.prefer}<br>
+      ⚠ <strong>${isEn?'Limit / avoid':'Αποφυγή'}:</strong> ${cg.avoid}
     </div>`;
     if(cg.key==='Pregnancy'){
       const tri=v('p-trimester')||'1';
-      html += `<div style="margin-bottom:10px;padding:8px 10px;background:var(--teal-50);border-radius:6px;font-size:12px"><strong>📅 ${PREGNANCY_TRIMESTER_NOTES[tri] ? ('Στάδιο: '+(tri==='1'?'1ο':tri==='2'?'2ο':'3ο')+' Τρίμηνο') : ''}</strong><br>${PREGNANCY_TRIMESTER_NOTES[tri]||''}</div>`;
+      html += `<div style="margin-bottom:10px;padding:8px 10px;background:var(--teal-50);border-radius:6px;font-size:12px"><strong>📅 ${isEn?'Trimester':'Στάδιο'} ${tri}</strong><br>${PREGNANCY_TRIMESTER_NOTES[tri]||''}</div>`;
     }
   });
-  html += `<div style="margin-top:8px;font-size:10px;color:var(--text-muted);font-style:italic">${GUIDANCE_SOURCES}</div>`;
+  html += `<div style="margin-top:8px;font-size:10px;color:var(--text-muted);font-style:italic">${guidanceSourcesForConditions(list, lang)}</div>`;
   return html;
 }
-
 // Combines macro % suggestions across selected conditions: takes the most
 // restrictive (lowest) % for each macro across all selected conditions,
 // then assigns any remainder to carbs (safest to add from whole-food sources).
@@ -3153,6 +3189,25 @@ function getCombinedMacroSuggestion(conditions) {
 }
 
 // Returns a plain-language explanation of why each macro % was suggested
+function proteinRationaleForCondition(cond){
+  const map={
+    CKD:'renal protection; protein remains conservative unless nephrology advises otherwise',
+    Hemodialysis:'dialysis-related protein losses; intake must be individualised with renal team',
+    Diabetes:'satiety and lean-mass preservation while keeping carbohydrates consistent',
+    Obesity:'satiety and preservation of lean mass during weight loss',
+    Dyslipidemia:'satiety and cardiometabolic balance within a Mediterranean-style pattern',
+    Hypertension:'satiety and muscle maintenance within a DASH-style pattern',
+    PCOS:'satiety and glycaemic-load support',
+    Thyroid:'satiety and muscle maintenance while supporting micronutrient adequacy',
+    IBS:'adequate protein while adjusting tolerated carbohydrate/fibre sources',
+    FoodIntolerance:'nutritional adequacy when food groups may be restricted',
+    Pregnancy:'increased tissue-growth needs; individualise by trimester and clinical review',
+    Menopause:'muscle and bone support during menopause',
+    Sports:'recovery and training adaptation',
+    General:'satiety, muscle maintenance and balanced healthy eating'
+  };
+  return map[cond]||map.General;
+}
 function getMacroSuggestionExplanation(conditions){
   const list = (conditions&&conditions.length) ? conditions : ['General'];
   const sugg = list.map(c=>({cond:c, vals:COND_MACROS[c]||COND_MACROS.General}));
@@ -3160,10 +3215,10 @@ function getMacroSuggestionExplanation(conditions){
   const carbDriver  = sugg.reduce((a,b)=>a.vals.c<b.vals.c?a:b);
   const proDriver   = sugg.reduce((a,b)=>a.vals.p<b.vals.p?a:b);
   return {
-    carb:  `${result.c}% — most conservative from ${carbDriver.cond} (${carbDriver.vals.c}%) to manage glycemic/metabolic load`,
-    prot:  `${result.p}% — most conservative from ${proDriver.cond} (${proDriver.vals.p}%) to protect renal/metabolic function`,
-    fat:   `${result.f}% — remainder after carb+protein, within healthy range (25–45%)`,
-    note:  list.length>1 ? `Combined from ${list.join(', ')} — most restrictive value per macro used` : ''
+    carb:  `${result.c}% — most conservative from ${conditionLabel(carbDriver.cond)} (${carbDriver.vals.c}%) to manage glycaemic load and food quality`,
+    prot:  `${result.p}% — ${proteinRationaleForCondition(proDriver.cond)}`,
+    fat:   `${result.f}% — remainder after carbohydrate + protein; focus on unsaturated fats and clinical tolerance`,
+    note:  list.length>1 ? `Combined from ${list.map(conditionLabel).join(', ')} — most conservative value per macro used` : ''
   };
 }
 
@@ -3176,7 +3231,7 @@ const PAGE_INFO = {
   exchanges:{title:'Exchange System',sub:'Σύστημα Ισοδυνάμων · Auto-calculated from macro targets'},
   oneday:{title:'1-Day Auto Plan',sub:'Exchange-based daily meal plan with meal dropdowns'},
   sevenday:{title:'7-Day Meal Plan',sub:'Full weekly schedule — all 7 plan variants'},
-  fooddb:{title:'Food Database',sub:'Open Food Facts search · Macros per 100g'},
+  fooddb:{title:'Food Database',sub:'USDA FoodData Central · Macros per 100g'},
   recipes:{title:'Recipes',sub:'Custom recipes · Auto-calculated nutrition'},
   report:{title:'Client Report (Print)',sub:'PRINT — Κλινική Αναφορά Διατροφής'},
   tracking:{title:'Progress Tracking',sub:'Body composition history · Visit log'},
@@ -3482,7 +3537,7 @@ function calcExchanges(){
   };
 }
 
-const EX_ROW_GRID = 'minmax(150px,1.5fr) 72px 64px 64px 64px 72px 80px';
+const EX_ROW_GRID = 'minmax(190px,260px) 78px 64px 64px 64px 72px 80px';
 
 function renderExchanges(){
   calcExchanges();
@@ -3518,6 +3573,14 @@ function resetExAuto(key){
   S.exAuto[key]=true;
   calcExchanges();
   renderExchanges();
+}
+function applySuggestedExchangeServings(){
+  S.exAuto={starch:true,protein:true,fat:true,...(S.exAuto||{})};
+  calcExchanges();
+  renderExchanges();
+  refreshExchangePlansNow();
+  const note=document.getElementById('exchange-check');
+  if(note) note.insertAdjacentHTML('afterbegin','<div class="alert ok">✅ Suggested servings applied within the active condition caps. Review clinically and adjust if needed.</div>');
 }
 
 // Called on every keystroke in the Exchange System table.
@@ -3622,29 +3685,33 @@ function renderExchangeChecks(){
         if(diff<0) fix=gapData.starchCapped||gapData.proteinCapped||gapData.fatCapped
           ? `Plan is capped at condition limits — add ${Math.round(Math.abs(diff)/81)} starch ex or ${Math.round(Math.abs(diff)/45)} fat ex to close gap`
           : `Add ${Math.round(Math.abs(diff)/81)} starch ex or increase fat ex`;
-        else fix='Reduce starch or fat exchanges by 1–2';
+        else fix='Consider reducing starch or fat by 1–2 exchanges, or accept the small difference if meals are balanced';
       }
       if(i===1){ // Carbs
         if(diff<0) fix=gapData.starchCapped
           ? `Starch capped at ${caps.starchDailyMax} ex/day (condition limit) — need ${Math.round(Math.abs(diff)/15)} more starch ex to cover carb target`
           : `Add ${Math.round(Math.abs(diff)/15)} starch exchange(s)`;
-        else fix=`Reduce starch by ${Math.round(Math.abs(diff)/15)} exchange(s)`;
+        else fix=`Consider reducing starch by ${Math.round(Math.abs(diff)/15)} exchange(s), or accept +${Math.abs(diff)}g if meal distribution is clinically balanced`;
       }
       if(i===2){ // Protein
         if(diff<0) fix=gapData.proteinCapped
           ? `Protein capped at ${caps.proteinDailyMax} ex/day (condition limit) — need ${Math.round(Math.abs(diff)/7)} more protein ex`
           : `Add ${Math.round(Math.abs(diff)/7)} protein exchange(s) (~${Math.round(Math.abs(diff)/7)*30}g more meat/fish)`;
-        else fix=`Reduce protein by ${Math.round(Math.abs(diff)/7)} exchange(s)`;
+        else fix=`Consider reducing protein by ${Math.round(Math.abs(diff)/7)} exchange(s), or accept +${Math.abs(diff)}g if portions remain realistic`;
       }
       if(i===3){ // Fat
         if(diff<0) fix=gapData.fatCapped
           ? `Fat capped at ${caps.fatDailyMax} tsp/day (condition limit) — need ${Math.round(Math.abs(diff)/5)} more fat ex`
           : `Add ${Math.round(Math.abs(diff)/5)} fat exchange(s) (${Math.round(Math.abs(diff)/5)} tsp olive oil)`;
-        else fix=`Reduce fat by ${Math.round(Math.abs(diff)/5)} exchange(s)`;
+        else fix=`Consider reducing fat by ${Math.round(Math.abs(diff)/5)} exchange(s), or accept +${Math.abs(diff)}g if fat quality is appropriate`;
       }
     }
     chk+=`<tr><td>${label}</td><td>${Math.round(tgt)}</td><td>${Math.round(plan)}</td><td style="color:${ok?'inherit':diff<0?'var(--warn)':'var(--err)'}">${diff>0?'+':''}${diff}</td><td><span class="badge ${ok?'ok':'warn'}">${ok?'OK':'Adjust'}</span></td><td style="font-size:12px;color:var(--text-muted)">${fix}</td></tr>`;
   });
+    if((S.conditions||[]).includes('Dyslipidemia')){
+    const fatCapKcal=(caps.fatDailyMax||0)*(m.fat?.kcal||45);
+    chk+=`<tr><td colspan="6"><div class="alert info" style="margin:6px 0 0">High Cholesterol note: olive-oil fat quality matters. Current fat cap allows up to <strong>${caps.fatDailyMax} tsp</strong> (~${Math.round(fatCapKcal)} kcal from fat exchanges). If calories are still low, consider increasing starch or lean-protein servings rather than forcing extra fat.</div></td></tr>`;
+  }
   setEl('exchange-check',chk+'</tbody></table>');
 
   let prec='<table><thead><tr><th>Metric</th><th>Target</th><th>Plan</th><th>Tolerance</th><th>Status</th></tr></thead><tbody>';
@@ -3656,62 +3723,47 @@ function renderExchangeChecks(){
 }
 
 function calcBodyComp(){
-  const w=S.weight||0, isMale=S.sex==='M';
+  const fieldWeight=parseFloat(v('p-weight'));
+  const w=Number.isFinite(fieldWeight) && fieldWeight>0 ? fieldWeight : (S.weight||0);
+  const isMale=S.sex==='M';
   const bf=parseFloat(v('bc-bf'))||null, water=parseFloat(v('bc-water'))||null;
   const visceral=parseFloat(v('bc-visceral'))||null, metage=parseFloat(v('bc-metage'))||null;
   const fatmass=bf&&w ? w*bf/100 : null;
   const ffm=fatmass!==null ? w-fatmass : null;
+  const fatmassEl=document.getElementById('bc-fatmass');
+  const ffmEl=document.getElementById('bc-ffm');
+  if(fatmass!==null && !S.bcManual?.fatmass && fatmassEl) fatmassEl.value=fatmass.toFixed(1);
+  if(ffm!==null && !S.bcManual?.ffm && ffmEl) ffmEl.value=ffm.toFixed(1);
   const muscle=parseFloat(v('bc-muscle'))||null;
-  console.log('[NutriFlow bodycomp] calcBodyComp', {
-    S_weight:S.weight,
-    profileWeightField:v('p-weight'),
-    w,
-    bfRaw:v('bc-bf'),
-    bf,
-    fatmass,
-    ffm,
-    bcManual:S.bcManual,
-    fatmassField:v('bc-fatmass'),
-    ffmField:v('bc-ffm'),
-    shouldFillFatMass:fatmass!==null && !S.bcManual?.fatmass && !v('bc-fatmass'),
-    shouldFillFfm:ffm!==null && !S.bcManual?.ffm && !v('bc-ffm')
-  });
   S.bc={bf,water,fatmass,ffm,muscle,metage,visceral};
-  if(fatmass!==null&&!S.bcManual?.fatmass&&!v('bc-fatmass')) document.getElementById('bc-fatmass').value=fatmass.toFixed(1);
-  if(ffm!==null&&!S.bcManual?.ffm&&!v('bc-ffm')) document.getElementById('bc-ffm').value=ffm.toFixed(1);
   if(bf!==null){const lo=isMale?10:18,hi=isMale?20:28; setEl('bc-bf-note',bf<lo?'⚠ Low — review energy availability':bf>hi?'⚠ High — metabolic risk':'✅ Within normal range');}
   if(water!==null){const lo=isMale?50:45,hi=isMale?65:60; setEl('bc-water-note',water<lo?'⚠ May indicate dehydration':water>hi?'⚠ Review clinically':'✅ Adequate');}
-  if(visceral!==null) setEl('bc-visceral-note',visceral<=12?'✅ Healthy level':'⚠ Elevated — cardiometabolic risk');
+  if(visceral!==null){
+    const msg=visceral<=9?'✅ Healthy level':visceral<=12?'⚠ Borderline / upper-limit — monitor cardiometabolic risk':'⚠ Elevated — cardiometabolic risk';
+    setEl('bc-visceral-note',msg);
+  }
   if(metage!==null&&S.age) setEl('bc-metage-note',metage<=S.age?'✅ Favorable':'⚠ Metabolic age above chronological');
 
   const fields=[['Body Fat',bf,'%',isMale?'10–20%':'18–28%'],['Body Water',water,'%',isMale?'50–65%':'45–60%'],
     ['Fat Mass',fatmass!==null?fatmass.toFixed(1):null,'kg','Auto'],['Fat-Free Mass',ffm!==null?ffm.toFixed(1):null,'kg','Weight − fat mass'],
     ['Muscle Mass',muscle!==null?muscle.toFixed(1):null,'kg','Measured / manual'],
-    ['Visceral Fat',visceral,'score','1–12 healthy'],['Metabolic Age',metage,'y','≤ chronological age']];
-  setEl('bc-interpretation','<div class="metrics-grid">'+fields.map(([l,val,u,ref])=>
-    `<div class="metric"><div class="m-label">${l}</div><div class="m-value" style="font-size:20px">${val!=null?val+u:'—'}</div><div class="m-sub">Ref: ${ref}</div></div>`
-  ).join('')+'</div>');
+    ['Visceral Fat',visceral,'score','1–9 healthy · 10–12 borderline · 13+ high'],['Metabolic Age',metage,'y','≤ chronological age']];
+  setEl('bc-interpretation','<div class="metrics-grid">'+fields.map(([l,val,u,ref])=>{
+    const visceralClass=l==='Visceral Fat'&&val!=null ? (val<=9?'ok':val<=12?'warn':'err') : '';
+    return `<div class="metric"><div class="m-label">${l}</div><div class="m-value ${visceralClass}" style="font-size:20px">${val!=null?val+u:'—'}</div><div class="m-sub">Ref: ${ref}</div></div>`;
+  }).join('')+'</div>');
 
-  const targetWt=(w*0.95).toFixed(1);
-  setEl('bc-targets',`<div class="form-grid"><div class="metric"><div class="m-label">Target weight (5% initial)</div><div class="m-value" style="font-size:20px">${targetWt} kg</div></div><div class="metric"><div class="m-label">Target BMI (long-term)</div><div class="m-value" style="font-size:20px">22–27</div><div class="m-sub">Clinical reference zone</div></div></div>`);
+  const targetWt=w?(w*0.95).toFixed(1):'—';
+  setEl('bc-targets',`<div class="form-grid"><div class="metric"><div class="m-label">Target weight (5% initial)</div><div class="m-value" style="font-size:20px">${targetWt}${w?' kg':''}</div></div><div class="metric"><div class="m-label">Target BMI (long-term)</div><div class="m-value" style="font-size:20px">22–27</div><div class="m-sub">Clinical reference zone</div></div></div>`);
   setEl('d-bf',bf?bf.toFixed(1)+'%':'—');
 }
 
 function onBodyCompManualInput(field){
-  console.log('[NutriFlow bodycomp] onBodyCompManualInput', {
-    field,
-    before:{...(S.bcManual||{})},
-    profileWeightField:v('p-weight'),
-    bodyFatField:v('bc-bf'),
-    fatmassField:v('bc-fatmass'),
-    ffmField:v('bc-ffm')
-  });
   S.bcManual={fatmass:false,ffm:false,muscle:false,...(S.bcManual||{})};
-  if(field==='fatmass' || field==='ffm' || field==='muscle') S.bcManual[field]=true;
-  console.log('[NutriFlow bodycomp] onBodyCompManualInput after flags', {after:S.bcManual});
+  if((field==='fatmass' || field==='ffm') && !String(v(field==='fatmass'?'bc-fatmass':'bc-ffm')).trim()) S.bcManual[field]=false;
+  else if(field==='fatmass' || field==='ffm' || field==='muscle') S.bcManual[field]=true;
   calcBodyComp();
 }
-
 function saveBodyComp(){
   S.tracking.unshift({date:new Date().toLocaleDateString('el-GR'),weight:S.weight,bf:v('bc-bf'),muscle:v('bc-muscle'),visceral:v('bc-visceral'),notes:'Body comp entry'});
   alert('✅ Measurements saved! View in Progress Tracking.');
@@ -3990,7 +4042,16 @@ function buildReport(){
   const day=calcDayTotals();
   const gapOk=Math.abs(day.gap)<=100;
   const baseReportRules=isEn ? GENERAL_HEALTH_RULES_EN : GENERAL_HEALTH_RULES;
-  const reportRules=baseReportRules.filter(rule=>condList.includes('Pregnancy') || !/pregnancy|εγκυμοσύνη|κύηση/i.test(rule));
+    const reportRules=baseReportRules
+    .filter(rule=>condList.includes('Pregnancy') || !/pregnancy|εγκυμοσύνη|κύηση/i.test(rule))
+    .map(rule=>{
+      if(condList.includes('IBS') && /Fibre|Φυτικές ίνες/i.test(rule)){
+        return isEn
+          ? 'Fibre: aim for 25-30g/day using tolerated sources such as cooked vegetables, oats, rice, quinoa and unripe banana; avoid generic high-FODMAP legume advice unless tolerated.'
+          : 'Φυτικές ίνες: στόχος 25–30g/ημέρα από ανεκτές πηγές όπως βραστά λαχανικά, βρώμη, ρύζι, κινόα και άγουρη μπανάνα — όχι γενική σύσταση για όσπρια αν δεν είναι ανεκτά.';
+      }
+      return rule;
+    });
   const goalLabel=isEn?'Goal':'Στόχος';
   const dayUnit=isEn?'kcal/day':'kcal/ημέρα';
   const abnormalLabsHtml=S.reportOptions?.includeBlood!==false ? reportAbnormalLabsHtml(isEn) : '';
@@ -4404,10 +4465,14 @@ const CONDITION_VITAMINS = {
   PCOS:        [{n:'Βιταμίνη D', why:'Συχνή ανεπάρκεια, σχετίζεται με ινσουλινοαντίσταση'},{n:'Myo-inositol', why:'Πιθανή βελτίωση ωορρηξίας/ινσουλινοαντίστασης — συζήτηση με ιατρό'},{n:'Ωμέγα-3', why:'Αντιφλεγμονώδης δράση'}],
   GERD:        [{n:'Βιταμίνη Β12', why:'Μακροχρόνια χρήση PPI μειώνει την απορρόφηση'},{n:'Μαγνήσιο', why:'PPI μπορούν να μειώσουν τα επίπεδα μαγνησίου'}],
   IBS:         [{n:'Προβιοτικά', why:'Επιλογή στελέχους εξατομικευμένα — μπορεί να βοηθήσουν στα συμπτώματα'},{n:'Βιταμίνη D', why:'Έλεγχος επιπέδων αν περιορίζονται γαλακτοκομικά'}],
-  Obesity:     [{n:'Βιταμίνη D', why:'Συχνή ανεπάρκεια'},{n:'Βιταμίνη Β12, Σίδηρος', why:'Ειδικός έλεγχος μετά από βαριατρική επέμβαση'}],
+  Obesity:     [{n:'Βιταμίνη D', why:'Συχνή ανεπάρκεια'},{n:'Σίδηρος', why:'Η ανεπάρκεια σιδήρου είναι συχνή κατά τον θερμιδικό περιορισμό — εξέταση/παρακολούθηση επιπέδων όπου χρειάζεται'}],
   Thyroid:     [{n:'Σελήνιο', why:'Υποστηρίζει τη μετατροπή Τ4→Τ3, ιδίως στη Hashimoto'},{n:'Ψευδάργυρος, Σίδηρος, Βιταμίνη D', why:'Συχνές ελλείψεις σε αυτοάνοση θυρεοειδίτιδα'},{n:'⚠ Ιώδιο μόνο υπό καθοδήγηση', why:'Υπερβολικό ιώδιο μπορεί να επιδεινώσει την αυτοανοσία'}],
   Celiac:      [{n:'Σίδηρος, Φολικό οξύ, Βιταμίνη Β12', why:'Συχνές ελλείψεις λόγω δυσαπορρόφησης πριν τη διάγνωση/σε ενεργή νόσο'},{n:'Βιταμίνη D, Ασβέστιο', why:'Υποστήριξη οστικής υγείας'}],
   Thalassemia: [{n:'Φολικό οξύ', why:'Συχνά απαραίτητο λόγω αυξημένης ερυθροποίησης — υπό καθοδήγηση αιματολόγου'},{n:'⚠ Αποφυγή σιδήρου & υψηλής δόσης βιτ. C', why:'Κίνδυνος επιβάρυνσης σιδήρου σε ασθενείς με τακτικές μεταγγίσεις'}],
+  FoodIntolerance:[{n:'Ασβέστιο, Βιταμίνη D', why:'Αν αποφεύγονται γαλακτοκομικά'},{n:'Σίδηρος', why:'Αν αποφεύγεται κρέας'},{n:'Βιταμίνη Β12', why:'Αν αποφεύγονται ζωικά τρόφιμα'},{n:'Ψευδάργυρος', why:'Αν αποκλείονται πολλαπλές ομάδες τροφίμων'}],
+  Pregnancy:   [{n:'Φολικό οξύ', why:'600 mcg/ημέρα — νευρικός σωλήνας (ACOG)'},{n:'Σίδηρος', why:'27 mg/ημέρα — συχνή ανεπάρκεια στην εγκυμοσύνη'},{n:'Βιταμίνη D', why:'Έλεγχος επιπέδων'},{n:'Ιώδιο', why:'220 mcg/ημέρα — ανάπτυξη θυρεοειδούς εμβρύου'},{n:'Ωμέγα-3', why:'DHA για ανάπτυξη εγκεφάλου εμβρύου'},{n:'Χολίνη', why:'Νευρική ανάπτυξη'},{n:'Ασβέστιο', why:'1000 mg/ημέρα'}],
+  Menopause:   [{n:'Ασβέστιο, Βιταμίνη D', why:'Η απώλεια οστικής μάζας επιταχύνεται μετά την εμμηνόπαυση'},{n:'Μαγνήσιο', why:'Οστική υγεία και ύπνος'},{n:'Ωμέγα-3', why:'Ο καρδιαγγειακός κίνδυνος αυξάνεται μετά την εμμηνόπαυση'},{n:'Βιταμίνη Β12', why:'Η απορρόφηση μειώνεται με την ηλικία'}],
+  Sports:      [{n:'Σίδηρος', why:'Ιδίως σε γυναίκες αθλήτριες — απώλειες μέσω ιδρώτα/έμμηνου ρύσης'},{n:'Βιταμίνη D, Ασβέστιο', why:'Κίνδυνος καταγματικής κόπωσης / οστική υγεία'},{n:'Μαγνήσιο', why:'Μυϊκή λειτουργία και αποκατάσταση'},{n:'Νάτριο, Κάλιο', why:'Ενυδάτωση και απόδοση'}],
 };
 const VITAMIN_DISCLAIMER = 'ℹ️ Αυτά είναι κλινικές παρατηρήσεις προς εξέταση από τον διαιτολόγο — ΟΧΙ αυτόματες συστάσεις συμπληρωμάτων. Οποιαδήποτε απόφαση για συμπλήρωμα παραμένει αποκλειστικά κλινική κρίση, ιδιαίτερα σε ΧΝΝ, Αιμοκάθαρση και Μεσογειακή Αναιμία όπου ορισμένα συμπληρώματα (σίδηρος, κάλιο, βιταμίνες A/E/K) μπορεί να είναι επιβλαβή.';
 
@@ -4428,6 +4493,8 @@ const NUTRIENT_FOOD_SOURCES = {
   'Ωμέγα-3':      'λιπαρά ψάρια (σολομός, σαρδέλα, σκουμπρί), λιναρόσπορος, καρύδια, σόγια',
   'Ιώδιο':        'ιωδιούχο αλάτι, ψάρι, γαλακτοκομικά, αυγά — με μέτρο σε αυτοάνοση θυρεοειδίτιδα',
   'Κάλιο':        'φρούτα (μπανάνα, πορτοκάλι), πατάτα, όσπρια, γιαούρτι — προσοχή/εξατομίκευση σε CKD/Αιμοκάθαρση',
+  'Χολίνη':       'αυγά, κοτόπουλο, ψάρι, γαλακτοκομικά, όσπρια',
+  'Νάτριο':       'ηλεκτρολύτες/αλάτι σε εξατομικευμένη ποσότητα ανά ιδρώτα, άσκηση και πίεση',
 };
 
 // Returns a food-sources string for a nutrient suggestion, or null if none
@@ -4568,40 +4635,54 @@ function addVitaminItem(items, item){
   items.push(item);
 }
 
+function translateClinicalNote(text){
+  if((S.mealLanguage||'GR')!=='EN') return text;
+  return String(text||'')
+    .replaceAll('Συχνή ανεπάρκεια','Common deficiency')
+    .replaceAll('Έλεγχος επιπέδων','Check levels')
+    .replaceAll('Αν αποφεύγονται γαλακτοκομικά','if dairy is avoided')
+    .replaceAll('Αν αποφεύγεται κρέας','if meat is avoided')
+    .replaceAll('Αν αποφεύγονται ζωικά τρόφιμα','if animal foods are avoided')
+    .replaceAll('Αν αποκλείονται πολλαπλές ομάδες τροφίμων','if multiple food groups are excluded')
+    .replaceAll('Εργαστηριακά','Lab result')
+    .replaceAll('κάτω του φυσιολογικού','below reference range')
+    .replaceAll('Οστική υγεία','bone health')
+    .replaceAll('Μυϊκή λειτουργία και αποκατάσταση','muscle function and recovery')
+    .replaceAll('Ενυδάτωση και απόδοση','hydration and performance');
+}
 // Combines condition-based and lab-deficiency-based vitamin/mineral suggestions
 function renderVitaminSuggestions(){
+  const isEn=(S.mealLanguage||'GR')==='EN';
   const conditions=(S.conditions&&S.conditions.length)?S.conditions:[];
   let items=[];
   conditions.forEach(c=>{
-    (CONDITION_VITAMINS[c]||[]).forEach(item=>addVitaminItem(items, {...item, source:'Πάθηση: '+( (COND_GUIDANCE[c]||{}).gr || c)}));
+    (CONDITION_VITAMINS[c]||[]).forEach(item=>addVitaminItem(items, {...item, source:(isEn?'Condition: ':'Πάθηση: ')+conditionLabel(c)}));
   });
-  // Lab-based flags
   LAB_TESTS.forEach(t=>{
     const val=S.labValues[t.key];
     const status=labStatus(t,val);
     if(status==='low' && ['b12','folate','vitd','ferritin','iron','magnesium','hgb','calcium'].includes(t.key)){
       const map={b12:'Βιταμίνη Β12',folate:'Φολικό οξύ',vitd:'Βιταμίνη D',ferritin:'Σίδηρος',iron:'Σίδηρος',magnesium:'Μαγνήσιο',hgb:'Σίδηρος/Β12/Φολικό (αναιμία)',calcium:'Ασβέστιο'};
-      addVitaminItem(items, {n:map[t.key], why:`Εργαστηριακά: ${t.gr} = ${val} ${t.unit} (κάτω του φυσιολογικού ${t.low}–${t.high})`, source:'Από αιματολογικό έλεγχο'});
+      addVitaminItem(items, {n:map[t.key], why:`Εργαστηριακά: ${t.gr} = ${val} ${t.unit} (κάτω του φυσιολογικού ${t.low}–${t.high})`, source:isEn?'Blood analysis':'Από αιματολογικό έλεγχο'});
     }
   });
   const el=document.getElementById('vitamin-suggestions');
   if(!el) return;
   if(!items.length){
-    el.innerHTML='<div style="color:var(--text-muted);font-size:13px">No notable findings yet — select condition(s) in Client Profile and/or enter lab values above.</div>';
+    el.innerHTML=`<div style="color:var(--text-muted);font-size:13px">${isEn?'No notable findings yet — select condition(s) in Client Profile and/or enter lab values above.':'Δεν υπάρχουν σημαντικά ευρήματα ακόμη — επιλέξτε κατάσταση ή/και εισάγετε αιματολογικές τιμές.'}</div>`;
     return;
   }
-  let html='<table><thead><tr><th>Nutrient</th><th>Clinical note</th><th>Dietary food sources</th><th>Basis</th></tr></thead><tbody>';
+  let html=`<table><thead><tr><th>${isEn?'Nutrient':'Θρεπτικό συστατικό'}</th><th>${isEn?'Clinical note':'Κλινική σημείωση'}</th><th>${isEn?'Dietary food sources':'Διατροφικές πηγές'}</th><th>${isEn?'Basis':'Βάση'}</th></tr></thead><tbody>`;
   items.forEach(it=>{
     const foods=getFoodSources(it.n);
-    html+=`<tr><td><strong>${it.n}</strong></td><td style="font-size:12px">${it.why}</td><td style="font-size:12px">${foods||'—'}</td><td style="font-size:11px;color:var(--text-muted)">${it.source}</td></tr>`;
+    html+=`<tr><td><strong>${it.n}</strong></td><td style="font-size:12px">${translateClinicalNote(it.why)}</td><td style="font-size:12px">${foods||'—'}</td><td style="font-size:11px;color:var(--text-muted)">${it.source}</td></tr>`;
   });
   html+='</tbody></table>';
-  html+=`<div class="alert info" style="margin-top:10px;font-size:12px">${VITAMIN_DISCLAIMER}</div>`;
+  html+=`<div class="alert info" style="margin-top:10px;font-size:12px">${isEn?'Clinical observations for dietitian review only — not automatic supplement recommendations. Supplement decisions require clinical judgement, especially in CKD, dialysis and thalassemia.':VITAMIN_DISCLAIMER}</div>`;
   el.innerHTML=html;
 }
-
 // ═══════════════════════════════════════════
-//  FOOD DATABASE — OPEN FOOD FACTS
+//  FOOD DATABASE — USDA FOODDATA CENTRAL
 // ═══════════════════════════════════════════
 function foodNumber(value){
   const n=parseFloat(value);
@@ -4622,18 +4703,40 @@ function foodDisplayName(product){
     ''
   ).trim() || 'Food';
 }
-function normalizeFoodProduct(product){
-  const nutr=product.nutriments||{};
+const USDA_API_KEY = 'fkjQSM1430iFWhL6UXlJ1Z042mud4PDbs5r8lFki';
+function usdaNutrient(food, names){
+  const list=food.foodNutrients||[];
+  const wanted=names.map(n=>n.toLowerCase());
+  const hit=list.find(n=>wanted.some(w=>String(n.nutrientName||n.nutrient?.name||'').toLowerCase().includes(w)));
+  return foodNumber(hit?.value ?? hit?.amount);
+}
+function normalizeUSDAFoodProduct(food){
   return {
-    name:foodDisplayName(product),
-    rawName:product.product_name || product.product_name_en || product.generic_name || product.abbreviated_product_name || '',
-    brand:product.brands||'',
-    serving:product.serving_size||'',
-    kcal100:foodNumber(nutr['energy-kcal_100g'] ?? nutr['energy-kcal']),
-    carbs100:foodNumber(nutr.carbohydrates_100g),
-    protein100:foodNumber(nutr.proteins_100g),
-    fat100:foodNumber(nutr.fat_100g),
+    source:'usda',
+    fdcId:food.fdcId,
+    name:String(food.description||food.lowercaseDescription||'Food').trim(),
+    rawName:String(food.description||''),
+    brand:food.dataType||'USDA FoodData Central',
+    serving:'100 g',
+    defaultGrams:100,
+    kcal100:usdaNutrient(food,['energy']),
+    carbs100:usdaNutrient(food,['carbohydrate, by difference','carbohydrate']),
+    protein100:usdaNutrient(food,['protein']),
+    fat100:usdaNutrient(food,['total lipid','fat'])
   };
+}
+async function fetchUSDAFoods(query){
+  const params=new URLSearchParams({
+    query,
+    api_key:USDA_API_KEY,
+    dataType:'Foundation,SR Legacy',
+    pageSize:'20'
+  });
+  const url=`https://api.nal.usda.gov/fdc/v1/foods/search?${params.toString()}`;
+  const res=await fetchWithRetryOnce(url, {headers:{'Accept':'application/json'}});
+  if(!res.ok) throw new Error(`USDA FoodData Central returned HTTP ${res.status}`);
+  const data=await res.json();
+  return (data.foods||[]).map(normalizeUSDAFoodProduct).filter(p=>p.name && (p.kcal100!==null || p.carbs100!==null || p.protein100!==null || p.fat100!==null));
 }
 function normalizeRecipeFoodResult(recipe){
   const ingredients=recipe.ingredients||[];
@@ -4656,7 +4759,8 @@ function normalizeRecipeFoodResult(recipe){
   };
 }
 function recipeFoodResultsForQuery(query){
-  return (S.recipes||[]).map(normalizeRecipeFoodResult);
+  const q=String(query||'').toLowerCase().trim();
+  return (S.recipes||[]).map(normalizeRecipeFoodResult).filter(r=>!q || String(r.name||'').toLowerCase().includes(q));
 }
 async function fetchWithRetryOnce(url, options={}, delayMs=2000){
   try{
@@ -4669,46 +4773,29 @@ async function fetchWithRetryOnce(url, options={}, delayMs=2000){
 async function searchFoodDatabase(){
   const query=(v('food-search')||'').trim();
   if(!query){ setEl('fooddb-status','Enter a food name to search.'); return; }
-  setEl('fooddb-status','Searching Open Food Facts...');
+  setEl('fooddb-status','Searching USDA FoodData Central...');
   setEl('fooddb-results','');
   await loadRecipes({render:false, mergeLocal:true});
   const recipeResults=recipeFoodResultsForQuery(query);
-  const params=new URLSearchParams({
-    search_terms:query,
-    search_simple:'1',
-    action:'process',
-    json:'1',
-    page_size:'20',
-    fields:'product_name,product_name_en,generic_name,abbreviated_product_name,brands,serving_size,nutriments'
-  });
   try{
-    const url=`https://world.openfoodfacts.org/cgi/search.pl?${params.toString()}`;
-    let res=await fetchWithRetryOnce(url, {headers:{'Accept':'application/json'}});
-    if(res.status===503){
-      await new Promise(resolve=>setTimeout(resolve, 700));
-      res=await fetchWithRetryOnce(url, {headers:{'Accept':'application/json'}});
-    }
-    if(!res.ok) throw new Error(`Open Food Facts returned HTTP ${res.status}`);
-    const data=await res.json();
-    const products=(data.products||[]).map(normalizeFoodProduct).filter(p=>p.name && (p.kcal100!==null || p.carbs100!==null || p.protein100!==null || p.fat100!==null));
+    const products=await fetchUSDAFoods(query);
     S.foodResults=[...recipeResults, ...products];
     renderFoodResults(S.foodResults);
     const total=S.foodResults.length;
-    setEl('fooddb-status', total ? `${total} foods found (${recipeResults.length} saved recipe${recipeResults.length===1?'':'s'}). Nutrition shown per 100g.` : `No nutrition-labelled foods found for "${query}". Try a broader term such as oats, yogurt, or chicken.`);
+    setEl('fooddb-status', total ? `${total} foods found (${recipeResults.length} saved recipe${recipeResults.length===1?'':'s'}). Nutrition shown per 100g.` : `No USDA foods found for "${query}". Try a more specific ingredient term.`);
   }catch(err){
     S.foodResults=recipeResults;
     renderFoodResults(S.foodResults);
     setEl('fooddb-status', recipeResults.length
-      ? `${recipeResults.length} saved recipe${recipeResults.length===1?'':'s'} shown. Open Food Facts could not be reached. Details: ${err.message}`
-      : `Food search failed because the Open Food Facts API could not be reached or returned an error. Details: ${err.message}`);
+      ? `${recipeResults.length} saved recipe${recipeResults.length===1?'':'s'} shown. USDA search could not be reached. Details: ${err.message}`
+      : `Food search failed because USDA FoodData Central could not be reached or returned an error. Details: ${err.message}`);
   }
-}
-function renderFoodResults(products){
+}function renderFoodResults(products){
   const el=document.getElementById('fooddb-results'); if(!el) return;
   if(!products || !products.length){ el.innerHTML=''; return; }
   el.innerHTML=`<table><thead><tr><th>Food</th><th>Serving</th><th>kcal/100g</th><th>Carb</th><th>Protein</th><th>Fat</th><th>Actions</th></tr></thead><tbody>${products.map((p,i)=>`
     <tr>
-      <td><strong>${safeHtml(p.name)}</strong> ${p.source==='recipe'?'<span class="badge ok" style="margin-left:6px">My Recipe</span>':''}<div style="font-size:11px;color:var(--text-muted)">${safeHtml(p.brand||'Open Food Facts')}</div></td>
+      <td><strong>${safeHtml(p.name)}</strong> ${p.source==='recipe'?'<span class="badge ok" style="margin-left:6px">My Recipe</span>':''}<div style="font-size:11px;color:var(--text-muted)">${safeHtml(p.brand||'USDA FoodData Central')}</div></td>
       <td>${safeHtml(p.serving||'—')}</td>
       <td>${formatFoodNumber(p.kcal100,'')}</td>
       <td>${formatFoodNumber(p.carbs100,'g')}</td>
@@ -4743,7 +4830,7 @@ function addFoodResultToMealPlan(index){
     day:v(`food-add-day-${index}`)||'all',
     slot:v(`food-add-slot-${index}`)||'brk',
     name:foodName,
-    brand:p.brand||'Open Food Facts',
+    brand:p.brand||'USDA FoodData Central',
     grams,
     kcal100:foodNumber(p.kcal100)||0,
     carbs100:foodNumber(p.carbs100)||0,
@@ -4767,6 +4854,43 @@ function removeExtraFood(id){
 // ═══════════════════════════════════════════
 //  RECIPES
 // ═══════════════════════════════════════════
+let ingredientSearchResults=[];
+async function searchIngredientFoods(){
+  const query=(v('ing-search')||v('ing-name')||'').trim();
+  if(!query){ setEl('ingredient-search-status','Enter an ingredient name to search.'); return; }
+  setEl('ingredient-search-status','Searching USDA FoodData Central...');
+  setEl('ingredient-search-results','');
+  try{
+    ingredientSearchResults=await fetchUSDAFoods(query);
+    renderIngredientSearchResults();
+    setEl('ingredient-search-status', ingredientSearchResults.length ? `${ingredientSearchResults.length} USDA ingredients found. Select one to auto-fill nutrition.` : `No USDA ingredients found for "${query}".`);
+  }catch(err){
+    ingredientSearchResults=[];
+    setEl('ingredient-search-status',`Ingredient search failed: ${err.message}`);
+  }
+}
+function renderIngredientSearchResults(){
+  const el=document.getElementById('ingredient-search-results'); if(!el) return;
+  if(!ingredientSearchResults.length){ el.innerHTML=''; return; }
+  el.innerHTML=`<table><thead><tr><th>Ingredient</th><th>kcal/100g</th><th>Carb</th><th>Protein</th><th>Fat</th><th></th></tr></thead><tbody>${ingredientSearchResults.slice(0,8).map((p,i)=>`<tr>
+    <td><strong>${safeHtml(p.name)}</strong><div style="font-size:11px;color:var(--text-muted)">${safeHtml(p.brand||'USDA')}</div></td>
+    <td>${formatFoodNumber(p.kcal100,'')}</td><td>${formatFoodNumber(p.carbs100,'g')}</td><td>${formatFoodNumber(p.protein100,'g')}</td><td>${formatFoodNumber(p.fat100,'g')}</td>
+    <td><button class="btn" style="padding:4px 8px;font-size:11px" onclick="selectIngredientSearchResult(${i})">Use</button></td>
+  </tr>`).join('')}</tbody></table>`;
+}
+function selectIngredientSearchResult(index){
+  const p=ingredientSearchResults[index]; if(!p) return;
+  const map={
+    'ing-name':p.name,
+    'ing-grams':v('ing-grams')||100,
+    'ing-kcal':formatFoodNumber(p.kcal100,''),
+    'ing-carbs':formatFoodNumber(p.carbs100,''),
+    'ing-protein':formatFoodNumber(p.protein100,''),
+    'ing-fat':formatFoodNumber(p.fat100,'')
+  };
+  Object.entries(map).forEach(([id,val])=>{const el=document.getElementById(id); if(el) el.value=val;});
+  setEl('ingredient-search-status',`${safeHtml(p.name)} selected. Adjust grams or nutrition if needed, then add ingredient.`);
+}
 function recipeStorageKey(){
   return `nutriflow_recipes_${currentUser ? currentUser.id : 'local'}`;
 }
@@ -4912,6 +5036,7 @@ async function saveRecipe(){
   const servings=Math.max(1, parseInt(v('recipe-servings')||'1',10)||1);
   if(!name){ alert('Enter a recipe name.'); return; }
   if(!S.recipeDraft.length){ alert('Add at least one ingredient.'); return; }
+  if(S.recipeDraft.some(ing=>(foodNumber(ing.kcal100)+foodNumber(ing.carbs100)+foodNumber(ing.protein100)+foodNumber(ing.fat100))<=0)){ alert('Each ingredient needs nutrition values per 100g before saving.'); return; }
   const editingId=S.editingRecipeId;
   const recipe={id:editingId || `recipe_${Date.now()}`,name,servings,ingredients:S.recipeDraft.map(x=>({...x})),nutrition:recipeTotals(S.recipeDraft),updated_at:new Date().toISOString()};
   let savedToCloud=false;
@@ -5093,7 +5218,7 @@ async function loadAppointments(force=false){
   renderDashboardAppointments();
   if(currentUser){
     try{
-      const {data,error}=await supabaseClient.from('appointments').select('id,user_id,client_name,date,time,duration,type,notes,updated_at').eq('user_id',currentUser.id).order('date',{ascending:true}).order('time',{ascending:true});
+      const {data,error}=await supabaseClient.from('appointments').select('id,user_id,client_id,client_name,date,time,duration,type,notes,updated_at').eq('user_id',currentUser.id).order('date',{ascending:true}).order('time',{ascending:true});
       if(!error && data){
         const remote=data.map(normalizeAppointment);
         const localOnly=(S.appointments||[]).filter(a=>a.localOnly || String(a.id).startsWith('appt_'));
@@ -6044,6 +6169,31 @@ updateOnlineStatus();
 
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
