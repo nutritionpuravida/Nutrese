@@ -955,13 +955,13 @@ tr:hover td { background: var(--bg-hover); }
         </div>
         <div class="form-grid three" style="margin-bottom:16px">
           <div class="form-field"><label>Πρωινό / Breakfast</label>
-            <select id="s-breakfast" onchange="buildOneDayPlan()"></select>
+            <select id="s-breakfast" onchange="handleOneDayMealSelect('breakfast',this)"></select>
           </div>
           <div class="form-field"><label>Μεσημεριανό / Lunch</label>
-            <select id="s-lunch" onchange="buildOneDayPlan()"></select>
+            <select id="s-lunch" onchange="handleOneDayMealSelect('lunch',this)"></select>
           </div>
           <div class="form-field"><label>Βραδινό / Dinner</label>
-            <select id="s-dinner" onchange="buildOneDayPlan()"></select>
+            <select id="s-dinner" onchange="handleOneDayMealSelect('dinner',this)"></select>
           </div>
         </div>
         <div class="form-grid three" style="margin-bottom:8px">
@@ -1162,6 +1162,34 @@ tr:hover td { background: var(--bg-hover); }
     </div>
   </div>
 
+  <div id="custom-meal-modal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.62);z-index:9999;align-items:center;justify-content:center;padding:18px">
+    <div class="card" style="width:min(920px,96vw);max-height:90vh;overflow:auto;margin:0">
+      <div class="card-header">
+        <span class="card-title">＋ Custom meal</span>
+        <button class="btn" onclick="closeCustomMealBuilder()" style="margin-left:auto">× Close</button>
+      </div>
+      <div class="card-body">
+        <div class="alert info">Build a meal from USDA FoodData Central ingredients. Values are stored for your account and can be reused in the meal dropdowns.</div>
+        <div class="form-grid two">
+          <div class="form-field"><label>Meal name</label><input type="text" id="custom-meal-name" placeholder="e.g. Salmon quinoa bowl" oninput="renderCustomMealDraft()"></div>
+          <div class="form-field"><label>Ingredient search</label><input type="text" id="custom-meal-search" placeholder="e.g. chicken breast, potato, oats" onkeydown="if(event.key==='Enter') searchCustomMealFoods()"></div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 12px">
+          <button class="btn" onclick="searchCustomMealFoods()">Search USDA ingredient</button>
+          <button class="btn" onclick="clearCustomMealDraft()">Clear draft</button>
+        </div>
+        <div id="custom-meal-search-status" class="field-note"></div>
+        <div id="custom-meal-search-results" style="margin-bottom:12px"></div>
+        <div class="section-label">Ingredients</div>
+        <div id="custom-meal-draft"></div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:14px">
+          <button class="btn primary" onclick="saveCustomMeal()">💾 Save custom meal</button>
+          <span id="custom-meal-save-status" class="field-note"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- APPOINTMENTS -->
   <div class="page" id="page-appointments">
     <div class="card">
@@ -1281,6 +1309,7 @@ const S = {
   exMeta:null, lastDairyType:'Moderate-fat', lastMeatType:'Lean', weightSuggestionLocked:false, bcManual:{fatmass:false,ffm:false,muscle:false},
   bc:{bf:null,water:null,fatmass:null,ffm:null,muscle:null,metage:null,visceral:null},
   tracking:[],intake:{},notes:{},labValues:{},foodResults:[],recipes:[],recipeDraft:[],editingRecipeId:null,extraFoods:[],appointments:[],mealLanguage:'GR',reportOptions:{oneDay:false,sevenDay:true,includeBlood:true},
+  customMeals:[], customMealDraft:[], customMealContext:null,
   mealSel:{breakfast:'BRK_TOAST',lunch:'LUN_CHICKEN_RICE',dinner:'DIN_FISH_POTATO',snack1Extras:['fruit'],snack2Extras:['fruit'],sleepExtras:['fruit']}
 };
 
@@ -1872,6 +1901,7 @@ supabaseClient.auth.onAuthStateChange(async (event, session)=>{
       updateAccountPage();
     }
     if(subscriptionState.active && document.getElementById('page-clients')?.classList.contains('active')) renderClientList();
+    loadCustomMeals({render:false}).then(()=>rebuildMealDropdownOptions()).catch(e=>console.error('[NutriFlow custom meals] auth load failed', e));
     if(currentUser){
       appointmentsLoadedFor=null;
       loadAppointments(true).then(()=>{
@@ -2029,8 +2059,44 @@ const MEALS_EN = {
 };
 
 function mealText(key, portions, lang){
+  if(isCustomMealKey(key)) return customMealText(key, lang);
   const map = (lang||S.mealLanguage)==='EN' ? MEALS_EN : MEALS;
-  return map[key] ? map[key](S.ex, portions) : '';
+  let text = map[key] ? map[key](S.ex, portions) : '';
+  const extraFat=Number(portions?.fat||0);
+  if(text && FIXED_COMPOSITION_MEALS.has(key) && extraFat>0){
+    text += (lang||S.mealLanguage)==='EN' ? ` + ${extraFat} tsp olive oil` : ` + ${extraFat} κ.γ. ελαιόλαδο`;
+  }
+  return text;
+}
+function isCustomMealKey(key){
+  return String(key||'').startsWith('CUSTOM_');
+}
+function customMealIdFromKey(key){
+  return String(key||'').replace(/^CUSTOM_/,'');
+}
+function getCustomMealByKey(key){
+  const id=customMealIdFromKey(key);
+  return (S.customMeals||[]).find(m=>String(m.id)===String(id));
+}
+function customMealText(key, lang='GR'){
+  const meal=getCustomMealByKey(key);
+  if(!meal) return '';
+  const ingredients=Array.isArray(meal.ingredients)?meal.ingredients:[];
+  const detail=ingredients.length
+    ? ingredients.map(i=>`${safeHtml(i.name||'Food')} ${Math.round(foodNumber(i.grams)||0)}g`).join(' + ')
+    : '';
+  return `${safeHtml(meal.name||'Custom meal')} ✏️${detail?' ('+detail+')':''}`;
+}
+function customMealKcal(key){
+  const meal=getCustomMealByKey(key);
+  return Math.round(foodNumber(meal?.nutrition?.kcal)||0);
+}
+function effectivePortionsForKcal(mealKey, portions){
+  if(isCustomMealKey(mealKey)) return null;
+  if(FIXED_COMPOSITION_MEALS.has(mealKey)){
+    return Number(portions?.fat||0)>0 ? {prot:0,starch:0,fat:Number(portions.fat||0),veg:undefined} : null;
+  }
+  return portions;
 }
 
 // ── MEAL EXCHANGE COSTS ──
@@ -2208,9 +2274,9 @@ function calcDayTotals(){
   const snk2Built = allocation.snacks.snk2Built;
   const sleepBuilt = allocation.snacks.sleepBuilt;
 
-  const brkKcal  = exchangesToKcal(brkComp, null) + extraKcal('brk', null);
-  const lunKcal  = exchangesToKcal(lunComp, FIXED_COMPOSITION_MEALS.has(ms.lunch) ? null : portions.lunch) + extraKcal('lun', null);
-  const dinKcal  = exchangesToKcal(dinComp, FIXED_COMPOSITION_MEALS.has(ms.dinner) ? null : portions.dinner) + extraKcal('din', null);
+  const brkKcal  = (isCustomMealKey(ms.breakfast)?customMealKcal(ms.breakfast):exchangesToKcal(brkComp, null)) + extraKcal('brk', null);
+  const lunKcal  = (isCustomMealKey(ms.lunch)?customMealKcal(ms.lunch):exchangesToKcal(lunComp, effectivePortionsForKcal(ms.lunch, portions.lunch))) + extraKcal('lun', null);
+  const dinKcal  = (isCustomMealKey(ms.dinner)?customMealKcal(ms.dinner):exchangesToKcal(dinComp, effectivePortionsForKcal(ms.dinner, portions.dinner))) + extraKcal('din', null);
   const snk1Kcal = exchangesToKcal(snk1Built.exch, null) + (snk1Built.addOnKcal||0) + extraKcal('snk1', null);
   const snk2Kcal = exchangesToKcal(snk2Built.exch, null) + (snk2Built.addOnKcal||0) + extraKcal('snk2', null);
   const slpKcal  = exchangesToKcal(sleepBuilt.exch, null) + (sleepBuilt.addOnKcal||0) + extraKcal('sleep', null);
@@ -2706,7 +2772,13 @@ const DINNER_OPTIONS = [
   {v:'DIN_BEAN_PASTA',     l:'Φασόλια + ζυμαρικά 🌱'},
 ];
 function mealOptionsHtml(options, current){
-  return options.map(o=>`<option value="${o.v}" ${o.v===current?'selected':''}>${o.l}</option>`).join('');
+  const base=options.map(o=>`<option value="${o.v}" ${o.v===current?'selected':''}>${o.l}</option>`).join('');
+  const customCreate=`<option value="__CUSTOM__">＋ Custom meal</option>`;
+  const custom=(S.customMeals||[]).map(m=>{
+    const v='CUSTOM_'+m.id;
+    return `<option value="${v}" ${v===current?'selected':''}>✏️ Custom — ${safeHtml(m.name||'Meal')}</option>`;
+  }).join('');
+  return base + customCreate + custom;
 }
 
 // ── SNACK EXTRAS (multi-select per slot) ──
@@ -3131,6 +3203,34 @@ function allocateProteinRemaining(ex, fixed, scalableSlots, portions, p, caps, w
     }
   }
 }
+function allocateFatRemaining(ex, fixed, portions, p, warnings){
+  const target=Number(ex?.fat||0);
+  const alreadyUsed=Number(fixed?.fat||0);
+  let remaining=target-alreadyUsed;
+  if(remaining<0){
+    warnings.push(`fat fixed meals/snacks exceed daily exchange target by ${Math.abs(remaining)} exchange(s).`);
+    return;
+  }
+  const slots=['lunch','dinner'];
+  const maxPerMeal=5;
+  while(remaining>0){
+    const available=slots.filter(slot=>{
+      const mealKey=slot==='lunch'?p.lunch:p.dinner;
+      if(isCustomMealKey(mealKey)) return false;
+      const base=Number(MEAL_EXCHANGES[mealKey]?.fat||0);
+      return base + Number(portions[slot]?.fat||0) < maxPerMeal;
+    });
+    if(!available.length){
+      warnings.push(`Fat target exceeds the 5 tsp olive-oil per-meal display cap; review fat servings or add another fat exchange option.`);
+      break;
+    }
+    for(const slot of available){
+      if(remaining<=0) break;
+      portions[slot].fat += 1;
+      remaining--;
+    }
+  }
+}
 
 // Daily exchange ledger: subtract fixed breakfast/snack/fixed-meal exchanges
 // first, then distribute only the remainder to scalable lunch/dinner meals.
@@ -3146,8 +3246,8 @@ function getDayMealAllocation(plan=S.mealSel, lang=S.mealLanguage||'GR'){
   const snk1Built=buildSlotSnack('snk1', p.snack1Extras||[], lang, p.breakfast, p, fruitDist, dairyDist);
   const snk2Built=buildSlotSnack('snk2', p.snack2Extras||[], lang, p.breakfast, p, fruitDist, dairyDist);
   const sleepBuilt=buildSlotSnack('sleep', p.sleepExtras||[], lang, p.breakfast, p, fruitDist, dairyDist);
-  const lunchScales=!FIXED_COMPOSITION_MEALS.has(p.lunch);
-  const dinnerScales=!FIXED_COMPOSITION_MEALS.has(p.dinner);
+  const lunchScales=!FIXED_COMPOSITION_MEALS.has(p.lunch) && !isCustomMealKey(p.lunch);
+  const dinnerScales=!FIXED_COMPOSITION_MEALS.has(p.dinner) && !isCustomMealKey(p.dinner);
   const fixed=zeroExchangeUse();
   addExchangeUse(fixed, brkComp);
   addExchangeUse(fixed, snk1Built.exch);
@@ -3174,16 +3274,16 @@ function getDayMealAllocation(plan=S.mealSel, lang=S.mealLanguage||'GR'){
   }
   allocateRemainingExchange('starch','starch',ex,fixed,scalableSlots,portions,caps.starchPerMealMax,warnings);
   allocateProteinRemaining(ex,fixed,scalableSlots,portions,p,caps,warnings);
-  allocateRemainingExchange('fat','fat',ex,fixed,scalableSlots,portions,caps.fatPerMealMax,warnings);
+  allocateFatRemaining(ex,fixed,portions,p,warnings);
   allocateRemainingExchange('veg','veg',ex,fixed,scalableSlots,portions,99,warnings);
   const allocated=zeroExchangeUse();
   addExchangeUse(allocated, fixed);
   scalableSlots.forEach(slot=>{
     allocated.protein += Number(portions[slot]?.prot||0);
     allocated.starch  += Number(portions[slot]?.starch||0);
-    allocated.fat     += Number(portions[slot]?.fat||0);
     allocated.veg     += Number(portions[slot]?.veg||0);
   });
+  ['lunch','dinner'].forEach(slot=>{ allocated.fat += Number(portions[slot]?.fat||0); });
   const exchangeTarget={
     fruit:Number(ex?.fruit||0), veg:Number(ex?.veg||0), dairy:Number(ex?.dairy||0),
     starch:Number(ex?.starch||0), protein:Number(ex?.protein||0), fat:Number(ex?.fat||0)
@@ -3561,6 +3661,7 @@ function nav(id) {
   if(id==='oneday'||id==='sevenday'||id==='report'){
     syncExchangeInputsToState();
     calcExchanges();
+    loadCustomMeals({render:false});
   }
   if(id==='oneday') buildOneDayPlan();
   if(id==='sevenday') buildSevenDay();
@@ -4234,9 +4335,9 @@ function calcDayTotalsForPlan(dayPlan, lang='GR', dayIndex=0){
   const snk2Built = allocation.snacks.snk2Built;
   const sleepBuilt = allocation.snacks.sleepBuilt;
 
-  const brkKcal  = exchangesToKcal(brkComp, null) + extraKcal('brk', dayIndex);
-  const lunKcal  = exchangesToKcal(lunComp, FIXED_COMPOSITION_MEALS.has(dayPlan.lun) ? null : portions.lunch) + extraKcal('lun', dayIndex);
-  const dinKcal  = exchangesToKcal(dinComp, FIXED_COMPOSITION_MEALS.has(dayPlan.din) ? null : portions.dinner) + extraKcal('din', dayIndex);
+  const brkKcal  = (isCustomMealKey(dayPlan.brk)?customMealKcal(dayPlan.brk):exchangesToKcal(brkComp, null)) + extraKcal('brk', dayIndex);
+  const lunKcal  = (isCustomMealKey(dayPlan.lun)?customMealKcal(dayPlan.lun):exchangesToKcal(lunComp, effectivePortionsForKcal(dayPlan.lun, portions.lunch))) + extraKcal('lun', dayIndex);
+  const dinKcal  = (isCustomMealKey(dayPlan.din)?customMealKcal(dayPlan.din):exchangesToKcal(dinComp, effectivePortionsForKcal(dayPlan.din, portions.dinner))) + extraKcal('din', dayIndex);
   const snk1Kcal = exchangesToKcal(snk1Built.exch, null) + (snk1Built.addOnKcal||0) + extraKcal('snk1', dayIndex);
   const snk2Kcal = exchangesToKcal(snk2Built.exch, null) + (snk2Built.addOnKcal||0) + extraKcal('snk2', dayIndex);
   const slpKcal  = exchangesToKcal(sleepBuilt.exch, null) + (sleepBuilt.addOnKcal||0) + extraKcal('sleep', dayIndex);
@@ -4280,7 +4381,7 @@ function buildSevenDay(){
     if(!p.sleepExtras) p.sleepExtras=[];
   });
   const ex=S.ex;
-  const sel=(key,di,opts,cur)=>`<select style="width:100%;font-size:11px;padding:3px 5px;border:1px solid var(--border);border-radius:4px;background:var(--bg-page);color:var(--text-secondary);margin-bottom:5px" onchange="updateWeekPlan(${di},'${key}',this.value)">${mealOptionsHtml(opts,cur)}</select>`;
+  const sel=(key,di,opts,cur)=>`<select style="width:100%;font-size:11px;padding:3px 5px;border:1px solid var(--border);border-radius:4px;background:var(--bg-page);color:var(--text-secondary);margin-bottom:5px" onchange="handleWeekMealSelect(${di},'${key}',this)">${mealOptionsHtml(opts,cur)}</select>`;
   // Compact checkbox-extras group for a snack slot on a given day
   const extrasGroup=(slotKey,di,checked)=>`<div class="snack-extras-group" style="display:flex;flex-direction:column;gap:2px;margin-bottom:5px">${SNACK_EXTRAS.map(e=>`<label style="display:flex;align-items:center;gap:4px;font-size:10px;cursor:pointer;white-space:nowrap"><input type="checkbox" data-group="${e.group||''}" style="width:auto;transform:scale(0.85)" ${checked.includes(e.v)?'checked':''} onchange="toggleWeekPlanExtra(${di},'${slotKey}','${e.v}',this.checked)"> ${snackExtraLabel(e, lang)}</label>`).join('')}</div>`;
 
@@ -5692,6 +5793,142 @@ function printRecipe(id){
 }
 
 // ═══════════════════════════════════════════
+//  CUSTOM MEALS
+// ═══════════════════════════════════════════
+let customMealSearchResults=[];
+function customMealStorageKey(){ return `nutriflow_custom_meals_${currentUser ? currentUser.id : 'local'}`; }
+function persistCustomMealsLocal(){ try{ localStorage.setItem(customMealStorageKey(), JSON.stringify(S.customMeals||[])); }catch(e){} }
+async function loadCustomMeals(opts={}){
+  const local=JSON.parse(localStorage.getItem(customMealStorageKey())||'[]');
+  if(local.length) S.customMeals=local;
+  if(currentUser){
+    try{
+      const {data,error}=await supabaseClient.from('custom_meals').select('*').eq('user_id',currentUser.id).order('updated_at',{ascending:false});
+      if(error) throw error;
+      S.customMeals=(data||[]).map(r=>({id:r.id,name:r.name,ingredients:Array.isArray(r.ingredients)?r.ingredients:[],nutrition:r.nutrition||recipeTotals(r.ingredients||[]),updated_at:r.updated_at}));
+      persistCustomMealsLocal();
+    }catch(e){ console.error('[NutriFlow custom meals] load failed', e); }
+  }
+  if(opts.render!==false){
+    rebuildMealDropdownOptions();
+    if(document.getElementById('page-oneday')?.classList.contains('active')) buildOneDayPlan();
+    if(document.getElementById('page-sevenday')?.classList.contains('active')) buildSevenDay();
+  }
+}
+function rebuildMealDropdownOptions(){
+  const diet=v('p-diet')||'Omnivore';
+  const brk=document.getElementById('s-breakfast'), lun=document.getElementById('s-lunch'), din=document.getElementById('s-dinner');
+  if(brk) brk.innerHTML=mealOptionsHtml(filteredMealOptions(BREAKFAST_OPTIONS,diet), brk.value||S.mealSel?.breakfast||'BRK_TOAST');
+  if(lun) lun.innerHTML=mealOptionsHtml(filteredMealOptions(LUNCH_OPTIONS,diet), lun.value||S.mealSel?.lunch||'LUN_CHICKEN_RICE');
+  if(din) din.innerHTML=mealOptionsHtml(filteredMealOptions(DINNER_OPTIONS,diet), din.value||S.mealSel?.dinner||'DIN_FISH_POTATO');
+}
+function openCustomMealBuilder(context){
+  S.customMealContext=context||null; S.customMealDraft=[];
+  const name=document.getElementById('custom-meal-name'); if(name) name.value='';
+  setEl('custom-meal-search-status',''); setEl('custom-meal-search-results',''); setEl('custom-meal-save-status','');
+  renderCustomMealDraft();
+  const modal=document.getElementById('custom-meal-modal'); if(modal) modal.style.display='flex';
+}
+function closeCustomMealBuilder(){ const modal=document.getElementById('custom-meal-modal'); if(modal) modal.style.display='none'; }
+function clearCustomMealDraft(){ S.customMealDraft=[]; const name=document.getElementById('custom-meal-name'); if(name) name.value=''; renderCustomMealDraft(); }
+async function searchCustomMealFoods(){
+  const query=(v('custom-meal-search')||'').trim();
+  if(!query){ setEl('custom-meal-search-status','Enter an ingredient name to search.'); return; }
+  setEl('custom-meal-search-status','Searching USDA FoodData Central...'); setEl('custom-meal-search-results','');
+  try{
+    customMealSearchResults=await fetchUSDAFoods(query);
+    renderCustomMealSearchResults();
+    setEl('custom-meal-search-status', customMealSearchResults.length ? `${customMealSearchResults.length} USDA ingredients found.` : `No USDA ingredients found for "${query}".`);
+  }catch(e){ customMealSearchResults=[]; setEl('custom-meal-search-status',`USDA search failed: ${e.message}`); }
+}
+function renderCustomMealSearchResults(){
+  const el=document.getElementById('custom-meal-search-results'); if(!el) return;
+  if(!customMealSearchResults.length){ el.innerHTML=''; return; }
+  el.innerHTML=`<table><thead><tr><th>Ingredient</th><th>kcal/100g</th><th>Carb</th><th>Protein</th><th>Fat</th><th>Grams</th><th></th></tr></thead><tbody>${customMealSearchResults.slice(0,8).map((p,i)=>`<tr>
+    <td><strong>${safeHtml(p.name)}</strong><div style="font-size:11px;color:var(--text-muted)">${safeHtml(p.brand||'USDA')}</div></td>
+    <td>${formatFoodNumber(p.kcal100,'')}</td><td>${formatFoodNumber(p.carbs100,'g')}</td><td>${formatFoodNumber(p.protein100,'g')}</td><td>${formatFoodNumber(p.fat100,'g')}</td>
+    <td><input type="number" id="custom-meal-result-grams-${i}" min="1" step="1" value="100" style="width:72px;padding:5px"></td>
+    <td><button class="btn" style="padding:4px 8px;font-size:11px" onclick="addCustomMealIngredient(${i})">Add</button></td>
+  </tr>`).join('')}</tbody></table>`;
+}
+function addCustomMealIngredient(index){
+  const p=customMealSearchResults[index]; if(!p) return;
+  const grams=foodNumber(v(`custom-meal-result-grams-${index}`))||100;
+  if(!Array.isArray(S.customMealDraft)) S.customMealDraft=[];
+  S.customMealDraft.push({name:p.name,grams,kcal100:foodNumber(p.kcal100)||0,carbs100:foodNumber(p.carbs100)||0,protein100:foodNumber(p.protein100)||0,fat100:foodNumber(p.fat100)||0});
+  renderCustomMealDraft();
+}
+function updateCustomMealIngredient(index, field, value){ if(S.customMealDraft[index]){ S.customMealDraft[index][field]=field==='name'?value:(foodNumber(value)||0); renderCustomMealDraft(); } }
+function removeCustomMealIngredient(index){ S.customMealDraft.splice(index,1); renderCustomMealDraft(); }
+function renderCustomMealDraft(){
+  const el=document.getElementById('custom-meal-draft'); if(!el) return;
+  if(!Array.isArray(S.customMealDraft)) S.customMealDraft=[];
+  const total=recipeTotals(S.customMealDraft);
+  const rows=S.customMealDraft.map((ing,i)=>{ const t=ingredientTotals(ing); return `<tr>
+    <td>${safeHtml(ing.name||'Ingredient')}</td>
+    <td><input type="number" value="${ing.grams||0}" min="0" step="1" oninput="updateCustomMealIngredient(${i},'grams',this.value)" style="width:88px;padding:5px;text-align:right"> g</td>
+    <td>${formatFoodNumber(t.kcal,'')}</td><td>${formatFoodNumber(t.carbs,'g')}</td><td>${formatFoodNumber(t.protein,'g')}</td><td>${formatFoodNumber(t.fat,'g')}</td>
+    <td><button class="btn" style="padding:4px 8px;font-size:11px" onclick="removeCustomMealIngredient(${i})">Remove</button></td>
+  </tr>`; }).join('');
+  el.innerHTML=`<table><thead><tr><th>Ingredient</th><th>g used</th><th>kcal</th><th>Carb</th><th>Protein</th><th>Fat</th><th></th></tr></thead><tbody>${rows||'<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:14px">No ingredients yet.</td></tr>'}</tbody></table>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:12px">
+      <div class="metric"><span class="metric-label">Total kcal:</span> <span class="metric-value">${Math.round(total.kcal)}</span></div>
+      <div class="metric"><span class="metric-label">Carbs:</span> <span class="metric-value">${formatFoodNumber(total.carbs,'g')}</span></div>
+      <div class="metric"><span class="metric-label">Protein:</span> <span class="metric-value">${formatFoodNumber(total.protein,'g')}</span></div>
+      <div class="metric"><span class="metric-label">Fat:</span> <span class="metric-value">${formatFoodNumber(total.fat,'g')}</span></div>
+    </div>`;
+}
+async function saveCustomMeal(){
+  const name=(v('custom-meal-name')||'').trim();
+  if(!name){ alert('Enter a meal name.'); return; }
+  if(!S.customMealDraft || !S.customMealDraft.length){ alert('Add at least one ingredient.'); return; }
+  const nutrition=recipeTotals(S.customMealDraft);
+  let meal={id:'cm_'+Date.now(),name,ingredients:S.customMealDraft,nutrition,updated_at:new Date().toISOString(),localOnly:true};
+  if(currentUser){
+    try{
+      const row={user_id:currentUser.id,name,ingredients:S.customMealDraft,nutrition,updated_at:new Date().toISOString()};
+      const {data,error}=await supabaseClient.from('custom_meals').insert(row).select().maybeSingle();
+      if(error) throw error;
+      if(data) meal={id:data.id,name:data.name,ingredients:data.ingredients||S.customMealDraft,nutrition:data.nutrition||nutrition,updated_at:data.updated_at,localOnly:false};
+    }catch(e){ console.error('[NutriFlow custom meals] save failed', e); setEl('custom-meal-save-status','Saved locally. Supabase custom_meals table may not be configured yet.'); }
+  }
+  S.customMeals=[meal,...(S.customMeals||[]).filter(m=>String(m.id)!==String(meal.id))];
+  persistCustomMealsLocal();
+  applyCustomMealSelection('CUSTOM_'+meal.id);
+  closeCustomMealBuilder();
+}
+function applyCustomMealSelection(key){
+  const ctx=S.customMealContext;
+  if(ctx?.type==='oneday'){
+    S.mealSel={...S.mealSel,[ctx.slot]:key};
+    rebuildMealDropdownOptions();
+    const id=ctx.slot==='breakfast'?'s-breakfast':ctx.slot==='lunch'?'s-lunch':'s-dinner';
+    const el=document.getElementById(id); if(el) el.value=key;
+    buildOneDayPlan();
+  } else if(ctx?.type==='week'){
+    if(!S.weekPlans) S.weekPlans=WEEK_PLANS.map(p=>({...p}));
+    S.weekPlans[ctx.dayIndex][ctx.key]=key;
+    buildSevenDay();
+  } else rebuildMealDropdownOptions();
+}
+function handleOneDayMealSelect(slot, selectEl){
+  if(selectEl.value==='__CUSTOM__'){
+    selectEl.value=S.mealSel?.[slot] || (slot==='breakfast'?'BRK_TOAST':slot==='lunch'?'LUN_CHICKEN_RICE':'DIN_FISH_POTATO');
+    openCustomMealBuilder({type:'oneday',slot});
+    return;
+  }
+  buildOneDayPlan();
+}
+function handleWeekMealSelect(dayIndex, key, selectEl){
+  if(selectEl.value==='__CUSTOM__'){
+    if(S.weekPlans?.[dayIndex]) selectEl.value=S.weekPlans[dayIndex][key] || '';
+    openCustomMealBuilder({type:'week',dayIndex,key});
+    return;
+  }
+  updateWeekPlan(dayIndex,key,selectEl.value);
+}
+
+// ═══════════════════════════════════════════
 //  APPOINTMENTS CALENDAR
 // ═══════════════════════════════════════════
 let calendarCursor = new Date();
@@ -5978,7 +6215,7 @@ function captureState(){
 return {
     fields, conditions, primaryCondition,
     ex:S.ex, exAuto:S.exAuto, exMeta:S.exMeta, tracking:S.tracking, mealSel:S.mealSel,
-    weekPlans:S.weekPlans, mealLanguage:S.mealLanguage, reportOptions:S.reportOptions,
+    weekPlans:S.weekPlans, customMeals:S.customMeals, mealLanguage:S.mealLanguage, reportOptions:S.reportOptions,
     weightSuggestionLocked:S.weightSuggestionLocked, calAdjAutoValue:S.calAdjAutoValue, bcManual:S.bcManual,
     intake:S.intake, notes:S.notes, labValues:S.labValues, extraFoods:S.extraFoods,
     savedAt:new Date().toISOString()
@@ -6019,6 +6256,7 @@ function applyState(state){
     }
   });
   if(state.weekPlans) S.weekPlans=state.weekPlans;
+  if(state.customMeals) S.customMeals=state.customMeals;
   S.extraFoods=Array.isArray(state.extraFoods)?state.extraFoods:[];
   if(state.mealLanguage) S.mealLanguage=state.mealLanguage;
   if(state.reportOptions){
@@ -6483,6 +6721,7 @@ window.onload=function(){
   document.getElementById('s-snack2').innerHTML=snackExtrasHtml();
   document.getElementById('s-sleep').innerHTML=snackExtrasHtml();
   calcAll(); calcMacros(); renderDashboard();
+  loadCustomMeals({render:false}).then(()=>rebuildMealDropdownOptions()).catch(e=>console.error('[NutriFlow custom meals] startup load failed', e));
   const handledSignedOutReturn = handleSignedOutReturn();
   if(!handledSignedOutReturn) handleStripeReturnRefresh();
   loadAppointments().then(renderDashboardAppointments);
