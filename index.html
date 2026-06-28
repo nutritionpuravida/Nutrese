@@ -1890,15 +1890,10 @@ supabaseClient.auth.onAuthStateChange(async (event, session)=>{
   }
 });
 
-// FIX (2026-06, dietitian feedback after real client testing): fruit no
-// longer goes to breakfast at all — it is distributed ONLY across the three
-// snack slots (Snack 1, Snack 2, Before Sleep), split as evenly as possible
-// so the totals ALWAYS sum to exactly S.ex.fruit for any value (1, 2, 3, 4,
-// 5...). The previous version gave breakfast a fixed 1 serving and only
-// worked correctly for small totals because of an unrelated checkbox-based
-// snack system that has been removed (see note below) — this version has
-// no such dependency and is purely arithmetic, so it can never silently
-// break for any serving count.
+// Fruit distribution is deterministic and driven by Exchange System totals:
+// 1st fruit -> Snack 1, 2nd -> Snack 2, 3rd -> Before Sleep, then overflow
+// goes to Breakfast, Lunch, Dinner. This keeps every fruit exchange visible
+// and counted in kcal instead of silently capping at the three snack slots.
 function splitExchangeAcrossSlots(total, slots){
   const out={brk:0,lun:0,din:0,snk1:0,snk2:0,sleep:0};
   const clean=(slots||[]).filter(Boolean);
@@ -1933,13 +1928,7 @@ function snackDairyChoice(extras){
 function getFruitDistribution(plan=null){
   let remaining = Math.max(0, Math.round(Number(S.ex ? (S.ex.fruit||0) : 0)));
   const out={brk:0,lun:0,din:0,snk1:0,snk2:0,sleep:0};
-  const p=plan?normalizeMealPlan(plan):normalizeMealPlan(S.mealSel);
-  const selected=['snk1','snk2','sleep'].filter(slot=>{
-    const key=slot==='snk1'?'snack1Extras':slot==='snk2'?'snack2Extras':'sleepExtras';
-    return !!snackFruitChoice(p[key]);
-  });
-  const snackSlots=selected.length ? selected : ['snk1','snk2','sleep'];
-  snackSlots.forEach(slot=>{
+  ['snk1','snk2','sleep'].forEach(slot=>{
     if(remaining>0){ out[slot]=1; remaining--; }
   });
   const mainSlots=['brk','lun','din'];
@@ -2207,8 +2196,8 @@ function sideFruitText(count, lang='GR'){
   const n=Number(count||0);
   if(n<=0) return '';
   return lang==='EN'
-    ? `<br><span class="meal-tag">+ ${n} fruit serving${n>1?'s':''} (side fruit)</span>`
-    : `<br><span class="meal-tag">+ ${n} μερίδ${n>1?'ες':'α'} φρούτου</span>`;
+    ? `<br><span class="meal-tag">+ ${n} fruit serving${n>1?'s':''} (see Equivalents Guide)</span>`
+    : `<br><span class="meal-tag">+ ${n} μερίδ${n>1?'ες':'α'} φρούτου (βλ. Οδηγό Ισοδυναμιών)</span>`;
 }
 function sideFruitKcal(count){
   return Number(count||0) * Number(S.exMeta?.fruit?.kcal || 60);
@@ -2819,20 +2808,30 @@ function buildSlotSnack(slot, extras, lang='GR', breakfastKey, plan=null, fruitD
 function autoSnackExtrasForPlan(plan){
   const original=plan||{};
   const p=normalizeMealPlan(plan);
-  const slots=[
+  const fruitSlots=[
+    {key:'snack1Extras', slot:'snk1'},
+    {key:'snack2Extras', slot:'snk2'},
+    {key:'sleepExtras', slot:'sleep'},
+  ];
+  const dairySlots=[
     {key:'snack1Extras', slot:'snk1'},
     {key:'sleepExtras', slot:'sleep'},
     {key:'snack2Extras', slot:'snk2'},
   ];
-  const fruitSlots=Math.min(Math.max(0, Math.round(Number(S.ex?.fruit||0))), slots.length);
+  const fruitSlotCount=Math.min(Math.max(0, Math.round(Number(S.ex?.fruit||0))), fruitSlots.length);
   const brkUsesDairy=(p.breakfast==='BRK_CEREAL' || p.breakfast==='BRK_OATS_VEGAN') ? 1 : 0;
-  const dairySlots=Math.min(Math.max(0, Math.round(Number(S.ex?.dairy||0)-brkUsesDairy)), slots.length);
-  slots.forEach((cfg,i)=>{
+  const dairySlotCount=Math.min(Math.max(0, Math.round(Number(S.ex?.dairy||0)-brkUsesDairy)), dairySlots.length);
+  [...fruitSlots, ...dairySlots].forEach(cfg=>{
     const current=Array.isArray(p[cfg.key]) ? p[cfg.key] : [];
-    const keep=current.filter(v=>!['fruit','driedfruit','milk','yogurt','nofruit'].includes(v));
-    if(i<fruitSlots) keep.push(current.includes('driedfruit') ? 'driedfruit' : 'fruit');
-    if(i<dairySlots) keep.push(current.includes('yogurt') ? 'yogurt' : 'milk');
-    p[cfg.key]=keep;
+    p[cfg.key]=current.filter(v=>!['fruit','driedfruit','milk','yogurt','nofruit'].includes(v));
+  });
+  fruitSlots.forEach((cfg,i)=>{
+    const current=Array.isArray(original[cfg.key]) ? original[cfg.key] : [];
+    if(i<fruitSlotCount) p[cfg.key].push(current.includes('driedfruit') ? 'driedfruit' : 'fruit');
+  });
+  dairySlots.forEach((cfg,i)=>{
+    const current=Array.isArray(original[cfg.key]) ? original[cfg.key] : [];
+    if(i<dairySlotCount) p[cfg.key].push(current.includes('yogurt') ? 'yogurt' : 'milk');
   });
   // Keep both naming styles alive: 1-Day uses breakfast/lunch/dinner +
   // snack1Extras, while 7-Day uses brk/lun/din + snk1Extras.
