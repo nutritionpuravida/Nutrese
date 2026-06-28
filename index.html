@@ -2064,11 +2064,17 @@ function mealText(key, portions, lang){
   let text = map[key] ? map[key](S.ex, portions) : '';
   const extraProt=Number(portions?.prot||0);
   const extraFat=Number(portions?.fat||0);
-  if(text && FIXED_COMPOSITION_MEALS.has(key) && extraProt>0){
+  if(text && FIXED_COMPOSITION_MEALS.has(key) && extraProt>0 && key!=='DIN_SOUVLAKI_PITA'){
     const gramsPerEx = Math.round(30 * (((S.exMeta && S.exMeta.protein && S.exMeta.protein.pro) || 7)/7));
-    text += (lang||S.mealLanguage)==='EN'
-      ? ` + ${extraProt*gramsPerEx}g cooked lean protein`
-      : ` + ${extraProt*gramsPerEx}g μαγειρεμένη άπαχη πρωτεΐνη`;
+    if((lang||S.mealLanguage)==='EN'){
+      text += key==='DIN_OMELETTE'
+        ? ' + 1 extra egg + 30g light turkey'
+        : ` + ${extraProt*gramsPerEx}g cooked lean protein`;
+    } else {
+      text += key==='DIN_OMELETTE'
+        ? ' + 1 επιπλέον αυγό + 30g γαλοπούλα light'
+        : ` + ${extraProt*gramsPerEx}g μαγειρεμένη άπαχη πρωτεΐνη`;
+    }
   }
   if(text && FIXED_COMPOSITION_MEALS.has(key) && extraFat>0){
     text += (lang||S.mealLanguage)==='EN' ? ` + ${extraFat} tsp olive oil` : ` + ${extraFat} κ.γ. ελαιόλαδο`;
@@ -2353,7 +2359,7 @@ function mealSuffix(ex, p, veg, proteinSource, carbName, proteinLabel, isFishPro
       if(isFishProtein){
         // This dish's own named protein IS fish/tuna — show that single
         // weight directly (no "or meat" alternative needed).
-        parts.push(`${fishGrams}g μαγειρεμένο ${proteinLabel||'ψάρι'}`);
+        parts.push(proteinLabel==='τόνο' ? `${fishGrams}g τόνο` : `${fishGrams}g μαγειρεμένο ${proteinLabel||'ψάρι'}`);
       } else if(proteinLabel){
         // A specifically-named non-chicken meat (pork, mince, bifteki) —
         // single weight, no alternative offered.
@@ -3179,6 +3185,9 @@ function fishProteinExchangeCap(){
 function mealUsesFishProtein(mealKey){
   return /FISH|TUNA/.test(String(mealKey||''));
 }
+function allowsProteinTopUp(mealKey){
+  return !isCustomMealKey(mealKey) && mealKey!=='DIN_SOUVLAKI_PITA';
+}
 function allocateProteinRemaining(ex, fixed, scalableSlots, portions, p, caps, warnings){
   const target=Number(ex?.protein||0);
   const alreadyUsed=Number(fixed?.protein||0);
@@ -3189,10 +3198,12 @@ function allocateProteinRemaining(ex, fixed, scalableSlots, portions, p, caps, w
   }
   const proteinSlots=['lunch','dinner'].filter(slot=>{
     const mealKey=slot==='lunch'?p.lunch:p.dinner;
-    return !isCustomMealKey(mealKey);
+    return allowsProteinTopUp(mealKey);
   });
   if(remaining>0 && !proteinSlots.length){
-    warnings.push(`${remaining} protein exchange(s) cannot be allocated because both main meals are custom meals.`);
+    if(p.dinner!=='DIN_SOUVLAKI_PITA'){
+      warnings.push(`${remaining} protein exchange(s) cannot be allocated because both main meals are custom meals.`);
+    }
     return;
   }
   const slotCaps={};
@@ -3207,6 +3218,9 @@ function allocateProteinRemaining(ex, fixed, scalableSlots, portions, p, caps, w
       return base + Number(portions[slot]?.prot||0) < slotCaps[slot];
     });
     if(!available.length){
+      if(p.dinner==='DIN_SOUVLAKI_PITA'){
+        break;
+      }
       const dinnerAvailable=proteinSlots.includes('dinner');
       const slot=dinnerAvailable?'dinner':proteinSlots[proteinSlots.length-1];
       portions[slot].prot += remaining;
@@ -3316,6 +3330,7 @@ function getDayMealAllocation(plan=S.mealSel, lang=S.mealLanguage||'GR'){
   };
   const exchangeDiff=exchangeUseDiff(exchangeTarget, allocated);
   Object.entries(exchangeDiff).forEach(([key,val])=>{
+    if(key==='protein' && val>0 && p.dinner==='DIN_SOUVLAKI_PITA') return;
     if(val>0) warnings.push(`${val} ${key} exchange(s) remain unallocated.`);
     if(val<0) warnings.push(`${Math.abs(val)} ${key} exchange(s) are over-allocated.`);
   });
