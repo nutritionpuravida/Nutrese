@@ -2056,6 +2056,48 @@ const MEALS_EN = {
   DIN_BEAN_PASTA:     (ex,p) => 'Beans + pasta' + mealSuffixEn(ex,p,'salad', n=>`${n} bean serving${n>1?'s':''} (1/2 cup cooked per serving)`, 'pasta'),
 };
 
+Object.assign(MEALS, {
+  LUN_CHICKEN_POTATO: (ex,p) => 'Κοτόπουλο + πατάτα' + mealSuffix(ex,p,'σαλάτα',null,'πατάτα','κοτόπουλο'),
+  DIN_CHICKEN_POTATO: (ex,p) => 'Κοτόπουλο + πατάτα' + mealSuffix(ex,p,'σαλάτα',null,'πατάτα','κοτόπουλο'),
+  LUN_FASOLAKIA_CHICKEN: (ex,p) => 'Φασολάκια + κοτόπουλο' + mealSuffix(ex,p,'φασολάκια + σαλάτα',null,'πατάτα','κοτόπουλο'),
+  DIN_FASOLAKIA_CHICKEN: (ex,p) => 'Φασολάκια + κοτόπουλο' + mealSuffix(ex,p,'φασολάκια + σαλάτα',null,'πατάτα','κοτόπουλο'),
+  LUN_SALMON_POTATO: (ex,p) => 'Σολομός + πατάτα' + mealSuffix(ex,p,'σαλάτα',null,'πατάτα','σολομό',true),
+  DIN_SALMON_POTATO: (ex,p) => 'Σολομός + πατάτα' + mealSuffix(ex,p,'σαλάτα',null,'πατάτα','σολομό',true),
+  LUN_BAKED_FISH_VEG: (ex,p) => 'Ψάρι στο φούρνο' + mealSuffix(ex,p,'βραστά λαχανικά',null,'ρύζι','ψάρι',true),
+  DIN_BAKED_FISH_VEG: (ex,p) => 'Ψάρι στο φούρνο' + mealSuffix(ex,p,'βραστά λαχανικά',null,'ρύζι','ψάρι',true),
+  LUN_TUNA_RICE: (ex,p) => 'Τόνος + ρύζι' + mealSuffix(ex,p,'σαλάτα',null,'ρύζι','τόνο',true),
+  DIN_TUNA_RICE: (ex,p) => 'Τόνος + ρύζι' + mealSuffix(ex,p,'σαλάτα',null,'ρύζι','τόνο',true),
+  LUN_HALLOUMI_POTATO: (ex,p) => 'Χαλούμι ψητό + πατάτα' + mealSuffix(ex,{...p,fat:Math.max(0,Number(p?.fat||0)-2)},'σαλάτα',null,'πατάτα','χαλούμι'),
+  DIN_HALLOUMI_POTATO: (ex,p) => 'Χαλούμι ψητό + πατάτα' + mealSuffix(ex,{...p,fat:Math.max(0,Number(p?.fat||0)-2)},'σαλάτα',null,'πατάτα','χαλούμι'),
+  LUN_AVGOLEMONO_SOUP: (ex,p) => 'Αυγολέμονο σούπα' + mealSuffix(ex,p,'λαχανικά σούπας',null,'ρύζι','κοτόπουλο'),
+  DIN_AVGOLEMONO_SOUP: (ex,p) => 'Αυγολέμονο σούπα' + mealSuffix(ex,p,'λαχανικά σούπας',null,'ρύζι','κοτόπουλο'),
+  LUN_TRACHANAS_HALLOUMI: (ex,p) => 'Τραχανάς σούπα + χαλούμι' + mealSuffix(ex,{...p,fat:Math.max(0,Number(p?.fat||0)-2)},'λαχανικά',null,'τραχανά','χαλούμι'),
+  DIN_TRACHANAS_HALLOUMI: (ex,p) => 'Τραχανάς σούπα + χαλούμι' + mealSuffix(ex,{...p,fat:Math.max(0,Number(p?.fat||0)-2)},'λαχανικά',null,'τραχανά','χαλούμι'),
+  LUN_VEG_SOUP_CHICKEN: (ex,p) => 'Χορτόσουπα με κοτόπουλο' + mealSuffix(ex,p,'χορτόσουπα',null,'ρύζι','κοτόπουλο'),
+  DIN_VEG_SOUP_CHICKEN: (ex,p) => 'Χορτόσουπα με κοτόπουλο' + mealSuffix(ex,p,'χορτόσουπα',null,'ρύζι','κοτόπουλο'),
+});
+
+Object.assign(MEALS_EN, {
+  LUN_CHICKEN_POTATO: (ex,p) => 'Chicken + potato' + mealSuffixEn(ex,p,'salad',null,'potato','chicken'),
+  DIN_CHICKEN_POTATO: (ex,p) => 'Chicken + potato' + mealSuffixEn(ex,p,'salad',null,'potato','chicken'),
+  LUN_FASOLAKIA_CHICKEN: (ex,p) => 'Green beans + chicken' + mealSuffixEn(ex,p,'green beans + salad',null,'potato','chicken'),
+  DIN_FASOLAKIA_CHICKEN: (ex,p) => 'Green beans + chicken' + mealSuffixEn(ex,p,'green beans + salad',null,'potato','chicken'),
+  LUN_SALMON_POTATO: (ex,p) => 'Salmon + potato' + mealSuffixEn(ex,p,'salad',null,'potato','salmon',true),
+  DIN_SALMON_POTATO: (ex,p) => 'Salmon + potato' + mealSuffixEn(ex,p,'salad',null,'potato','salmon',true),
+  LUN_BAKED_FISH_VEG: (ex,p) => 'Baked fish' + mealSuffixEn(ex,p,'boiled vegetables',null,'rice','fish',true),
+  DIN_BAKED_FISH_VEG: (ex,p) => 'Baked fish' + mealSuffixEn(ex,p,'boiled vegetables',null,'rice','fish',true),
+  LUN_TUNA_RICE: (ex,p) => 'Tuna + rice' + mealSuffixEn(ex,p,'salad',null,'rice','tuna',true),
+  DIN_TUNA_RICE: (ex,p) => 'Tuna + rice' + mealSuffixEn(ex,p,'salad',null,'rice','tuna',true),
+  LUN_HALLOUMI_POTATO: (ex,p) => 'Grilled halloumi + potato' + mealSuffixEn(ex,{...p,fat:Math.max(0,Number(p?.fat||0)-2)},'salad',null,'potato','halloumi'),
+  DIN_HALLOUMI_POTATO: (ex,p) => 'Grilled halloumi + potato' + mealSuffixEn(ex,{...p,fat:Math.max(0,Number(p?.fat||0)-2)},'salad',null,'potato','halloumi'),
+  LUN_AVGOLEMONO_SOUP: (ex,p) => 'Avgolemono soup' + mealSuffixEn(ex,p,'soup vegetables',null,'rice','chicken'),
+  DIN_AVGOLEMONO_SOUP: (ex,p) => 'Avgolemono soup' + mealSuffixEn(ex,p,'soup vegetables',null,'rice','chicken'),
+  LUN_TRACHANAS_HALLOUMI: (ex,p) => 'Trachanas soup + halloumi' + mealSuffixEn(ex,{...p,fat:Math.max(0,Number(p?.fat||0)-2)},'vegetables',null,'trachanas','halloumi'),
+  DIN_TRACHANAS_HALLOUMI: (ex,p) => 'Trachanas soup + halloumi' + mealSuffixEn(ex,{...p,fat:Math.max(0,Number(p?.fat||0)-2)},'vegetables',null,'trachanas','halloumi'),
+  LUN_VEG_SOUP_CHICKEN: (ex,p) => 'Vegetable soup with chicken' + mealSuffixEn(ex,p,'vegetable soup',null,'rice','chicken'),
+  DIN_VEG_SOUP_CHICKEN: (ex,p) => 'Vegetable soup with chicken' + mealSuffixEn(ex,p,'vegetable soup',null,'rice','chicken'),
+});
+
 function mealText(key, portions, lang){
   if(isCustomMealKey(key)) return customMealText(key, lang);
   const map = (lang||S.mealLanguage)==='EN' ? MEALS_EN : MEALS;
@@ -2175,6 +2217,21 @@ const FIXED_COMPOSITION_MEALS = new Set([
   'LUN_CHICKPEA_STEW', 'LUN_BEAN_SALAD',
   'DIN_CHICKPEA_STEW', 'DIN_HALLOUMI_SALAD',
 ]);
+
+const NEW_MEAL_THEME_LABELS = {
+  CHICKEN_POTATO:{gr:'Κοτόπουλο + πατάτα', en:'Chicken + potato'},
+  FASOLAKIA_CHICKEN:{gr:'Φασολάκια + κοτόπουλο', en:'Green beans + chicken'},
+  SALMON_POTATO:{gr:'Σολομός + πατάτα', en:'Salmon + potato'},
+  BAKED_FISH_VEG:{gr:'Ψάρι στο φούρνο + λαχανικά', en:'Baked fish + vegetables'},
+  TUNA_RICE:{gr:'Τόνος + ρύζι', en:'Tuna + rice'},
+  HALLOUMI_POTATO:{gr:'Χαλούμι ψητό + πατάτα', en:'Grilled halloumi + potato'},
+  AVGOLEMONO_SOUP:{gr:'Αυγολέμονο σούπα', en:'Avgolemono soup'},
+  TRACHANAS_HALLOUMI:{gr:'Τραχανάς + χαλούμι', en:'Trachanas soup + halloumi'},
+  VEG_SOUP_CHICKEN:{gr:'Χορτόσουπα + κοτόπουλο', en:'Vegetable soup + chicken'},
+};
+function mealThemeFromKey(key){
+  return String(key||'').replace(/^(LUN|DIN)_/,'');
+}
 
 // Exchange costs for each snack slot are computed dynamically by
 // buildSlotSnack() below — fruit/dairy counts come from the distribution
@@ -2607,15 +2664,18 @@ window.addEventListener('afterprint', ()=>removePrintTwins(document));
 // Pescatarian: no meat (chicken/pork/beef) but fish/eggs/dairy OK
 // Vegetarian: no meat/fish but eggs/dairy OK
 // Vegan: no animal products — plant-based only
+const NEW_MEAT_MEAL_KEYS=['LUN_CHICKEN_POTATO','DIN_CHICKEN_POTATO','LUN_FASOLAKIA_CHICKEN','DIN_FASOLAKIA_CHICKEN','LUN_AVGOLEMONO_SOUP','DIN_AVGOLEMONO_SOUP','LUN_VEG_SOUP_CHICKEN','DIN_VEG_SOUP_CHICKEN'];
+const NEW_FISH_MEAL_KEYS=['LUN_SALMON_POTATO','DIN_SALMON_POTATO','LUN_BAKED_FISH_VEG','DIN_BAKED_FISH_VEG','LUN_TUNA_RICE','DIN_TUNA_RICE'];
+const NEW_DAIRY_EGG_MEAL_KEYS=['LUN_HALLOUMI_POTATO','DIN_HALLOUMI_POTATO','LUN_TRACHANAS_HALLOUMI','DIN_TRACHANAS_HALLOUMI'];
 const DIET_RESTRICTIONS = {
   Omnivore:    null, // no restrictions
-  Pescatarian: {excludeKeys:['LUN_CHICKEN_RICE','LUN_FASOLAKIA_PORK','LUN_PASTA_MINCE','LUN_BIFTEKI_BULGUR','DIN_CHICKEN_RICE','DIN_PASTA_MINCE','DIN_SOUVLAKI_PITA','DIN_BIFTEKI_BULGUR','BRK_TOAST_TURKEY']},
-  Vegetarian:  {excludeKeys:['LUN_CHICKEN_RICE','LUN_FISH_POTATO','LUN_LOUVI_TUNA','LUN_FASOLAKIA_PORK','LUN_TUNA_POTATO','LUN_PASTA_MINCE','LUN_BIFTEKI_BULGUR','DIN_CHICKEN_RICE','DIN_FISH_POTATO','DIN_TUNA_POTATO','DIN_PASTA_MINCE','DIN_SOUVLAKI_PITA','DIN_BIFTEKI_BULGUR','BRK_TOAST_TURKEY']},
+  Pescatarian: {excludeKeys:['LUN_CHICKEN_RICE','LUN_FASOLAKIA_PORK','LUN_PASTA_MINCE','LUN_BIFTEKI_BULGUR','DIN_CHICKEN_RICE','DIN_PASTA_MINCE','DIN_SOUVLAKI_PITA','DIN_BIFTEKI_BULGUR','BRK_TOAST_TURKEY', ...NEW_MEAT_MEAL_KEYS]},
+  Vegetarian:  {excludeKeys:['LUN_CHICKEN_RICE','LUN_FISH_POTATO','LUN_LOUVI_TUNA','LUN_FASOLAKIA_PORK','LUN_TUNA_POTATO','LUN_PASTA_MINCE','LUN_BIFTEKI_BULGUR','DIN_CHICKEN_RICE','DIN_FISH_POTATO','DIN_TUNA_POTATO','DIN_PASTA_MINCE','DIN_SOUVLAKI_PITA','DIN_BIFTEKI_BULGUR','BRK_TOAST_TURKEY', ...NEW_MEAT_MEAL_KEYS, ...NEW_FISH_MEAL_KEYS]},
   // FIX (2026-06): BRK_TOAST now also excluded for Vegan — it contains
   // "1 φέτα τυρί light" (light cheese), which is a dairy product and was
   // incorrectly left as the only available Vegan breakfast option before
   // BRK_OATS_VEGAN (fortified plant milk) was added above.
-  Vegan:       {excludeKeys:['LUN_CHICKEN_RICE','LUN_FISH_POTATO','LUN_LOUVI_TUNA','LUN_FASOLAKIA_PORK','LUN_TUNA_POTATO','LUN_PASTA_MINCE','LUN_BIFTEKI_BULGUR','DIN_CHICKEN_RICE','DIN_FISH_POTATO','DIN_TUNA_POTATO','DIN_PASTA_MINCE','DIN_SOUVLAKI_PITA','DIN_BIFTEKI_BULGUR','DIN_OMELETTE','BRK_TOAST_TURKEY','BRK_TOAST','BRK_EGGS','BRK_EGGS_TOAST','LUN_HALLOUMI_PASTA','DIN_HALLOUMI_SALAD','BRK_CEREAL']}, // BRK_CEREAL uses dairy milk; BRK_OATS_VEGAN (fortified plant milk) is the vegan-compliant oats option
+  Vegan:       {excludeKeys:['LUN_CHICKEN_RICE','LUN_FISH_POTATO','LUN_LOUVI_TUNA','LUN_FASOLAKIA_PORK','LUN_TUNA_POTATO','LUN_PASTA_MINCE','LUN_BIFTEKI_BULGUR','DIN_CHICKEN_RICE','DIN_FISH_POTATO','DIN_TUNA_POTATO','DIN_PASTA_MINCE','DIN_SOUVLAKI_PITA','DIN_BIFTEKI_BULGUR','DIN_OMELETTE','BRK_TOAST_TURKEY','BRK_TOAST','BRK_EGGS','BRK_EGGS_TOAST','LUN_HALLOUMI_PASTA','DIN_HALLOUMI_SALAD','BRK_CEREAL', ...NEW_MEAT_MEAL_KEYS, ...NEW_FISH_MEAL_KEYS, ...NEW_DAIRY_EGG_MEAL_KEYS]}, // BRK_CEREAL uses dairy milk; BRK_OATS_VEGAN (fortified plant milk) is the vegan-compliant oats option
 };
 
 // Filters meal option lists based on diet type
@@ -2778,10 +2838,19 @@ const BREAKFAST_OPTIONS = [
 ];
 const LUNCH_OPTIONS = [
   {v:'LUN_CHICKEN_RICE',   l:'Κοτόπουλο + ρύζι'},
+  {v:'LUN_CHICKEN_POTATO', l:'Κοτόπουλο + πατάτα'},
   {v:'LUN_FISH_POTATO',    l:'Ψάρι + πατάτα'},
+  {v:'LUN_SALMON_POTATO',  l:'Σολομός + πατάτα'},
+  {v:'LUN_BAKED_FISH_VEG', l:'Ψάρι στο φούρνο + λαχανικά'},
   {v:'LUN_LOUVI_TUNA',     l:'Λουβί + τόνος'},
   {v:'LUN_FASOLAKIA_PORK', l:'Φασολάκια + χοιρινό'},
+  {v:'LUN_FASOLAKIA_CHICKEN', l:'Φασολάκια + κοτόπουλο'},
   {v:'LUN_TUNA_POTATO',    l:'Τόνος + πατάτα'},
+  {v:'LUN_TUNA_RICE',      l:'Τόνος + ρύζι'},
+  {v:'LUN_HALLOUMI_POTATO', l:'Χαλούμι ψητό + πατάτα'},
+  {v:'LUN_AVGOLEMONO_SOUP', l:'Αυγολέμονο σούπα'},
+  {v:'LUN_TRACHANAS_HALLOUMI', l:'Τραχανάς + χαλούμι'},
+  {v:'LUN_VEG_SOUP_CHICKEN', l:'Χορτόσουπα + κοτόπουλο'},
   {v:'LUN_PASTA_MINCE',    l:'Μακαρόνια + κιμάς'},
   {v:'LUN_BIFTEKI_BULGUR', l:'Μπιφτέκι + πλιγούρι'},
   {v:'LUN_LENTILS_RICE',   l:'Φακές + ρύζι 🌱'},
@@ -2792,9 +2861,18 @@ const LUNCH_OPTIONS = [
 ];
 const DINNER_OPTIONS = [
   {v:'DIN_CHICKEN_RICE',   l:'Κοτόπουλο + ρύζι'},
+  {v:'DIN_CHICKEN_POTATO', l:'Κοτόπουλο + πατάτα'},
   {v:'DIN_FISH_POTATO',    l:'Ψάρι + πατάτα'},
+  {v:'DIN_SALMON_POTATO',  l:'Σολομός + πατάτα'},
+  {v:'DIN_BAKED_FISH_VEG', l:'Ψάρι στο φούρνο + λαχανικά'},
   {v:'DIN_OMELETTE',       l:'Ομελέτα + ψωμί'},
   {v:'DIN_TUNA_POTATO',    l:'Τόνος + πατάτα'},
+  {v:'DIN_TUNA_RICE',      l:'Τόνος + ρύζι'},
+  {v:'DIN_FASOLAKIA_CHICKEN', l:'Φασολάκια + κοτόπουλο'},
+  {v:'DIN_HALLOUMI_POTATO', l:'Χαλούμι ψητό + πατάτα'},
+  {v:'DIN_AVGOLEMONO_SOUP', l:'Αυγολέμονο σούπα'},
+  {v:'DIN_TRACHANAS_HALLOUMI', l:'Τραχανάς + χαλούμι'},
+  {v:'DIN_VEG_SOUP_CHICKEN', l:'Χορτόσουπα + κοτόπουλο'},
   {v:'DIN_PASTA_MINCE',    l:'Μακαρόνια + κιμάς'},
   {v:'DIN_SOUVLAKI_PITA',  l:'Σουβλάκι + πίτα'},
   {v:'DIN_BIFTEKI_BULGUR', l:'Μπιφτέκι + πλιγούρι'},
@@ -4744,6 +4822,12 @@ function strictMainDescription(mealKey, exch, lang='GR'){
   const vegGR=`σαλάτα (${portions.veg} φλ.)`;
   const vegEN=`salad (${portions.veg} cups)`;
   const joinParts=parts=>parts.filter(Boolean).join(' + ');
+  const theme=mealThemeFromKey(mealKey);
+  const builtInHalloumiFat=theme==='HALLOUMI_POTATO' || theme==='TRACHANAS_HALLOUMI';
+  const visibleFatGR=builtInHalloumiFat ? `${Math.max(0, portions.fat-2)} κ.γ. ελαιόλαδο` : fatGR;
+  const visibleFatEN=builtInHalloumiFat ? `${Math.max(0, portions.fat-2)} tsp olive oil` : fatEN;
+  const soupVegGR=theme==='AVGOLEMONO_SOUP' ? `λαχανικά σούπας (${portions.veg} φλ.)` : theme==='VEG_SOUP_CHICKEN' ? `χορτόσουπα (${portions.veg} φλ.)` : theme==='TRACHANAS_HALLOUMI' ? `λαχανικά (${portions.veg} φλ.)` : vegGR;
+  const soupVegEN=theme==='AVGOLEMONO_SOUP' ? `soup vegetables (${portions.veg} cups)` : theme==='VEG_SOUP_CHICKEN' ? `vegetable soup (${portions.veg} cups)` : theme==='TRACHANAS_HALLOUMI' ? `vegetables (${portions.veg} cups)` : vegEN;
   const grMap={
     LUN_CHICKEN_RICE:`Κοτόπουλο + ρύζι (${joinParts([`${proteinGr}g μαγειρεμένο κοτόπουλο`,starchGR,fatGR])}) – ${vegGR}`,
     DIN_CHICKEN_RICE:`Κοτόπουλο + ρύζι (${joinParts([`${proteinGr}g μαγειρεμένο κοτόπουλο`,starchGR,fatGR])}) – ${vegGR}`,
@@ -4756,6 +4840,24 @@ function strictMainDescription(mealKey, exch, lang='GR'){
     DIN_BIFTEKI_BULGUR:`Μπιφτέκι + πλιγούρι (${joinParts([`${proteinGr}g μπιφτέκι`,starchGR,fatGR])}) – ${vegGR}`,
     DIN_OMELETTE:`Ομελέτα + ψωμί (${joinParts(['2 αυγά','60g γαλοπούλα light',starchGR,fatGR])}) – βραστά λαχανικά (${portions.veg} φλ.)`,
     DIN_SOUVLAKI_PITA:`Σουβλάκι κοτόπουλο + κυπριακή πίτα (${joinParts([`${proteinGr}g κοτόπουλο`,starchGR||'1 μικρή κυπριακή πίτα',fatGR])}) – ${vegGR}`,
+    LUN_CHICKEN_POTATO:`Κοτόπουλο + πατάτα (${joinParts([`${proteinGr}g μαγειρεμένο κοτόπουλο`,starchGR,visibleFatGR])}) – ${vegGR}`,
+    DIN_CHICKEN_POTATO:`Κοτόπουλο + πατάτα (${joinParts([`${proteinGr}g μαγειρεμένο κοτόπουλο`,starchGR,visibleFatGR])}) – ${vegGR}`,
+    LUN_FASOLAKIA_CHICKEN:`Φασολάκια + κοτόπουλο (${joinParts([`${proteinGr}g μαγειρεμένο κοτόπουλο`,'φασολάκια',starchGR,visibleFatGR])}) – ${vegGR}`,
+    DIN_FASOLAKIA_CHICKEN:`Φασολάκια + κοτόπουλο (${joinParts([`${proteinGr}g μαγειρεμένο κοτόπουλο`,'φασολάκια',starchGR,visibleFatGR])}) – ${vegGR}`,
+    LUN_SALMON_POTATO:`Σολομός + πατάτα (${joinParts([`${proteinGr}g μαγειρεμένο σολομό`,starchGR,visibleFatGR])}) – ${vegGR}`,
+    DIN_SALMON_POTATO:`Σολομός + πατάτα (${joinParts([`${proteinGr}g μαγειρεμένο σολομό`,starchGR,visibleFatGR])}) – ${vegGR}`,
+    LUN_BAKED_FISH_VEG:`Ψάρι στο φούρνο (${joinParts([`${proteinGr}g ψάρι`,starchGR,visibleFatGR])}) – βραστά λαχανικά (${portions.veg} φλ.)`,
+    DIN_BAKED_FISH_VEG:`Ψάρι στο φούρνο (${joinParts([`${proteinGr}g ψάρι`,starchGR,visibleFatGR])}) – βραστά λαχανικά (${portions.veg} φλ.)`,
+    LUN_TUNA_RICE:`Τόνος + ρύζι (${joinParts([`${proteinGr}g τόνο`,starchGR,visibleFatGR])}) – ${vegGR}`,
+    DIN_TUNA_RICE:`Τόνος + ρύζι (${joinParts([`${proteinGr}g τόνο`,starchGR,visibleFatGR])}) – ${vegGR}`,
+    LUN_HALLOUMI_POTATO:`Χαλούμι ψητό + πατάτα (${joinParts([`${proteinGr}g χαλούμι`,starchGR,visibleFatGR])}) – ${vegGR}`,
+    DIN_HALLOUMI_POTATO:`Χαλούμι ψητό + πατάτα (${joinParts([`${proteinGr}g χαλούμι`,starchGR,visibleFatGR])}) – ${vegGR}`,
+    LUN_AVGOLEMONO_SOUP:`Αυγολέμονο σούπα (${joinParts([`${Math.max(0, proteinGr-30)}g μαγειρεμένο κοτόπουλο`,starchGR,'1 αυγό',visibleFatGR])}) – ${soupVegGR}`,
+    DIN_AVGOLEMONO_SOUP:`Αυγολέμονο σούπα (${joinParts([`${Math.max(0, proteinGr-30)}g μαγειρεμένο κοτόπουλο`,starchGR,'1 αυγό',visibleFatGR])}) – ${soupVegGR}`,
+    LUN_TRACHANAS_HALLOUMI:`Τραχανάς σούπα + χαλούμι (${joinParts([starchGR,`${Math.max(60, proteinGr-80)}g χαλούμι ψητό`,'2 αυγά',visibleFatGR])}) – ${soupVegGR}`,
+    DIN_TRACHANAS_HALLOUMI:`Τραχανάς σούπα + χαλούμι (${joinParts([starchGR,`${Math.max(60, proteinGr-80)}g χαλούμι ψητό`,'2 αυγά',visibleFatGR])}) – ${soupVegGR}`,
+    LUN_VEG_SOUP_CHICKEN:`Χορτόσουπα με κοτόπουλο (${joinParts([`${proteinGr}g μαγειρεμένο κοτόπουλο`,starchGR,visibleFatGR])}) – ${soupVegGR}`,
+    DIN_VEG_SOUP_CHICKEN:`Χορτόσουπα με κοτόπουλο (${joinParts([`${proteinGr}g μαγειρεμένο κοτόπουλο`,starchGR,visibleFatGR])}) – ${soupVegGR}`,
   };
   const enMap={
     LUN_CHICKEN_RICE:`Chicken + rice (${joinParts([`${proteinGr}g cooked chicken`,starchEN,fatEN])}) - ${vegEN}`,
@@ -4769,6 +4871,24 @@ function strictMainDescription(mealKey, exch, lang='GR'){
     DIN_BIFTEKI_BULGUR:`Burger + bulgur (${joinParts([`${proteinGr}g burger`,starchEN,fatEN])}) - ${vegEN}`,
     DIN_OMELETTE:`Omelette + bread (${joinParts(['2 eggs','60g light turkey',starchEN,fatEN])}) - boiled vegetables (${portions.veg} cups)`,
     DIN_SOUVLAKI_PITA:`Chicken souvlaki + Cypriot pita (${joinParts([`${proteinGr}g chicken`,starchEN||'1 small Cypriot pita',fatEN])}) - ${vegEN}`,
+    LUN_CHICKEN_POTATO:`Chicken + potato (${joinParts([`${proteinGr}g cooked chicken`,starchEN,visibleFatEN])}) - ${vegEN}`,
+    DIN_CHICKEN_POTATO:`Chicken + potato (${joinParts([`${proteinGr}g cooked chicken`,starchEN,visibleFatEN])}) - ${vegEN}`,
+    LUN_FASOLAKIA_CHICKEN:`Green beans + chicken (${joinParts([`${proteinGr}g cooked chicken`,'green beans',starchEN,visibleFatEN])}) - ${vegEN}`,
+    DIN_FASOLAKIA_CHICKEN:`Green beans + chicken (${joinParts([`${proteinGr}g cooked chicken`,'green beans',starchEN,visibleFatEN])}) - ${vegEN}`,
+    LUN_SALMON_POTATO:`Salmon + potato (${joinParts([`${proteinGr}g cooked salmon`,starchEN,visibleFatEN])}) - ${vegEN}`,
+    DIN_SALMON_POTATO:`Salmon + potato (${joinParts([`${proteinGr}g cooked salmon`,starchEN,visibleFatEN])}) - ${vegEN}`,
+    LUN_BAKED_FISH_VEG:`Baked fish (${joinParts([`${proteinGr}g fish`,starchEN,visibleFatEN])}) - boiled vegetables (${portions.veg} cups)`,
+    DIN_BAKED_FISH_VEG:`Baked fish (${joinParts([`${proteinGr}g fish`,starchEN,visibleFatEN])}) - boiled vegetables (${portions.veg} cups)`,
+    LUN_TUNA_RICE:`Tuna + rice (${joinParts([`${proteinGr}g tuna`,starchEN,visibleFatEN])}) - ${vegEN}`,
+    DIN_TUNA_RICE:`Tuna + rice (${joinParts([`${proteinGr}g tuna`,starchEN,visibleFatEN])}) - ${vegEN}`,
+    LUN_HALLOUMI_POTATO:`Grilled halloumi + potato (${joinParts([`${proteinGr}g halloumi`,starchEN,visibleFatEN])}) - ${vegEN}`,
+    DIN_HALLOUMI_POTATO:`Grilled halloumi + potato (${joinParts([`${proteinGr}g halloumi`,starchEN,visibleFatEN])}) - ${vegEN}`,
+    LUN_AVGOLEMONO_SOUP:`Avgolemono soup (${joinParts([`${Math.max(0, proteinGr-30)}g cooked chicken`,starchEN,'1 egg',visibleFatEN])}) - ${soupVegEN}`,
+    DIN_AVGOLEMONO_SOUP:`Avgolemono soup (${joinParts([`${Math.max(0, proteinGr-30)}g cooked chicken`,starchEN,'1 egg',visibleFatEN])}) - ${soupVegEN}`,
+    LUN_TRACHANAS_HALLOUMI:`Trachanas soup + halloumi (${joinParts([starchEN,`${Math.max(60, proteinGr-80)}g grilled halloumi`,'2 eggs',visibleFatEN])}) - ${soupVegEN}`,
+    DIN_TRACHANAS_HALLOUMI:`Trachanas soup + halloumi (${joinParts([starchEN,`${Math.max(60, proteinGr-80)}g grilled halloumi`,'2 eggs',visibleFatEN])}) - ${soupVegEN}`,
+    LUN_VEG_SOUP_CHICKEN:`Vegetable soup with chicken (${joinParts([`${proteinGr}g cooked chicken`,starchEN,visibleFatEN])}) - ${soupVegEN}`,
+    DIN_VEG_SOUP_CHICKEN:`Vegetable soup with chicken (${joinParts([`${proteinGr}g cooked chicken`,starchEN,visibleFatEN])}) - ${soupVegEN}`,
   };
   return (lang==='EN' ? enMap[mealKey] : grMap[mealKey]) || mealText(mealKey, portions, lang);
 }
