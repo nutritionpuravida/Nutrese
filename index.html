@@ -1891,9 +1891,9 @@ supabaseClient.auth.onAuthStateChange(async (event, session)=>{
 });
 
 // Fruit distribution is deterministic and driven by Exchange System totals:
-// 1st fruit -> Snack 1, 2nd -> Snack 2, 3rd -> Before Sleep, then overflow
-// goes to Breakfast, Lunch, Dinner. This keeps every fruit exchange visible
-// and counted in kcal instead of silently capping at the three snack slots.
+// servings are split across Snack 1, Snack 2 and Before Sleep, allowing
+// multiple fruit servings per snack slot (e.g. 4 -> 2/1/1, 6 -> 2/2/2).
+// Fruit is never added to Breakfast, Lunch or Dinner.
 function splitExchangeAcrossSlots(total, slots){
   const out={brk:0,lun:0,din:0,snk1:0,snk2:0,sleep:0};
   const clean=(slots||[]).filter(Boolean);
@@ -1926,19 +1926,8 @@ function snackDairyChoice(extras){
   return '';
 }
 function getFruitDistribution(plan=null){
-  let remaining = Math.max(0, Math.round(Number(S.ex ? (S.ex.fruit||0) : 0)));
-  const out={brk:0,lun:0,din:0,snk1:0,snk2:0,sleep:0};
-  ['snk1','snk2','sleep'].forEach(slot=>{
-    if(remaining>0){ out[slot]=1; remaining--; }
-  });
-  const mainSlots=['brk','lun','din'];
-  let i=0;
-  while(remaining>0){
-    out[mainSlots[i % mainSlots.length]] += 1;
-    remaining--;
-    i++;
-  }
-  return out;
+  const total = Math.max(0, Math.round(Number(S.ex ? (S.ex.fruit||0) : 0)));
+  return splitExchangeAcrossSlots(total, ['snk1','snk2','sleep']);
 }
 
 // FIX (2026-06): dairy is now distributed across ALL THREE snack slots
@@ -2192,16 +2181,6 @@ function renderExtraFoodsForSlot(slot, dayIndex=null, opts={}){
   }).join('');
   return `<div class="extra-foods ${opts.reportMode?'report-extra-foods':''}">${rows}</div>`;
 }
-function sideFruitText(count, lang='GR'){
-  const n=Number(count||0);
-  if(n<=0) return '';
-  return lang==='EN'
-    ? `<br><span class="meal-tag">+ ${n} fruit serving${n>1?'s':''} (see Equivalents Guide)</span>`
-    : `<br><span class="meal-tag">+ ${n} μερίδ${n>1?'ες':'α'} φρούτου (βλ. Οδηγό Ισοδυναμιών)</span>`;
-}
-function sideFruitKcal(count){
-  return Number(count||0) * Number(S.exMeta?.fruit?.kcal || 60);
-}
 function refreshMealPlanViews(){
   buildOneDayPlan();
   buildSevenDay();
@@ -2211,7 +2190,6 @@ function calcDayTotals(){
   const ms = S.mealSel;
   const allocation = getDayMealAllocation(ms);
   const portions = allocation.portions;
-  const fruitDist = allocation.fruitDist || getFruitDistribution(ms);
   const brkComp  = MEAL_EXCHANGES[ms.breakfast] || {};
   const lunComp  = MEAL_EXCHANGES[ms.lunch]     || {};
   const dinComp  = MEAL_EXCHANGES[ms.dinner]    || {};
@@ -2220,9 +2198,9 @@ function calcDayTotals(){
   const snk2Built = allocation.snacks.snk2Built;
   const sleepBuilt = allocation.snacks.sleepBuilt;
 
-  const brkKcal  = exchangesToKcal(brkComp, null) + sideFruitKcal(fruitDist.brk) + extraKcal('brk', null);
-  const lunKcal  = exchangesToKcal(lunComp, FIXED_COMPOSITION_MEALS.has(ms.lunch) ? null : portions.lunch) + sideFruitKcal(fruitDist.lun) + extraKcal('lun', null);
-  const dinKcal  = exchangesToKcal(dinComp, FIXED_COMPOSITION_MEALS.has(ms.dinner) ? null : portions.dinner) + sideFruitKcal(fruitDist.din) + extraKcal('din', null);
+  const brkKcal  = exchangesToKcal(brkComp, null) + extraKcal('brk', null);
+  const lunKcal  = exchangesToKcal(lunComp, FIXED_COMPOSITION_MEALS.has(ms.lunch) ? null : portions.lunch) + extraKcal('lun', null);
+  const dinKcal  = exchangesToKcal(dinComp, FIXED_COMPOSITION_MEALS.has(ms.dinner) ? null : portions.dinner) + extraKcal('din', null);
   const snk1Kcal = exchangesToKcal(snk1Built.exch, null) + extraKcal('snk1', null);
   const snk2Kcal = exchangesToKcal(snk2Built.exch, null) + extraKcal('snk2', null);
   const slpKcal  = exchangesToKcal(sleepBuilt.exch, null) + extraKcal('sleep', null);
@@ -2733,14 +2711,16 @@ function snackExtrasHtml(){
 }
 
 function handleSnackOptionChange(cb){
-  if(!cb || !cb.checked) return;
+  if(!cb) return;
   const group=cb.dataset.group;
-  if(!group) return;
   const container=cb.closest('#s-snack1,#s-snack2,#s-sleep,.snack-extras-group');
-  if(!container) return;
-  container.querySelectorAll(`input[data-group="${group}"]`).forEach(other=>{
-    if(other!==cb) other.checked=false;
-  });
+  if(group && cb.checked && container){
+    container.querySelectorAll(`input[data-group="${group}"]`).forEach(other=>{
+      if(other!==cb) other.checked=false;
+    });
+  }
+  if(document.getElementById('page-oneday')?.classList.contains('active')) buildOneDayPlan();
+  else if(document.getElementById('page-dashboard')?.classList.contains('active')) buildOneDayPlan();
 }
 
 function refreshSnackExtrasLabels(){
@@ -3030,7 +3010,6 @@ function getDayMealAllocation(plan=S.mealSel, lang=S.mealLanguage||'GR'){
   addExchangeUse(fixed, snk1Built.exch);
   addExchangeUse(fixed, snk2Built.exch);
   addExchangeUse(fixed, sleepBuilt.exch);
-  addExchangeUse(fixed, {fruit:Number(fruitDist.brk||0)+Number(fruitDist.lun||0)+Number(fruitDist.din||0)});
   addMainMealFixedUse(fixed, lunComp, lunchScales);
   addMainMealFixedUse(fixed, dinComp, dinnerScales);
 
@@ -3971,17 +3950,16 @@ function buildOneDayPlan(){
   const ex=S.ex;
   const allocation=getDayMealAllocation(S.mealSel, lang);
   const portions=allocation.portions;
-  const fruitDist=allocation.fruitDist || getFruitDistribution(S.mealSel);
   const day=calcDayTotals();
   const snk1Built=allocation.snacks.snk1Built;
   const snk2Built=allocation.snacks.snk2Built;
   const sleepBuilt=allocation.snacks.sleepBuilt;
   const meals=[
-    {slot:'brk', time:lang==='EN'?'Breakfast':'Πρωινό',      en:'Breakfast',     text:mealText(brk,null,lang)+sideFruitText(fruitDist.brk,lang), kcal:day.brkKcal},
+    {slot:'brk', time:lang==='EN'?'Breakfast':'Πρωινό',      en:'Breakfast',     text:mealText(brk,null,lang),              kcal:day.brkKcal},
     {slot:'snk1', time:lang==='EN'?'Snack 1':'Σνακ 1',        en:'Snack 1',       text:snk1Built.text,                       kcal:day.snk1Kcal},
-    {slot:'lun', time:lang==='EN'?'Lunch':'Μεσημεριανό',     en:'Lunch',         text:mealText(lun,portions.lunch,lang)+sideFruitText(fruitDist.lun,lang), kcal:day.lunKcal},
+    {slot:'lun', time:lang==='EN'?'Lunch':'Μεσημεριανό',     en:'Lunch',         text:mealText(lun,portions.lunch,lang),    kcal:day.lunKcal},
     {slot:'snk2', time:lang==='EN'?'Snack 2':'Σνακ 2',        en:'Snack 2',       text:snk2Built.text,                       kcal:day.snk2Kcal},
-    {slot:'din', time:lang==='EN'?'Dinner':'Βραδινό',        en:'Dinner',        text:mealText(din,portions.dinner,lang)+sideFruitText(fruitDist.din,lang), kcal:day.dinKcal},
+    {slot:'din', time:lang==='EN'?'Dinner':'Βραδινό',        en:'Dinner',        text:mealText(din,portions.dinner,lang),   kcal:day.dinKcal},
     {slot:'sleep', time:lang==='EN'?'Before sleep':'Πριν τον ύπνο',en:'Before sleep', text:sleepBuilt.text,                   kcal:day.slpKcal},
   ];
   const planEl=document.getElementById('oneday-plan');
@@ -4060,7 +4038,6 @@ function buildOneDayPlan(){
 function calcDayTotalsForPlan(dayPlan, lang='GR', dayIndex=0){
   const allocation=getDayMealAllocation(dayPlan, lang);
   const portions=allocation.portions;
-  const fruitDist=allocation.fruitDist || getFruitDistribution(dayPlan);
   const brkComp  = MEAL_EXCHANGES[dayPlan.brk] || {};
   const lunComp  = MEAL_EXCHANGES[dayPlan.lun] || {};
   const dinComp  = MEAL_EXCHANGES[dayPlan.din] || {};
@@ -4068,9 +4045,9 @@ function calcDayTotalsForPlan(dayPlan, lang='GR', dayIndex=0){
   const snk2Built = allocation.snacks.snk2Built;
   const sleepBuilt = allocation.snacks.sleepBuilt;
 
-  const brkKcal  = exchangesToKcal(brkComp, null) + sideFruitKcal(fruitDist.brk) + extraKcal('brk', dayIndex);
-  const lunKcal  = exchangesToKcal(lunComp, FIXED_COMPOSITION_MEALS.has(dayPlan.lun) ? null : portions.lunch) + sideFruitKcal(fruitDist.lun) + extraKcal('lun', dayIndex);
-  const dinKcal  = exchangesToKcal(dinComp, FIXED_COMPOSITION_MEALS.has(dayPlan.din) ? null : portions.dinner) + sideFruitKcal(fruitDist.din) + extraKcal('din', dayIndex);
+  const brkKcal  = exchangesToKcal(brkComp, null) + extraKcal('brk', dayIndex);
+  const lunKcal  = exchangesToKcal(lunComp, FIXED_COMPOSITION_MEALS.has(dayPlan.lun) ? null : portions.lunch) + extraKcal('lun', dayIndex);
+  const dinKcal  = exchangesToKcal(dinComp, FIXED_COMPOSITION_MEALS.has(dayPlan.din) ? null : portions.dinner) + extraKcal('din', dayIndex);
   const snk1Kcal = exchangesToKcal(snk1Built.exch, null) + extraKcal('snk1', dayIndex);
   const snk2Kcal = exchangesToKcal(snk2Built.exch, null) + extraKcal('snk2', dayIndex);
   const slpKcal  = exchangesToKcal(sleepBuilt.exch, null) + extraKcal('sleep', dayIndex);
@@ -4079,7 +4056,7 @@ function calcDayTotalsForPlan(dayPlan, lang='GR', dayIndex=0){
   const gap      = totalKcal-target;
   return {brkKcal,lunKcal,dinKcal,snk1Kcal,snk2Kcal,slpKcal,totalKcal,target,gap,
           snk1Text:snk1Built.text, snk2Text:snk2Built.text, slpText:sleepBuilt.text,
-          portions, fruitDist, warnings:allocation.warnings};
+          portions, warnings:allocation.warnings};
 }
 
 function buildSevenDay(){
@@ -4140,18 +4117,17 @@ function buildSevenDay(){
     S.weekPlans.forEach((p,di)=>{
       const dt=calcDayTotalsForPlan(p, lang, di);
       const gapOk=Math.abs(dt.gap)<=100;
-      const fruitDist=dt.fruitDist||{};
       let cell='';
       if(row.key==='brk'){
-        cell=sel('brk',di,filteredBrk,p.brk)+`<div style="color:var(--text-primary);font-size:12px;font-weight:600;line-height:1.4">${mealText(p.brk,null,lang)}${sideFruitText(fruitDist.brk,lang)}${renderExtraFoodsForSlot('brk', di)}</div><div style="font-size:11px;color:var(--teal-600);margin-top:2px">${dt.brkKcal} kcal</div>`;
+        cell=sel('brk',di,filteredBrk,p.brk)+`<div style="color:var(--text-primary);font-size:12px;font-weight:600;line-height:1.4">${mealText(p.brk,null,lang)}${renderExtraFoodsForSlot('brk', di)}</div><div style="font-size:11px;color:var(--teal-600);margin-top:2px">${dt.brkKcal} kcal</div>`;
       } else if(row.key==='snk1'){
         cell=extrasGroup('snk1Extras',di,p.snk1Extras)+`<div style="color:var(--text-primary);font-size:12px;font-weight:600;line-height:1.4">${dt.snk1Text}${renderExtraFoodsForSlot('snk1', di)}</div><div style="font-size:11px;color:var(--teal-600);margin-top:2px">${dt.snk1Kcal} kcal</div>`;
       } else if(row.key==='lun'){
-        cell=sel('lun',di,filteredLun,p.lun)+`<div style="color:var(--text-primary);font-size:12px;font-weight:600;line-height:1.4">${mealText(p.lun,dt.portions.lunch,lang)}${sideFruitText(fruitDist.lun,lang)}${renderExtraFoodsForSlot('lun', di)}</div><div style="font-size:11px;color:var(--teal-600);margin-top:2px">${dt.lunKcal} kcal</div>`;
+        cell=sel('lun',di,filteredLun,p.lun)+`<div style="color:var(--text-primary);font-size:12px;font-weight:600;line-height:1.4">${mealText(p.lun,dt.portions.lunch,lang)}${renderExtraFoodsForSlot('lun', di)}</div><div style="font-size:11px;color:var(--teal-600);margin-top:2px">${dt.lunKcal} kcal</div>`;
       } else if(row.key==='snk2'){
         cell=extrasGroup('snk2Extras',di,p.snk2Extras)+`<div style="color:var(--text-primary);font-size:12px;font-weight:600;line-height:1.4">${dt.snk2Text}${renderExtraFoodsForSlot('snk2', di)}</div><div style="font-size:11px;color:var(--teal-600);margin-top:2px">${dt.snk2Kcal} kcal</div>`;
       } else if(row.key==='din'){
-        cell=sel('din',di,filteredDin,p.din)+`<div style="color:var(--text-primary);font-size:12px;font-weight:600;line-height:1.4">${mealText(p.din,dt.portions.dinner,lang)}${sideFruitText(fruitDist.din,lang)}${renderExtraFoodsForSlot('din', di)}</div><div style="font-size:11px;color:var(--teal-600);margin-top:2px">${dt.dinKcal} kcal</div>`;
+        cell=sel('din',di,filteredDin,p.din)+`<div style="color:var(--text-primary);font-size:12px;font-weight:600;line-height:1.4">${mealText(p.din,dt.portions.dinner,lang)}${renderExtraFoodsForSlot('din', di)}</div><div style="font-size:11px;color:var(--teal-600);margin-top:2px">${dt.dinKcal} kcal</div>`;
       } else if(row.key==='sleep'){
         cell=extrasGroup('sleepExtras',di,p.sleepExtras)+`<div style="color:var(--text-primary);font-size:12px;font-weight:600;line-height:1.4">${dt.slpText}${renderExtraFoodsForSlot('sleep', di)}</div><div style="font-size:11px;color:var(--teal-600);margin-top:2px">${dt.slpKcal} kcal</div>`;
       } else if(row.key==='kcal'){
@@ -4214,14 +4190,13 @@ function openSevenDayModal(dayIndex){
   closeSevenDayModal();
   const p=S.weekPlans[dayIndex];
   const dt=calcDayTotalsForPlan(p, lang, dayIndex);
-  const fruitDist=dt.fruitDist||{};
   const dayLabel=weekDayLabel(p, dayIndex, lang);
   const rows=[
-    [lang==='EN'?'Breakfast':'Πρωινό', mealText(p.brk,null,lang)+sideFruitText(fruitDist.brk,lang)+renderExtraFoodsForSlot('brk', dayIndex), dt.brkKcal],
+    [lang==='EN'?'Breakfast':'Πρωινό', mealText(p.brk,null,lang)+renderExtraFoodsForSlot('brk', dayIndex), dt.brkKcal],
     [lang==='EN'?'Snack 1':'Σνακ 1', dt.snk1Text+renderExtraFoodsForSlot('snk1', dayIndex), dt.snk1Kcal],
-    [lang==='EN'?'Lunch':'Μεσημεριανό', mealText(p.lun,dt.portions.lunch,lang)+sideFruitText(fruitDist.lun,lang)+renderExtraFoodsForSlot('lun', dayIndex), dt.lunKcal],
+    [lang==='EN'?'Lunch':'Μεσημεριανό', mealText(p.lun,dt.portions.lunch,lang)+renderExtraFoodsForSlot('lun', dayIndex), dt.lunKcal],
     [lang==='EN'?'Snack 2':'Σνακ 2', dt.snk2Text+renderExtraFoodsForSlot('snk2', dayIndex), dt.snk2Kcal],
-    [lang==='EN'?'Dinner':'Βραδινό', mealText(p.din,dt.portions.dinner,lang)+sideFruitText(fruitDist.din,lang)+renderExtraFoodsForSlot('din', dayIndex), dt.dinKcal],
+    [lang==='EN'?'Dinner':'Βραδινό', mealText(p.din,dt.portions.dinner,lang)+renderExtraFoodsForSlot('din', dayIndex), dt.dinKcal],
     [lang==='EN'?'Before sleep':'Πριν τον ύπνο', dt.slpText+renderExtraFoodsForSlot('sleep', dayIndex), dt.slpKcal],
   ];
   const overlay=document.createElement('div');
