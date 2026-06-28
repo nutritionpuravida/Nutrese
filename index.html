@@ -2062,7 +2062,14 @@ function mealText(key, portions, lang){
   if(isCustomMealKey(key)) return customMealText(key, lang);
   const map = (lang||S.mealLanguage)==='EN' ? MEALS_EN : MEALS;
   let text = map[key] ? map[key](S.ex, portions) : '';
+  const extraProt=Number(portions?.prot||0);
   const extraFat=Number(portions?.fat||0);
+  if(text && FIXED_COMPOSITION_MEALS.has(key) && extraProt>0){
+    const gramsPerEx = Math.round(30 * (((S.exMeta && S.exMeta.protein && S.exMeta.protein.pro) || 7)/7));
+    text += (lang||S.mealLanguage)==='EN'
+      ? ` + ${extraProt*gramsPerEx}g cooked lean protein`
+      : ` + ${extraProt*gramsPerEx}g μαγειρεμένη άπαχη πρωτεΐνη`;
+  }
   if(text && FIXED_COMPOSITION_MEALS.has(key) && extraFat>0){
     text += (lang||S.mealLanguage)==='EN' ? ` + ${extraFat} tsp olive oil` : ` + ${extraFat} κ.γ. ελαιόλαδο`;
   }
@@ -2094,7 +2101,9 @@ function customMealKcal(key){
 function effectivePortionsForKcal(mealKey, portions){
   if(isCustomMealKey(mealKey)) return null;
   if(FIXED_COMPOSITION_MEALS.has(mealKey)){
-    return Number(portions?.fat||0)>0 ? {prot:0,starch:0,fat:Number(portions.fat||0),veg:undefined} : null;
+    const prot=Number(portions?.prot||0);
+    const fat=Number(portions?.fat||0);
+    return (prot>0 || fat>0) ? {prot,starch:0,fat,veg:undefined} : null;
   }
   return portions;
 }
@@ -3178,23 +3187,38 @@ function allocateProteinRemaining(ex, fixed, scalableSlots, portions, p, caps, w
     warnings.push(`protein fixed meals exceed daily exchange target by ${Math.abs(remaining)} exchange(s).`);
     return;
   }
-  if(remaining>0 && !scalableSlots.length){
-    warnings.push(`${remaining} protein exchange(s) cannot be allocated because both main meals are fixed.`);
+  const proteinSlots=['lunch','dinner'].filter(slot=>{
+    const mealKey=slot==='lunch'?p.lunch:p.dinner;
+    return !isCustomMealKey(mealKey);
+  });
+  if(remaining>0 && !proteinSlots.length){
+    warnings.push(`${remaining} protein exchange(s) cannot be allocated because both main meals are custom meals.`);
     return;
   }
   const slotCaps={};
-  scalableSlots.forEach(slot=>{
+  proteinSlots.forEach(slot=>{
     const mealKey=slot==='lunch'?p.lunch:p.dinner;
     slotCaps[slot]=mealUsesFishProtein(mealKey) ? Math.min(caps.proteinPerMealMax, fishProteinExchangeCap()) : caps.proteinPerMealMax;
   });
   while(remaining>0){
-    const available=scalableSlots.filter(slot=>Number(portions[slot]?.prot||0)<slotCaps[slot]);
+    const available=proteinSlots.filter(slot=>{
+      const mealKey=slot==='lunch'?p.lunch:p.dinner;
+      const base=Number(MEAL_EXCHANGES[mealKey]?.protein||0);
+      return base + Number(portions[slot]?.prot||0) < slotCaps[slot];
+    });
     if(!available.length){
-      warnings.push(`Protein target exceeds realistic per-meal caps; review meal combination or add another protein occasion.`);
+      const dinnerAvailable=proteinSlots.includes('dinner');
+      const slot=dinnerAvailable?'dinner':proteinSlots[proteinSlots.length-1];
+      portions[slot].prot += remaining;
+      warnings.push(`Protein target exceeds realistic per-meal caps; ${remaining} exchange(s) assigned to ${slot} to preserve the Exchange System total.`);
+      remaining=0;
       break;
     }
     available.sort((a,b)=>{
-      const pa=Number(portions[a]?.prot||0), pb=Number(portions[b]?.prot||0);
+      const mealA=a==='lunch'?p.lunch:p.dinner;
+      const mealB=b==='lunch'?p.lunch:p.dinner;
+      const pa=Number(MEAL_EXCHANGES[mealA]?.protein||0)+Number(portions[a]?.prot||0);
+      const pb=Number(MEAL_EXCHANGES[mealB]?.protein||0)+Number(portions[b]?.prot||0);
       if(pa!==pb) return pa-pb;
       // Prefer dinner on ties so breakfast-light days do not keep giving
       // the remainder to lunch first.
@@ -3281,10 +3305,10 @@ function getDayMealAllocation(plan=S.mealSel, lang=S.mealLanguage||'GR'){
   const allocated=zeroExchangeUse();
   addExchangeUse(allocated, fixed);
   scalableSlots.forEach(slot=>{
-    allocated.protein += Number(portions[slot]?.prot||0);
     allocated.starch  += Number(portions[slot]?.starch||0);
     allocated.veg     += Number(portions[slot]?.veg||0);
   });
+  ['lunch','dinner'].forEach(slot=>{ allocated.protein += Number(portions[slot]?.prot||0); });
   ['lunch','dinner'].forEach(slot=>{ allocated.fat += Number(portions[slot]?.fat||0); });
   const exchangeTarget={
     fruit:Number(ex?.fruit||0), veg:Number(ex?.veg||0), dairy:Number(ex?.dairy||0),
