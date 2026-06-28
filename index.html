@@ -928,6 +928,7 @@ tr:hover td { background: var(--bg-hover); }
         <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px">
           <button class="btn" onclick="applySuggestedExchangeServings()">✨ Suggested servings</button>
           <button class="btn primary" onclick="refreshExchangePlansNow()">🔄 Apply to Meal Plans</button>
+          <button class="btn primary" onclick="generateAiSevenDayPlan()">✨ Generate AI Plan</button>
           <span style="font-size:12px;color:var(--text-muted)">Click after changing servings to push updates into 1-Day, 7-Day plan and Report</span>
         </div>
         <div id="exchange-rows"></div>
@@ -990,12 +991,8 @@ tr:hover td { background: var(--bg-hover); }
   <!-- 7-DAY PLAN -->
   <div class="page" id="page-sevenday">
     <div class="card">
-      <div class="card-header"><span class="card-title">📅 SYSTEM — 7-Day Meal Plan (Αυτόματο Πλάνο 7 Ημερών)</span></div>
+      <div class="card-header"><span class="card-title">📅 7-Day Meal Plan</span></div>
       <div class="card-body">
-        <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:12px">
-          <button class="btn primary" id="meal-lang-gr-7day" onclick="setMealLanguage('GR')">GR</button>
-          <button class="btn" id="meal-lang-en-7day" onclick="setMealLanguage('EN')">EN</button>
-        </div>
         <div id="sevenday-body"></div>
       </div>
     </div>
@@ -1309,6 +1306,7 @@ const S = {
   exMeta:null, lastDairyType:'Moderate-fat', lastMeatType:'Lean', weightSuggestionLocked:false, bcManual:{fatmass:false,ffm:false,muscle:false},
   bc:{bf:null,water:null,fatmass:null,ffm:null,muscle:null,metage:null,visceral:null},
   tracking:[],intake:{},notes:{},labValues:{},foodResults:[],recipes:[],recipeDraft:[],editingRecipeId:null,extraFoods:[],appointments:[],mealLanguage:'GR',reportOptions:{oneDay:false,sevenDay:true,includeBlood:true},
+  sevenDayView:'day', sevenDayActiveIndex:0, aiPlanStatus:'',
   customMeals:[], customMealDraft:[], customMealContext:null,
   mealSel:{breakfast:'BRK_TOAST',lunch:'LUN_CHICKEN_RICE',dinner:'DIN_FISH_POTATO',snack1Extras:['fruit'],snack2Extras:['fruit'],sleepExtras:['fruit']}
 };
@@ -4596,6 +4594,465 @@ function toggleWeekPlanExtra(dayIndex, extrasKey, extraValue, checked){
   buildSevenDay();
 }
 
+const SEVEN_DAY_SLOTS=[
+  {key:'brk', ai:'breakfast', labelGR:'Πρωινό', labelEN:'Breakfast', icon:'🌅'},
+  {key:'snk1', ai:'snack1', labelGR:'Σνακ 1', labelEN:'Snack 1', icon:'🍎'},
+  {key:'lun', ai:'lunch', labelGR:'Μεσημεριανό', labelEN:'Lunch', icon:'🍽️'},
+  {key:'snk2', ai:'snack2', labelGR:'Σνακ 2', labelEN:'Snack 2', icon:'🍊'},
+  {key:'din', ai:'dinner', labelGR:'Βραδινό', labelEN:'Dinner', icon:'🌙'},
+  {key:'sleep', ai:'before_sleep', labelGR:'Πριν τον ύπνο', labelEN:'Before sleep', icon:'😴'},
+];
+
+function ensureWeekPlans(){
+  if(!S.weekPlans) S.weekPlans = WEEK_PLANS.map(p=>({...p}));
+  S.weekPlans.forEach(p=>{
+    if(!p.snk1Extras) p.snk1Extras=[];
+    if(!p.snk2Extras) p.snk2Extras=[];
+    if(!p.sleepExtras) p.sleepExtras=[];
+  });
+}
+
+function aiMealForSlot(dayPlan, slotKey){
+  const slot=SEVEN_DAY_SLOTS.find(s=>s.key===slotKey);
+  return slot && dayPlan?.aiMeals ? dayPlan.aiMeals[slot.ai] : null;
+}
+
+function aiMealText(meal, lang='GR'){
+  if(!meal) return '';
+  if(lang==='EN') return meal.description_en || meal.description_gr || meal.description || meal.name || '';
+  return meal.description_gr || meal.description || meal.description_en || meal.name || '';
+}
+
+function aiMealName(meal, lang='GR'){
+  if(!meal) return '';
+  return meal.name || (lang==='EN' ? meal.description_en : meal.description_gr) || meal.description || '';
+}
+
+function slotExtraKey(slotKey){
+  return slotKey==='snk1' ? 'snk1Extras' : slotKey==='snk2' ? 'snk2Extras' : slotKey==='sleep' ? 'sleepExtras' : null;
+}
+
+function fallbackSlotData(dayPlan, dt, slotKey, lang, dayIndex){
+  if(slotKey==='brk') return {name:mealOptionLabel(dayPlan.brk, lang), text:mealText(dayPlan.brk,null,lang)+renderExtraFoodsForSlot('brk', dayIndex), kcal:dt.brkKcal};
+  if(slotKey==='snk1') return {name:lang==='EN'?'Snack 1':'Σνακ 1', text:dt.snk1Text+renderExtraFoodsForSlot('snk1', dayIndex), kcal:dt.snk1Kcal};
+  if(slotKey==='lun') return {name:mealOptionLabel(dayPlan.lun, lang), text:mealText(dayPlan.lun,dt.portions.lunch,lang)+renderExtraFoodsForSlot('lun', dayIndex), kcal:dt.lunKcal};
+  if(slotKey==='snk2') return {name:lang==='EN'?'Snack 2':'Σνακ 2', text:dt.snk2Text+renderExtraFoodsForSlot('snk2', dayIndex), kcal:dt.snk2Kcal};
+  if(slotKey==='din') return {name:mealOptionLabel(dayPlan.din, lang), text:mealText(dayPlan.din,dt.portions.dinner,lang)+renderExtraFoodsForSlot('din', dayIndex), kcal:dt.dinKcal};
+  return {name:lang==='EN'?'Before sleep':'Πριν τον ύπνο', text:dt.slpText+renderExtraFoodsForSlot('sleep', dayIndex), kcal:dt.slpKcal};
+}
+
+function mealOptionLabel(key, lang='GR'){
+  const all=[...BREAKFAST_OPTIONS,...LUNCH_OPTIONS,...DINNER_OPTIONS];
+  const found=all.find(o=>o.v===key);
+  if(!found) return isCustomMealKey(key) ? customMealText(key, lang).split('–')[0].trim() : '';
+  return found.l.replace(/\s*[🌱🥚]+/g,'');
+}
+
+function getSevenDaySlotData(dayPlan, dt, slotKey, lang, dayIndex){
+  const ai=aiMealForSlot(dayPlan, slotKey);
+  if(ai){
+    return {name:aiMealName(ai, lang), text:aiMealText(ai, lang)+renderExtraFoodsForSlot(slotKey, dayIndex), kcal:Math.round(Number(ai.kcal||0)), source:'ai'};
+  }
+  return {...fallbackSlotData(dayPlan, dt, slotKey, lang, dayIndex), source:'engine'};
+}
+
+function reportSevenDaySlotText(dayPlan, dt, slotKey, lang, dayIndex, extraOpts){
+  const ai=aiMealForSlot(dayPlan, slotKey);
+  if(ai) return aiMealText(ai, lang)+renderExtraFoodsForSlot(slotKey, dayIndex, extraOpts);
+  if(slotKey==='brk') return mealText(dayPlan.brk,null,lang)+renderExtraFoodsForSlot('brk', dayIndex, extraOpts);
+  if(slotKey==='snk1') return dt.snk1Text+renderExtraFoodsForSlot('snk1', dayIndex, extraOpts);
+  if(slotKey==='lun') return mealText(dayPlan.lun,dt.portions.lunch,lang)+renderExtraFoodsForSlot('lun', dayIndex, extraOpts);
+  if(slotKey==='snk2') return dt.snk2Text+renderExtraFoodsForSlot('snk2', dayIndex, extraOpts);
+  if(slotKey==='din') return mealText(dayPlan.din,dt.portions.dinner,lang)+renderExtraFoodsForSlot('din', dayIndex, extraOpts);
+  return dt.slpText+renderExtraFoodsForSlot('sleep', dayIndex, extraOpts);
+}
+
+function calcDayTotalsForPlanDisplay(dayPlan, lang='GR', dayIndex=0){
+  if(dayPlan?.aiMeals){
+    const slotKcal=Object.fromEntries(SEVEN_DAY_SLOTS.map(s=>[s.key, Math.round(Number(dayPlan.aiMeals?.[s.ai]?.kcal||0)) + extraKcal(s.key, dayIndex)]));
+    const totalKcal=SEVEN_DAY_SLOTS.reduce((sum,s)=>sum+slotKcal[s.key],0);
+    const target=Math.round(S.goalKcal||0);
+    return {
+      brkKcal:slotKcal.brk, snk1Kcal:slotKcal.snk1, lunKcal:slotKcal.lun,
+      snk2Kcal:slotKcal.snk2, dinKcal:slotKcal.din, slpKcal:slotKcal.sleep,
+      totalKcal, target, gap:totalKcal-target, portions:{lunch:{},dinner:{}},
+      snk1Text:aiMealText(dayPlan.aiMeals.snack1, lang), snk2Text:aiMealText(dayPlan.aiMeals.snack2, lang), slpText:aiMealText(dayPlan.aiMeals.before_sleep, lang),
+      exchangeTotalKcal:exchangeSystemTotalKcal(S.ex||{}), exchangeGap:totalKcal-exchangeSystemTotalKcal(S.ex||{}), warnings:[]
+    };
+  }
+  return calcDayTotalsForPlan(dayPlan, lang, dayIndex);
+}
+
+function buildSevenDay(){
+  updateMealLanguageButtons();
+  ensureWeekPlans();
+  const lang=S.mealLanguage||'GR';
+  const active=Math.min(Math.max(Number(S.sevenDayActiveIndex||0),0),6);
+  S.sevenDayActiveIndex=active;
+  const dayPlan=S.weekPlans[active];
+  const dt=calcDayTotalsForPlanDisplay(dayPlan, lang, active);
+  const dayLabel=weekDayLabel(dayPlan, active, lang);
+  const isWeek=S.sevenDayView==='week';
+  const statusOk=Math.abs(dt.gap)<=100;
+  const statusColor=statusOk?'var(--teal-600)':Math.abs(dt.gap)<=200?'var(--warn)':'var(--err)';
+  const dayTabs=S.weekPlans.map((p,i)=>{
+    const activeTab=i===active;
+    return `<button class="btn ${activeTab?'primary':''}" style="padding:7px 10px;font-size:12px;min-width:58px" onclick="setSevenDayActive(${i})">${safeHtml(weekDayLabel(p,i,lang).slice(0,3))}</button>`;
+  }).join('');
+  let html=`<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:12px">
+    <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+      <button class="btn primary" onclick="generateAiSevenDayPlan()">✨ Generate AI Plan</button>
+      <button class="btn" onclick="setSevenDayView('${isWeek?'day':'week'}')">${isWeek?(lang==='EN'?'Day view':'Προβολή ημέρας'):(lang==='EN'?'Week view':'Προβολή εβδομάδας')}</button>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn primary" id="meal-lang-gr-7day" onclick="setMealLanguage('GR')">GR</button>
+      <button class="btn" id="meal-lang-en-7day" onclick="setMealLanguage('EN')">EN</button>
+    </div>
+  </div>
+  <div style="padding:10px 12px;border:1px solid var(--teal-100);background:var(--teal-50);border-radius:8px;margin-bottom:12px;color:var(--teal-800);font-size:13px;font-weight:700">✨ AI-generated plan — clinical review required before sharing with client.</div>
+  ${S.aiPlanStatus?`<div style="padding:9px 12px;border:1px solid var(--border);background:var(--bg-page);border-radius:8px;margin-bottom:12px;color:var(--text-secondary);font-size:13px">${safeHtml(S.aiPlanStatus)}</div>`:''}
+  <div style="display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:10px">
+    <button class="btn" onclick="shiftSevenDay(-1)">←</button>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center">${dayTabs}</div>
+    <button class="btn" onclick="shiftSevenDay(1)">→</button>
+  </div>`;
+
+  if(isWeek){
+    html+=renderSevenDayWeekSummary(lang);
+  } else {
+    html+=`<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin:12px 0">
+      <div>
+        <div style="font-size:22px;font-weight:900;color:var(--text-primary)">${safeHtml(dayLabel)}</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px">${dayPlan.aiMeals?'AI / manual flexible plan':'Exchange-engine fallback plan'}</div>
+      </div>
+      <div style="text-align:right;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-page)">
+        <div style="font-size:22px;font-weight:900;color:${statusColor}">${dt.totalKcal} kcal ${statusOk?'✅':'⚠️'}</div>
+        <div style="font-size:12px;color:var(--text-muted)">Target ${dt.target||0} · ${dt.gap>0?'+':''}${dt.gap||0}</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px">
+      ${SEVEN_DAY_SLOTS.map(slot=>renderSevenDayMealCard(dayPlan, dt, slot, lang, active)).join('')}
+    </div>
+    <div style="margin-top:14px;padding:12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-page)">
+      <div style="font-weight:900;color:${statusColor};font-size:16px">${lang==='EN'?'Daily total':'Σύνολο ημέρας'}: ${dt.totalKcal} kcal</div>
+      <div style="font-size:13px;color:var(--text-secondary);margin-top:4px">${lang==='EN'?'Target':'Στόχος'}: ${dt.target||0} kcal · ${lang==='EN'?'Difference':'Διαφορά'}: ${dt.gap>0?'+':''}${dt.gap||0} kcal</div>
+    </div>`;
+  }
+  setEl('sevenday-body', html);
+}
+
+function renderSevenDayMealCard(dayPlan, dt, slot, lang, dayIndex){
+  const data=getSevenDaySlotData(dayPlan, dt, slot.key, lang, dayIndex);
+  const extraKey=slotExtraKey(slot.key);
+  const filteredBrk=filteredMealOptions(BREAKFAST_OPTIONS, v('p-diet')||'Omnivore');
+  const filteredLun=filteredMealOptions(LUNCH_OPTIONS, v('p-diet')||'Omnivore');
+  const filteredDin=filteredMealOptions(DINNER_OPTIONS, v('p-diet')||'Omnivore');
+  const selectHtml=slot.key==='brk' ? `<select style="width:100%;margin-top:8px" onchange="handleWeekMealSelect(${dayIndex},'brk',this)">${mealOptionsHtml(filteredBrk,dayPlan.brk)}</select>` :
+    slot.key==='lun' ? `<select style="width:100%;margin-top:8px" onchange="handleWeekMealSelect(${dayIndex},'lun',this)">${mealOptionsHtml(filteredLun,dayPlan.lun)}</select>` :
+    slot.key==='din' ? `<select style="width:100%;margin-top:8px" onchange="handleWeekMealSelect(${dayIndex},'din',this)">${mealOptionsHtml(filteredDin,dayPlan.din)}</select>` : '';
+  const extrasHtml=extraKey && !dayPlan.aiMeals ? `<div class="snack-extras-group" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">${SNACK_EXTRAS.map(e=>`<label title="${safeHtml(e.tip||'')}" style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer"><input type="checkbox" ${dayPlan[extraKey]?.includes(e.v)?'checked':''} onchange="toggleWeekPlanExtra(${dayIndex},'${extraKey}','${e.v}',this.checked)"> ${snackExtraLabel(e, lang)}</label>`).join('')}</div>` : '';
+  return `<div style="border:1px solid var(--border);border-radius:8px;background:var(--bg-surface);padding:12px;display:flex;flex-direction:column;gap:7px">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
+      <div>
+        <div style="font-size:12px;font-weight:900;color:var(--text-muted);text-transform:uppercase">${slot.icon} ${lang==='EN'?slot.labelEN:slot.labelGR}</div>
+        <div style="font-size:15px;font-weight:900;color:var(--text-primary);margin-top:3px">${safeHtml(data.name||'Meal')}</div>
+      </div>
+      <button class="btn" title="Edit meal" style="padding:6px 8px" onclick="openFlexibleMealEditor(${dayIndex},'${slot.key}')">✎</button>
+    </div>
+    <div style="font-size:13px;line-height:1.55;color:var(--text-secondary)">${data.text||'—'}</div>
+    <div style="font-size:12px;font-weight:900;color:var(--teal-600)">${data.kcal||0} kcal</div>
+    ${selectHtml}
+    ${extrasHtml}
+  </div>`;
+}
+
+function renderSevenDayWeekSummary(lang='GR'){
+  return `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">
+    <thead><tr style="background:var(--teal-600);color:#fff">
+      <th style="padding:9px;text-align:left">${lang==='EN'?'Day':'Ημέρα'}</th>
+      <th style="padding:9px;text-align:left">${lang==='EN'?'Breakfast':'Πρωινό'}</th>
+      <th style="padding:9px;text-align:left">${lang==='EN'?'Lunch':'Μεσημεριανό'}</th>
+      <th style="padding:9px;text-align:left">${lang==='EN'?'Dinner':'Βραδινό'}</th>
+      <th style="padding:9px;text-align:right">kcal</th>
+    </tr></thead><tbody>
+    ${S.weekPlans.map((p,i)=>{
+      const dt=calcDayTotalsForPlanDisplay(p, lang, i);
+      const brk=getSevenDaySlotData(p, dt, 'brk', lang, i);
+      const lun=getSevenDaySlotData(p, dt, 'lun', lang, i);
+      const din=getSevenDaySlotData(p, dt, 'din', lang, i);
+      return `<tr style="border-bottom:1px solid var(--border);cursor:pointer" onclick="setSevenDayActive(${i});setSevenDayView('day')">
+        <td style="padding:9px;font-weight:900">${safeHtml(weekDayLabel(p,i,lang))}</td>
+        <td style="padding:9px">${safeHtml(brk.name||'—')}</td>
+        <td style="padding:9px">${safeHtml(lun.name||'—')}</td>
+        <td style="padding:9px">${safeHtml(din.name||'—')}</td>
+        <td style="padding:9px;text-align:right;font-weight:900;color:${Math.abs(dt.gap)<=100?'var(--teal-600)':'var(--warn)'}">${dt.totalKcal}</td>
+      </tr>`;
+    }).join('')}</tbody></table></div>`;
+}
+
+function setSevenDayActive(index){ S.sevenDayActiveIndex=Number(index)||0; buildSevenDay(); }
+function shiftSevenDay(delta){ S.sevenDayActiveIndex=(Number(S.sevenDayActiveIndex||0)+Number(delta)+7)%7; buildSevenDay(); }
+function setSevenDayView(view){ S.sevenDayView=view==='week'?'week':'day'; buildSevenDay(); }
+
+window.setSevenDayActive=setSevenDayActive;
+window.shiftSevenDay=shiftSevenDay;
+window.setSevenDayView=setSevenDayView;
+
+function collectAiMealPlanPayload(){
+  const selectedCondition=getSelectedPrimaryCondition();
+  return {
+    client:{
+      age:S.age||v('p-age'), sex:S.sex||v('p-sex'), weight:S.weight||v('p-weight'), height:S.height||v('p-height'),
+      goal:v('p-goal'), condition:selectedCondition, diet_type:v('p-diet')||'Omnivore'
+    },
+    macros:{carb_percent:Number(v('m-carb')||0), protein_percent:Number(v('m-protein')||0), fat_percent:Math.max(0,100-Number(v('m-carb')||0)-Number(v('m-protein')||0))},
+    exchanges:{...S.ex},
+    kcal_target:Math.round(S.goalKcal||exchangeSystemTotalKcal(S.ex||{})||0),
+    intake:{
+      allergies:v('n-allergies'), dislikes:v('n-dislikes'), intolerances:v('i-intolerances'),
+      digestion:v('i-digestion'), diagnoses:v('n-diagnoses'), notes:v('n-clinician-notes')
+    },
+    exchange_values:{
+      fruit:60, vegetable:28, dairy:80, starch:81, protein:46, fat:45
+    },
+    model:'claude-sonnet-4-6'
+  };
+}
+
+function aiMealPlanPrompt(payload){
+  return `You are a clinical dietitian assistant specialising in the ADA Exchange System and Greek/Cypriot cuisine.
+Generate a clinically accurate 7-day meal plan.
+
+STRICT RULES:
+- Use ONLY Greek/Cypriot Mediterranean ingredients
+- Each day must hit exactly ${payload.kcal_target} kcal using the ADA exchange values provided
+- No single meal combination repeats more than twice
+- Tuna/canned fish maximum 2 times per week
+- Breakfast alternates: toast days and oat days
+- For IBS: avoid legumes, limit bulgur to 1x/week
+- For Hypothyroid: include selenium sources (fish, eggs)
+- For Polyps: red meat maximum 2x/week, lean cuts only
+- For Insulin Resistance: distribute carbs evenly across all meals, no large carb loads in one meal
+- Portions must be realistic and patient-friendly
+- Potatoes described as: 1 μικρή (~80g), 1 μέτρια (~150g), or 1 μεγάλη (~200g)
+- Fish/meat portions max 150g per meal
+- Include variety: fish, chicken, eggs, lean meat
+
+ADA EXCHANGE VALUES:
+- Fruit: 60 kcal per serving
+- Vegetable: 28 kcal per serving
+- Dairy low-fat: 80 kcal per serving
+- Starch: 81 kcal per serving
+- Protein lean: 46 kcal per serving
+- Fat: 45 kcal per serving
+
+CLIENT EXCHANGE SERVINGS FOR THE DAY:
+Fruit: ${payload.exchanges.fruit}
+Vegetable: ${payload.exchanges.veg}
+Dairy: ${payload.exchanges.dairy}
+Starch: ${payload.exchanges.starch}
+Protein: ${payload.exchanges.protein}
+Fat: ${payload.exchanges.fat}
+Target kcal: ${payload.kcal_target}
+
+Return ONLY valid JSON with monday through sunday, each containing breakfast, snack1, lunch, snack2, dinner, before_sleep, total_kcal. Each meal must include name, description_gr, description_en, kcal.`;
+}
+
+async function generateAiSevenDayPlan(){
+  ensureWeekPlans();
+  S.aiPlanStatus='✨ Generating your personalised meal plan...';
+  buildSevenDay();
+  const payload=collectAiMealPlanPayload();
+  try{
+    if(!currentUser) throw new Error('Please sign in before using AI meal generation.');
+    const response=await withTimeout(
+      supabaseClient.functions.invoke('generate-ai-plan', {body:{payload, prompt:aiMealPlanPrompt(payload), model:'claude-sonnet-4-6'}}),
+      45000,
+      'AI meal generation'
+    );
+    if(response.error) throw response.error;
+    const plan=response.data?.plan || response.data?.meal_plan || response.data;
+    applyAiSevenDayPlan(plan);
+    S.aiPlanStatus='✨ AI plan generated — please review each day and adjust as needed before sharing with client.';
+  }catch(err){
+    console.error('[NutriFlow AI plan]', err);
+    S.aiPlanStatus=`AI generation is unavailable: ${err.message || err}. You can still edit each meal manually with the pencil button.`;
+  }
+  buildSevenDay();
+}
+window.generateAiSevenDayPlan=generateAiSevenDayPlan;
+
+function applyAiSevenDayPlan(plan){
+  if(typeof plan==='string') plan=JSON.parse(plan);
+  if(!plan || typeof plan!=='object') throw new Error('AI response did not contain a meal plan.');
+  const keys=['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+  ensureWeekPlans();
+  S.weekPlans=S.weekPlans.map((existing,i)=>{
+    const src=plan[keys[i]] || plan[WEEK_DAYS_EN[i]] || plan[WEEK_DAYS_GR[i]] || plan[i];
+    if(!src) return existing;
+    const aiMeals={};
+    SEVEN_DAY_SLOTS.forEach(slot=>{
+      const meal=src[slot.ai] || src[slot.key];
+      if(meal) aiMeals[slot.ai]={
+        name:String(meal.name||'').trim(),
+        description_gr:String(meal.description_gr||meal.description||meal.text||'').trim(),
+        description_en:String(meal.description_en||meal.description||meal.text||'').trim(),
+        kcal:Math.round(Number(meal.kcal||0))
+      };
+    });
+    return {...existing, aiMeals, source:'ai'};
+  });
+}
+
+let flexibleMealEditContext=null;
+let flexibleMealSearchResults=[];
+
+function openFlexibleMealEditor(dayIndex, slotKey){
+  ensureWeekPlans();
+  const lang=S.mealLanguage||'GR';
+  const dayPlan=S.weekPlans[dayIndex];
+  const dt=calcDayTotalsForPlanDisplay(dayPlan, lang, dayIndex);
+  const slot=SEVEN_DAY_SLOTS.find(s=>s.key===slotKey);
+  const current=getSevenDaySlotData(dayPlan, dt, slotKey, lang, dayIndex);
+  flexibleMealEditContext={dayIndex, slotKey};
+  closeFlexibleMealEditor();
+  const savedOptions=(S.customMeals||[]).map(m=>`<option value="${safeHtml(m.id)}">${safeHtml(m.name||'Custom meal')}</option>`).join('');
+  const overlay=document.createElement('div');
+  overlay.id='flex-meal-editor';
+  overlay.className='no-print';
+  overlay.style.cssText='position:fixed;inset:0;z-index:1250;background:rgba(0,0,0,.62);display:flex;align-items:center;justify-content:center;padding:18px';
+  overlay.onclick=e=>{ if(e.target===overlay) closeFlexibleMealEditor(); };
+  overlay.innerHTML=`<div style="width:min(820px,96vw);max-height:90vh;overflow:auto;background:var(--bg-surface);color:var(--text-primary);border:1px solid var(--border);border-radius:10px;box-shadow:0 18px 70px rgba(0,0,0,.35)">
+    <div style="position:sticky;top:0;background:var(--teal-600);color:#fff;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;z-index:1">
+      <div><div style="font-size:18px;font-weight:900">${safeHtml(weekDayLabel(dayPlan,dayIndex,lang))} — ${safeHtml(lang==='EN'?slot.labelEN:slot.labelGR)}</div><div style="font-size:12px;opacity:.9">Edit meal text and kcal; daily total updates immediately.</div></div>
+      <button class="btn" style="background:#fff!important;color:#0F6E56!important;font-size:18px;font-weight:900" onclick="closeFlexibleMealEditor()">✕</button>
+    </div>
+    <div style="padding:16px;display:grid;gap:12px">
+      <div class="form-grid two">
+        <div class="form-field"><label>Meal name</label><input id="flex-meal-name" type="text" value="${safeHtml(current.name||'')}"></div>
+        <div class="form-field"><label>kcal</label><input id="flex-meal-kcal" type="number" min="0" step="1" value="${Math.round(current.kcal||0)}"></div>
+      </div>
+      <div class="form-field"><label>Greek description</label><textarea id="flex-meal-desc-gr" rows="3">${safeHtml(current.text||'')}</textarea></div>
+      <div class="form-field"><label>English description</label><textarea id="flex-meal-desc-en" rows="3">${safeHtml(current.text||'')}</textarea></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:end">
+        <div class="form-field" style="min-width:240px;flex:1"><label>Saved custom meals</label><select id="flex-saved-meal"><option value="">Select saved meal...</option>${savedOptions}</select></div>
+        <button class="btn" onclick="useSavedCustomMealInFlexibleEditor()">Use saved meal</button>
+        <button class="btn" onclick="regenerateFlexibleMealSlot()">Regenerate this meal</button>
+      </div>
+      <div class="section-label">USDA ingredient search</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <input id="flex-usda-search" type="text" placeholder="e.g. chicken breast, potato, oats" style="flex:1;min-width:220px" onkeydown="if(event.key==='Enter')searchFlexibleMealFoods()">
+        <button class="btn" onclick="searchFlexibleMealFoods()">Search USDA</button>
+      </div>
+      <div id="flex-usda-status" class="field-note"></div>
+      <div id="flex-usda-results"></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn" onclick="closeFlexibleMealEditor()">Cancel</button>
+        <button class="btn primary" onclick="saveFlexibleMealEdit()">Save meal</button>
+      </div>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+}
+window.openFlexibleMealEditor=openFlexibleMealEditor;
+
+function closeFlexibleMealEditor(){ document.getElementById('flex-meal-editor')?.remove(); }
+window.closeFlexibleMealEditor=closeFlexibleMealEditor;
+
+function saveFlexibleMealEdit(){
+  const ctx=flexibleMealEditContext; if(!ctx) return;
+  ensureWeekPlans();
+  const slot=SEVEN_DAY_SLOTS.find(s=>s.key===ctx.slotKey);
+  const day=S.weekPlans[ctx.dayIndex];
+  if(!day.aiMeals) day.aiMeals={};
+  day.aiMeals[slot.ai]={
+    name:v('flex-meal-name')||'Custom meal',
+    description_gr:v('flex-meal-desc-gr')||v('flex-meal-desc-en')||'',
+    description_en:v('flex-meal-desc-en')||v('flex-meal-desc-gr')||'',
+    kcal:Math.round(Number(v('flex-meal-kcal')||0))
+  };
+  day.source='manual';
+  closeFlexibleMealEditor();
+  buildSevenDay();
+  if(document.getElementById('page-report')?.classList.contains('active')) buildReport();
+}
+window.saveFlexibleMealEdit=saveFlexibleMealEdit;
+
+function useSavedCustomMealInFlexibleEditor(){
+  const id=v('flex-saved-meal');
+  const meal=(S.customMeals||[]).find(m=>String(m.id)===String(id));
+  if(!meal) return;
+  const kcal=Math.round(Number(meal.perServing?.kcal || meal.total?.kcal || meal.kcal || 0));
+  const desc=(meal.ingredients||[]).map(i=>`${i.name} ${i.grams||''}g`.trim()).join(' + ') || meal.name;
+  const nameEl=document.getElementById('flex-meal-name'), kcalEl=document.getElementById('flex-meal-kcal'), gr=document.getElementById('flex-meal-desc-gr'), en=document.getElementById('flex-meal-desc-en');
+  if(nameEl) nameEl.value=meal.name||'Custom meal';
+  if(kcalEl) kcalEl.value=kcal;
+  if(gr) gr.value=desc;
+  if(en) en.value=desc;
+}
+window.useSavedCustomMealInFlexibleEditor=useSavedCustomMealInFlexibleEditor;
+
+async function searchFlexibleMealFoods(){
+  const query=v('flex-usda-search');
+  if(!query){ setEl('flex-usda-status','Enter an ingredient name.'); return; }
+  setEl('flex-usda-status','Searching USDA FoodData Central...');
+  setEl('flex-usda-results','');
+  try{
+    flexibleMealSearchResults=await fetchUSDAFoods(query);
+    renderFlexibleMealFoodResults();
+    setEl('flex-usda-status', flexibleMealSearchResults.length ? `${flexibleMealSearchResults.length} foods found. Use one to replace this meal draft.` : 'No foods found.');
+  }catch(err){
+    flexibleMealSearchResults=[];
+    setEl('flex-usda-status',`USDA search failed: ${err.message}`);
+  }
+}
+window.searchFlexibleMealFoods=searchFlexibleMealFoods;
+
+function renderFlexibleMealFoodResults(){
+  const el=document.getElementById('flex-usda-results'); if(!el) return;
+  el.innerHTML=`<table><thead><tr><th>Food</th><th>kcal/100g</th><th>Grams</th><th></th></tr></thead><tbody>${flexibleMealSearchResults.slice(0,8).map((p,i)=>`<tr>
+    <td><strong>${safeHtml(p.name)}</strong><div style="font-size:11px;color:var(--text-muted)">${safeHtml(p.brand||'USDA')}</div></td>
+    <td>${formatFoodNumber(p.kcal100,'')}</td>
+    <td><input id="flex-food-g-${i}" type="number" min="1" step="1" value="100" style="width:80px"></td>
+    <td><button class="btn" onclick="useFlexibleMealFood(${i})">Use</button></td>
+  </tr>`).join('')}</tbody></table>`;
+}
+
+function useFlexibleMealFood(index){
+  const p=flexibleMealSearchResults[index]; if(!p) return;
+  const grams=Number(v(`flex-food-g-${index}`)||100);
+  const kcal=Math.round((foodNumber(p.kcal100)||0)*grams/100);
+  const text=`${p.name} (${grams}g)`;
+  const nameEl=document.getElementById('flex-meal-name'), kcalEl=document.getElementById('flex-meal-kcal'), gr=document.getElementById('flex-meal-desc-gr'), en=document.getElementById('flex-meal-desc-en');
+  if(nameEl) nameEl.value=p.name;
+  if(kcalEl) kcalEl.value=kcal;
+  if(gr) gr.value=text;
+  if(en) en.value=text;
+}
+window.useFlexibleMealFood=useFlexibleMealFood;
+
+async function regenerateFlexibleMealSlot(){
+  const ctx=flexibleMealEditContext;
+  if(!ctx){ return; }
+  setEl('flex-usda-status','Regenerating this meal with AI...');
+  try{
+    const payload={...collectAiMealPlanPayload(), day:WEEK_DAYS_EN[ctx.dayIndex], slot:SEVEN_DAY_SLOTS.find(s=>s.key===ctx.slotKey)?.ai};
+    const response=await withTimeout(supabaseClient.functions.invoke('generate-ai-plan', {body:{payload, prompt:aiMealPlanPrompt(payload), mode:'single_meal', model:'claude-sonnet-4-6'}}), 30000, 'AI meal regeneration');
+    if(response.error) throw response.error;
+    const meal=response.data?.meal || response.data;
+    if(!meal) throw new Error('No meal returned.');
+    const nameEl=document.getElementById('flex-meal-name'), kcalEl=document.getElementById('flex-meal-kcal'), gr=document.getElementById('flex-meal-desc-gr'), en=document.getElementById('flex-meal-desc-en');
+    if(nameEl) nameEl.value=meal.name||'AI meal';
+    if(kcalEl) kcalEl.value=Math.round(Number(meal.kcal||0));
+    if(gr) gr.value=meal.description_gr||meal.description||'';
+    if(en) en.value=meal.description_en||meal.description||'';
+    setEl('flex-usda-status','AI meal regenerated. Review and save if suitable.');
+  }catch(err){
+    setEl('flex-usda-status',`AI regeneration unavailable: ${err.message || err}. You can edit manually.`);
+  }
+}
+window.regenerateFlexibleMealSlot=regenerateFlexibleMealSlot;
+
 function reportModeFromOptions(){
   const one=S.reportOptions?.oneDay!==false;
   const seven=S.reportOptions?.sevenDay!==false;
@@ -4741,17 +5198,17 @@ function buildReport(){
       </tr></thead>
       <tbody>
       ${(S.weekPlans||WEEK_PLANS).map((p,i)=>{
-        const dt=calcDayTotalsForPlan(p, lang, i);
+        const dt=calcDayTotalsForPlanDisplay(p, lang, i);
         const ok=Math.abs(dt.gap)<=100;
         const dayLabel=weekDayLabel(p, i, lang);
         return `<tr style="background:${i%2===0?'var(--bg-surface)':'var(--teal-50)'};border-bottom:1px solid var(--border)">
           <td style="padding:4px;font-weight:700;word-wrap:break-word">${dayLabel}</td>
-          <td style="padding:4px;word-wrap:break-word">${mealText(p.brk,null,lang)}${renderExtraFoodsForSlot('brk', i, reportExtraOpts)}</td>
-          <td style="padding:4px;word-wrap:break-word">${dt.snk1Text}${renderExtraFoodsForSlot('snk1', i, reportExtraOpts)}</td>
-          <td style="padding:4px;word-wrap:break-word">${mealText(p.lun,dt.portions.lunch,lang)}${renderExtraFoodsForSlot('lun', i, reportExtraOpts)}</td>
-          <td style="padding:4px;word-wrap:break-word">${dt.snk2Text}${renderExtraFoodsForSlot('snk2', i, reportExtraOpts)}</td>
-          <td style="padding:4px;word-wrap:break-word">${mealText(p.din,dt.portions.dinner,lang)}${renderExtraFoodsForSlot('din', i, reportExtraOpts)}</td>
-          <td style="padding:4px;word-wrap:break-word">${dt.slpText}${renderExtraFoodsForSlot('sleep', i, reportExtraOpts)}</td>
+          <td style="padding:4px;word-wrap:break-word">${reportSevenDaySlotText(p,dt,'brk',lang,i,reportExtraOpts)}</td>
+          <td style="padding:4px;word-wrap:break-word">${reportSevenDaySlotText(p,dt,'snk1',lang,i,reportExtraOpts)}</td>
+          <td style="padding:4px;word-wrap:break-word">${reportSevenDaySlotText(p,dt,'lun',lang,i,reportExtraOpts)}</td>
+          <td style="padding:4px;word-wrap:break-word">${reportSevenDaySlotText(p,dt,'snk2',lang,i,reportExtraOpts)}</td>
+          <td style="padding:4px;word-wrap:break-word">${reportSevenDaySlotText(p,dt,'din',lang,i,reportExtraOpts)}</td>
+          <td style="padding:4px;word-wrap:break-word">${reportSevenDaySlotText(p,dt,'sleep',lang,i,reportExtraOpts)}</td>
           <td style="padding:4px;text-align:right;font-weight:700;white-space:nowrap;color:${ok?'#0f6e56':'#b45309'}">${dt.totalKcal}</td>
         </tr>`;
       }).join('')}
@@ -6257,6 +6714,7 @@ return {
     fields, conditions, primaryCondition,
     ex:S.ex, exAuto:S.exAuto, exMeta:S.exMeta, tracking:S.tracking, mealSel:S.mealSel,
     weekPlans:S.weekPlans, customMeals:S.customMeals, mealLanguage:S.mealLanguage, reportOptions:S.reportOptions,
+    sevenDayView:S.sevenDayView, sevenDayActiveIndex:S.sevenDayActiveIndex, aiPlanStatus:S.aiPlanStatus,
     weightSuggestionLocked:S.weightSuggestionLocked, calAdjAutoValue:S.calAdjAutoValue, bcManual:S.bcManual,
     intake:S.intake, notes:S.notes, labValues:S.labValues, extraFoods:S.extraFoods,
     savedAt:new Date().toISOString()
@@ -6298,6 +6756,9 @@ function applyState(state){
   });
   if(state.weekPlans) S.weekPlans=state.weekPlans;
   if(state.customMeals) S.customMeals=state.customMeals;
+  if(state.sevenDayView) S.sevenDayView=state.sevenDayView;
+  if(state.sevenDayActiveIndex!==undefined) S.sevenDayActiveIndex=Number(state.sevenDayActiveIndex)||0;
+  if(state.aiPlanStatus!==undefined) S.aiPlanStatus=state.aiPlanStatus;
   S.extraFoods=Array.isArray(state.extraFoods)?state.extraFoods:[];
   if(state.mealLanguage) S.mealLanguage=state.mealLanguage;
   if(state.reportOptions){
