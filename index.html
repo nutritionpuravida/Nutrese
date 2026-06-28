@@ -4591,6 +4591,9 @@ window.closeSevenDayModal=closeSevenDayModal;
 function updateWeekPlan(dayIndex, mealKey, value){
   if(!S.weekPlans) S.weekPlans = WEEK_PLANS.map(p=>({...p}));
   S.weekPlans[dayIndex][mealKey]=value;
+  S.weekPlans[dayIndex].manualMeals={...(S.weekPlans[dayIndex].manualMeals||{}), [mealKey]:true};
+  delete S.weekPlans[dayIndex].aiMeals;
+  S.weekPlans[dayIndex].source='engine';
   buildSevenDay();
 }
 
@@ -4731,6 +4734,7 @@ function strictSnackDescription(exch, extras, lang='GR'){
 }
 
 function strictMainDescription(mealKey, exch, lang='GR'){
+  if(isCustomMealKey(mealKey)) return customMealText(mealKey, lang);
   const portions={starch:Number(exch.starch||0), prot:Number(exch.protein||0), fat:Number(exch.fat||0), veg:Number(exch.veg||0)};
   const proteinGr=portions.prot===4 ? 140 : portions.prot*30;
   const starchGR=portions.starch>0 ? (mealKey.includes('SOUVLAKI') ? '1 μικρή κυπριακή πίτα' : mealKey.includes('POTATO') ? formatPotatoPortion(portions.starch,'GR') : `${formatCups(portions.starch)} φλ. ${mealKey.includes('PASTA')?'ζυμαρικά':mealKey.includes('BIFTEKI')?'πλιγούρι':'ρύζι'}`) : '';
@@ -4785,9 +4789,10 @@ function ensureWeekPlans(){
   S.weekPlans.forEach((p,index)=>{
     const strict=STRICT_WEEK_MEALS[index];
     if(strict){
-      p.brk=strict.brk;
-      p.lun=strict.lun;
-      p.din=strict.din;
+      p.manualMeals=p.manualMeals||{};
+      if(!p.manualMeals.brk) p.brk=strict.brk;
+      if(!p.manualMeals.lun) p.lun=strict.lun;
+      if(!p.manualMeals.din) p.din=strict.din;
     }
     p.snk1Extras=[...new Set([...(Array.isArray(p.snk1Extras)?p.snk1Extras:[]), ...(Array.isArray(p.snack1Extras)?p.snack1Extras:[])])];
     p.snk2Extras=[...new Set([...(Array.isArray(p.snk2Extras)?p.snk2Extras:[]), ...(Array.isArray(p.snack2Extras)?p.snack2Extras:[])])];
@@ -6670,6 +6675,9 @@ function applyCustomMealSelection(key){
   } else if(ctx?.type==='week'){
     if(!S.weekPlans) S.weekPlans=WEEK_PLANS.map(p=>({...p}));
     S.weekPlans[ctx.dayIndex][ctx.key]=key;
+    S.weekPlans[ctx.dayIndex].manualMeals={...(S.weekPlans[ctx.dayIndex].manualMeals||{}), [ctx.key]:true};
+    delete S.weekPlans[ctx.dayIndex].aiMeals;
+    S.weekPlans[ctx.dayIndex].source='engine';
     buildSevenDay();
   } else rebuildMealDropdownOptions();
 }
