@@ -5003,6 +5003,85 @@ function reportSevenDaySlotText(dayPlan, dt, slotKey, lang, dayIndex, extraOpts)
   return dt.slpText+renderExtraFoodsForSlot('sleep', dayIndex, extraOpts);
 }
 
+function buildWeeklyPlanSnapshot(lang=S.mealLanguage||'GR'){
+  ensureWeekPlans();
+  const weekPlans=JSON.parse(JSON.stringify(S.weekPlans||WEEK_PLANS));
+  const cleanExtraOpts={showRemove:false,hideTitle:true,showDbNote:false,reportMode:true};
+  const days=weekPlans.map((p,i)=>{
+    const dt=calcDayTotalsForPlanDisplay(p, lang, i);
+    const slots=Object.fromEntries(SEVEN_DAY_SLOTS.map(slot=>{
+      const data=getSevenDaySlotData(p, dt, slot.key, lang, i);
+      return [slot.key,{
+        label:lang==='EN'?slot.labelEN:slot.labelGR,
+        name:data.name||'',
+        description:reportSevenDaySlotText(p, dt, slot.key, lang, i, cleanExtraOpts)||data.text||'',
+        kcal:Number(data.kcal||0)
+      }];
+    }));
+    return {
+      day:weekDayLabel(p,i,lang),
+      dayIndex:i,
+      brk:p.brk, lun:p.lun, din:p.din,
+      totalKcal:dt.totalKcal,
+      target:dt.target,
+      gap:dt.gap,
+      slots
+    };
+  });
+  return {savedAt:new Date().toISOString(), language:lang, weekPlans, days};
+}
+
+function savedWeeklyPlansForReport(){
+  if(S.savedWeeklyPlan?.weekPlans?.length===7) return S.savedWeeklyPlan.weekPlans;
+  return WEEK_PLANS;
+}
+
+function setWeeklyPlanSaveStatus(message, ok=true){
+  const el=document.getElementById('weekly-plan-save-status');
+  if(el){
+    el.textContent=message;
+    el.style.color=ok?'var(--teal-700)':'var(--err)';
+    setTimeout(()=>{ if(el.textContent===message) el.textContent=''; }, 3500);
+  } else if(message) alert(message);
+}
+
+async function saveWeeklyPlan(){
+  ensureWeekPlans();
+  const name=(v('p-name')||'').trim();
+  if(!name){ alert('Please enter a client name before saving the plan.'); nav('profile'); return; }
+  let clientRef=v('p-id');
+  if(!clientRef){ clientRef='c'+Date.now(); const idEl=document.getElementById('p-id'); if(idEl) idEl.value=clientRef; }
+  S.savedWeeklyPlan=buildWeeklyPlanSnapshot(S.mealLanguage||'GR');
+  const state=captureState();
+  const localRow={id:'local_'+clientRef, client_ref:clientRef, name, data:state, updated_at:new Date().toISOString(), localOnly:true};
+  try{
+    if(currentUser){
+      const existing=await supabaseClient.from('clients').select('id,data').eq('user_id',currentUser.id).eq('client_ref',clientRef).maybeSingle();
+      if(existing.error) throw existing.error;
+      let result;
+      if(existing.data){
+        result=await supabaseClient.from('clients').update({name, data:state, updated_at:new Date().toISOString()}).eq('id',existing.data.id).select().maybeSingle();
+      } else {
+        result=await supabaseClient.from('clients').insert({user_id:currentUser.id, client_ref:clientRef, name, data:state}).select().maybeSingle();
+      }
+      if(result.error) throw result.error;
+      if(result.data) upsertLocalClient({...result.data, localOnly:false});
+    } else {
+      upsertLocalClient(localRow);
+    }
+    S_isDirty=false;
+    setWeeklyPlanSaveStatus('✅ Το πλάνο αποθηκεύτηκε');
+    if(document.getElementById('page-report')?.classList.contains('active')) buildReport();
+    await renderClientList();
+  }catch(e){
+    console.error('[NutriFlow weekly plan] save failed; using local fallback', e);
+    upsertLocalClient(localRow);
+    S_isDirty=false;
+    setWeeklyPlanSaveStatus('✅ Το πλάνο αποθηκεύτηκε τοπικά', true);
+  }
+}
+window.saveWeeklyPlan=saveWeeklyPlan;
+
 function calcDayTotalsForPlanDisplay(dayPlan, lang='GR', dayIndex=0){
   if(dayPlan?.aiMeals){
     const slotKcal=Object.fromEntries(SEVEN_DAY_SLOTS.map(s=>[s.key, Math.round(Number(dayPlan.aiMeals?.[s.ai]?.kcal||0)) + extraKcal(s.key, dayIndex)]));
@@ -5077,7 +5156,9 @@ function buildSevenDay(){
   let html=`<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:12px">
     <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
       <button class="btn primary" onclick="generateAiSevenDayPlan()">✨ Generate AI Plan</button>
+      <button class="btn primary" onclick="saveWeeklyPlan()">💾 Αποθήκευση Πλάνου</button>
       <button class="btn" onclick="setSevenDayView('${isWeek?'day':'week'}')">${isWeek?(lang==='EN'?'Day view':'Προβολή ημέρας'):(lang==='EN'?'Week view':'Προβολή εβδομάδας')}</button>
+      <span id="weekly-plan-save-status" style="font-size:13px;font-weight:800;color:var(--teal-700)"></span>
     </div>
     <div style="display:flex;gap:8px">
       <button class="btn primary" id="meal-lang-gr-7day" onclick="setMealLanguage('GR')">GR</button>
@@ -5587,7 +5668,7 @@ function buildReport(){
         <th style="padding:4px;text-align:right;white-space:nowrap">kcal</th>
       </tr></thead>
       <tbody>
-      ${(S.weekPlans||WEEK_PLANS).map((p,i)=>{
+      ${savedWeeklyPlansForReport().map((p,i)=>{
         const dt=calcDayTotalsForPlanDisplay(p, lang, i);
         const ok=Math.abs(dt.gap)<=100;
         const dayLabel=weekDayLabel(p, i, lang);
@@ -7106,7 +7187,7 @@ function captureState(){
 return {
     fields, conditions, primaryCondition,
     ex:S.ex, exAuto:S.exAuto, exMeta:S.exMeta, tracking:S.tracking, mealSel:S.mealSel,
-    weekPlans:S.weekPlans, customMeals:S.customMeals, mealLanguage:S.mealLanguage, reportOptions:S.reportOptions,
+    weekPlans:S.weekPlans, savedWeeklyPlan:S.savedWeeklyPlan, customMeals:S.customMeals, mealLanguage:S.mealLanguage, reportOptions:S.reportOptions,
     sevenDayView:S.sevenDayView, sevenDayActiveIndex:S.sevenDayActiveIndex, aiPlanStatus:S.aiPlanStatus,
     weightSuggestionLocked:S.weightSuggestionLocked, calAdjAutoValue:S.calAdjAutoValue, bcManual:S.bcManual,
     intake:S.intake, notes:S.notes, labValues:S.labValues, extraFoods:S.extraFoods,
@@ -7147,7 +7228,9 @@ function applyState(state){
       });
     }
   });
-  if(state.weekPlans) S.weekPlans=state.weekPlans;
+  S.savedWeeklyPlan=state.savedWeeklyPlan || null;
+  if(state.savedWeeklyPlan?.weekPlans) S.weekPlans=state.savedWeeklyPlan.weekPlans;
+  else if(state.weekPlans) S.weekPlans=state.weekPlans;
   if(state.customMeals) S.customMeals=state.customMeals;
   if(state.sevenDayView) S.sevenDayView=state.sevenDayView;
   if(state.sevenDayActiveIndex!==undefined) S.sevenDayActiveIndex=Number(state.sevenDayActiveIndex)||0;
@@ -7195,6 +7278,7 @@ function resetForm(){
   S.tracking=[]; S.intake={}; S.notes={}; S.labValues={}; S.extraFoods=[];
   S.mealSel={breakfast:'BRK_TOAST',lunch:'LUN_CHICKEN_RICE',dinner:'DIN_FISH_POTATO',snack1Extras:['fruit'],snack2Extras:['fruit'],sleepExtras:['fruit']};
   S.weekPlans=WEEK_PLANS.map(p=>({...p}));
+  S.savedWeeklyPlan=null;
   S.mealLanguage='GR';
   S.reportOptions={oneDay:false,sevenDay:true,includeBlood:true};
   syncReportModeControls();
