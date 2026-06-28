@@ -2726,6 +2726,12 @@ function handleSnackOptionChange(cb){
       if(other!==cb) other.checked=false;
     });
   }
+  const oneDaySlotMap={'s-snack1':'snack1Extras','s-snack2':'snack2Extras','s-sleep':'sleepExtras'};
+  const stateKey=container?.id ? oneDaySlotMap[container.id] : null;
+  if(stateKey){
+    S.mealSel={...S.mealSel,[stateKey]:Array.from(container.querySelectorAll('input[type=checkbox]:checked')).map(input=>input.value)};
+    console.log('[NutriFlow snacks] synced 1-day snack state', stateKey, S.mealSel[stateKey]);
+  }
   if(document.getElementById('page-oneday')?.classList.contains('active')){
     console.log('[NutriFlow snacks] recalculating 1-day plan after snack change');
     buildOneDayPlan();
@@ -2753,6 +2759,11 @@ function getSnackExtras(elId){
   const el=document.getElementById(elId);
   if(!el) return [];
   return Array.from(el.querySelectorAll('input[type=checkbox]:checked')).map(cb=>cb.value);
+}
+function getOneDaySnackExtras(elId, stateKey){
+  const fromDom=getSnackExtras(elId);
+  if(document.getElementById(elId)) return fromDom;
+  return Array.isArray(S.mealSel?.[stateKey]) ? S.mealSel[stateKey] : [];
 }
 
 // Builds the full display text + exchange composition for a snack slot.
@@ -3980,7 +3991,7 @@ function buildOneDayPlan(){
   updateMealLanguageButtons();
   const lang=S.mealLanguage||'GR';
   const brk=v('s-breakfast')||'BRK_TOAST', lun=v('s-lunch')||'LUN_CHICKEN_RICE', din=v('s-dinner')||'DIN_FISH_POTATO';
-  const snk1Extras=getSnackExtras('s-snack1'), snk2Extras=getSnackExtras('s-snack2'), sleepExtras=getSnackExtras('s-sleep');
+  const snk1Extras=getOneDaySnackExtras('s-snack1','snack1Extras'), snk2Extras=getOneDaySnackExtras('s-snack2','snack2Extras'), sleepExtras=getOneDaySnackExtras('s-sleep','sleepExtras');
   S.mealSel={breakfast:brk,lunch:lun,dinner:din,snack1Extras:snk1Extras,snack2Extras:snk2Extras,sleepExtras:sleepExtras};
   const ex=S.ex;
   const allocation=getDayMealAllocation(S.mealSel, lang);
