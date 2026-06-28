@@ -2424,6 +2424,26 @@ const WEEK_PLANS = [
 ];
 const WEEK_DAYS_GR=['Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο','Κυριακή'];
 const WEEK_DAYS_EN=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+function isTunaMealKey(key){
+  return /TUNA|LOUVI_TUNA/.test(String(key||''));
+}
+function enforceWeeklyTunaCap(plans){
+  const replacements={
+    lun:['LUN_CHICKEN_RICE','LUN_FISH_POTATO','LUN_FASOLAKIA_PORK','LUN_PASTA_MINCE','LUN_BIFTEKI_BULGUR','LUN_LENTILS_RICE'],
+    din:['DIN_CHICKEN_RICE','DIN_FISH_POTATO','DIN_OMELETTE','DIN_PASTA_MINCE','DIN_BIFTEKI_BULGUR','DIN_SOUVLAKI_PITA']
+  };
+  let tunaCount=0;
+  (plans||[]).forEach((p,dayIndex)=>{
+    ['lun','din'].forEach(slot=>{
+      if(!isTunaMealKey(p?.[slot])) return;
+      tunaCount++;
+      if(tunaCount<=2) return;
+      const options=replacements[slot]||[];
+      const replacement=options.find(key=>!isTunaMealKey(key));
+      if(replacement) p[slot]=replacement;
+    });
+  });
+}
 function weekDayLabel(plan, index, lang='GR'){
   const gr=plan?.day || WEEK_DAYS_GR[index] || '';
   if(lang==='EN'){
@@ -4591,6 +4611,10 @@ function toggleWeekPlanExtra(dayIndex, extrasKey, extraValue, checked){
   } else {
     day[extrasKey] = day[extrasKey].filter(v=>v!==extraValue);
   }
+  if(extrasKey==='snk1Extras') day.snack1Extras=day.snk1Extras;
+  if(extrasKey==='snack1Extras') day.snk1Extras=day.snack1Extras;
+  if(extrasKey==='snk2Extras') day.snack2Extras=day.snk2Extras;
+  if(extrasKey==='snack2Extras') day.snk2Extras=day.snack2Extras;
   buildSevenDay();
 }
 
@@ -4605,11 +4629,21 @@ const SEVEN_DAY_SLOTS=[
 
 function ensureWeekPlans(){
   if(!S.weekPlans) S.weekPlans = WEEK_PLANS.map(p=>({...p}));
-  S.weekPlans.forEach(p=>{
-    if(!p.snk1Extras) p.snk1Extras=[];
-    if(!p.snk2Extras) p.snk2Extras=[];
-    if(!p.sleepExtras) p.sleepExtras=[];
+  S.weekPlans.forEach((p,index)=>{
+    p.snk1Extras=[...new Set([...(Array.isArray(p.snk1Extras)?p.snk1Extras:[]), ...(Array.isArray(p.snack1Extras)?p.snack1Extras:[])])];
+    p.snk2Extras=[...new Set([...(Array.isArray(p.snk2Extras)?p.snk2Extras:[]), ...(Array.isArray(p.snack2Extras)?p.snack2Extras:[])])];
+    p.snack1Extras=p.snk1Extras;
+    p.snack2Extras=p.snk2Extras;
+    if(!Array.isArray(p.sleepExtras)) p.sleepExtras=[];
+    if(index===5 && !p.sleepExtras.some(v=>v==='milk' || v==='yogurt')){
+      p.sleepExtras=[...p.sleepExtras.filter(v=>v!=='nofruit'), 'milk'];
+    }
+    if(index===5 && (p.brk==='BRK_CEREAL' || p.brk==='BRK_OATS_VEGAN')){
+      p.snk1Extras=p.snk1Extras.filter(v=>v!=='milk' && v!=='yogurt');
+      p.snack1Extras=p.snk1Extras;
+    }
   });
+  enforceWeeklyTunaCap(S.weekPlans);
 }
 
 function aiMealForSlot(dayPlan, slotKey){
@@ -4767,25 +4801,25 @@ function renderSevenDayMealCard(dayPlan, dt, slot, lang, dayIndex){
 }
 
 function renderSevenDayWeekSummary(lang='GR'){
-  return `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">
+  return `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px;background:var(--bg-surface);border:1px solid var(--border)">
     <thead><tr style="background:var(--teal-600);color:#fff">
-      <th style="padding:9px;text-align:left">${lang==='EN'?'Day':'Ημέρα'}</th>
-      <th style="padding:9px;text-align:left">${lang==='EN'?'Breakfast':'Πρωινό'}</th>
-      <th style="padding:9px;text-align:left">${lang==='EN'?'Lunch':'Μεσημεριανό'}</th>
-      <th style="padding:9px;text-align:left">${lang==='EN'?'Dinner':'Βραδινό'}</th>
-      <th style="padding:9px;text-align:right">kcal</th>
+      <th style="padding:9px;text-align:left;border-bottom:1px solid var(--border)">${lang==='EN'?'Day':'Ημέρα'}</th>
+      <th style="padding:9px;text-align:left;border-bottom:1px solid var(--border)">${lang==='EN'?'Breakfast':'Πρωινό'}</th>
+      <th style="padding:9px;text-align:left;border-bottom:1px solid var(--border)">${lang==='EN'?'Lunch':'Μεσημεριανό'}</th>
+      <th style="padding:9px;text-align:left;border-bottom:1px solid var(--border)">${lang==='EN'?'Dinner':'Βραδινό'}</th>
+      <th style="padding:9px;text-align:right;border-bottom:1px solid var(--border)">Kcal</th>
     </tr></thead><tbody>
     ${S.weekPlans.map((p,i)=>{
       const dt=calcDayTotalsForPlanDisplay(p, lang, i);
       const brk=getSevenDaySlotData(p, dt, 'brk', lang, i);
       const lun=getSevenDaySlotData(p, dt, 'lun', lang, i);
       const din=getSevenDaySlotData(p, dt, 'din', lang, i);
-      return `<tr style="border-bottom:1px solid var(--border);cursor:pointer" onclick="setSevenDayActive(${i});setSevenDayView('day')">
-        <td style="padding:9px;font-weight:900">${safeHtml(weekDayLabel(p,i,lang))}</td>
-        <td style="padding:9px">${safeHtml(brk.name||'—')}</td>
-        <td style="padding:9px">${safeHtml(lun.name||'—')}</td>
-        <td style="padding:9px">${safeHtml(din.name||'—')}</td>
-        <td style="padding:9px;text-align:right;font-weight:900;color:${Math.abs(dt.gap)<=100?'var(--teal-600)':'var(--warn)'}">${dt.totalKcal}</td>
+      return `<tr style="border-bottom:1px solid var(--border);background:${i%2===0?'var(--bg-surface)':'var(--teal-50)'}">
+        <td style="padding:9px;font-weight:900;color:var(--text-primary)">${safeHtml(weekDayLabel(p,i,lang))}</td>
+        <td style="padding:9px;color:var(--text-secondary)">${safeHtml(brk.name||'—')}</td>
+        <td style="padding:9px;color:var(--text-secondary)">${safeHtml(lun.name||'—')}</td>
+        <td style="padding:9px;color:var(--text-secondary)">${safeHtml(din.name||'—')}</td>
+        <td style="padding:9px;text-align:right;font-weight:900;color:var(--teal-600)">${dt.totalKcal}</td>
       </tr>`;
     }).join('')}</tbody></table></div>`;
 }
