@@ -981,7 +981,7 @@ tr:hover td { background: var(--bg-hover); }
             <div id="s-sleep" style="display:flex;flex-wrap:wrap;gap:8px;padding:8px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input)" onchange="buildOneDayPlan()"></div>
           </div>
         </div>
-        <div class="field-note" style="margin-bottom:12px">Fruit and dairy servings are assigned with the snack checkboxes and draw from the Exchange System totals. Choose fresh fruit or dried fruit, and milk or yogurt. 🥜 Nuts count as 1 fat exchange and automatically replace 1 tsp olive oil from the main meals — daily calorie total stays unchanged.</div>
+        <div class="field-note" style="margin-bottom:12px">Fruit and dairy servings are assigned with the snack checkboxes and draw from the Exchange System totals. Choose fresh fruit or dried fruit, and milk or yogurt. Starch snacks replace 1 starch serving from the main meals. 🥜 Nuts count as 1 fat exchange and automatically replace 1 tsp olive oil from the main meals — daily calorie total stays unchanged.</div>
         <div id="oneday-plan"></div>
         <div class="section-label">EXCHANGE COVERAGE CHECK</div>
         <div id="oneday-check"></div>
@@ -3028,8 +3028,8 @@ function refreshMealDropdownLabels(){
 // used ONLY for two things: (1) restyling the automatic fruit/dairy serving
 // — dried instead of fresh, yogurt instead of milk; (2) adding extra items
 // on top — coffee. Nuts are a fat exchange and replace olive oil from main
-// meals via the exchange ledger. Starch options (crackers, oat bar) remain removed
-// per the original feedback. This combination is what makes "choose
+// meals via the exchange ledger. Starch snack options replace one main-meal
+// starch serving through the same ledger. This combination is what makes "choose
 // multiple snack items" and "the numbers are always correct" both true at
 // the same time — the two are no longer in tension the way they were in
 // either previous version.
@@ -3038,18 +3038,46 @@ const SNACK_EXTRAS = [
   {v:'driedfruit', group:'fruit', gr:'🍇 Αποξηραμένα φρούτα (1 μερίδα)', en:'🍇 Dried fruit (1 serving)'},    // 1 fruit exchange
   {v:'milk',       group:'dairy', gr:'🥛 Γάλα 1,5% (1 φλ.)',         en:'🥛 Milk 1.5% (1 cup)'},             // 1 dairy exchange
   {v:'yogurt',     group:'dairy', gr:'🍦 Γιαούρτι 2% (~170g)',       en:'🍦 Yogurt 2% (~170g)'},             // 1 dairy exchange
+  {v:'oatcookies', group:'starch', snackOnly:true, gr:'🍪 Μπισκότα βρώμης (2-3 τεμ.)', en:'🍪 Oat biscuits (2-3 pcs)', tip:'Αντικαθιστά 1 μερίδα αμύλου από κύριο γεύμα / Replaces 1 starch serving from a main meal'}, // 1 starch exchange
+  {v:'cerealbar',  group:'starch', snackOnly:true, gr:'🥣 Μπάρα δημητριακών (1 τεμ. ~25g)', en:'🥣 Cereal bar (1 pc ~25g)', tip:'Αντικαθιστά 1 μερίδα αμύλου από κύριο γεύμα / Replaces 1 starch serving from a main meal'}, // 1 starch exchange
+  {v:'crackers',   group:'starch', snackOnly:true, gr:'🍞 Κράκερ ολικής (3-4 τεμ.)', en:'🍞 Wholegrain crackers (3-4 pcs)', tip:'Αντικαθιστά 1 μερίδα αμύλου από κύριο γεύμα / Replaces 1 starch serving from a main meal'}, // 1 starch exchange
   {v:'nuts',       gr:'🥜 Ξηροί καρποί (1 λίπος)',     en:'🥜 Nuts (1 fat exchange)', tip:'Αντικαθιστά 1 κ.γ. ελαιόλαδο από το κύριο γεύμα — οι θερμίδες παραμένουν ίδιες / Replaces 1 tsp olive oil from main meal — calories stay the same'},        // 1 fat exchange
   {v:'coffee',     gr:'☕ + Καφές',                    en:'☕ + Coffee (without sugar)'},      // additive extra
 ];
+const STARCH_SNACK_VALUES = ['oatcookies','cerealbar','crackers'];
+function selectedStarchSnackValue(extras){
+  return (extras||[]).find(v=>STARCH_SNACK_VALUES.includes(v)) || '';
+}
+function selectedStarchSnackCount(sourcePlan=null){
+  const plan=sourcePlan || S.mealSel || {};
+  return (selectedStarchSnackValue(plan.snack1Extras||plan.snk1Extras||[]) ? 1 : 0) +
+         (selectedStarchSnackValue(plan.snack2Extras||plan.snk2Extras||[]) ? 1 : 0);
+}
 
 // Renders the checkbox group HTML for a snack slot's extras
 function snackExtraLabel(extra, lang){
   const key=(lang||S.mealLanguage)==='EN' ? 'en' : 'gr';
   return extra[key] || extra.gr || extra.en || extra.l || '';
 }
-function snackExtrasHtml(){
+function snackExtrasHtml(slot='snack', selected=[]){
   const lang=S.mealLanguage||'GR';
-  return SNACK_EXTRAS.map(e=>`<label title="${safeHtml(e.tip||'')}" style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap"><input type="checkbox" value="${e.v}" data-group="${e.group||''}" style="width:auto" ${e.v==='fruit'?'checked':''} onchange="handleSnackOptionChange(this)"> ${snackExtraLabel(e, lang)}</label>`).join('');
+  const isSleep=slot==='sleep';
+  const starchSelected=selectedStarchSnackValue(selected);
+  const totalStarch=Math.max(0, Math.round(Number(S.ex?.starch||0)));
+  const selectedInOtherSlots=Math.max(0, selectedStarchSnackCount() - (starchSelected ? 1 : 0));
+  return SNACK_EXTRAS
+    .filter(e=>!(isSleep && e.snackOnly))
+    .map(e=>{
+      const checked=selected.includes(e.v) || (!selected.length && e.v==='fruit');
+      const isStarch=STARCH_SNACK_VALUES.includes(e.v);
+      const noStarchAvailable=isStarch && !checked && selectedInOtherSlots>=totalStarch;
+      const disabled=noStarchAvailable ? 'disabled' : '';
+      const opacity=noStarchAvailable ? '.45' : '1';
+      const cursor=noStarchAvailable ? 'not-allowed' : 'pointer';
+      const warn=noStarchAvailable ? '<span style="color:var(--amber-700);font-size:10px;font-weight:700;margin-left:3px">Δεν υπάρχει διαθέσιμο άμυλο</span>' : '';
+      const note=(isStarch && checked) ? '<div style="color:var(--teal-700);font-size:10px;font-weight:700;margin-left:20px;margin-top:1px">Αντικαθιστά 1 μερίδα αμύλου από κύριο γεύμα</div>' : '';
+      return `<div style="display:flex;flex-direction:column;opacity:${opacity}"><label title="${safeHtml(e.tip||'')}" style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:${cursor};white-space:nowrap"><input type="checkbox" value="${e.v}" data-group="${e.group||''}" style="width:auto" ${checked?'checked':''} ${disabled} onchange="handleSnackOptionChange(this)"> ${snackExtraLabel(e, lang)}${warn}</label>${note}</div>`;
+    }).join('');
 }
 
 function handleSnackOptionChange(cb){
@@ -3074,6 +3102,7 @@ function handleSnackOptionChange(cb){
     S.mealSel={...S.mealSel,[stateKey]:Array.from(container.querySelectorAll('input[type=checkbox]:checked')).map(input=>input.value)};
     normalizeDairyExtrasForPlan(S.mealSel, slotFromExtrasKey(stateKey));
     syncSnackCheckboxUiFromMealSel();
+    refreshSnackExtrasLabels();
     console.log('[NutriFlow snacks] synced 1-day snack state', stateKey, S.mealSel[stateKey]);
   }
   if(document.getElementById('page-oneday')?.classList.contains('active')){
@@ -3086,11 +3115,12 @@ function handleSnackOptionChange(cb){
 }
 
 function refreshSnackExtrasLabels(){
-  [['s-snack1','snack1Extras'],['s-snack2','snack2Extras'],['s-sleep','sleepExtras']].forEach(([elId,key])=>{
+  [['s-snack1','snack1Extras','snk1'],['s-snack2','snack2Extras','snk2'],['s-sleep','sleepExtras','sleep']].forEach(([elId,key,slot])=>{
     const el=document.getElementById(elId);
     if(!el) return;
     const checked=getSnackExtras(elId);
-    el.innerHTML=snackExtrasHtml();
+    const selected=checked.length ? checked : (S.mealSel[key]||[]);
+    el.innerHTML=snackExtrasHtml(slot, selected);
     const saved=S.mealSel[key]||[];
     el.querySelectorAll('input[type=checkbox]').forEach(cb=>{
       cb.checked = checked.includes(cb.value) || saved.includes(cb.value);
@@ -3124,6 +3154,7 @@ function buildSlotSnack(slot, extras, lang='GR', breakfastKey, plan=null, fruitD
   const dairyChoice = snackDairyChoice(extras||[]);
   const addNuts = (extras||[]).includes('nuts');
   const addCoffee = (extras||[]).includes('coffee');
+  const starchChoice = slot==='sleep' ? '' : selectedStarchSnackValue(extras||[]);
 
   const exch = {fruit:0, starch:0, fat:0, dairy:0};
   let addOnKcal = 0;
@@ -3150,6 +3181,11 @@ function buildSlotSnack(slot, extras, lang='GR', breakfastKey, plan=null, fruitD
   if(addNuts){
     exch.fat += 1;
     parts.push(lang==='EN' ? '6 almonds or 4 walnuts' : '6 αμύγδαλα ή 4 καρύδια');
+  }
+  if(starchChoice){
+    exch.starch += 1;
+    const item=SNACK_EXTRAS.find(e=>e.v===starchChoice);
+    parts.push(lang==='EN' ? (item?.en||'Starch snack') : (item?.gr||'Σνακ αμύλου'));
   }
   if(addCoffee){ parts.push(lang==='EN' ? 'Coffee (without sugar)' : 'Καφές (χωρίς ζάχαρη)'); }
 
@@ -4649,7 +4685,11 @@ function buildSevenDay(){
   const ex=S.ex;
   const sel=(key,di,opts,cur)=>`<select style="width:100%;font-size:11px;padding:3px 5px;border:1px solid var(--border);border-radius:4px;background:var(--bg-page);color:var(--text-secondary);margin-bottom:5px" onchange="handleWeekMealSelect(${di},'${key}',this)">${mealOptionsHtml(opts,cur)}</select>`;
   // Compact checkbox-extras group for a snack slot on a given day
-  const extrasGroup=(slotKey,di,checked)=>`<div class="snack-extras-group" style="display:flex;flex-direction:column;gap:2px;margin-bottom:5px">${SNACK_EXTRAS.map(e=>`<label title="${safeHtml(e.tip||'')}" style="display:flex;align-items:center;gap:4px;font-size:10px;cursor:pointer;white-space:nowrap"><input type="checkbox" data-group="${e.group||''}" style="width:auto;transform:scale(0.85)" ${checked.includes(e.v)?'checked':''} onchange="toggleWeekPlanExtra(${di},'${slotKey}','${e.v}',this.checked)"> ${snackExtraLabel(e, lang)}</label>`).join('')}</div>`;
+  const extrasGroup=(slotKey,di,checked)=>`<div class="snack-extras-group" style="display:flex;flex-direction:column;gap:2px;margin-bottom:5px">${SNACK_EXTRAS.filter(e=>!(slotKey==='sleepExtras' && e.snackOnly)).map(e=>{
+    const isStarch=STARCH_SNACK_VALUES.includes(e.v);
+    const note=isStarch && checked.includes(e.v) ? '<div style="color:var(--teal-700);font-size:9px;font-weight:700;margin-left:18px">Αντικαθιστά 1 μερίδα αμύλου από κύριο γεύμα</div>' : '';
+    return `<div style="display:flex;flex-direction:column"><label title="${safeHtml(e.tip||'')}" style="display:flex;align-items:center;gap:4px;font-size:10px;cursor:pointer;white-space:nowrap"><input type="checkbox" data-group="${e.group||''}" style="width:auto;transform:scale(0.85)" ${checked.includes(e.v)?'checked':''} onchange="toggleWeekPlanExtra(${di},'${slotKey}','${e.v}',this.checked)"> ${snackExtraLabel(e, lang)}</label>${note}</div>`;
+  }).join('')}</div>`;
 
   let html='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr>';
   html+=`<th style="background:var(--teal-600);color:#fff;padding:8px;min-width:90px">${lang==='EN'?'Meal':'Γεύμα'}</th>`;
@@ -4895,6 +4935,16 @@ function strictApplyNutsReplacement(slots, plan){
   }
 }
 
+function strictApplySnackStarchReplacement(slots, plan){
+  [['snk1','snk1Extras'],['snk2','snk2Extras']].forEach(([slot,key])=>{
+    if(!selectedStarchSnackValue(plan?.[key]||plan?.[key.replace('snk','snack')]||[])) return;
+    slots[slot].starch=(slots[slot].starch||0)+1;
+    if((slots.lun.starch||0)>0) slots.lun.starch--;
+    else if((slots.din.starch||0)>0) slots.din.starch--;
+    else console.warn('[NutriFlow strict ledger] Starch snack selected but no main-meal starch was available to replace.', {slot, plan});
+  });
+}
+
 function strictCompleteDairyLedger(slots, plan, isToast){
   const target=STRICT_CASE1_EXCHANGES.dairy;
   let current=Object.values(slots).reduce((sum,exch)=>sum+Number(exch?.dairy||0),0);
@@ -4935,6 +4985,7 @@ function strictFallbackLedger(dayPlan, dayIndex){
     sleep:{},
   };
   strictCompleteDairyLedger(slots, dayPlan, isToast);
+  strictApplySnackStarchReplacement(slots, dayPlan);
   strictApplyNutsReplacement(slots, dayPlan);
   const totals=strictZeroUse();
   Object.values(slots).forEach(exch=>strictAddUse(totals, exch));
@@ -4967,6 +5018,11 @@ function strictSnackDescription(exch, extras, lang='GR'){
   }
   if(exch.fat){
     parts.push(lang==='EN' ? `${exch.fat*6} almonds or ${exch.fat*4} walnuts` : `${exch.fat*6} αμύγδαλα ή ${exch.fat*4} καρύδια`);
+  }
+  if(exch.starch){
+    const starchValue=selectedStarchSnackValue(extras||[]);
+    const item=SNACK_EXTRAS.find(e=>e.v===starchValue);
+    parts.push(lang==='EN' ? (item?.en||'Starch snack') : (item?.gr||'Σνακ αμύλου'));
   }
   if((extras||[]).includes('coffee')) parts.push(lang==='EN'?'Coffee (without sugar)':'Καφές (χωρίς ζάχαρη)');
   return parts.length ? parts.join(' + ') : '—';
@@ -5359,7 +5415,11 @@ function renderSevenDayMealCard(dayPlan, dt, slot, lang, dayIndex){
   const selectHtml=slot.key==='brk' ? `<select style="width:100%;margin-top:8px" onchange="handleWeekMealSelect(${dayIndex},'brk',this)">${mealOptionsHtml(filteredBrk,dayPlan.brk)}</select>` :
     slot.key==='lun' ? `<select style="width:100%;margin-top:8px" onchange="handleWeekMealSelect(${dayIndex},'lun',this)">${mealOptionsHtml(filteredLun,dayPlan.lun)}</select>` :
     slot.key==='din' ? `<select style="width:100%;margin-top:8px" onchange="handleWeekMealSelect(${dayIndex},'din',this)">${mealOptionsHtml(filteredDin,dayPlan.din)}</select>` : '';
-  const extrasHtml=extraKey && !dayPlan.aiMeals ? `<div class="snack-extras-group" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">${SNACK_EXTRAS.map(e=>`<label title="${safeHtml(e.tip||'')}" style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer"><input type="checkbox" ${dayPlan[extraKey]?.includes(e.v)?'checked':''} onchange="toggleWeekPlanExtra(${dayIndex},'${extraKey}','${e.v}',this.checked)"> ${snackExtraLabel(e, lang)}</label>`).join('')}</div>` : '';
+  const extrasHtml=extraKey && !dayPlan.aiMeals ? `<div class="snack-extras-group" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">${SNACK_EXTRAS.filter(e=>!(slot.key==='sleep' && e.snackOnly)).map(e=>{
+    const checked=dayPlan[extraKey]?.includes(e.v);
+    const note=STARCH_SNACK_VALUES.includes(e.v) && checked ? '<div style="color:var(--teal-700);font-size:10px;font-weight:700;margin-left:20px;margin-top:1px">Αντικαθιστά 1 μερίδα αμύλου από κύριο γεύμα</div>' : '';
+    return `<div style="display:flex;flex-direction:column"><label title="${safeHtml(e.tip||'')}" style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer"><input type="checkbox" data-group="${e.group||''}" ${checked?'checked':''} onchange="toggleWeekPlanExtra(${dayIndex},'${extraKey}','${e.v}',this.checked)"> ${snackExtraLabel(e, lang)}</label>${note}</div>`;
+  }).join('')}</div>` : '';
   return `<div style="border:1px solid var(--border);border-radius:8px;background:var(--bg-surface);padding:12px;display:flex;flex-direction:column;gap:7px">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
       <div>
@@ -8038,9 +8098,9 @@ window.onload=function(){
   document.getElementById('s-breakfast').innerHTML=mealOptionsHtml(filteredMealOptions(BREAKFAST_OPTIONS,v('p-diet')||'Omnivore'),'BRK_TOAST');
   document.getElementById('s-lunch').innerHTML=mealOptionsHtml(filteredMealOptions(LUNCH_OPTIONS,v('p-diet')||'Omnivore'),'LUN_CHICKEN_RICE');
   document.getElementById('s-dinner').innerHTML=mealOptionsHtml(filteredMealOptions(DINNER_OPTIONS,v('p-diet')||'Omnivore'),'DIN_FISH_POTATO');
-  document.getElementById('s-snack1').innerHTML=snackExtrasHtml();
-  document.getElementById('s-snack2').innerHTML=snackExtrasHtml();
-  document.getElementById('s-sleep').innerHTML=snackExtrasHtml();
+  document.getElementById('s-snack1').innerHTML=snackExtrasHtml('snk1', S.mealSel.snack1Extras||[]);
+  document.getElementById('s-snack2').innerHTML=snackExtrasHtml('snk2', S.mealSel.snack2Extras||[]);
+  document.getElementById('s-sleep').innerHTML=snackExtrasHtml('sleep', S.mealSel.sleepExtras||[]);
   calcAll(); calcMacros(); renderDashboard();
   loadCustomMeals({render:false}).then(()=>rebuildMealDropdownOptions()).catch(e=>console.error('[NutriFlow custom meals] startup load failed', e));
   const handledSignedOutReturn = handleSignedOutReturn();
