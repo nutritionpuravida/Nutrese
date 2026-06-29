@@ -221,6 +221,45 @@ td { padding: 9px 10px; border-bottom: 1px solid var(--border); color: var(--tex
 tr:last-child td { border-bottom: none; }
 tr:hover td { background: var(--bg-hover); }
 .week-summary-table tr:hover td { background: inherit !important; }
+[data-theme="dark"] .week-summary-table,
+html[data-theme="dark"] .week-summary-table {
+  background: var(--bg-surface) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border) !important;
+}
+[data-theme="dark"] .week-summary-table tbody tr,
+html[data-theme="dark"] .week-summary-table tbody tr {
+  background: var(--bg-surface) !important;
+  border-color: var(--border) !important;
+}
+[data-theme="dark"] .week-summary-table tbody tr:nth-child(even),
+html[data-theme="dark"] .week-summary-table tbody tr:nth-child(even) {
+  background: var(--bg-page) !important;
+}
+[data-theme="dark"] .week-summary-table tbody tr:last-child,
+html[data-theme="dark"] .week-summary-table tbody tr:last-child {
+  background: rgba(15, 110, 86, .18) !important;
+  border-top-color: var(--teal-600) !important;
+}
+[data-theme="dark"] .week-summary-table th,
+[data-theme="dark"] .week-summary-table td,
+html[data-theme="dark"] .week-summary-table th,
+html[data-theme="dark"] .week-summary-table td {
+  border-color: var(--border) !important;
+}
+[data-theme="dark"] .week-summary-table td,
+html[data-theme="dark"] .week-summary-table td {
+  color: var(--text-secondary) !important;
+}
+[data-theme="dark"] .week-summary-table td:first-child,
+html[data-theme="dark"] .week-summary-table td:first-child {
+  color: var(--text-primary) !important;
+  font-weight: 900 !important;
+}
+[data-theme="dark"] .week-summary-table td:last-child,
+html[data-theme="dark"] .week-summary-table td:last-child {
+  color: var(--teal-600) !important;
+}
 
 /* ─── BADGES ─── */
 .badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 700; }
@@ -2493,12 +2532,10 @@ function formatPotatoPortion(exCount, lang='GR') {
     {max:3, gr:'1 μεγάλη πατάτα (~200g)', en:'1 large potato (~200g)'}
   ];
   if(n<=3) return (units.find(u=>n<=u.max)||units[2])[lang==='EN'?'en':'gr'];
-  const large=Math.floor(n/3);
-  const rem=n%3;
-  const remTxt=rem ? ' + ' + formatPotatoPortion(rem, lang) : '';
+  const grams=Math.round(n*80);
   return lang==='EN'
-    ? `${large} large potato${large>1?'es':''} (~${large*200}g)${remTxt}`
-    : `${large} μεγάλες πατάτες (~${large*200}g)${remTxt}`;
+    ? `1 large potato portion (~${grams}g)`
+    : `1 μεγάλη μερίδα πατάτας (~${grams}g)`;
 }
 
 function mealSuffix(ex, p, veg, proteinSource, carbName, proteinLabel, isFishProtein) {
@@ -4999,14 +5036,15 @@ function strictApplySnackStarchReplacement(slots, plan){
 function strictCompleteDairyLedger(slots, plan, isToast){
   const target=STRICT_CASE1_EXCHANGES.dairy;
   let current=Object.values(slots).reduce((sum,exch)=>sum+Number(exch?.dairy||0),0);
-  ['snk1','snk2','sleep'].forEach(slot=>{
+  const selectedOrder=isToast ? ['snk1','sleep','snk2'] : ['sleep','snk1','snk2'];
+  selectedOrder.forEach(slot=>{
     if(current>=target) return;
     if(dairyChoiceForPlanSlot(plan, slot)){
       slots[slot].dairy=(slots[slot].dairy||0)+1;
       current++;
     }
   });
-  const fallbackOrder=isToast ? ['snk1','sleep','snk2'] : ['sleep','snk1','snk2'];
+  const fallbackOrder=selectedOrder;
   fallbackOrder.forEach(slot=>{
     if(current>=target) return;
     if(!(slots[slot].dairy>0)){
@@ -5035,6 +5073,15 @@ function strictFallbackLedger(dayPlan, dayIndex){
     din:{starch:1,protein:4,fat:4,veg:3},
     sleep:{},
   };
+  const strictDinnerKey=dayPlan?.din || dayPlan?.dinner;
+  if(strictDinnerKey==='DIN_SOUVLAKI_PITA' && Number(slots.din.starch||0)<2){
+    const needed=2-Number(slots.din.starch||0);
+    const moved=Math.min(needed, Number(slots.lun.starch||0));
+    if(moved>0){
+      slots.lun.starch-=moved;
+      slots.din.starch=(slots.din.starch||0)+moved;
+    }
+  }
   strictCompleteDairyLedger(slots, dayPlan, isToast);
   strictApplySnackStarchReplacement(slots, dayPlan);
   strictApplyNutsReplacement(slots, dayPlan);
