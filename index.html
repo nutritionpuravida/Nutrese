@@ -746,7 +746,7 @@ tr:hover td { background: var(--bg-hover); }
       <div class="card-body">
         <div class="section-label">DEMOGRAPHICS</div>
         <div class="form-grid three">
-          <div class="form-field"><label>Client ID</label><input type="text" id="p-id" value="001" oninput="calcAll()"></div>
+          <div class="form-field"><label>Client Reference</label><div id="p-id-display" style="min-height:38px;display:flex;align-items:center;padding:8px 10px;border:1px solid var(--border-strong);border-radius:6px;background:var(--bg-muted);font-weight:700;color:var(--text)">New client</div><input type="hidden" id="p-id" value=""></div>
           <div class="form-field"><label>Full Name</label><input type="text" id="p-name" placeholder="—" oninput="calcAll()"></div>
           <div class="form-field"><label>Date</label><input type="date" id="p-date" oninput="calcAll()"></div>
         </div>
@@ -1303,6 +1303,7 @@ tr:hover td { background: var(--bg-hover); }
 <script>
 const S = {
   name:'',age:null,sex:'M',height:null,weight:null,activity:1.55,
+  activeClientId:null, activeClientRef:'',
   condition:'General',conditions:[],goal:'Maintenance',meatType:'Lean',dairyType:'Moderate-fat',
   calAdj:0,bmi:null,bmr:null,tdee:null,goalKcal:null,bmiCat:'',
   carbPct:45,protPct:20,fatPct:35,carbG:0,protG:0,fatG:0,
@@ -5203,23 +5204,18 @@ async function saveWeeklyPlan(){
   ensureWeekPlans();
   const name=(v('p-name')||'').trim();
   if(!name){ alert('Please enter a client name before saving the plan.'); nav('profile'); return; }
-  let clientRef=v('p-id');
-  if(!clientRef){ clientRef='c'+Date.now(); const idEl=document.getElementById('p-id'); if(idEl) idEl.value=clientRef; }
+  const identity=await ensureActiveClientIdentity();
   S.savedWeeklyPlan=buildWeeklyPlanSnapshot(S.mealLanguage||'GR');
   const state=captureState();
-  const localRow={id:'local_'+clientRef, client_ref:clientRef, name, data:state, updated_at:new Date().toISOString(), localOnly:true};
+  const savedAt=new Date().toISOString();
+  const localRow={id:identity.id, client_ref:identity.client_ref, name, data:state, updated_at:savedAt, localOnly:true};
   try{
     if(currentUser){
-      const existing=await supabaseClient.from('clients').select('id,data').eq('user_id',currentUser.id).eq('client_ref',clientRef).maybeSingle();
-      if(existing.error) throw existing.error;
-      let result;
-      if(existing.data){
-        result=await supabaseClient.from('clients').update({name, data:state, updated_at:new Date().toISOString()}).eq('id',existing.data.id).select().maybeSingle();
-      } else {
-        result=await supabaseClient.from('clients').insert({user_id:currentUser.id, client_ref:clientRef, name, data:state}).select().maybeSingle();
+      const savedRemote=await upsertClientToSupabase({id:identity.id, client_ref:identity.client_ref, name, data:state, updated_at:savedAt, localOnly:false}, {updated_at:savedAt});
+      if(savedRemote){
+        setActiveClientIdentity(savedRemote.id, savedRemote.client_ref);
+        upsertLocalClient({...savedRemote, localOnly:false});
       }
-      if(result.error) throw result.error;
-      if(result.data) upsertLocalClient({...result.data, localOnly:false});
     } else {
       upsertLocalClient(localRow);
     }
@@ -7282,8 +7278,7 @@ function clearAppointmentForm(){
   const card=document.getElementById('appointment-form-card'); if(card) card.style.display='none';
 }
 function appointmentClientUuid(){
-  const id=String(v('p-id')||'').trim();
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id) ? id : null;
+  return isUuid(S.activeClientId) ? S.activeClientId : null;
 }async function saveAppointmentFromForm(){
   const clientName=(v('appt-client')||'').trim();
   if(!clientName){ alert('Enter a client name.'); return; }
@@ -7386,6 +7381,7 @@ function captureState(){
   const primaryCondition=getSelectedPrimaryCondition();
   const conditions=primaryCondition ? [primaryCondition] : [];
 return {
+    clientId:S.activeClientId, clientRef:S.activeClientRef,
     fields, conditions, primaryCondition,
     ex:S.ex, exAuto:S.exAuto, exMeta:S.exMeta, tracking:S.tracking, mealSel:S.mealSel,
     weekPlans:S.weekPlans, savedWeeklyPlan:S.savedWeeklyPlan, customMeals:S.customMeals, mealLanguage:S.mealLanguage, reportOptions:S.reportOptions,
@@ -7400,6 +7396,7 @@ return {
 function applyState(state){
   if(!state) return;
   Object.entries(state.fields||{}).forEach(([id,val])=>{const el=document.getElementById(id); if(el) el.value=val;});
+  setActiveClientIdentity(state.clientId || state.activeClientId || null, state.clientRef || state.activeClientRef || state.fields?.['p-id'] || '');
   S.weightSuggestionLocked=state.weightSuggestionLocked!==undefined ? !!state.weightSuggestionLocked : !!(state.fields&&state.fields['p-weight']);
   S.calAdjAutoValue=state.calAdjAutoValue;
   S.bcManual={fatmass:false,ffm:false,muscle:false,...(state.bcManual||{})};
@@ -7451,6 +7448,7 @@ function applyState(state){
 
 // Resets the whole form/state back to a blank "new client" template
 function resetForm(){
+  setActiveClientIdentity(null, '');
   S.calAdjAutoValue = undefined;
   S.weightSuggestionLocked = false;
   S.bcManual = {fatmass:false,ffm:false,muscle:false};
@@ -7461,7 +7459,7 @@ function resetForm(){
     else el.value='';
   });
   setPrimaryCondition('');
-  document.getElementById('p-id').value='001';
+  setActiveClientIdentity(null, '');
   document.getElementById('p-date').value=new Date().toISOString().split('T')[0];
   document.getElementById('m-carb').value=45;
   document.getElementById('m-protein').value=20;
@@ -7491,11 +7489,56 @@ function resetForm(){
 function clientStorageKey(){
   return 'nutriflow_clients_' + (currentUser ? currentUser.id : 'local');
 }
+function isUuid(value){
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value||''));
+}
+function makeClientUuid(){
+  if(window.crypto && typeof window.crypto.randomUUID==='function') return window.crypto.randomUUID();
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c=>{
+    const r=Math.random()*16|0, v=c==='x'?r:(r&0x3|0x8);
+    return v.toString(16);
+  });
+}
+function setActiveClientIdentity(id, ref){
+  S.activeClientId = id || null;
+  S.activeClientRef = ref || '';
+  const hidden=document.getElementById('p-id');
+  const display=document.getElementById('p-id-display');
+  if(hidden) hidden.value = S.activeClientRef;
+  if(display) display.textContent = S.activeClientRef || 'New client';
+}
+function clientReferenceNumber(ref){
+  const m=String(ref||'').match(/^C(\d+)$/i);
+  return m ? Number(m[1]) : 0;
+}
+async function getNextClientReference(){
+  const refs=[];
+  loadLocalClients().forEach(c=>{ if(c.client_ref) refs.push(c.client_ref); });
+  if(currentUser){
+    try{
+      const {data, error}=await supabaseClient.from('clients').select('client_ref').eq('user_id', currentUser.id);
+      if(error) throw error;
+      (data||[]).forEach(c=>{ if(c.client_ref) refs.push(c.client_ref); });
+    }catch(e){
+      console.error('[NutriFlow clients] could not read remote refs for next client number', e);
+    }
+  }
+  const max=refs.reduce((highest, ref)=>Math.max(highest, clientReferenceNumber(ref)), 0);
+  return 'C'+String(max+1).padStart(3,'0');
+}
+async function ensureActiveClientIdentity(){
+  if(!S.activeClientId || (currentUser && !isUuid(S.activeClientId))) S.activeClientId = makeClientUuid();
+  if(!S.activeClientRef) S.activeClientRef = await getNextClientReference();
+  setActiveClientIdentity(S.activeClientId, S.activeClientRef);
+  return {id:S.activeClientId, client_ref:S.activeClientRef};
+}
 function normalizeClientRow(row){
   const data=row?.data || row?.state || {};
-  const clientRef=row?.client_ref || row?.clientRef || data?.fields?.['p-id'] || data?.inputs?.['p-id'] || '';
+  const stateId=row?.client_id || row?.clientId || data?.clientId || data?.activeClientId || '';
+  const rowId=row?.id || stateId || '';
+  const clientRef=row?.client_ref || row?.clientRef || data?.clientRef || data?.activeClientRef || data?.fields?.['p-id'] || data?.inputs?.['p-id'] || '';
   return {
-    id: row?.id || ('local_'+(clientRef||Date.now())),
+    id: rowId || ('local_'+(clientRef||Date.now())),
     user_id: row?.user_id || (currentUser && currentUser.id) || null,
     client_ref: clientRef,
     name: row?.name || data?.fields?.['p-name'] || data?.inputs?.['p-name'] || 'Unnamed client',
@@ -7526,8 +7569,10 @@ function saveLocalClients(clients){
 }
 function upsertLocalClient(row){
   const normalized=normalizeClientRow(row);
-  const key=normalized.client_ref || normalized.id;
-  const clients=loadLocalClients().filter(c=>(c.client_ref||c.id)!==key && String(c.id)!==String(normalized.id));
+  const clients=loadLocalClients().filter(c=>
+    String(c.id)!==String(normalized.id) &&
+    (!normalized.client_ref || String(c.client_ref)!==String(normalized.client_ref))
+  );
   const saved={...normalized, localOnly:normalized.localOnly!==false, updated_at:normalized.updated_at||new Date().toISOString()};
   clients.unshift(saved);
   saveLocalClients(clients);
@@ -7550,15 +7595,18 @@ async function findSupabaseClientByRef(clientRef){
     .select('*')
     .eq('user_id', currentUser.id)
     .eq('client_ref', clientRef)
-    .maybeSingle();
+    .order('updated_at', {ascending:false})
+    .limit(1);
   if(error) throw error;
-  return data ? normalizeClientRow({...data, localOnly:false}) : null;
+  return data && data[0] ? normalizeClientRow({...data[0], localOnly:false}) : null;
 }
 
 async function upsertClientToSupabase(row, options={}){
   if(!currentUser) throw new Error('No signed-in user');
   const normalized=normalizeClientRow(row);
+  const dbId=isUuid(normalized.id) ? normalized.id : makeClientUuid();
   const payload={
+    id: dbId,
     user_id: currentUser.id,
     client_ref: normalized.client_ref,
     name: normalized.name,
@@ -7566,25 +7614,22 @@ async function upsertClientToSupabase(row, options={}){
     updated_at: options.updated_at || normalized.updated_at || new Date().toISOString()
   };
   const upsertResult=await supabaseClient.from('clients')
-    .upsert(payload, {onConflict:'user_id,client_ref'})
+    .upsert(payload, {onConflict:'id'})
     .select()
     .maybeSingle();
   if(!upsertResult.error) return normalizeClientRow({...upsertResult.data, localOnly:false});
 
-  // If the database is missing a unique constraint on (user_id, client_ref),
-  // fall back to an explicit find-then-update/insert so Save Client still
-  // updates the existing row rather than creating duplicates.
+  // Fallback for projects where upsert permissions/configuration fail: update
+  // by the internal UUID only, never by the visible client reference.
   console.warn('[NutriFlow clients] upsert fallback used', upsertResult.error);
-  const existing=await findSupabaseClientByRef(normalized.client_ref);
-  if(existing?.id && !String(existing.id).startsWith('local_')){
+  if(isUuid(dbId)){
     const {data, error}=await supabaseClient.from('clients')
       .update({name:payload.name, data:payload.data, updated_at:payload.updated_at})
-      .eq('id', existing.id)
+      .eq('id', dbId)
       .eq('user_id', currentUser.id)
       .select()
       .maybeSingle();
-    if(error) throw error;
-    return normalizeClientRow({...data, localOnly:false});
+    if(!error && data) return normalizeClientRow({...data, localOnly:false});
   }
   const {data, error}=await supabaseClient.from('clients')
     .insert(payload)
@@ -7607,7 +7652,7 @@ async function migrateLocalClientsToSupabase(){
       const localTime=Date.parse(row.updated_at||'')||0;
       const remoteTime=Date.parse(remote?.updated_at||'')||0;
       if(remote && remoteTime>localTime) continue;
-      await upsertClientToSupabase({...row, localOnly:false}, {updated_at:row.updated_at});
+      await upsertClientToSupabase({...row, id:remote?.id || (isUuid(row.id)?row.id:null), localOnly:false}, {updated_at:row.updated_at});
       migrated++;
     }catch(e){
       console.error('[NutriFlow clients] local migration failed for '+(row.name||row.client_ref), e);
@@ -7649,9 +7694,10 @@ function existingClientDisplayName(existingRow){
   return existingRow?.name || existingRow?.data?.fields?.['p-name'] || existingRow?.state?.fields?.['p-name'] || 'this client';
 }
 
-function newClient(){
+async function newClient(){
   if(!confirm('Start a new client? Unsaved changes to the current client will be lost (use "Save Client" first if needed).')) return;
   resetForm();
+  await ensureActiveClientIdentity();
   nav('intake');
 }
 
@@ -7667,12 +7713,11 @@ async function saveCurrentClient(options={}){
     setTimeout(()=>document.getElementById('p-name')?.focus(), 50);
     return;
   }
-  let id=v('p-id');
-  if(!id){ id='c'+Date.now(); document.getElementById('p-id').value=id; }
+  const identity=await ensureActiveClientIdentity();
   const state=captureState();
   const savedAt=new Date().toISOString();
-  const localRow={id:'local_'+id, client_ref:id, name, data:state, updated_at:savedAt, localOnly:true};
-  const existingLocal=loadLocalClients().find(c=>(c.client_ref||c.id)===id);
+  const localRow={id:identity.id, client_ref:identity.client_ref, name, data:state, updated_at:savedAt, localOnly:true};
+  const existingLocal=loadLocalClients().find(c=>String(c.id)===String(identity.id));
   if(existingLocal && shouldWarnRiskyClientOverwrite(state, existingLocal)){
     const existingName=existingClientDisplayName(existingLocal);
     const ok=confirm(`⚠️ This will overwrite the existing client "${existingName}" with blank/incomplete data. Their saved profile, body composition, exchanges, and meal plans may be lost. Continue?`);
@@ -7689,7 +7734,12 @@ async function saveCurrentClient(options={}){
   let error=null;
   let savedRemote=null;
   try{
-    const existing=await findSupabaseClientByRef(id);
+    let existing=null;
+    if(isUuid(identity.id)){
+      const existingResult=await supabaseClient.from('clients').select('*').eq('id',identity.id).eq('user_id',currentUser.id).maybeSingle();
+      if(existingResult.error) throw existingResult.error;
+      existing=existingResult.data ? normalizeClientRow({...existingResult.data, localOnly:false}) : null;
+    }
     if(existing){
       if(!existingLocal && shouldWarnRiskyClientOverwrite(state, existing)){
         const existingName=existingClientDisplayName(existing);
@@ -7697,7 +7747,8 @@ async function saveCurrentClient(options={}){
         if(!ok) return;
       }
     }
-    savedRemote=await upsertClientToSupabase({client_ref:id, name, data:state, updated_at:savedAt, localOnly:false}, {updated_at:savedAt});
+    savedRemote=await upsertClientToSupabase({id:identity.id, client_ref:identity.client_ref, name, data:state, updated_at:savedAt, localOnly:false}, {updated_at:savedAt});
+    setActiveClientIdentity(savedRemote.id, savedRemote.client_ref);
   }catch(e){
     error=e;
   }
@@ -7739,6 +7790,7 @@ async function loadClientById(rowId){
   }
   if(!data) return;
   applyState(data.data);
+  setActiveClientIdentity(data.id, data.client_ref || data.data?.clientRef || data.data?.fields?.['p-id'] || '');
   S_isDirty=false; // freshly loaded from cloud, nothing unsaved yet
   nav('dashboard');
 }
@@ -7757,7 +7809,7 @@ async function deleteClientById(rowId){
       return;
     }
   }
-  saveLocalClients(loadLocalClients().filter(c=>String(c.id)!==String(rowId) && String(c.client_ref)!==String(rowId)));
+  saveLocalClients(loadLocalClients().filter(c=>String(c.id)!==String(rowId)));
   if(deletedRemote) console.log('[NutriFlow clients] deleted from Supabase', rowId);
   renderClientList();
 }
@@ -7801,7 +7853,7 @@ function renderClientListRows(clients){
       : '<div style="color:var(--text-muted);text-align:center;padding:24px">No saved clients yet. Fill in Client Profile and click "💾 Save Client".</div>';
     return;
   }
-  el.innerHTML='<table><thead><tr><th>Name</th><th>Client ID</th><th>Last saved</th><th></th></tr></thead><tbody>'+
+  el.innerHTML='<table><thead><tr><th>Name</th><th>Reference</th><th>Last saved</th><th></th></tr></thead><tbody>'+
     clients.map(c=>{
       const data=c.data||{};
       const cond=(data.conditions||[]).map(conditionLabel).join(', ')||'Healthy Eating';
@@ -7836,7 +7888,7 @@ async function exportAllClients(){
     alert('No saved clients to back up yet. Save at least one client first ("💾 Save Client" on Client Profile).');
     return;
   }
-  const backup={app:'NutriFlow', version:'v1', exportedAt:new Date().toISOString(), clients:clients.map(c=>({client_ref:c.client_ref, name:c.name, state:c.data}))};
+  const backup={app:'NutriFlow', version:'v1', exportedAt:new Date().toISOString(), clients:clients.map(c=>({id:c.id, client_ref:c.client_ref, name:c.name, state:c.data}))};
   const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
@@ -7847,7 +7899,8 @@ async function exportAllClients(){
 }
 
 // Restores clients from a previously downloaded backup JSON file into the
-// signed-in user's cloud account. Matches by Client ID (client_ref): overwrite if exists, else add.
+// signed-in user's cloud account. UUID is the true row key; client_ref is
+// retained only as the visible human reference.
 function importClientsFile(input){
   const file=input.files && input.files[0];
   if(!file) return;
@@ -7866,14 +7919,10 @@ function importClientsFile(input){
         const ref=c.client_ref || c.id;
         const name=c.name||'Unnamed client';
         const state=c.state||c.data;
-        const {data:existing} = await supabaseClient.from('clients').select('id').eq('user_id',currentUser.id).eq('client_ref',ref).maybeSingle();
-        if(existing){
-          await supabaseClient.from('clients').update({name, data:state, updated_at:new Date().toISOString()}).eq('id',existing.id);
-          updated++;
-        } else {
-          await supabaseClient.from('clients').insert({user_id:currentUser.id, client_ref:ref, name, data:state});
-          added++;
-        }
+        const id=isUuid(c.id) ? c.id : (isUuid(state?.clientId) ? state.clientId : makeClientUuid());
+        const existed=!!(isUuid(id) && (await supabaseClient.from('clients').select('id').eq('id',id).eq('user_id',currentUser.id).maybeSingle()).data);
+        await upsertClientToSupabase({id, client_ref:ref, name, data:{...state, clientId:id, clientRef:ref}, localOnly:false});
+        if(existed) updated++; else added++;
       }
       renderClientList();
       alert(`✅ Restore complete.\n\nAdded: ${added}\nUpdated: ${updated}`);
