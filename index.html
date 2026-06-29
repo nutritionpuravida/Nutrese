@@ -2223,8 +2223,8 @@ function effectivePortionsForKcal(mealKey, portions){
 // Snacks are specified in SNACK_EXCHANGES below.
 const MEAL_EXCHANGES = {
   // Breakfasts: fixed composition
-  BRK_TOAST:       {protein:1, starch:2, fat:0, fruit:0, dairy:0, veg:0},
-  BRK_TOAST_TURKEY:{protein:2, starch:2, fat:0, fruit:0, dairy:0, veg:0}, // cheese+turkey = 2 protein
+  BRK_TOAST:       {protein:1, starch:2, fat:0, fruit:0, dairy:0, veg:1},
+  BRK_TOAST_TURKEY:{protein:2, starch:2, fat:0, fruit:0, dairy:0, veg:1}, // cheese+turkey = 2 protein + cucumber/tomato veg
   BRK_EGGS:        {protein:2, starch:1, fat:0, fruit:0, dairy:0, veg:0}, // 2 eggs = 2 protein, 1 bread
   BRK_EGGS_TOAST:  {protein:2, starch:2, fat:0, fruit:0, dairy:0, veg:0}, // egg+cheese = 2 protein
   BRK_CEREAL:      {protein:0, starch:2, fat:0, fruit:0, dairy:1, veg:0},
@@ -4848,6 +4848,9 @@ const STRICT_WEEK_MEALS=[
 
 function strictCase1BudgetActive(){
   const ex=S.ex||{};
+  const goal=Math.round(Number(S.goalKcal||0));
+  const caseGoal=!goal || Math.abs(goal-1585)<=10 || Math.abs(goal-1581)<=10;
+  if(!caseGoal) return false;
   return Object.entries(STRICT_CASE1_EXCHANGES).every(([key,val])=>{
     const current=Number(ex[key]||0);
     if(key==='veg') return current===val || current===5;
@@ -5405,7 +5408,7 @@ function renderSevenDayWeekSummary(lang='GR'){
       <tr style="background:#eef8f4;border-top:2px solid #0F6E56">
         <td style="padding:9px;font-weight:900;color:#111827">${lang==='EN'?'Target/day':'Στόχος/ημέρα'}</td>
         <td colspan="6" style="padding:9px;color:#374151"></td>
-        <td style="padding:9px;text-align:right;font-weight:900;color:#0F6E56">1585 kcal</td>
+        <td style="padding:9px;text-align:right;font-weight:900;color:#0F6E56">${Math.round(S.goalKcal||exchangeSystemTotalKcal(S.ex||{})||0)} kcal</td>
       </tr>
     </tbody></table></div>`;
 }
