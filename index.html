@@ -3038,15 +3038,25 @@ const SNACK_EXTRAS = [
   {v:'driedfruit', group:'fruit', gr:'🍇 Αποξηραμένα φρούτα (1 μερίδα)', en:'🍇 Dried fruit (1 serving)'},    // 1 fruit exchange
   {v:'milk',       group:'dairy', gr:'🥛 Γάλα 1,5% (1 φλ.)',         en:'🥛 Milk 1.5% (1 cup)'},             // 1 dairy exchange
   {v:'yogurt',     group:'dairy', gr:'🍦 Γιαούρτι 2% (~170g)',       en:'🍦 Yogurt 2% (~170g)'},             // 1 dairy exchange
-  {v:'oatcookies', group:'starch', snackOnly:true, gr:'🍪 Μπισκότα βρώμης (2-3 τεμ.)', en:'🍪 Oat biscuits (2-3 pcs)', tip:'Αντικαθιστά 1 μερίδα αμύλου από κύριο γεύμα / Replaces 1 starch serving from a main meal'}, // 1 starch exchange
-  {v:'cerealbar',  group:'starch', snackOnly:true, gr:'🥣 Μπάρα δημητριακών (1 τεμ. ~25g)', en:'🥣 Cereal bar (1 pc ~25g)', tip:'Αντικαθιστά 1 μερίδα αμύλου από κύριο γεύμα / Replaces 1 starch serving from a main meal'}, // 1 starch exchange
+  {v:'oatcookies', group:'starch', snackOnly:true, gr:'🍪 Μπισκότα βρώμης (2-3 τεμ.)', en:'🍪 Oat biscuits (2-3 pcs)', tip:'Αντικαθιστά 1 μερίδα αμύλου + 1 μερίδα λίπους / Replaces 1 starch + 1 fat exchange'}, // 1 starch + 1 fat
+  {v:'cerealbar',  group:'starch', snackOnly:true, gr:'🥣 Μπάρα δημητριακών (1 τεμ. ~25g)', en:'🥣 Cereal bar (1 pc ~25g)', tip:'Αντικαθιστά 1 μερίδα αμύλου + 1 μερίδα λίπους / Replaces 1 starch + 1 fat exchange'}, // 1 starch + 1 fat
   {v:'crackers',   group:'starch', snackOnly:true, gr:'🍞 Κράκερ ολικής (3-4 τεμ.)', en:'🍞 Wholegrain crackers (3-4 pcs)', tip:'Αντικαθιστά 1 μερίδα αμύλου από κύριο γεύμα / Replaces 1 starch serving from a main meal'}, // 1 starch exchange
   {v:'nuts',       gr:'🥜 Ξηροί καρποί (1 λίπος)',     en:'🥜 Nuts (1 fat exchange)', tip:'Αντικαθιστά 1 κ.γ. ελαιόλαδο από το κύριο γεύμα — οι θερμίδες παραμένουν ίδιες / Replaces 1 tsp olive oil from main meal — calories stay the same'},        // 1 fat exchange
   {v:'coffee',     gr:'☕ + Καφές',                    en:'☕ + Coffee (without sugar)'},      // additive extra
 ];
 const STARCH_SNACK_VALUES = ['oatcookies','cerealbar','crackers'];
+const STARCH_PLUS_FAT_SNACK_VALUES = ['oatcookies','cerealbar'];
 function selectedStarchSnackValue(extras){
   return (extras||[]).find(v=>STARCH_SNACK_VALUES.includes(v)) || '';
+}
+function starchSnackIncludesFat(value){
+  return STARCH_PLUS_FAT_SNACK_VALUES.includes(value);
+}
+function snackReplacementNote(value){
+  if(value==='nuts') return 'Αντικαθιστά 1 μερίδα λίπους (ελαιόλαδο)';
+  if(starchSnackIncludesFat(value)) return 'Αντικαθιστά 1 μερίδα αμύλου + 1 μερίδα λίπους';
+  if(STARCH_SNACK_VALUES.includes(value)) return 'Αντικαθιστά 1 μερίδα αμύλου από κύριο γεύμα';
+  return '';
 }
 function selectedStarchSnackCount(sourcePlan=null){
   const plan=sourcePlan || S.mealSel || {};
@@ -3075,7 +3085,8 @@ function snackExtrasHtml(slot='snack', selected=[]){
       const opacity=noStarchAvailable ? '.45' : '1';
       const cursor=noStarchAvailable ? 'not-allowed' : 'pointer';
       const warn=noStarchAvailable ? '<span style="color:var(--amber-700);font-size:10px;font-weight:700;margin-left:3px">Δεν υπάρχει διαθέσιμο άμυλο</span>' : '';
-      const note=(isStarch && checked) ? '<div style="color:var(--teal-700);font-size:10px;font-weight:700;margin-left:20px;margin-top:1px">Αντικαθιστά 1 μερίδα αμύλου από κύριο γεύμα</div>' : '';
+      const noteText=checked ? snackReplacementNote(e.v) : '';
+      const note=noteText ? `<div style="color:var(--teal-700);font-size:10px;font-weight:700;margin-left:20px;margin-top:1px">${noteText}</div>` : '';
       return `<div style="display:flex;flex-direction:column;opacity:${opacity}"><label title="${safeHtml(e.tip||'')}" style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:${cursor};white-space:nowrap"><input type="checkbox" value="${e.v}" data-group="${e.group||''}" style="width:auto" ${checked?'checked':''} ${disabled} onchange="handleSnackOptionChange(this)"> ${snackExtraLabel(e, lang)}${warn}</label>${note}</div>`;
     }).join('');
 }
@@ -3184,6 +3195,7 @@ function buildSlotSnack(slot, extras, lang='GR', breakfastKey, plan=null, fruitD
   }
   if(starchChoice){
     exch.starch += 1;
+    if(starchSnackIncludesFat(starchChoice)) exch.fat += 1;
     const item=SNACK_EXTRAS.find(e=>e.v===starchChoice);
     parts.push(lang==='EN' ? (item?.en||'Starch snack') : (item?.gr||'Σνακ αμύλου'));
   }
@@ -4686,8 +4698,8 @@ function buildSevenDay(){
   const sel=(key,di,opts,cur)=>`<select style="width:100%;font-size:11px;padding:3px 5px;border:1px solid var(--border);border-radius:4px;background:var(--bg-page);color:var(--text-secondary);margin-bottom:5px" onchange="handleWeekMealSelect(${di},'${key}',this)">${mealOptionsHtml(opts,cur)}</select>`;
   // Compact checkbox-extras group for a snack slot on a given day
   const extrasGroup=(slotKey,di,checked)=>`<div class="snack-extras-group" style="display:flex;flex-direction:column;gap:2px;margin-bottom:5px">${SNACK_EXTRAS.filter(e=>!(slotKey==='sleepExtras' && e.snackOnly)).map(e=>{
-    const isStarch=STARCH_SNACK_VALUES.includes(e.v);
-    const note=isStarch && checked.includes(e.v) ? '<div style="color:var(--teal-700);font-size:9px;font-weight:700;margin-left:18px">Αντικαθιστά 1 μερίδα αμύλου από κύριο γεύμα</div>' : '';
+    const noteText=checked.includes(e.v) ? snackReplacementNote(e.v) : '';
+    const note=noteText ? `<div style="color:var(--teal-700);font-size:9px;font-weight:700;margin-left:18px">${noteText}</div>` : '';
     return `<div style="display:flex;flex-direction:column"><label title="${safeHtml(e.tip||'')}" style="display:flex;align-items:center;gap:4px;font-size:10px;cursor:pointer;white-space:nowrap"><input type="checkbox" data-group="${e.group||''}" style="width:auto;transform:scale(0.85)" ${checked.includes(e.v)?'checked':''} onchange="toggleWeekPlanExtra(${di},'${slotKey}','${e.v}',this.checked)"> ${snackExtraLabel(e, lang)}</label>${note}</div>`;
   }).join('')}</div>`;
 
@@ -4937,11 +4949,18 @@ function strictApplyNutsReplacement(slots, plan){
 
 function strictApplySnackStarchReplacement(slots, plan){
   [['snk1','snk1Extras'],['snk2','snk2Extras']].forEach(([slot,key])=>{
-    if(!selectedStarchSnackValue(plan?.[key]||plan?.[key.replace('snk','snack')]||[])) return;
+    const starchValue=selectedStarchSnackValue(plan?.[key]||plan?.[key.replace('snk','snack')]||[]);
+    if(!starchValue) return;
     slots[slot].starch=(slots[slot].starch||0)+1;
     if((slots.lun.starch||0)>0) slots.lun.starch--;
     else if((slots.din.starch||0)>0) slots.din.starch--;
     else console.warn('[NutriFlow strict ledger] Starch snack selected but no main-meal starch was available to replace.', {slot, plan});
+    if(starchSnackIncludesFat(starchValue)){
+      slots[slot].fat=(slots[slot].fat||0)+1;
+      if((slots.lun.fat||0)>0) slots.lun.fat--;
+      else if((slots.din.fat||0)>0) slots.din.fat--;
+      else console.warn('[NutriFlow strict ledger] Starch+fat snack selected but no main-meal fat was available to replace.', {slot, plan});
+    }
   });
 }
 
@@ -5016,8 +5035,8 @@ function strictSnackDescription(exch, extras, lang='GR'){
       ? (lang==='EN' ? `${exch.dairy} yogurt 2% (~${Math.round(170*exch.dairy)}g)` : `${exch.dairy} γιαούρτι 2% (~${Math.round(170*exch.dairy)}g)`)
       : (lang==='EN' ? `${exch.dairy} cup${exch.dairy>1?'s':''} 1.5% milk` : `${exch.dairy} φλ. γάλα 1,5%`));
   }
-  if(exch.fat){
-    parts.push(lang==='EN' ? `${exch.fat*6} almonds or ${exch.fat*4} walnuts` : `${exch.fat*6} αμύγδαλα ή ${exch.fat*4} καρύδια`);
+  if((extras||[]).includes('nuts')){
+    parts.push(lang==='EN' ? '6 almonds or 4 walnuts' : '6 αμύγδαλα ή 4 καρύδια');
   }
   if(exch.starch){
     const starchValue=selectedStarchSnackValue(extras||[]);
@@ -5417,7 +5436,8 @@ function renderSevenDayMealCard(dayPlan, dt, slot, lang, dayIndex){
     slot.key==='din' ? `<select style="width:100%;margin-top:8px" onchange="handleWeekMealSelect(${dayIndex},'din',this)">${mealOptionsHtml(filteredDin,dayPlan.din)}</select>` : '';
   const extrasHtml=extraKey && !dayPlan.aiMeals ? `<div class="snack-extras-group" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">${SNACK_EXTRAS.filter(e=>!(slot.key==='sleep' && e.snackOnly)).map(e=>{
     const checked=dayPlan[extraKey]?.includes(e.v);
-    const note=STARCH_SNACK_VALUES.includes(e.v) && checked ? '<div style="color:var(--teal-700);font-size:10px;font-weight:700;margin-left:20px;margin-top:1px">Αντικαθιστά 1 μερίδα αμύλου από κύριο γεύμα</div>' : '';
+    const noteText=checked ? snackReplacementNote(e.v) : '';
+    const note=noteText ? `<div style="color:var(--teal-700);font-size:10px;font-weight:700;margin-left:20px;margin-top:1px">${noteText}</div>` : '';
     return `<div style="display:flex;flex-direction:column"><label title="${safeHtml(e.tip||'')}" style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer"><input type="checkbox" data-group="${e.group||''}" ${checked?'checked':''} onchange="toggleWeekPlanExtra(${dayIndex},'${extraKey}','${e.v}',this.checked)"> ${snackExtraLabel(e, lang)}</label>${note}</div>`;
   }).join('')}</div>` : '';
   return `<div style="border:1px solid var(--border);border-radius:8px;background:var(--bg-surface);padding:12px;display:flex;flex-direction:column;gap:7px">
