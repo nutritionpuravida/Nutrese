@@ -2398,6 +2398,38 @@ function refreshMealPlanViews(){
 }
 function calcDayTotals(){
   const ms = S.mealSel;
+  const strictPlan={
+    brk:ms.breakfast, lun:ms.lunch, din:ms.dinner,
+    snk1Extras:ms.snack1Extras||[], snk2Extras:ms.snack2Extras||[], sleepExtras:ms.sleepExtras||[],
+    snack1Extras:ms.snack1Extras||[], snack2Extras:ms.snack2Extras||[]
+  };
+  const strict=strictFallbackLedger(strictPlan, 0);
+  if(strict?.valid){
+    const target=1581;
+    return {
+      brkKcal:strictSlotKcal(strict.slots.brk),
+      snk1Kcal:strictSlotKcal(strict.slots.snk1),
+      lunKcal:strictSlotKcal(strict.slots.lun),
+      snk2Kcal:strictSlotKcal(strict.slots.snk2),
+      dinKcal:strictSlotKcal(strict.slots.din),
+      slpKcal:strictSlotKcal(strict.slots.sleep),
+      totalKcal:strict.totalKcal,
+      target,
+      gap:strict.totalKcal-target,
+      exchangeTotalKcal:target,
+      allocatedExchangeKcal:target,
+      exchangeGap:strict.totalKcal-target,
+      addOnKcal:0,
+      extraFoodKcal:extraKcal('brk', null)+extraKcal('lun', null)+extraKcal('din', null)+extraKcal('snk1', null)+extraKcal('snk2', null)+extraKcal('sleep', null),
+      exchangeTarget:{...STRICT_CASE1_EXCHANGES},
+      allocatedExchanges:strict.totals,
+      exchangeDiff:strict.diff,
+      warnings:[],
+      strictLedger:strict,
+      strictSlots:strict.slots,
+      strictPlan
+    };
+  }
   const allocation = getDayMealAllocation(ms);
   const portions = allocation.portions;
   const brkComp  = MEAL_EXCHANGES[ms.breakfast] || {};
@@ -2950,14 +2982,36 @@ const DINNER_OPTIONS = [
   {v:'DIN_HALLOUMI_SALAD', l:'Χαλούμι ψητό + σαλάτα 🥚'},
   {v:'DIN_BEAN_PASTA',     l:'Φασόλια + ζυμαρικά 🌱'},
 ];
+function mealTitleFromTemplate(key, lang='GR'){
+  const map=lang==='EN' ? MEALS_EN : MEALS;
+  const text=map[key] ? map[key]({}, {}) : '';
+  return String(text||'').split(/\s+[–-]\s+|\s+\(/)[0].trim();
+}
+function mealOptionDisplayLabel(option, lang=S.mealLanguage||'GR'){
+  if(lang==='EN'){
+    const title=mealTitleFromTemplate(option.v, 'EN');
+    if(title) return title;
+  }
+  return option.l;
+}
 function mealOptionsHtml(options, current){
-  const base=options.map(o=>`<option value="${o.v}" ${o.v===current?'selected':''}>${o.l}</option>`).join('');
+  const lang=S.mealLanguage||'GR';
+  const base=options.map(o=>`<option value="${o.v}" ${o.v===current?'selected':''}>${safeHtml(mealOptionDisplayLabel(o, lang))}</option>`).join('');
   const customCreate=`<option value="__CUSTOM__">＋ Custom meal</option>`;
   const custom=(S.customMeals||[]).map(m=>{
     const v='CUSTOM_'+m.id;
     return `<option value="${v}" ${v===current?'selected':''}>✏️ Custom — ${safeHtml(m.name||'Meal')}</option>`;
   }).join('');
   return base + customCreate + custom;
+}
+function refreshMealDropdownLabels(){
+  const diet=v('p-diet')||'Omnivore';
+  const brk=document.getElementById('s-breakfast');
+  const lun=document.getElementById('s-lunch');
+  const din=document.getElementById('s-dinner');
+  if(brk) brk.innerHTML=mealOptionsHtml(filteredMealOptions(BREAKFAST_OPTIONS,diet), brk.value||S.mealSel?.breakfast||'BRK_TOAST');
+  if(lun) lun.innerHTML=mealOptionsHtml(filteredMealOptions(LUNCH_OPTIONS,diet), lun.value||S.mealSel?.lunch||'LUN_CHICKEN_RICE');
+  if(din) din.innerHTML=mealOptionsHtml(filteredMealOptions(DINNER_OPTIONS,diet), din.value||S.mealSel?.dinner||'DIN_FISH_POTATO');
 }
 
 // ── SNACK EXTRAS (multi-select per slot) ──
@@ -3178,6 +3232,7 @@ function syncWeekPlanSnackExtraFromOneDay(extraValue){
 function setMealLanguage(lang){
   S.mealLanguage = lang==='EN' ? 'EN' : 'GR';
   updateMealLanguageButtons();
+  refreshMealDropdownLabels();
   refreshSnackExtrasLabels();
   setEl('condition-guidance', renderCombinedGuidance(S.conditions));
   if(document.getElementById('page-blood')?.classList.contains('active')) renderVitaminSuggestions();
@@ -4424,13 +4479,15 @@ function buildOneDayPlan(){
   const snk1Built=allocation.snacks.snk1Built;
   const snk2Built=allocation.snacks.snk2Built;
   const sleepBuilt=allocation.snacks.sleepBuilt;
+  const strictTextPlan=day.strictPlan||{brk,lun,din,snk1Extras,snk2Extras,sleepExtras};
+  const strictActive=!!day.strictSlots;
   const meals=[
-    {slot:'brk', time:lang==='EN'?'Breakfast':'Πρωινό',      en:'Breakfast',     text:mealText(brk,null,lang),              kcal:day.brkKcal},
-    {slot:'snk1', time:lang==='EN'?'Snack 1':'Σνακ 1',        en:'Snack 1',       text:snk1Built.text,                       kcal:day.snk1Kcal},
-    {slot:'lun', time:lang==='EN'?'Lunch':'Μεσημεριανό',     en:'Lunch',         text:mealText(lun,portions.lunch,lang),    kcal:day.lunKcal},
-    {slot:'snk2', time:lang==='EN'?'Snack 2':'Σνακ 2',        en:'Snack 2',       text:snk2Built.text,                       kcal:day.snk2Kcal},
-    {slot:'din', time:lang==='EN'?'Dinner':'Βραδινό',        en:'Dinner',        text:mealText(din,portions.dinner,lang),   kcal:day.dinKcal},
-    {slot:'sleep', time:lang==='EN'?'Before sleep':'Πριν τον ύπνο',en:'Before sleep', text:sleepBuilt.text,                   kcal:day.slpKcal},
+    {slot:'brk', time:lang==='EN'?'Breakfast':'Πρωινό',      en:'Breakfast',     text:strictActive?strictSlotText(strictTextPlan,'brk',lang,0):mealText(brk,null,lang),              kcal:day.brkKcal},
+    {slot:'snk1', time:lang==='EN'?'Snack 1':'Σνακ 1',        en:'Snack 1',       text:strictActive?strictSlotText(strictTextPlan,'snk1',lang,0):snk1Built.text,                       kcal:day.snk1Kcal},
+    {slot:'lun', time:lang==='EN'?'Lunch':'Μεσημεριανό',     en:'Lunch',         text:strictActive?strictSlotText(strictTextPlan,'lun',lang,0):mealText(lun,portions.lunch,lang),    kcal:day.lunKcal},
+    {slot:'snk2', time:lang==='EN'?'Snack 2':'Σνακ 2',        en:'Snack 2',       text:strictActive?strictSlotText(strictTextPlan,'snk2',lang,0):snk2Built.text,                       kcal:day.snk2Kcal},
+    {slot:'din', time:lang==='EN'?'Dinner':'Βραδινό',        en:'Dinner',        text:strictActive?strictSlotText(strictTextPlan,'din',lang,0):mealText(din,portions.dinner,lang),   kcal:day.dinKcal},
+    {slot:'sleep', time:lang==='EN'?'Before sleep':'Πριν τον ύπνο',en:'Before sleep', text:strictActive?strictSlotText(strictTextPlan,'sleep',lang,0):sleepBuilt.text,                   kcal:day.slpKcal},
   ];
   const visibleMeals=meals.filter(m=>m.text&&m.text!=='—');
   const displayedTotalKcal=visibleMeals.reduce((sum,m)=>sum+Number(m.kcal||0),0);
@@ -4795,7 +4852,11 @@ const STRICT_WEEK_MEALS=[
 
 function strictCase1BudgetActive(){
   const ex=S.ex||{};
-  return Object.entries(STRICT_CASE1_EXCHANGES).every(([key,val])=>Number(ex[key]||0)===val);
+  return Object.entries(STRICT_CASE1_EXCHANGES).every(([key,val])=>{
+    const current=Number(ex[key]||0);
+    if(key==='veg') return current===val || current===5;
+    return current===val;
+  });
 }
 
 function strictSlotKcal(exch){
@@ -4829,6 +4890,26 @@ function strictApplyNutsReplacement(slots, plan){
   }
 }
 
+function strictCompleteDairyLedger(slots, plan, isToast){
+  const target=STRICT_CASE1_EXCHANGES.dairy;
+  let current=Object.values(slots).reduce((sum,exch)=>sum+Number(exch?.dairy||0),0);
+  ['snk1','snk2','sleep'].forEach(slot=>{
+    if(current>=target) return;
+    if(dairyChoiceForPlanSlot(plan, slot)){
+      slots[slot].dairy=(slots[slot].dairy||0)+1;
+      current++;
+    }
+  });
+  const fallbackOrder=isToast ? ['snk1','sleep','snk2'] : ['sleep','snk1','snk2'];
+  fallbackOrder.forEach(slot=>{
+    if(current>=target) return;
+    if(!(slots[slot].dairy>0)){
+      slots[slot].dairy=1;
+      current++;
+    }
+  });
+}
+
 function strictFallbackLedger(dayPlan, dayIndex){
   if(!strictCase1BudgetActive()) return null;
   normalizeDairyExtrasForPlan(dayPlan);
@@ -4848,9 +4929,7 @@ function strictFallbackLedger(dayPlan, dayIndex){
     din:{starch:1,protein:4,fat:4,veg:3},
     sleep:{},
   };
-  ['snk1','snk2','sleep'].forEach(slot=>{
-    if(dairyChoiceForPlanSlot(dayPlan, slot)) slots[slot].dairy=(slots[slot].dairy||0)+1;
-  });
+  strictCompleteDairyLedger(slots, dayPlan, isToast);
   strictApplyNutsReplacement(slots, dayPlan);
   const totals=strictZeroUse();
   Object.values(slots).forEach(exch=>strictAddUse(totals, exch));
@@ -5050,7 +5129,7 @@ function mealOptionLabel(key, lang='GR'){
   const all=[...BREAKFAST_OPTIONS,...LUNCH_OPTIONS,...DINNER_OPTIONS];
   const found=all.find(o=>o.v===key);
   if(!found) return isCustomMealKey(key) ? customMealText(key, lang).split('–')[0].trim() : '';
-  return found.l.replace(/\s*[🌱🥚]+/g,'');
+  return mealOptionDisplayLabel(found, lang).replace(/\s*[🌱🥚]+/g,'');
 }
 
 function getSevenDaySlotData(dayPlan, dt, slotKey, lang, dayIndex){
@@ -5103,6 +5182,7 @@ function buildWeeklyPlanSnapshot(lang=S.mealLanguage||'GR'){
 
 function savedWeeklyPlansForReport(){
   if(S.savedWeeklyPlan?.weekPlans?.length===7) return S.savedWeeklyPlan.weekPlans;
+  if(S.weekPlans?.length===7) return S.weekPlans;
   return WEEK_PLANS;
 }
 
@@ -5231,8 +5311,8 @@ function buildSevenDay(){
       <span id="weekly-plan-save-status" style="font-size:13px;font-weight:800;color:var(--teal-700)"></span>
     </div>
     <div style="display:flex;gap:8px">
-      <button class="btn primary" id="meal-lang-gr-7day" onclick="setMealLanguage('GR')">GR</button>
-      <button class="btn" id="meal-lang-en-7day" onclick="setMealLanguage('EN')">EN</button>
+      <button class="btn ${lang==='EN'?'':'primary'}" id="meal-lang-gr-7day" onclick="setMealLanguage('GR')">GR</button>
+      <button class="btn ${lang==='EN'?'primary':''}" id="meal-lang-en-7day" onclick="setMealLanguage('EN')">EN</button>
     </div>
   </div>
   <div style="padding:10px 12px;border:1px solid var(--teal-100);background:var(--teal-50);border-radius:8px;margin-bottom:12px;color:var(--teal-800);font-size:13px;font-weight:700">✨ AI-generated plan — clinical review required before sharing with client.</div>
@@ -5265,6 +5345,7 @@ function buildSevenDay(){
     </div>`;
   }
   setEl('sevenday-body', html);
+  updateMealLanguageButtons();
 }
 
 function renderSevenDayMealCard(dayPlan, dt, slot, lang, dayIndex){
@@ -5659,7 +5740,7 @@ function reportBodyCompositionHtml(isEn){
 }
 
 function reportExchangeSummaryHtml(isEn){
-  const ex=S.ex||{};
+  const ex=strictCase1BudgetActive() ? STRICT_CASE1_EXCHANGES : (S.ex||{});
   const m=S.exMeta||makeExMeta();
   const rows=[
     ['starch', isEn?'Starch':'Άμυλο'],
@@ -5703,15 +5784,16 @@ function buildReport(){
   const lang=S.mealLanguage||'GR';
   const isEn=lang==='EN';
   const condList=(S.conditions&&S.conditions.length)?S.conditions:['General'];
-  const showClinicalBox=!(condList.length===1 && condList[0]==='General');
+  const showClinicalBox=!!((S.notes&&S.notes.diagnoses) || (S.notes&&S.notes.medication));
   const reportCondName=c=>isEn ? ((REPORT_CONDITION_EN[c]||REPORT_CONDITION_EN.General).name) : ((COND_GUIDANCE[c]||COND_GUIDANCE.General).gr);
   const reportCond=c=>isEn ? (REPORT_CONDITION_EN[c]||REPORT_CONDITION_EN.General) : (COND_GUIDANCE[c]||COND_GUIDANCE.General);
   const condNames=condList.map(reportCondName).join(', ');
-  const today=new Date().toLocaleDateString('el-GR');
+  const today=formatDateDMY(new Date());
   const n=S.notes, intake=S.intake;
   const reportExtraOpts={showRemove:false,hideTitle:true,showDbNote:false,reportMode:true};
   ensureWeekPlans();
-  const reportDailyPlan=(S.weekPlans&&S.weekPlans[0]) ? S.weekPlans[0] : WEEK_PLANS[0];
+  const reportWeekPlans=savedWeeklyPlansForReport();
+  const reportDailyPlan=(reportWeekPlans&&reportWeekPlans[0]) ? reportWeekPlans[0] : WEEK_PLANS[0];
   const day=calcDayTotalsForPlanDisplay(reportDailyPlan, lang, 0);
   const brkText=reportSevenDaySlotText(reportDailyPlan, day, 'brk', lang, 0, reportExtraOpts);
   const lunText=reportSevenDaySlotText(reportDailyPlan, day, 'lun', lang, 0, reportExtraOpts);
@@ -5777,9 +5859,7 @@ function buildReport(){
 
     ${showClinicalBox?`
     <div class="report-clinical-box" style="background:#fff8e1;color:#1f2937;border:1px solid #f3d27a;border-left:4px solid #d97706;padding:10px 12px;border-radius:6px;font-size:12px;margin-bottom:14px;line-height:1.55">
-      <strong>⚕️ ${isEn?'Primary condition':'Κύρια κατάσταση'}:</strong> ${condNames}
-      ${n.diagnoses?'<br><strong>'+(isEn?'Diagnoses':'Διαγνώσεις')+':</strong> '+n.diagnoses:''}
-      ${n.medication?'<br><strong>'+(isEn?'Medication':'Φαρμακευτική αγωγή')+':</strong> '+n.medication:''}
+      ${[n.diagnoses?'<strong>'+(isEn?'Diagnoses':'Διαγνώσεις')+':</strong> '+n.diagnoses:'', n.medication?'<strong>'+(isEn?'Medication':'Φαρμακευτική αγωγή')+':</strong> '+n.medication:''].filter(Boolean).join('<br>')}
     </div>`:''}
     ${bodyCompositionHtml}
     ${exchangeSummaryHtml}
@@ -5830,7 +5910,7 @@ function buildReport(){
         <th style="padding:4px;text-align:right;white-space:nowrap">kcal</th>
       </tr></thead>
       <tbody>
-      ${savedWeeklyPlansForReport().map((p,i)=>{
+      ${reportWeekPlans.map((p,i)=>{
         const dt=calcDayTotalsForPlanDisplay(p, lang, i);
         const ok=Math.abs(dt.gap)<=100;
         const dayLabel=weekDayLabel(p, i, lang);
@@ -7070,6 +7150,10 @@ function safeHtml(value){
 function pad2(n){ return String(n).padStart(2,'0'); }
 function dateToISO(d){ return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; }
 function todayISO(){ return dateToISO(new Date()); }
+function formatDateDMY(date=new Date()){
+  const d = date instanceof Date ? date : new Date(date);
+  return `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()}`;
+}
 function parseISODate(iso){
   const parts=String(iso||todayISO()).split('-').map(Number);
   return new Date(parts[0]||new Date().getFullYear(), (parts[1]||1)-1, parts[2]||1);
@@ -7838,7 +7922,7 @@ window.onload=function(){
     // have, and a hand-typed one is exactly what caused the original bug
     // (see the fingerprint comment above). The fingerprint remains the only
     // way to actually verify two copies share identical content.
-    const openedDate = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
+    const openedDate = formatDateDMY(new Date());
     const openedSidebarEl = document.getElementById('opened-date-sidebar');
     const openedTopbarEl = document.getElementById('opened-date-topbar');
     if(openedSidebarEl) openedSidebarEl.textContent = openedDate;
