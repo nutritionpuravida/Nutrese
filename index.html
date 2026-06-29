@@ -1976,18 +1976,77 @@ function getFruitDistribution(plan=null){
 // then the remainder is split evenly across snack1/snack2/sleep, with
 // "before sleep" given the first priority serving (clinically common to
 // place dairy before bed) when the total doesn't divide evenly.
-function getDairyDistribution(breakfastKey=(S.mealSel && S.mealSel.breakfast) || 'BRK_TOAST', plan=null){
-  const total = S.ex ? (S.ex.dairy||0) : 0;
+function dairyTargetForSnackSlots(breakfastKey=(S.mealSel && S.mealSel.breakfast) || 'BRK_TOAST'){
+  const total = Math.max(0, Math.round(Number(S.ex ? (S.ex.dairy||0) : 0)));
   const brkUsesDairy = (breakfastKey==='BRK_CEREAL' || breakfastKey==='BRK_OATS_VEGAN') ? 1 : 0;
-  const remaining = Math.max(0, total - brkUsesDairy);
+  return {total, brkUsesDairy, snackTarget:Math.max(0, total-brkUsesDairy)};
+}
+function planSlotExtras(plan, slot){
+  if(!plan) return [];
+  if(slot==='snk1') return Array.isArray(plan.snk1Extras) ? plan.snk1Extras : (Array.isArray(plan.snack1Extras) ? plan.snack1Extras : []);
+  if(slot==='snk2') return Array.isArray(plan.snk2Extras) ? plan.snk2Extras : (Array.isArray(plan.snack2Extras) ? plan.snack2Extras : []);
+  return Array.isArray(plan.sleepExtras) ? plan.sleepExtras : [];
+}
+function setPlanSlotExtras(plan, slot, extras){
+  if(!plan) return;
+  const arr=[...new Set(extras||[])];
+  if(slot==='snk1'){ plan.snk1Extras=arr; plan.snack1Extras=arr; }
+  else if(slot==='snk2'){ plan.snk2Extras=arr; plan.snack2Extras=arr; }
+  else plan.sleepExtras=arr;
+}
+function removeDairyFromExtras(extras){ return (extras||[]).filter(v=>v!=='milk' && v!=='yogurt'); }
+function setSlotDairyChoice(plan, slot, choice='milk'){
+  const extras=removeDairyFromExtras(planSlotExtras(plan, slot));
+  if(choice) extras.push(choice);
+  setPlanSlotExtras(plan, slot, extras);
+}
+function dairyChoiceForPlanSlot(plan, slot){ return snackDairyChoice(planSlotExtras(plan, slot)); }
+function slotFromExtrasKey(key){
+  if(key==='snk1Extras' || key==='snack1Extras') return 'snk1';
+  if(key==='snk2Extras' || key==='snack2Extras') return 'snk2';
+  if(key==='sleepExtras') return 'sleep';
+  return '';
+}
+function normalizeDairyExtrasForPlan(plan, changedSlot=''){
+  if(!plan) return plan;
+  const p=plan;
+  const brk=p.brk || p.breakfast || 'BRK_TOAST';
+  const {brkUsesDairy, snackTarget}=dairyTargetForSnackSlots(brk);
+  const slots=['snk1','snk2','sleep'];
+  if(snackTarget<=0){
+    slots.forEach(slot=>setPlanSlotExtras(p, slot, removeDairyFromExtras(planSlotExtras(p, slot))));
+    return p;
+  }
+  let selected=slots.filter(slot=>!!dairyChoiceForPlanSlot(p, slot));
+  if(selected.length>snackTarget){
+    const removalOrder=['sleep','snk2','snk1'].filter(slot=>slot!==changedSlot);
+    for(const slot of removalOrder){
+      if(selected.length<=snackTarget) break;
+      setPlanSlotExtras(p, slot, removeDairyFromExtras(planSlotExtras(p, slot)));
+      selected=slots.filter(s=>!!dairyChoiceForPlanSlot(p, s));
+    }
+  }
+  selected=slots.filter(slot=>!!dairyChoiceForPlanSlot(p, slot));
+  if(selected.length<snackTarget){
+    const fillOrder=['snk1','sleep','snk2'].filter(slot=>slot!==changedSlot).concat([changedSlot].filter(Boolean));
+    for(const slot of fillOrder){
+      if(selected.length>=snackTarget) break;
+      if(!dairyChoiceForPlanSlot(p, slot)){
+        setSlotDairyChoice(p, slot, 'milk');
+        selected=slots.filter(s=>!!dairyChoiceForPlanSlot(p, s));
+      }
+    }
+  }
+  p.brk=p.brk||p.breakfast;
+  p.lun=p.lun||p.lunch;
+  p.din=p.din||p.dinner;
+  return p;
+}
+function getDairyDistribution(breakfastKey=(S.mealSel && S.mealSel.breakfast) || 'BRK_TOAST', plan=null){
+  const {brkUsesDairy}=dairyTargetForSnackSlots(breakfastKey);
   const p=plan?normalizeMealPlan(plan):normalizeMealPlan(S.mealSel);
-  const selected=['snk1','snk2','sleep'].filter(slot=>{
-    const key=slot==='snk1'?'snack1Extras':slot==='snk2'?'snack2Extras':'sleepExtras';
-    return !!snackDairyChoice(p[key]);
-  });
-  const backfill=['snk1','sleep','snk2'].filter(slot=>!selected.includes(slot));
-  const dist=splitExchangeAcrossSlots(remaining, [...selected, ...backfill]);
-  dist.brk=brkUsesDairy;
+  const dist={brk:brkUsesDairy,snk1:0,snk2:0,sleep:0,lun:0,din:0};
+  ['snk1','snk2','sleep'].forEach(slot=>{ dist[slot]=dairyChoiceForPlanSlot(p, slot) ? 1 : 0; });
   return dist;
 }
 
@@ -2949,6 +3008,8 @@ function handleSnackOptionChange(cb){
   const stateKey=container?.id ? oneDaySlotMap[container.id] : null;
   if(stateKey){
     S.mealSel={...S.mealSel,[stateKey]:Array.from(container.querySelectorAll('input[type=checkbox]:checked')).map(input=>input.value)};
+    normalizeDairyExtrasForPlan(S.mealSel, slotFromExtrasKey(stateKey));
+    syncSnackCheckboxUiFromMealSel();
     console.log('[NutriFlow snacks] synced 1-day snack state', stateKey, S.mealSel[stateKey]);
   }
   if(document.getElementById('page-oneday')?.classList.contains('active')){
@@ -4697,6 +4758,9 @@ function toggleWeekPlanExtra(dayIndex, extrasKey, extraValue, checked){
   if(extrasKey==='snack1Extras') day.snk1Extras=day.snack1Extras;
   if(extrasKey==='snk2Extras') day.snack2Extras=day.snk2Extras;
   if(extrasKey==='snack2Extras') day.snk2Extras=day.snack2Extras;
+  if(extraValue==='milk' || extraValue==='yogurt'){
+    normalizeDairyExtrasForPlan(day, slotFromExtrasKey(extrasKey));
+  }
   buildSevenDay();
 }
 
@@ -4759,22 +4823,26 @@ function strictApplyNutsReplacement(slots, plan){
 
 function strictFallbackLedger(dayPlan, dayIndex){
   if(!strictCase1BudgetActive()) return null;
+  normalizeDairyExtrasForPlan(dayPlan);
   const isToast=[0,2,4,6].includes(Number(dayIndex));
   const slots=isToast ? {
     brk:{starch:2,protein:1,veg:1},
-    snk1:{fruit:1,dairy:1},
+    snk1:{fruit:1},
     lun:{starch:2,protein:3,fat:4,veg:3},
     snk2:{fruit:1},
     din:{starch:1,protein:4,fat:4,veg:2},
-    sleep:{dairy:1},
+    sleep:{},
   } : {
     brk:{starch:2,dairy:1},
     snk1:{fruit:1},
     lun:{starch:2,protein:4,fat:4,veg:3},
     snk2:{fruit:1},
     din:{starch:1,protein:4,fat:4,veg:3},
-    sleep:{dairy:1},
+    sleep:{},
   };
+  ['snk1','snk2','sleep'].forEach(slot=>{
+    if(dairyChoiceForPlanSlot(dayPlan, slot)) slots[slot].dairy=(slots[slot].dairy||0)+1;
+  });
   strictApplyNutsReplacement(slots, dayPlan);
   const totals=strictZeroUse();
   Object.values(slots).forEach(exch=>strictAddUse(totals, exch));
@@ -4920,13 +4988,7 @@ function ensureWeekPlans(){
     p.snack1Extras=p.snk1Extras;
     p.snack2Extras=p.snk2Extras;
     if(!Array.isArray(p.sleepExtras)) p.sleepExtras=[];
-    if(index===5 && !p.sleepExtras.some(v=>v==='milk' || v==='yogurt')){
-      p.sleepExtras=[...p.sleepExtras.filter(v=>v!=='nofruit'), 'milk'];
-    }
-    if(index===5 && (p.brk==='BRK_CEREAL' || p.brk==='BRK_OATS_VEGAN')){
-      p.snk1Extras=p.snk1Extras.filter(v=>v!=='milk' && v!=='yogurt');
-      p.snack1Extras=p.snk1Extras;
-    }
+    normalizeDairyExtrasForPlan(p);
   });
   enforceWeeklyTunaCap(S.weekPlans);
 }
