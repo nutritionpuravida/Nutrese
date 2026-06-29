@@ -2827,7 +2827,7 @@ const EQUIVALENTS_DATA = [
       {gr:'2 μικρά ροδάκινα ή βερίκοκα', en:'2 small peaches or apricots'},
       {gr:'1 μικρό αχλάδι ή 1 ακτινίδιο μεγάλο', en:'1 small pear or 1 large kiwi'},
       {gr:'½ μεγάλο γκρέιπφρουτ', en:'½ large grapefruit'},
-      {gr:'2 κ.σ. σταφίδες ή 3 αποξηραμένα βερίκοκα (βλ. Οδηγό Ισοδυναμιών)', en:'2 tbsp raisins or 3 dried apricots (see Equivalents Guide)'},
+      {gr:'2 κ.σ. σταφίδες ή 3 αποξηραμένα βερίκοκα', en:'2 tbsp raisins or 3 dried apricots'},
       {gr:'3 δαμάσκηνα φρέσκα', en:'3 fresh plums'},
     ]},
   { key:'veg', icon:'🥗', gr:'Λαχανικά (1 μερίδα)', en:'Vegetables (1 exchange)',
@@ -3131,9 +3131,9 @@ function buildSlotSnack(slot, extras, lang='GR', breakfastKey, plan=null, fruitD
     exch.fruit += fruitCount;
     parts.push(fruitChoice==='driedfruit'
       ? (lang==='EN'
-        ? `${fruitCount} serving${fruitCount>1?'s':''} dried fruit (see Equivalents Guide)`
-        : `${fruitCount} μερίδ${fruitCount>1?'ες':'α'} αποξηραμένων φρούτων (βλ. Οδηγό Ισοδυναμιών)`)
-      : (lang==='EN' ? `${fruitCount} fruit${fruitCount>1?'s':''} (see Equivalents Guide)` : `${fruitCount} φρούτ${fruitCount>1?'α':'ο'} (βλ. Οδηγό Ισοδυναμιών)`));
+        ? `${fruitCount} serving${fruitCount>1?'s':''} dried fruit`
+        : `${fruitCount} μερίδ${fruitCount>1?'ες':'α'} αποξηραμένων φρούτων`)
+      : (lang==='EN' ? `${fruitCount} fruit${fruitCount>1?'s':''}` : `${fruitCount} φρούτ${fruitCount>1?'α':'ο'}`));
   }
   if(dairyCount>0){
     exch.dairy += dairyCount;
@@ -4951,8 +4951,8 @@ function strictSnackDescription(exch, extras, lang='GR'){
   if(exch.fruit){
     const dried=(extras||[]).includes('driedfruit');
     parts.push(dried
-      ? (lang==='EN' ? `${exch.fruit} serving${exch.fruit>1?'s':''} dried fruit (see Equivalents Guide)` : `${exch.fruit} μερίδ${exch.fruit>1?'ες':'α'} αποξηραμένων φρούτων (βλ. Οδηγό Ισοδυναμιών)`)
-      : (lang==='EN' ? `${exch.fruit} fruit${exch.fruit>1?'s':''} (see Equivalents Guide)` : `${exch.fruit} φρούτ${exch.fruit>1?'α':'ο'} (βλ. Οδηγό Ισοδυναμιών)`));
+      ? (lang==='EN' ? `${exch.fruit} serving${exch.fruit>1?'s':''} dried fruit` : `${exch.fruit} μερίδ${exch.fruit>1?'ες':'α'} αποξηραμένων φρούτων`)
+      : (lang==='EN' ? `${exch.fruit} fruit${exch.fruit>1?'s':''}` : `${exch.fruit} φρούτ${exch.fruit>1?'α':'ο'}`));
   }
   if(exch.dairy){
     const yogurt=(extras||[]).includes('yogurt');
@@ -5739,44 +5739,6 @@ function reportBodyCompositionHtml(isEn){
   ]);
 }
 
-function reportExchangeSummaryHtml(isEn){
-  const ex=strictCase1BudgetActive() ? STRICT_CASE1_EXCHANGES : (S.ex||{});
-  const m=S.exMeta||makeExMeta();
-  const rows=[
-    ['starch', isEn?'Starch':'Άμυλο'],
-    ['protein', isEn?'Protein':'Πρωτεΐνη'],
-    ['fat', isEn?'Fat':'Λίπος'],
-    ['veg', isEn?'Vegetables':'Λαχανικά'],
-    ['fruit', isEn?'Fruit':'Φρούτα'],
-    ['dairy', isEn?'Dairy':'Γαλακτοκομικά'],
-  ].map(([key,label])=>{
-    const servings=Number(ex[key]||0);
-    const kcal=Math.round(servings*Number(m[key]?.kcal||0));
-    return {key,label,servings,kcal};
-  });
-  const total=rows.reduce((sum,r)=>sum+r.kcal,0);
-  if(!rows.some(r=>r.servings>0)) return '';
-  return `<div class="report-section-compact" style="margin:8px 0 10px">
-    <div style="font-size:13px;font-weight:700;color:var(--teal-800);margin:0 0 6px;border-bottom:2px solid var(--teal-600);padding-bottom:3px">⚖️ ${isEn?'Exchange System Summary':'Σύνοψη Συστήματος Ισοδυνάμων'}</div>
-    <table style="width:100%;border-collapse:collapse;font-size:11px;border:1px solid var(--border)">
-      <thead><tr style="background:var(--teal-600);color:#fff">
-        <th style="padding:4px;text-align:left">${isEn?'Category':'Κατηγορία'}</th>
-        <th style="padding:4px;text-align:right">Kcal</th>
-      </tr></thead>
-      <tbody>
-        ${rows.map(r=>`<tr style="border-bottom:1px solid var(--border)">
-          <td style="padding:4px">${safeHtml(r.label)}</td>
-          <td style="padding:4px;text-align:right;color:var(--teal-700);font-weight:700">${r.kcal}</td>
-        </tr>`).join('')}
-        <tr style="background:var(--teal-50);border-top:2px solid var(--teal-600);font-weight:800">
-          <td style="padding:4px">${isEn?'Total':'Σύνολο'}</td>
-          <td style="padding:4px;text-align:right">${total} kcal</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>`;
-}
-
 function buildReport(){
   updateMealLanguageButtons();
   syncReportModeControls();
@@ -5817,7 +5779,6 @@ function buildReport(){
   const dayUnit=isEn?'kcal/day':'kcal/ημέρα';
   const abnormalLabsHtml=S.reportOptions?.includeBlood!==false ? reportAbnormalLabsHtml(isEn) : '';
   const bodyCompositionHtml=reportBodyCompositionHtml(isEn);
-  const exchangeSummaryHtml=reportExchangeSummaryHtml(isEn);
   const reportGuidelinesHtml=`<div style="font-size:14px;font-weight:700;color:var(--teal-800);margin:14px 0 6px;border-bottom:2px solid var(--teal-600);padding-bottom:4px">📋 ${isEn?'GENERAL GUIDANCE':'ΓΕΝΙΚΕΣ ΟΔΗΓΙΕΣ'}</div>
     <div style="columns:2;column-gap:20px;font-size:12px;line-height:1.65;margin-bottom:14px">
       ${reportRules.map(r=>`<div style="break-inside:avoid;margin-bottom:4px">✔ ${r}</div>`).join('')}
@@ -5862,7 +5823,6 @@ function buildReport(){
       ${[n.diagnoses?'<strong>'+(isEn?'Diagnoses':'Διαγνώσεις')+':</strong> '+n.diagnoses:'', n.medication?'<strong>'+(isEn?'Medication':'Φαρμακευτική αγωγή')+':</strong> '+n.medication:''].filter(Boolean).join('<br>')}
     </div>`:''}
     ${bodyCompositionHtml}
-    ${exchangeSummaryHtml}
     ${reportGuidelinesHtml}
     ${abnormalLabsHtml}
     ${(S.reportOptions?.oneDay!==false) ? `
@@ -5936,11 +5896,6 @@ function buildReport(){
     ${n.clinician_notes?`
     <div style="font-size:14px;font-weight:700;color:var(--teal-800);margin:14px 0 6px;border-bottom:2px solid var(--teal-600);padding-bottom:4px">📝 ${isEn?'DIETITIAN NOTES':'ΣΗΜΕΙΩΣΕΙΣ ΔΙΑΙΤΟΛΟΓΟΥ'}</div>
     <div style="font-size:13px;padding:10px;background:var(--teal-50);border-radius:6px">${n.clinician_notes}</div>`:''}
-
-    <!-- FOOTER -->
-    <div style="margin-top:20px;padding-top:10px;border-top:1px solid #ddd;font-size:10px;color:#aaa;text-align:center">
-      NutriFlow - Smart Nutrition Software · ${today} · ${isEn?'For clinical use only · Prepared by a registered dietitian':'Για κλινική χρήση μόνο · Συντάχθηκε από εγκεκριμένο διαιτολόγο'}
-    </div>
   </div>`);
 }
 
