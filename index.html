@@ -2299,7 +2299,7 @@ Object.assign(MEALS, {
   LUN_LENTIL_SOUP: (ex,p) => 'Φακές σούπα (1 φλ. μαγειρεμένες φακές + 1 κ.γ. ελαιόλαδο) – σαλάτα (2 φλ.)',
   LUN_CHICKPEAS_SALAD: (ex,p) => 'Ρεβίθια (1 φλ. ρεβίθια + 1 κ.γ. ελαιόλαδο + ντομάτα) – σαλάτα (2 φλ.)',
   LUN_SPINACH_RICE: (ex,p) => 'Σπανακόρυζο (1 φλ. + 1 κ.γ. ελαιόλαδο) + 30g τυρί light – σαλάτα (2 φλ.)',
-  LUN_PEAS_LADERO: (ex,p) => 'Αρακάς λαδερός (1 φλ. + 1 κ.γ. ελαιόλαδο) – σαλάτα (2 φλ.)',
+  LUN_PEAS_LADERO: (ex,p) => 'Αρακάς (1 φλ. + 1 κ.γ. ελαιόλαδο) – σαλάτα (2 φλ.)',
   LUN_GRILLED_FISH_RICE: (ex,p) => 'Ψητό ψάρι (140g τσιπούρα ή λαβράκι) + ½ φλ. ρύζι + 2 κ.γ. ελαιόλαδο – σαλάτα (2 φλ.)',
   DIN_CHICKEN_QUINOA: (ex,p) => 'Κοτόπουλο + κινόα (120g μαγειρεμένο κοτόπουλο + ½ φλ. κινόα + 2 κ.γ. ελαιόλαδο) – σαλάτα (2 φλ.)',
   DIN_GEMISTA_LIGHT: (ex,p) => 'Γεμιστά light (120g κιμάς κοτόπουλου + ⅔ φλ. ρύζι + 1 κ.γ. ελαιόλαδο) – σαλάτα (2 φλ.)',
@@ -2333,7 +2333,7 @@ Object.assign(MEALS_EN, {
   LUN_LENTIL_SOUP: (ex,p) => 'Lentil soup (1 cup cooked lentils + 1 tsp olive oil) - salad (2 cups)',
   LUN_CHICKPEAS_SALAD: (ex,p) => 'Chickpeas (1 cup chickpeas + 1 tsp olive oil + tomato) - salad (2 cups)',
   LUN_SPINACH_RICE: (ex,p) => 'Spinach rice (1 cup + 1 tsp olive oil) + 30g light cheese - salad (2 cups)',
-  LUN_PEAS_LADERO: (ex,p) => 'Peas in olive oil (1 cup + 1 tsp olive oil) - salad (2 cups)',
+  LUN_PEAS_LADERO: (ex,p) => 'Peas (1 cup + 1 tsp olive oil) - salad (2 cups)',
   LUN_GRILLED_FISH_RICE: (ex,p) => 'Grilled fish (140g sea bream or sea bass) + 1/2 cup rice + 2 tsp olive oil - salad (2 cups)',
   DIN_CHICKEN_QUINOA: (ex,p) => 'Chicken + quinoa (120g cooked chicken + 1/2 cup cooked quinoa + 2 tsp olive oil) - salad (2 cups)',
   DIN_GEMISTA_LIGHT: (ex,p) => 'Stuffed vegetables light (120g chicken mince + 2/3 cup rice + 1 tsp olive oil) - salad (2 cups)',
@@ -3161,7 +3161,7 @@ const LUNCH_OPTIONS = [
   {v:'LUN_LENTIL_SOUP', l:'Φακές σούπα 🌱'},
   {v:'LUN_CHICKPEAS_SALAD', l:'Ρεβίθια + σαλάτα 🌱'},
   {v:'LUN_SPINACH_RICE', l:'Σπανακόρυζο + τυρί light'},
-  {v:'LUN_PEAS_LADERO', l:'Αρακάς λαδερός 🌱'},
+  {v:'LUN_PEAS_LADERO', l:'Αρακάς 🌱'},
   {v:'LUN_GRILLED_FISH_RICE', l:'Ψητό ψάρι + ρύζι'},
 ];
 const DINNER_OPTIONS = [
@@ -3296,6 +3296,18 @@ function snackExtraLabel(extra, lang){
   const key=(lang||S.mealLanguage)==='EN' ? 'en' : 'gr';
   return extra[key] || extra.gr || extra.en || extra.l || '';
 }
+function snackSlotName(slot){
+  if(slot==='snack1Extras' || slot==='snk1Extras' || slot==='snk1') return 'snk1';
+  if(slot==='snack2Extras' || slot==='snk2Extras' || slot==='snk2') return 'snk2';
+  if(slot==='sleepExtras' || slot==='sleep') return 'sleep';
+  return slot || 'snack';
+}
+function snackExtraAllowedForSlot(extra, slot){
+  const normalized=snackSlotName(slot);
+  if(extra.slots && !extra.slots.includes(normalized)) return false;
+  if(normalized==='sleep' && extra.snackOnly) return false;
+  return true;
+}
 function snackExtrasHtml(slot='snack', selected=[]){
   const lang=S.mealLanguage||'GR';
   const isSleep=slot==='sleep';
@@ -3303,10 +3315,7 @@ function snackExtrasHtml(slot='snack', selected=[]){
   const totalStarch=Math.max(0, Math.round(Number(S.ex?.starch||0)));
   const selectedInOtherSlots=Math.max(0, selectedStarchSnackCount() - (starchSelected ? 1 : 0));
   return SNACK_EXTRAS
-    .filter(e=>{
-      if(e.slots && !e.slots.includes(slot)) return false;
-      return !(isSleep && e.snackOnly);
-    })
+    .filter(e=>snackExtraAllowedForSlot(e, slot))
     .map(e=>{
       const checked=selected.includes(e.v) || (!selected.length && e.v==='fruit');
       const isStarch=STARCH_SNACK_VALUES.includes(e.v);
@@ -5002,7 +5011,7 @@ function buildSevenDay(){
   const ex=S.ex;
   const sel=(key,di,opts,cur)=>`<select style="width:100%;font-size:11px;padding:3px 5px;border:1px solid var(--border);border-radius:4px;background:var(--bg-page);color:var(--text-secondary);margin-bottom:5px" onchange="handleWeekMealSelect(${di},'${key}',this)">${mealOptionsHtml(opts,cur)}</select>`;
   // Compact checkbox-extras group for a snack slot on a given day
-  const extrasGroup=(slotKey,di,checked)=>`<div class="snack-extras-group" style="display:flex;flex-direction:column;gap:2px;margin-bottom:5px">${SNACK_EXTRAS.filter(e=>!(slotKey==='sleepExtras' && e.snackOnly)).map(e=>{
+  const extrasGroup=(slotKey,di,checked)=>`<div class="snack-extras-group" style="display:flex;flex-direction:column;gap:2px;margin-bottom:5px">${SNACK_EXTRAS.filter(e=>snackExtraAllowedForSlot(e, slotKey)).map(e=>{
     const noteText=checked.includes(e.v) ? snackReplacementNote(e.v) : '';
     const note=noteText ? `<div style="color:var(--teal-700);font-size:9px;font-weight:700;margin-left:18px">${noteText}</div>` : '';
     return `<div style="display:flex;flex-direction:column"><label title="${safeHtml(e.tip||'')}" style="display:flex;align-items:center;gap:4px;font-size:10px;cursor:pointer;white-space:nowrap"><input type="checkbox" data-group="${e.group||''}" style="width:auto;transform:scale(0.85)" ${checked.includes(e.v)?'checked':''} onchange="toggleWeekPlanExtra(${di},'${slotKey}','${e.v}',this.checked)"> ${snackExtraLabel(e, lang)}</label>${note}</div>`;
@@ -5748,7 +5757,7 @@ function renderSevenDayMealCard(dayPlan, dt, slot, lang, dayIndex){
   const selectHtml=slot.key==='brk' ? `<select style="width:100%;margin-top:8px" onchange="handleWeekMealSelect(${dayIndex},'brk',this)">${mealOptionsHtml(filteredBrk,dayPlan.brk)}</select>` :
     slot.key==='lun' ? `<select style="width:100%;margin-top:8px" onchange="handleWeekMealSelect(${dayIndex},'lun',this)">${mealOptionsHtml(filteredLun,dayPlan.lun)}</select>` :
     slot.key==='din' ? `<select style="width:100%;margin-top:8px" onchange="handleWeekMealSelect(${dayIndex},'din',this)">${mealOptionsHtml(filteredDin,dayPlan.din)}</select>` : '';
-  const extrasHtml=extraKey && !dayPlan.aiMeals ? `<div class="snack-extras-group" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">${SNACK_EXTRAS.filter(e=>!(slot.key==='sleep' && e.snackOnly)).map(e=>{
+  const extrasHtml=extraKey && !dayPlan.aiMeals ? `<div class="snack-extras-group" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">${SNACK_EXTRAS.filter(e=>snackExtraAllowedForSlot(e, slot.key)).map(e=>{
     const checked=dayPlan[extraKey]?.includes(e.v);
     const noteText=checked ? snackReplacementNote(e.v) : '';
     const note=noteText ? `<div style="color:var(--teal-700);font-size:10px;font-weight:700;margin-left:20px;margin-top:1px">${noteText}</div>` : '';
