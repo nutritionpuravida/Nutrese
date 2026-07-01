@@ -2321,11 +2321,11 @@ function mealText(key, portions, lang){
     const gramsPerEx = Math.round(30 * (((S.exMeta && S.exMeta.protein && S.exMeta.protein.pro) || 7)/7));
     if((lang||S.mealLanguage)==='EN'){
       text += key==='DIN_OMELETTE'
-        ? ' + 1 extra egg + 30g light turkey'
+        ? ' + 30g light turkey'
         : ` + ${extraProt*gramsPerEx}g cooked lean protein`;
     } else {
       text += key==='DIN_OMELETTE'
-        ? ' + 1 επιπλέον αυγό + 30g γαλοπούλα light'
+        ? ' + 30g γαλοπούλα light'
         : ` + ${extraProt*gramsPerEx}g μαγειρεμένη άπαχη πρωτεΐνη`;
     }
   }
