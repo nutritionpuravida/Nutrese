@@ -2210,6 +2210,9 @@ const MEALS = {
   BRK_EGGS_TOAST:  (ex,p) => `Τοστ (2 φέτες ψωμί ολικής) – 1 αυγό + 1 φέτα τυρί light`,
   BRK_CEREAL:      (ex,p) => `Βρώμη (5 κ.σ. / ~40g) – 1 φλ. γάλα 1,5%`,
   BRK_OATS_VEGAN:  (ex,p) => `Βρώμη (5 κ.σ. / ~40g) – 1 φλ. εμπλουτισμένο φυτικό γάλα (αμύγδαλο/σόγια)`,
+  BRK_BOILED_EGGS_2:(ex,p) => `Αυγά βραστά (2 αυγά) + 1 φέτα ψωμί ολικής + αγγούρι/ντοματίνια`,
+  BRK_RUSKS_ANTHOTYRO:(ex,p) => `Παξιμάδια (2) + ανθότυρο (~40g) + ντοματίνια`,
+  BRK_YOGURT_HONEY_WALNUTS:(ex,p) => `Γιαούρτι 2% (~170g) + μέλι (1 κ.γ.) + καρύδια (4) + φρούτο`,
   LUN_CHICKEN_RICE:   (ex,p) => 'Κοτόπουλο + ρύζι' + mealSuffix(ex,p,'σαλάτα',null,'ρύζι'),
   LUN_FISH_POTATO:    (ex,p) => 'Ψάρι + πατάτα' + mealSuffix(ex,p,'σαλάτα',null,'πατάτα','ψάρι',true),
   LUN_LOUVI_TUNA:     (ex,p) => 'Λουβί + τόνος' + mealSuffix(ex,p,'σαλάτα / χόρτα',null,'λουβί','τόνο',true),
@@ -2243,6 +2246,9 @@ const MEALS_EN = {
   BRK_EGGS_TOAST:  (ex,p) => `Toast (2 slices wholegrain bread) - 1 egg + 1 slice light cheese`,
   BRK_CEREAL:      (ex,p) => `Oats (5 tbsp / ~40g) - 1 cup 1.5% milk`,
   BRK_OATS_VEGAN:  (ex,p) => `Oats (5 tbsp / ~40g) - 1 cup fortified plant milk (almond/soy)`,
+  BRK_BOILED_EGGS_2:(ex,p) => `Boiled eggs (2 eggs) + 1 slice wholegrain bread + cucumber/cherry tomatoes`,
+  BRK_RUSKS_ANTHOTYRO:(ex,p) => `Rusks (2) + anthotyros cheese (~40g) + cherry tomatoes`,
+  BRK_YOGURT_HONEY_WALNUTS:(ex,p) => `Greek yogurt 2% (~170g) + honey (1 tsp) + walnuts (4) + fruit`,
   LUN_CHICKEN_RICE:   (ex,p) => 'Chicken + rice' + mealSuffixEn(ex,p,'salad',null,'rice'),
   LUN_FISH_POTATO:    (ex,p) => 'Fish + potato' + mealSuffixEn(ex,p,'salad',null,'potato','fish',true),
   LUN_LOUVI_TUNA:     (ex,p) => 'Black-eyed beans + tuna' + mealSuffixEn(ex,p,'salad / greens',null,'black-eyed beans','tuna',true),
@@ -2288,6 +2294,19 @@ Object.assign(MEALS, {
   DIN_TRACHANAS_HALLOUMI: (ex,p) => 'Τραχανάς σούπα + χαλούμι' + mealSuffix(ex,{...p,fat:Math.max(0,Number(p?.fat||0)-2)},'λαχανικά',null,'τραχανά','χαλούμι'),
   LUN_VEG_SOUP_CHICKEN: (ex,p) => 'Χορτόσουπα με κοτόπουλο' + mealSuffix(ex,p,'χορτόσουπα',null,'ρύζι','κοτόπουλο'),
   DIN_VEG_SOUP_CHICKEN: (ex,p) => 'Χορτόσουπα με κοτόπουλο' + mealSuffix(ex,p,'χορτόσουπα',null,'ρύζι','κοτόπουλο'),
+  LUN_CHICKEN_QUINOA: (ex,p) => 'Κοτόπουλο + κινόα (120g μαγειρεμένο κοτόπουλο + ½ φλ. κινόα + 2 κ.γ. ελαιόλαδο) – σαλάτα (2 φλ.)',
+  LUN_SALMON_QUINOA: (ex,p) => 'Σολομός + κινόα (140g μαγειρεμένο σολομό + ½ φλ. κινόα + 2 κ.γ. ελαιόλαδο) – σαλάτα (2 φλ.)',
+  LUN_LENTIL_SOUP: (ex,p) => 'Φακές σούπα (1 φλ. μαγειρεμένες φακές + 1 κ.γ. ελαιόλαδο) – σαλάτα (2 φλ.)',
+  LUN_CHICKPEAS_SALAD: (ex,p) => 'Ρεβίθια (1 φλ. ρεβίθια + 1 κ.γ. ελαιόλαδο + ντομάτα) – σαλάτα (2 φλ.)',
+  LUN_SPINACH_RICE: (ex,p) => 'Σπανακόρυζο (1 φλ. + 1 κ.γ. ελαιόλαδο) + 30g τυρί light – σαλάτα (2 φλ.)',
+  LUN_PEAS_LADERO: (ex,p) => 'Αρακάς λαδερός (1 φλ. + 1 κ.γ. ελαιόλαδο) – σαλάτα (2 φλ.)',
+  LUN_GRILLED_FISH_RICE: (ex,p) => 'Ψητό ψάρι (140g τσιπούρα ή λαβράκι) + ½ φλ. ρύζι + 2 κ.γ. ελαιόλαδο – σαλάτα (2 φλ.)',
+  DIN_CHICKEN_QUINOA: (ex,p) => 'Κοτόπουλο + κινόα (120g μαγειρεμένο κοτόπουλο + ½ φλ. κινόα + 2 κ.γ. ελαιόλαδο) – σαλάτα (2 φλ.)',
+  DIN_GEMISTA_LIGHT: (ex,p) => 'Γεμιστά light (120g κιμάς κοτόπουλου + ⅔ φλ. ρύζι + 1 κ.γ. ελαιόλαδο) – σαλάτα (2 φλ.)',
+  DIN_CHICKEN_MEATBALLS_RICE: (ex,p) => 'Κεφτεδάκια κοτόπουλου (120g) + ½ φλ. ρύζι + 2 κ.γ. ελαιόλαδο – σαλάτα (2 φλ.)',
+  DIN_CHICKEN_MINCE_PASTA: (ex,p) => 'Μακαρόνια με κιμά κοτόπουλο light (⅔ φλ. μαγειρεμένα + 90g κιμάς + 1 κ.γ. ελαιόλαδο) – σαλάτα (2 φλ.)',
+  DIN_GRILLED_FISH_RICE: (ex,p) => 'Ψητό ψάρι (140g τσιπούρα ή λαβράκι) + ½ φλ. ρύζι + 2 κ.γ. ελαιόλαδο – σαλάτα (2 φλ.)',
+  DIN_CHICKPEAS_SALAD: (ex,p) => 'Ρεβίθια (1 φλ. ρεβίθια + 1 κ.γ. ελαιόλαδο + ντομάτα) – σαλάτα (2 φλ.)',
 });
 
 Object.assign(MEALS_EN, {
@@ -2309,6 +2328,19 @@ Object.assign(MEALS_EN, {
   DIN_TRACHANAS_HALLOUMI: (ex,p) => 'Trachanas soup + halloumi' + mealSuffixEn(ex,{...p,fat:Math.max(0,Number(p?.fat||0)-2)},'vegetables',null,'trachanas','halloumi'),
   LUN_VEG_SOUP_CHICKEN: (ex,p) => 'Vegetable soup with chicken' + mealSuffixEn(ex,p,'vegetable soup',null,'rice','chicken'),
   DIN_VEG_SOUP_CHICKEN: (ex,p) => 'Vegetable soup with chicken' + mealSuffixEn(ex,p,'vegetable soup',null,'rice','chicken'),
+  LUN_CHICKEN_QUINOA: (ex,p) => 'Chicken + quinoa (120g cooked chicken + 1/2 cup cooked quinoa + 2 tsp olive oil) - salad (2 cups)',
+  LUN_SALMON_QUINOA: (ex,p) => 'Salmon + quinoa (140g cooked salmon + 1/2 cup cooked quinoa + 2 tsp olive oil) - salad (2 cups)',
+  LUN_LENTIL_SOUP: (ex,p) => 'Lentil soup (1 cup cooked lentils + 1 tsp olive oil) - salad (2 cups)',
+  LUN_CHICKPEAS_SALAD: (ex,p) => 'Chickpeas (1 cup chickpeas + 1 tsp olive oil + tomato) - salad (2 cups)',
+  LUN_SPINACH_RICE: (ex,p) => 'Spinach rice (1 cup + 1 tsp olive oil) + 30g light cheese - salad (2 cups)',
+  LUN_PEAS_LADERO: (ex,p) => 'Peas in olive oil (1 cup + 1 tsp olive oil) - salad (2 cups)',
+  LUN_GRILLED_FISH_RICE: (ex,p) => 'Grilled fish (140g sea bream or sea bass) + 1/2 cup rice + 2 tsp olive oil - salad (2 cups)',
+  DIN_CHICKEN_QUINOA: (ex,p) => 'Chicken + quinoa (120g cooked chicken + 1/2 cup cooked quinoa + 2 tsp olive oil) - salad (2 cups)',
+  DIN_GEMISTA_LIGHT: (ex,p) => 'Stuffed vegetables light (120g chicken mince + 2/3 cup rice + 1 tsp olive oil) - salad (2 cups)',
+  DIN_CHICKEN_MEATBALLS_RICE: (ex,p) => 'Chicken meatballs (120g) + 1/2 cup rice + 2 tsp olive oil - salad (2 cups)',
+  DIN_CHICKEN_MINCE_PASTA: (ex,p) => 'Pasta with chicken mince light (2/3 cup cooked + 90g mince + 1 tsp olive oil) - salad (2 cups)',
+  DIN_GRILLED_FISH_RICE: (ex,p) => 'Grilled fish (140g sea bream or sea bass) + 1/2 cup rice + 2 tsp olive oil - salad (2 cups)',
+  DIN_CHICKPEAS_SALAD: (ex,p) => 'Chickpeas (1 cup chickpeas + 1 tsp olive oil + tomato) - salad (2 cups)',
 });
 
 function mealText(key, portions, lang){
@@ -2378,6 +2410,9 @@ const MEAL_EXCHANGES = {
   BRK_EGGS_TOAST:  {protein:2, starch:2, fat:0, fruit:0, dairy:0, veg:0}, // egg+cheese = 2 protein
   BRK_CEREAL:      {protein:0, starch:2, fat:0, fruit:0, dairy:1, veg:0},
   BRK_OATS_VEGAN:  {protein:0, starch:2, fat:0, fruit:0, dairy:1, veg:0}, // fortified plant milk counted as dairy exchange (see Equivalents Guide)
+  BRK_BOILED_EGGS_2:{protein:2, starch:1, fat:0, fruit:0, dairy:0, veg:1},
+  BRK_RUSKS_ANTHOTYRO:{protein:1, starch:2, fat:0, fruit:0, dairy:0, veg:1},
+  BRK_YOGURT_HONEY_WALNUTS:{protein:0, starch:0, fat:1, fruit:1, dairy:1, veg:0},
   // Main meals: base veg only — starch/protein/fat added dynamically from getMealPortions()
   LUN_CHICKEN_RICE:   {protein:0, starch:0, fat:0, fruit:0, dairy:0, veg:1},
   LUN_FISH_POTATO:    {protein:0, starch:0, fat:0, fruit:0, dairy:0, veg:1},
@@ -2405,6 +2440,19 @@ const MEAL_EXCHANGES = {
   DIN_CHICKPEA_STEW:  {protein:2, starch:2, fat:1, fruit:0, dairy:0, veg:2},
   DIN_HALLOUMI_SALAD: {protein:2, starch:1, fat:0, fruit:0, dairy:0, veg:3},
   DIN_BEAN_PASTA:     {protein:2, starch:0, fat:1, fruit:0, dairy:0, veg:1},
+  LUN_CHICKEN_QUINOA: {protein:3, starch:2, fat:2, fruit:0, dairy:0, veg:1},
+  LUN_SALMON_QUINOA: {protein:3, starch:2, fat:2, fruit:0, dairy:0, veg:1},
+  LUN_LENTIL_SOUP: {protein:2, starch:2, fat:1, fruit:0, dairy:0, veg:1},
+  LUN_CHICKPEAS_SALAD: {protein:2, starch:2, fat:1, fruit:0, dairy:0, veg:1},
+  LUN_SPINACH_RICE: {protein:1, starch:2, fat:1, fruit:0, dairy:0, veg:2},
+  LUN_PEAS_LADERO: {protein:0, starch:2, fat:1, fruit:0, dairy:0, veg:2},
+  LUN_GRILLED_FISH_RICE: {protein:3, starch:2, fat:2, fruit:0, dairy:0, veg:1},
+  DIN_CHICKEN_QUINOA: {protein:3, starch:2, fat:2, fruit:0, dairy:0, veg:1},
+  DIN_GEMISTA_LIGHT: {protein:3, starch:2, fat:1, fruit:0, dairy:0, veg:1},
+  DIN_CHICKEN_MEATBALLS_RICE: {protein:3, starch:2, fat:2, fruit:0, dairy:0, veg:1},
+  DIN_CHICKEN_MINCE_PASTA: {protein:3, starch:2, fat:1, fruit:0, dairy:0, veg:1},
+  DIN_GRILLED_FISH_RICE: {protein:3, starch:2, fat:2, fruit:0, dairy:0, veg:1},
+  DIN_CHICKPEAS_SALAD: {protein:2, starch:2, fat:1, fruit:0, dairy:0, veg:1},
 };
 
 // FIX (2026-06): these 6 meals have a complete, literal recipe (their
@@ -2425,6 +2473,11 @@ const FIXED_COMPOSITION_MEALS = new Set([
   'DIN_OMELETTE', 'DIN_SOUVLAKI_PITA',
   'LUN_CHICKPEA_STEW', 'LUN_BEAN_SALAD',
   'DIN_CHICKPEA_STEW', 'DIN_HALLOUMI_SALAD',
+  'LUN_CHICKEN_QUINOA', 'LUN_SALMON_QUINOA', 'LUN_LENTIL_SOUP',
+  'LUN_CHICKPEAS_SALAD', 'LUN_SPINACH_RICE', 'LUN_PEAS_LADERO',
+  'LUN_GRILLED_FISH_RICE', 'DIN_CHICKEN_QUINOA', 'DIN_GEMISTA_LIGHT',
+  'DIN_CHICKEN_MEATBALLS_RICE', 'DIN_CHICKEN_MINCE_PASTA',
+  'DIN_GRILLED_FISH_RICE', 'DIN_CHICKPEAS_SALAD',
 ]);
 
 const NEW_MEAL_THEME_LABELS = {
@@ -3077,6 +3130,9 @@ const BREAKFAST_OPTIONS = [
   {v:'BRK_EGGS_TOAST',   l:'Τοστ (αυγό + τυρί)'},
   {v:'BRK_CEREAL',       l:'Βρώμη + γάλα'},
   {v:'BRK_OATS_VEGAN',   l:'Βρώμη + φυτικό γάλα 🌱'},
+  {v:'BRK_BOILED_EGGS_2', l:'Αυγά βραστά + ψωμί'},
+  {v:'BRK_RUSKS_ANTHOTYRO', l:'Παξιμάδια + ανθότυρο'},
+  {v:'BRK_YOGURT_HONEY_WALNUTS', l:'Γιαούρτι + μέλι + καρύδια'},
 ];
 const LUNCH_OPTIONS = [
   {v:'LUN_CHICKEN_RICE',   l:'Κοτόπουλο + ρύζι'},
@@ -3100,6 +3156,13 @@ const LUNCH_OPTIONS = [
   {v:'LUN_TOFU_RICE',      l:'Τόφου σαλτέ + ρύζι 🌱'},
   {v:'LUN_HALLOUMI_PASTA', l:'Χαλούμι ψητό + ζυμαρικά 🥚'},
   {v:'LUN_BEAN_SALAD',     l:'Φασόλια σαλάτα + ψωμί 🌱'},
+  {v:'LUN_CHICKEN_QUINOA', l:'Κοτόπουλο + κινόα'},
+  {v:'LUN_SALMON_QUINOA', l:'Σολομός + κινόα'},
+  {v:'LUN_LENTIL_SOUP', l:'Φακές σούπα 🌱'},
+  {v:'LUN_CHICKPEAS_SALAD', l:'Ρεβίθια + σαλάτα 🌱'},
+  {v:'LUN_SPINACH_RICE', l:'Σπανακόρυζο + τυρί light'},
+  {v:'LUN_PEAS_LADERO', l:'Αρακάς λαδερός 🌱'},
+  {v:'LUN_GRILLED_FISH_RICE', l:'Ψητό ψάρι + ρύζι'},
 ];
 const DINNER_OPTIONS = [
   {v:'DIN_CHICKEN_RICE',   l:'Κοτόπουλο + ρύζι'},
@@ -3123,6 +3186,12 @@ const DINNER_OPTIONS = [
   {v:'DIN_CHICKPEA_STEW',  l:'Ρεβίθια γιαχνί + ψωμί 🌱'},
   {v:'DIN_HALLOUMI_SALAD', l:'Χαλούμι ψητό + σαλάτα 🥚'},
   {v:'DIN_BEAN_PASTA',     l:'Φασόλια + ζυμαρικά 🌱'},
+  {v:'DIN_CHICKEN_QUINOA', l:'Κοτόπουλο + κινόα'},
+  {v:'DIN_GEMISTA_LIGHT', l:'Γεμιστά light'},
+  {v:'DIN_CHICKEN_MEATBALLS_RICE', l:'Κεφτεδάκια κοτόπουλου + ρύζι'},
+  {v:'DIN_CHICKEN_MINCE_PASTA', l:'Μακαρόνια με κιμά κοτόπουλο light'},
+  {v:'DIN_GRILLED_FISH_RICE', l:'Ψητό ψάρι + ρύζι'},
+  {v:'DIN_CHICKPEAS_SALAD', l:'Ρεβίθια + σαλάτα 🌱'},
 ];
 function mealTitleFromTemplate(key, lang='GR'){
   const map=lang==='EN' ? MEALS_EN : MEALS;
@@ -3178,6 +3247,14 @@ const SNACK_EXTRAS = [
   {v:'driedfruit', group:'fruit', gr:'🍇 Αποξηραμένα φρούτα (1 μερίδα)', en:'🍇 Dried fruit (1 serving)'},    // 1 fruit exchange
   {v:'milk',       group:'dairy', gr:'🥛 Γάλα 1,5% (1 φλ.)',         en:'🥛 Milk 1.5% (1 cup)'},             // 1 dairy exchange
   {v:'yogurt',     group:'dairy', gr:'🍦 Γιαούρτι 2% (~170g)',       en:'🍦 Yogurt 2% (~170g)'},             // 1 dairy exchange
+  {v:'snk_fruit_crackers_cottage', group:'combo', slots:['snk1'], gr:'🍎 1 φρούτο + κράκερ (4) + τυρί cottage (~100g)', en:'🍎 1 fruit + crackers (4) + cottage cheese (~100g)'}, // 1 fruit + 1 starch + 1 protein
+  {v:'snk_fruit_ricecakes_tahini_nuts', group:'combo', slots:['snk1'], gr:'🍎 1 φρούτο + 2 ρυζογκοφρέτες + 1 κ.γ. ταχίνι + 6 αμύγδαλα ή 4 καρύδια', en:'🍎 1 fruit + 2 rice cakes + 1 tsp tahini + 6 almonds or 4 walnuts'}, // 1 fruit + 1 starch + 2 fat
+  {v:'snk_anthotyro_rusk_fruit', group:'combo', slots:['snk1'], gr:'🧀 Ανθότυρο (~40g) + παξιμάδι (1) + φρούτο', en:'🧀 Anthotyros cheese (~40g) + rusk (1) + fruit'}, // 1 protein + 1 starch + 1 fruit
+  {v:'snk_hummus_veg', group:'combo', slots:['snk1','snk2'], gr:'🥣 Χούμους (2 κ.σ.) + λαχανικά (αγγούρι, καρότο, πιπεριά)', en:'🥣 Hummus (2 tbsp) + vegetables (cucumber, carrot, pepper)'}, // 1 starch + 1 fat + 1 vegetable
+  {v:'snk_yogurt_only', group:'combo', slots:['snk2'], gr:'🍦 1 γιαούρτι 2% (~170g)', en:'🍦 Greek yogurt 2% (~170g)'}, // 1 dairy
+  {v:'snk_crackers_cheese', group:'combo', slots:['snk2'], gr:'🍞 4 κράκερ ολικής + 1 φέτα τυρί light', en:'🍞 4 wholegrain crackers + 1 slice light cheese'}, // 1 starch + 1 protein
+  {v:'sleep_milk_glass', group:'combo', slots:['sleep'], gr:'🥛 1 ποτήρι γάλα 1,5% (~240ml)', en:'🥛 1 glass semi-skimmed milk 1.5% (~240ml)'}, // 1 dairy
+  {v:'sleep_cocoa_milk', group:'combo', slots:['sleep'], gr:'☕ Κακάο με γάλα 1,5% (~240ml, χωρίς ζάχαρη)', en:'☕ Cocoa with semi-skimmed milk 1.5% (~240ml, no sugar)'}, // 1 dairy
   {v:'oatcookies', group:'starch', snackOnly:true, gr:'🍪 Μπισκότα βρώμης (2-3 τεμ.)', en:'🍪 Oat biscuits (2-3 pcs)', tip:'Αντικαθιστά 1 μερίδα αμύλου + 1 μερίδα λίπους / Replaces 1 starch + 1 fat exchange'}, // 1 starch + 1 fat
   {v:'cerealbar',  group:'starch', snackOnly:true, gr:'🥣 Μπάρα δημητριακών (1 τεμ. ~25g)', en:'🥣 Cereal bar (1 pc ~25g)', tip:'Αντικαθιστά 1 μερίδα αμύλου + 1 μερίδα λίπους / Replaces 1 starch + 1 fat exchange'}, // 1 starch + 1 fat
   {v:'crackers',   group:'starch', snackOnly:true, gr:'🍞 Κράκερ ολικής (3-4 τεμ.)', en:'🍞 Wholegrain crackers (3-4 pcs)', tip:'Αντικαθιστά 1 μερίδα αμύλου από κύριο γεύμα / Replaces 1 starch serving from a main meal'}, // 1 starch exchange
@@ -3186,6 +3263,16 @@ const SNACK_EXTRAS = [
 ];
 const STARCH_SNACK_VALUES = ['oatcookies','cerealbar','crackers'];
 const STARCH_PLUS_FAT_SNACK_VALUES = ['oatcookies','cerealbar'];
+const SNACK_COMBO_EXCHANGES = {
+  snk_fruit_crackers_cottage:{fruit:1,starch:1,protein:1},
+  snk_fruit_ricecakes_tahini_nuts:{fruit:1,starch:1,fat:2},
+  snk_anthotyro_rusk_fruit:{protein:1,starch:1,fruit:1},
+  snk_hummus_veg:{starch:1,fat:1,veg:1},
+  snk_yogurt_only:{dairy:1},
+  snk_crackers_cheese:{starch:1,protein:1},
+  sleep_milk_glass:{dairy:1},
+  sleep_cocoa_milk:{dairy:1},
+};
 function selectedStarchSnackValue(extras){
   return (extras||[]).find(v=>STARCH_SNACK_VALUES.includes(v)) || '';
 }
@@ -3216,7 +3303,10 @@ function snackExtrasHtml(slot='snack', selected=[]){
   const totalStarch=Math.max(0, Math.round(Number(S.ex?.starch||0)));
   const selectedInOtherSlots=Math.max(0, selectedStarchSnackCount() - (starchSelected ? 1 : 0));
   return SNACK_EXTRAS
-    .filter(e=>!(isSleep && e.snackOnly))
+    .filter(e=>{
+      if(e.slots && !e.slots.includes(slot)) return false;
+      return !(isSleep && e.snackOnly);
+    })
     .map(e=>{
       const checked=selected.includes(e.v) || (!selected.length && e.v==='fruit');
       const isStarch=STARCH_SNACK_VALUES.includes(e.v);
@@ -3306,8 +3396,9 @@ function buildSlotSnack(slot, extras, lang='GR', breakfastKey, plan=null, fruitD
   const addNuts = (extras||[]).includes('nuts');
   const addCoffee = (extras||[]).includes('coffee');
   const starchChoice = slot==='sleep' ? '' : selectedStarchSnackValue(extras||[]);
+  const comboChoices = (extras||[]).filter(v=>SNACK_COMBO_EXCHANGES[v]);
 
-  const exch = {fruit:0, starch:0, fat:0, dairy:0};
+  const exch = {fruit:0, starch:0, fat:0, dairy:0, protein:0, veg:0};
   let addOnKcal = 0;
   const parts = [];
 
@@ -3339,6 +3430,12 @@ function buildSlotSnack(slot, extras, lang='GR', breakfastKey, plan=null, fruitD
     const item=SNACK_EXTRAS.find(e=>e.v===starchChoice);
     parts.push(lang==='EN' ? (item?.en||'Starch snack') : (item?.gr||'Σνακ αμύλου'));
   }
+  comboChoices.forEach(choice=>{
+    const comboEx=SNACK_COMBO_EXCHANGES[choice]||{};
+    Object.keys(comboEx).forEach(key=>{ exch[key]=(exch[key]||0)+Number(comboEx[key]||0); });
+    const item=SNACK_EXTRAS.find(e=>e.v===choice);
+    parts.push(lang==='EN' ? (item?.en||'Snack option') : (item?.gr||'Επιλογή σνακ'));
+  });
   if(addCoffee){ parts.push(lang==='EN' ? 'Coffee (without sugar)' : 'Καφές (χωρίς ζάχαρη)'); }
 
   return {exch, addOnKcal, text: parts.length ? parts.join(' + ') : '—'};
