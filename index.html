@@ -1159,21 +1159,10 @@ html[data-theme="dark"] .week-summary-table td:last-child {
             <button class="btn" id="meal-lang-en-report" onclick="setMealLanguage('EN')">EN</button>
           </div>
           <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
-            <span style="font-size:13px;font-weight:800;color:var(--text-secondary)">Full Report includes:</span>
-            <label style="display:flex;align-items:center;gap:7px;font-size:13px;font-weight:700;cursor:pointer">
-              <input type="radio" name="report-plan-mode" value="7day" checked onchange="onReportOptionsChange()" style="width:16px;height:16px;accent-color:var(--teal-600)">
-              <span id="report-mode-7day-label">7-Day Meal Plan only</span>
-            </label>
-            <label style="display:flex;align-items:center;gap:7px;font-size:13px;font-weight:700;cursor:pointer">
-              <input type="radio" name="report-plan-mode" value="1day" onchange="onReportOptionsChange()" style="width:16px;height:16px;accent-color:var(--teal-600)">
-              <span id="report-mode-1day-label">1-Day Meal Plan only</span>
-            </label>
-            <label style="display:flex;align-items:center;gap:7px;font-size:13px;font-weight:700;cursor:pointer">
-              <input type="radio" name="report-plan-mode" value="both" onchange="onReportOptionsChange()" style="width:16px;height:16px;accent-color:var(--teal-600)">
-              <span id="report-mode-both-label">Both plans</span>
-            </label>
+            <span id="report-days-title" style="font-size:13px;font-weight:800;color:var(--text-secondary)">Print days from 7-day plan:</span>
+            <div id="report-day-selector" style="display:flex;gap:8px;flex-wrap:wrap"></div>
           </div>
-          <div class="field-note" style="width:100%;margin:2px 0 0">Tip: for the 7-day plan, landscape fits better on one page.</div>
+          <div class="field-note" style="width:100%;margin:2px 0 0" id="report-days-note">Select one or more days to print from the weekly plan. Single-day print hides the weekday name.</div>
           <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;cursor:pointer">
             <input type="checkbox" id="rep-include-blood" checked onchange="onReportOptionsChange()" style="width:16px;height:16px;accent-color:var(--teal-600)">
             <span id="report-include-blood-label">Include Blood Analysis summary</span>
@@ -1454,7 +1443,7 @@ const S = {
   exAuto:{starch:true,protein:true,fat:true},
   exMeta:null, lastDairyType:'Moderate-fat', lastMeatType:'Lean', weightSuggestionLocked:false, bcManual:{fatmass:false,ffm:false,muscle:false},
   bc:{bf:null,water:null,fatmass:null,ffm:null,muscle:null,metage:null,visceral:null},
-  tracking:[],intake:{},notes:{},labValues:{},foodResults:[],recipes:[],recipeDraft:[],editingRecipeId:null,extraFoods:[],appointments:[],mealLanguage:'GR',reportOptions:{oneDay:false,sevenDay:true,includeBlood:true},
+  tracking:[],intake:{},notes:{},labValues:{},foodResults:[],recipes:[],recipeDraft:[],editingRecipeId:null,extraFoods:[],appointments:[],mealLanguage:'GR',reportOptions:{oneDay:false,sevenDay:true,includeBlood:true,days:[0,1,2,3,4,5,6]},
   sevenDayView:'day', sevenDayActiveIndex:0, weekViewTheme:'light', aiPlanStatus:'',
   customMeals:[], customMealDraft:[], customMealContext:null,
   mealSel:{breakfast:'BRK_TOAST',lunch:'LUN_CHICKEN_RICE',dinner:'DIN_FISH_POTATO',snack1Extras:['fruit'],snack2Extras:['fruit'],sleepExtras:['fruit']}
@@ -2531,14 +2520,15 @@ function exchangesToKcal(composition, portions, fruitOverride, dairyOverride){
 // Calculates a full day's exchange usage and kcal breakdown from the
 // current meal + snack selections and portions
 const EXTRA_FOOD_DAYS=[
-  {v:'all',label:'All days'},
-  {v:'0',label:'Monday'},
-  {v:'1',label:'Tuesday'},
-  {v:'2',label:'Wednesday'},
-  {v:'3',label:'Thursday'},
-  {v:'4',label:'Friday'},
-  {v:'5',label:'Saturday'},
-  {v:'6',label:'Sunday'},
+  {v:'all',label:'All days',gr:'Όλες οι ημέρες',en:'All 7 days'},
+  {v:'specific',label:'Specific days',gr:'Συγκεκριμένες ημέρες',en:'Specific days'},
+  {v:'0',label:'Monday',gr:'Δευτέρα',en:'Monday'},
+  {v:'1',label:'Tuesday',gr:'Τρίτη',en:'Tuesday'},
+  {v:'2',label:'Wednesday',gr:'Τετάρτη',en:'Wednesday'},
+  {v:'3',label:'Thursday',gr:'Πέμπτη',en:'Thursday'},
+  {v:'4',label:'Friday',gr:'Παρασκευή',en:'Friday'},
+  {v:'5',label:'Saturday',gr:'Σάββατο',en:'Saturday'},
+  {v:'6',label:'Sunday',gr:'Κυριακή',en:'Sunday'},
 ];
 const EXTRA_FOOD_SLOTS=[
   {v:'brk',label:'Breakfast'},
@@ -2549,10 +2539,33 @@ const EXTRA_FOOD_SLOTS=[
   {v:'sleep',label:'Before sleep'},
 ];
 function extraFoodDayOptionsHtml(){
-  return EXTRA_FOOD_DAYS.map(d=>`<option value="${d.v}">${d.label}</option>`).join('');
+  const isEn=(S.mealLanguage||'GR')==='EN';
+  return EXTRA_FOOD_DAYS.map(d=>`<option value="${d.v}">${isEn?(d.en||d.label):(d.gr||d.label)}</option>`).join('');
 }
 function extraFoodSlotOptionsHtml(){
   return EXTRA_FOOD_SLOTS.map(s=>`<option value="${s.v}">${s.label}</option>`).join('');
+}
+function extraFoodSpecificDaysHtml(index){
+  const isEn=(S.mealLanguage||'GR')==='EN';
+  return EXTRA_FOOD_DAYS.filter(d=>!['all','specific'].includes(d.v)).map(d=>`
+    <label style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;cursor:pointer">
+      <input type="checkbox" id="food-add-specific-${index}-${d.v}" value="${d.v}" style="width:13px;height:13px;accent-color:var(--teal-600)">
+      ${isEn?(d.en||d.label):(d.gr||d.label)}
+    </label>`).join('');
+}
+function toggleFoodSpecificDays(index){
+  const box=document.getElementById(`food-add-specific-days-${index}`);
+  if(!box) return;
+  box.style.display = v(`food-add-day-${index}`)==='specific' ? 'flex' : 'none';
+}
+function selectedExtraFoodDays(index){
+  const dayChoice=v(`food-add-day-${index}`)||'all';
+  if(dayChoice!=='specific') return [dayChoice];
+  return EXTRA_FOOD_DAYS
+    .filter(d=>!['all','specific'].includes(d.v))
+    .map(d=>document.getElementById(`food-add-specific-${index}-${d.v}`))
+    .filter(el=>el&&el.checked)
+    .map(el=>el.value);
 }
 function extraFoodTotalsForItem(food){
   const grams=foodNumber(food.grams)||100;
@@ -2902,7 +2915,7 @@ function printPage(){
 }
 function printReportSevenDayLandscape(){
   const oldOptions={...(S.reportOptions||{})};
-  S.reportOptions={oneDay:false,sevenDay:true};
+  S.reportOptions={oneDay:false,sevenDay:true,includeBlood:oldOptions.includeBlood!==false,days:allReportDayIndexes()};
   nav('report');
   buildReport();
   const week=document.querySelector('#report-body .report-week-section');
@@ -2917,7 +2930,7 @@ function printReportSevenDayLandscape(){
 }
 function printReportOneDayPortrait(){
   const oldOptions={...(S.reportOptions||{})};
-  S.reportOptions={oneDay:true,sevenDay:false};
+  S.reportOptions={oneDay:false,sevenDay:true,includeBlood:oldOptions.includeBlood!==false,days:[0]};
   nav('report');
   buildReport();
   const day=document.querySelector('#report-body .report-day-section');
@@ -3547,13 +3560,13 @@ function updateMealLanguageButtons(){
     if(en){ en.classList.toggle('primary', isEn); }
   });
   setEl('report-options-title', isEn ? '⚙️ Report Options — Choose what to print' : '⚙️ Επιλογές Αναφοράς — Επιλέξτε τι θα εκτυπωθεί');
-  setEl('report-mode-7day-label', isEn ? '7-Day Meal Plan only' : 'Μόνο εβδομαδιαίο πλάνο');
-  setEl('report-mode-1day-label', isEn ? '1-Day Meal Plan only' : 'Μόνο ημερήσιο πλάνο');
-  setEl('report-mode-both-label', isEn ? 'Both plans' : 'Και τα δύο πλάνα');
+  setEl('report-days-title', isEn ? 'Print days from 7-day plan:' : 'Εκτύπωση ημερών από το 7ήμερο πλάνο:');
+  setEl('report-days-note', isEn ? 'Select one or more days to print from the weekly plan. Single-day print hides the weekday name.' : 'Επιλέξτε μία ή περισσότερες ημέρες από το εβδομαδιαίο πλάνο. Σε μία ημέρα δεν εμφανίζεται το όνομα ημέρας.');
   setEl('report-include-blood-label', isEn ? 'Include Blood Analysis summary' : 'Συμπερίληψη σύνοψης αιματολογικού ελέγχου');
   setEl('report-print-btn', isEn ? '🖨️ Print Full Report' : '🖨️ Εκτύπωση πλήρους αναφοράς');
-  setEl('report-options-note', isEn ? 'Choose what the full report includes. 7-day plan prints in landscape automatically; 1-day only prints in portrait.' : 'Επιλέξτε τι θα περιλαμβάνει η πλήρης αναφορά. Το 7ήμερο πλάνο εκτυπώνεται αυτόματα landscape· μόνο ημερήσιο πλάνο εκτυπώνεται portrait.');
+  setEl('report-options-note', isEn ? 'Use Print / Save PDF and choose “Save as PDF” in the browser print dialog.' : 'Χρησιμοποιήστε Εκτύπωση / Αποθήκευση PDF και επιλέξτε “Save as PDF” στο παράθυρο εκτύπωσης.');
   setEl('report-print-title', isEn ? '📄 PRINT — Clinical Nutrition Report' : '📄 PRINT — Κλινική Αναφορά Διατροφής');
+  renderReportDaySelector();
 }
 
 // Base default macro values per exchange (g CHO / g PRO / g FAT per exchange).
@@ -6098,24 +6111,39 @@ async function regenerateFlexibleMealSlot(){
 window.regenerateFlexibleMealSlot=regenerateFlexibleMealSlot;
 
 function reportModeFromOptions(){
-  const one=S.reportOptions?.oneDay!==false;
-  const seven=S.reportOptions?.sevenDay!==false;
-  if(one && seven) return 'both';
-  if(one) return '1day';
   return '7day';
 }
+function allReportDayIndexes(){ return [0,1,2,3,4,5,6]; }
+function selectedReportDayIndexes(){
+  const raw=Array.isArray(S.reportOptions?.days) ? S.reportOptions.days : allReportDayIndexes();
+  const clean=[...new Set(raw.map(n=>parseInt(n,10)).filter(n=>n>=0&&n<7))].sort((a,b)=>a-b);
+  return clean.length ? clean : allReportDayIndexes();
+}
+function renderReportDaySelector(){
+  const wrap=document.getElementById('report-day-selector');
+  if(!wrap) return;
+  const isEn=(S.mealLanguage||'GR')==='EN';
+  const selected=new Set(selectedReportDayIndexes());
+  wrap.innerHTML=allReportDayIndexes().map(i=>{
+    const label=isEn?WEEK_DAYS_EN[i]:WEEK_DAYS_GR[i];
+    return `<label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;cursor:pointer">
+      <input type="checkbox" class="report-day-checkbox" value="${i}" ${selected.has(i)?'checked':''} onchange="onReportOptionsChange()" style="width:15px;height:15px;accent-color:var(--teal-600)">
+      ${safeHtml(label)}
+    </label>`;
+  }).join('');
+}
 function syncReportModeControls(){
-  const mode=reportModeFromOptions();
-  document.querySelectorAll('input[name="report-plan-mode"]').forEach(r=>{ r.checked = r.value===mode; });
   const blood=document.getElementById('rep-include-blood');
   if(blood) blood.checked = S.reportOptions?.includeBlood!==false;
+  renderReportDaySelector();
 }
 function onReportOptionsChange(){
-  const mode=document.querySelector('input[name="report-plan-mode"]:checked')?.value || '7day';
+  const checked=[...document.querySelectorAll('.report-day-checkbox:checked')].map(el=>parseInt(el.value,10)).filter(n=>n>=0&&n<7);
   S.reportOptions = {
-    oneDay: mode==='1day' || mode==='both',
-    sevenDay: mode==='7day' || mode==='both',
+    oneDay:false,
+    sevenDay:true,
     includeBlood: document.getElementById('rep-include-blood')?.checked !== false,
+    days: checked.length ? checked : allReportDayIndexes(),
   };
   updateMealLanguageButtons();
   buildReport();
@@ -6179,15 +6207,14 @@ function buildReport(){
   const reportExtraOpts={showRemove:false,hideTitle:true,showDbNote:false,reportMode:true};
   ensureWeekPlans();
   const reportWeekPlans=savedWeeklyPlansForReport();
-  const reportDailyPlan=(reportWeekPlans&&reportWeekPlans[0]) ? reportWeekPlans[0] : WEEK_PLANS[0];
-  const day=calcDayTotalsForPlanDisplay(reportDailyPlan, lang, 0);
-  const brkText=reportSevenDaySlotText(reportDailyPlan, day, 'brk', lang, 0, reportExtraOpts);
-  const lunText=reportSevenDaySlotText(reportDailyPlan, day, 'lun', lang, 0, reportExtraOpts);
-  const dinText=reportSevenDaySlotText(reportDailyPlan, day, 'din', lang, 0, reportExtraOpts);
-  const snk1Text=reportSevenDaySlotText(reportDailyPlan, day, 'snk1', lang, 0, reportExtraOpts);
-  const snk2Text=reportSevenDaySlotText(reportDailyPlan, day, 'snk2', lang, 0, reportExtraOpts);
-  const sleepText=reportSevenDaySlotText(reportDailyPlan, day, 'sleep', lang, 0, reportExtraOpts);
-  const gapOk=Math.abs(day.gap)<=100;
+  const selectedDayIndexes=selectedReportDayIndexes();
+  const selectedReportPlans=selectedDayIndexes.map((dayIndex,ordinal)=>({
+    dayIndex,
+    ordinal,
+    plan:(reportWeekPlans&&reportWeekPlans[dayIndex]) ? reportWeekPlans[dayIndex] : WEEK_PLANS[dayIndex]
+  })).filter(x=>x.plan);
+  const singleReportDay=selectedReportPlans.length===1;
+  const fullWeekReport=selectedReportPlans.length===7 && selectedReportPlans.every((x,i)=>x.dayIndex===i);
   const baseReportRules=isEn ? GENERAL_HEALTH_RULES_EN : GENERAL_HEALTH_RULES;
     const reportRules=baseReportRules
     .filter(rule=>condList.includes('Pregnancy') || !/pregnancy|εγκυμοσύνη|κύηση/i.test(rule))
@@ -6215,7 +6242,7 @@ function buildReport(){
   ];
   setEl('report-body',`<div style="width:100%;font-family:Arial,sans-serif;font-size:13px">
 
-    <div class="report-page-one ${(S.reportOptions?.sevenDay!==false)?'with-week':''}">
+    <div class="report-page-one with-week">
     <!-- HEADER -->
     <div style="padding-bottom:12px;border-bottom:3px solid var(--teal-600);margin-bottom:14px">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px">
@@ -6249,35 +6276,14 @@ function buildReport(){
     ${bodyCompositionHtml}
     ${reportGuidelinesHtml}
     ${abnormalLabsHtml}
-    ${(S.reportOptions?.oneDay!==false) ? `
-    <div class="report-day-section">
-    <div style="font-size:14px;font-weight:700;color:var(--teal-800);margin:14px 0 6px;border-bottom:2px solid var(--teal-600);padding-bottom:4px">☀️ ${isEn?'DAILY MEAL PLAN':'ΗΜΕΡΗΣΙΟ ΠΛΑΝΟ ΓΕΥΜΑΤΩΝ'}</div>
-    <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">${isEn?'Total':'Σύνολο'}: <strong>${day.totalKcal} kcal</strong> | ${isEn?'Target':'Στόχος'}: ${day.target} kcal ${gapOk?'✅':''}</div>
-    <table style="width:100%;border-collapse:collapse;font-size:12px">
-      ${[
-        ['🌅',isEn?'Breakfast':'Πρωινό',brkText,day.brkKcal],
-        ['🍎',isEn?'Snack 1':'Σνακ 1',snk1Text,day.snk1Kcal],
-        ['🍽️',isEn?'Lunch':'Μεσημεριανό',lunText,day.lunKcal],
-        ['🍊',isEn?'Snack 2':'Σνακ 2',snk2Text,day.snk2Kcal],
-        ['🌙',isEn?'Dinner':'Βραδινό',dinText,day.dinKcal],
-        ['😴',isEn?'Before sleep':'Πριν τον ύπνο',sleepText,day.slpKcal],
-      ].map(([icon,label,text,kcal])=>`<tr style="border-bottom:1px solid #eee">
-        <td style="padding:6px 4px;width:24px;font-size:16px">${icon}</td>
-        <td style="padding:6px 4px;font-weight:600;width:130px;white-space:nowrap">${label}</td>
-        <td style="padding:6px 4px">${text}</td>
-        <td style="padding:6px 4px;text-align:right;color:var(--text-muted);white-space:nowrap;font-size:11px">${kcal} kcal</td>
-      </tr>`).join('')}
-      <tr style="border-top:2px solid var(--teal-600);font-weight:700;background:var(--teal-50)">
-        <td colspan="3" style="padding:6px 4px">${isEn?'Daily total':'Σύνολο ημέρας'}</td>
-        <td style="padding:6px 4px;text-align:right">${day.totalKcal} kcal</td>
-      </tr>
-    </table>
-    </div>` : ''}
     </div>
 
-    ${(S.reportOptions?.sevenDay!==false) ? `
     <div class="report-week-section">
-    <div style="font-size:14px;font-weight:700;color:var(--teal-800);margin:16px 0 6px;border-bottom:2px solid var(--teal-600);padding-bottom:4px">📅 ${isEn?'WEEKLY PLAN':'ΕΒΔΟΜΑΔΙΑΙΟ ΠΛΑΝΟ'}</div>
+    <div style="font-size:14px;font-weight:700;color:var(--teal-800);margin:16px 0 6px;border-bottom:2px solid var(--teal-600);padding-bottom:4px">📅 ${
+      singleReportDay
+        ? (isEn?'Daily Nutrition Plan':'Ημερήσιο Πλάνο Διατροφής')
+        : (isEn?'SELECTED MEAL PLAN DAYS':'ΕΠΙΛΕΓΜΕΝΕΣ ΗΜΕΡΕΣ ΠΛΑΝΟΥ')
+    }</div>
     <table class="report-week-table" style="width:100%;table-layout:fixed;border-collapse:collapse;font-size:10px;background:var(--bg-surface);border:1px solid var(--border)">
       <colgroup>
         <col style="width:6%"><col style="width:14%"><col style="width:14%"><col style="width:14%">
@@ -6294,18 +6300,18 @@ function buildReport(){
         <th style="padding:4px;text-align:right;white-space:nowrap">kcal</th>
       </tr></thead>
       <tbody>
-      ${reportWeekPlans.map((p,i)=>{
-        const dt=calcDayTotalsForPlanDisplay(p, lang, i);
+      ${selectedReportPlans.map(({plan:p,dayIndex,ordinal},rowIndex)=>{
+        const dt=calcDayTotalsForPlanDisplay(p, lang, dayIndex);
         const ok=Math.abs(dt.gap)<=100;
-        const dayLabel=weekDayLabel(p, i, lang);
-        return `<tr style="background:${i%2===0?'var(--bg-surface)':'var(--teal-50)'};border-bottom:1px solid var(--border)">
+        const dayLabel=singleReportDay ? '' : (fullWeekReport ? weekDayLabel(p, dayIndex, lang) : (isEn?`Day ${ordinal+1}`:`Ημέρα ${ordinal+1}`));
+        return `<tr style="background:${rowIndex%2===0?'var(--bg-surface)':'var(--teal-50)'};border-bottom:1px solid var(--border)">
           <td style="padding:4px;font-weight:700;word-wrap:break-word">${dayLabel}</td>
-          <td style="padding:4px;word-wrap:break-word">${reportSevenDaySlotText(p,dt,'brk',lang,i,reportExtraOpts)}</td>
-          <td style="padding:4px;word-wrap:break-word">${reportSevenDaySlotText(p,dt,'snk1',lang,i,reportExtraOpts)}</td>
-          <td style="padding:4px;word-wrap:break-word">${reportSevenDaySlotText(p,dt,'lun',lang,i,reportExtraOpts)}</td>
-          <td style="padding:4px;word-wrap:break-word">${reportSevenDaySlotText(p,dt,'snk2',lang,i,reportExtraOpts)}</td>
-          <td style="padding:4px;word-wrap:break-word">${reportSevenDaySlotText(p,dt,'din',lang,i,reportExtraOpts)}</td>
-          <td style="padding:4px;word-wrap:break-word">${reportSevenDaySlotText(p,dt,'sleep',lang,i,reportExtraOpts)}</td>
+          <td style="padding:4px;word-wrap:break-word">${reportSevenDaySlotText(p,dt,'brk',lang,dayIndex,reportExtraOpts)}</td>
+          <td style="padding:4px;word-wrap:break-word">${reportSevenDaySlotText(p,dt,'snk1',lang,dayIndex,reportExtraOpts)}</td>
+          <td style="padding:4px;word-wrap:break-word">${reportSevenDaySlotText(p,dt,'lun',lang,dayIndex,reportExtraOpts)}</td>
+          <td style="padding:4px;word-wrap:break-word">${reportSevenDaySlotText(p,dt,'snk2',lang,dayIndex,reportExtraOpts)}</td>
+          <td style="padding:4px;word-wrap:break-word">${reportSevenDaySlotText(p,dt,'din',lang,dayIndex,reportExtraOpts)}</td>
+          <td style="padding:4px;word-wrap:break-word">${reportSevenDaySlotText(p,dt,'sleep',lang,dayIndex,reportExtraOpts)}</td>
           <td style="padding:4px;text-align:right;font-weight:700;white-space:nowrap;color:${ok?'#0f6e56':'#b45309'}">${dt.totalKcal}</td>
         </tr>`;
       }).join('')}
@@ -6315,7 +6321,7 @@ function buildReport(){
       </tr>
       </tbody>
     </table>
-    </div>` : ''}
+    </div>
 
     ${n.clinician_notes?`
     <div style="font-size:14px;font-weight:700;color:var(--teal-800);margin:14px 0 6px;border-bottom:2px solid var(--teal-600);padding-bottom:4px">📝 ${isEn?'DIETITIAN NOTES':'ΣΗΜΕΙΩΣΕΙΣ ΔΙΑΙΤΟΛΟΓΟΥ'}</div>
@@ -6635,12 +6641,20 @@ const LAB_TESTS = [
 // potassium, fat-soluble vitamins) can be harmful.
 const CONDITION_VITAMINS = {
   Diabetes:    [{n:'Βιταμίνη D', why:'Συχνή ανεπάρκεια, σχετίζεται με ινσουλινοαντίσταση'},{n:'Μαγνήσιο', why:'Συχνά χαμηλό στον διαβήτη τύπου 2'},{n:'Βιταμίνη Β12', why:'Έλεγχος αν λαμβάνεται μετφορμίνη — μειώνει την απορρόφηση'}],
-  CKD:         [{n:'⚠ Ενεργή Βιταμίνη D (calcitriol)', why:'Μόνο υπό νεφρολογική παρακολούθηση — μειωμένη ενεργοποίηση στους νεφρούς'},{n:'Σύμπλεγμα Β (υδατοδιαλυτές)', why:'Διαιτητικοί περιορισμοί μπορεί να μειώσουν την πρόσληψη'},{n:'⚠ Αποφυγή πολυβιταμινών υψηλής δόσης A/E/K και καλίου', why:'Κίνδυνος συσσώρευσης σε μειωμένη νεφρική λειτουργία'}],
+  CKD:         [
+    {n:'Βιταμίνη D', nEn:'Vitamin D', why:'Πρωτεΐνη: 0.8 g/kg σωματικού βάρους, αποφυγή υπερβολικής πρωτεΐνης. Περιορισμός φωσφόρου, νάτριο <2g/ημέρα, παρακολούθηση καλίου και περιορισμός μόνο αν τα εργαστηριακά δείχνουν αυξημένο K+.', whyEn:'Protein: 0.8 g/kg body weight, avoid excess protein. Restrict phosphorus, sodium <2g/day, monitor potassium and restrict only if labs show elevated K+.'},
+    {n:'Βιταμίνη Β12', nEn:'Vitamin B12', why:'Έλεγχος επιπέδων σε ΧΝΝ στάδιο 1-2 και εξατομίκευση ανά εργαστηριακά.', whyEn:'Monitor levels in CKD stage 1-2 and individualise based on labs.'},
+    {n:'Φολικό οξύ', nEn:'Folate', why:'Έλεγχος επιπέδων, ιδιαίτερα αν υπάρχουν διατροφικοί περιορισμοί ή αναιμία.', whyEn:'Monitor levels, especially with dietary restriction or anaemia.'},
+    {n:'Σίδηρος', nEn:'Iron', why:'Έλεγχος φερριτίνης/σιδήρου. Αποφυγή υψηλού καλίου αν υπάρχει υπερκαλιαιμία. Περιορισμός υψηλού φωσφόρου: επεξεργασμένα τρόφιμα, αναψυκτικά τύπου cola, υπερβολικά γαλακτοκομικά. Το βράσιμο πατάτας και απόρριψη νερού μειώνει το κάλιο.', whyEn:'Check ferritin/iron. Avoid high-potassium foods if hyperkalaemia is present. Limit high-phosphorus foods: processed foods, cola drinks, excess dairy. Boiling potatoes and discarding the water lowers potassium.'}
+  ],
   Hemodialysis:[{n:'⚠ Ενεργή Βιταμίνη D, σίδηρος/EPO', why:'Συνήθως διαχειρίζονται ιατρικά στη μονάδα αιμοκάθαρσης'},{n:'Σύμπλεγμα Β (υδατοδιαλυτές, ειδικά για αιμοκάθαρση)', why:'Απώλειες κατά τη διαδικασία αιμοκάθαρσης'}],
   Hypertension:[{n:'Μαγνήσιο & Κάλιο από τροφή', why:'Υποστηρίζουν ρύθμιση πίεσης — ΌΧΙ συμπληρώματα καλίου αν συνυπάρχει CKD/Αιμοκάθαρση χωρίς ιατρική οδηγία'}],
   Dyslipidemia:[{n:'Ωμέγα-3 (EPA/DHA)', why:'Μπορεί να μειώσει τα τριγλυκερίδια — συζήτηση δοσολογίας με ιατρό'}],
   PCOS:        [{n:'Βιταμίνη D', why:'Συχνή ανεπάρκεια, σχετίζεται με ινσουλινοαντίσταση'},{n:'Myo-inositol', why:'Πιθανή βελτίωση ωορρηξίας/ινσουλινοαντίστασης — συζήτηση με ιατρό'},{n:'Ωμέγα-3', why:'Αντιφλεγμονώδης δράση'}],
-  GERD:        [{n:'Βιταμίνη Β12', why:'Μακροχρόνια χρήση PPI μειώνει την απορρόφηση'},{n:'Μαγνήσιο', why:'PPI μπορούν να μειώσουν τα επίπεδα μαγνησίου'}],
+  GERD:        [
+    {n:'Βιταμίνη Β12', nEn:'Vitamin B12', why:'Έλεγχος ιδιαίτερα αν λαμβάνονται αναστολείς αντλίας πρωτονίων (PPIs). Λίπος 25–30% ενέργειας, μέτρια πρωτεΐνη ομοιόμορφα στα γεύματα, μικρά και συχνά γεύματα.', whyEn:'Monitor especially if using PPIs. Fat 25-30% of total energy, moderate protein evenly distributed across meals, use smaller frequent meals.'},
+    {n:'Μαγνήσιο', nEn:'Magnesium', why:'Οι PPIs μπορεί να μειώσουν τα επίπεδα μαγνησίου. Αποφυγή καφεΐνης, αλκοόλ, σοκολάτας, πικάντικων και υψηλού λίπους γευμάτων. Τα ωμέγα-3 μπορεί να βοηθήσουν στη μείωση φλεγμονής του οισοφάγου.', whyEn:'PPIs may lower magnesium. Avoid caffeine, alcohol, chocolate, spicy foods and high-fat meals. Omega-3 fatty acids may help reduce oesophageal inflammation.'}
+  ],
   IBS:         [{n:'Προβιοτικά', why:'Επιλογή στελέχους εξατομικευμένα — μπορεί να βοηθήσουν στα συμπτώματα'},{n:'Βιταμίνη D', why:'Έλεγχος επιπέδων αν περιορίζονται γαλακτοκομικά'}],
   Obesity:     [{n:'Βιταμίνη D', why:'Συχνή ανεπάρκεια'},{n:'Σίδηρος', why:'Η ανεπάρκεια σιδήρου είναι συχνή κατά τον θερμιδικό περιορισμό — εξέταση/παρακολούθηση επιπέδων όπου χρειάζεται'}],
   Thyroid:     [{n:'Σελήνιο', why:'Υποστηρίζει τη μετατροπή Τ4→Τ3, ιδίως στη Hashimoto'},{n:'Ψευδάργυρος, Σίδηρος, Βιταμίνη D', why:'Συχνές ελλείψεις σε αυτοάνοση θυρεοειδίτιδα'},{n:'⚠ Ιώδιο μόνο υπό καθοδήγηση', why:'Υπερβολικό ιώδιο μπορεί να επιδεινώσει την αυτοανοσία'}],
@@ -6650,6 +6664,22 @@ const CONDITION_VITAMINS = {
   Pregnancy:   [{n:'Φολικό οξύ', why:'600 mcg/ημέρα — νευρικός σωλήνας (ACOG)'},{n:'Σίδηρος', why:'27 mg/ημέρα — συχνή ανεπάρκεια στην εγκυμοσύνη'},{n:'Βιταμίνη D', why:'Έλεγχος επιπέδων'},{n:'Ιώδιο', why:'220 mcg/ημέρα — ανάπτυξη θυρεοειδούς εμβρύου'},{n:'Ωμέγα-3', why:'DHA για ανάπτυξη εγκεφάλου εμβρύου'},{n:'Χολίνη', why:'Νευρική ανάπτυξη'},{n:'Ασβέστιο', why:'1000 mg/ημέρα'}],
   Menopause:   [{n:'Ασβέστιο, Βιταμίνη D', why:'Η απώλεια οστικής μάζας επιταχύνεται μετά την εμμηνόπαυση'},{n:'Μαγνήσιο', why:'Οστική υγεία και ύπνος'},{n:'Ωμέγα-3', why:'Ο καρδιαγγειακός κίνδυνος αυξάνεται μετά την εμμηνόπαυση'},{n:'Βιταμίνη Β12', why:'Η απορρόφηση μειώνεται με την ηλικία'}],
   Sports:      [{n:'Σίδηρος', why:'Ιδίως σε γυναίκες αθλήτριες — απώλειες μέσω ιδρώτα/έμμηνου ρύσης'},{n:'Βιταμίνη D, Ασβέστιο', why:'Κίνδυνος καταγματικής κόπωσης / οστική υγεία'},{n:'Μαγνήσιο', why:'Μυϊκή λειτουργία και αποκατάσταση'},{n:'Νάτριο, Κάλιο', why:'Ενυδάτωση και απόδοση'}],
+  Osteoporosis:[
+    {n:'Ασβέστιο', nEn:'Calcium', why:'Στόχος 1000–1200 mg/ημέρα. Πρωτεΐνη 1.2–1.6 g/kg IBW για διατήρηση οστικής μήτρας. Περιορισμός νατρίου και καφεΐνης γιατί αυξάνουν την αποβολή ασβεστίου.', whyEn:'Target 1000-1200 mg/day. Protein 1.2-1.6 g/kg IBW to preserve bone matrix. Limit sodium and caffeine because they increase calcium excretion.'},
+    {n:'Βιταμίνη D', nEn:'Vitamin D', why:'Στόχος 800–1000 IU/ημέρα, με έλεγχο επιπέδων. Άσκηση με βάρη/αντιστάσεις παράλληλα με τη διατροφική παρέμβαση.', whyEn:'Target 800-1000 IU/day with level monitoring. Weight-bearing exercise is recommended alongside dietary intervention.'},
+    {n:'Βιταμίνη Κ2', nEn:'Vitamin K2', why:'Υποστήριξη οστικού μεταβολισμού, εξατομικευμένα και με προσοχή σε αντιπηκτική αγωγή.', whyEn:'Supports bone metabolism, individualised and with caution if using anticoagulants.'},
+    {n:'Μαγνήσιο', nEn:'Magnesium', why:'Σημαντικό για οστική υγεία και μεταβολισμό βιταμίνης D.', whyEn:'Important for bone health and vitamin D metabolism.'}
+  ],
+  Migraines:   [
+    {n:'Μαγνήσιο', nEn:'Magnesium', why:'400–600 mg/ημέρα μπορεί να βοηθήσει σε επιλεγμένους ασθενείς. Τακτικά γεύματα, αποφυγή παράλειψης γευμάτων.', whyEn:'400-600 mg/day may help selected patients. Regular meal timing is critical; avoid skipping meals.'},
+    {n:'Ριβοφλαβίνη / Βιταμίνη B2', nEn:'Riboflavin / Vitamin B2', why:'400 mg/ημέρα χρησιμοποιείται συχνά στην πρόληψη ημικρανιών. Ισορροπημένα μακροθρεπτικά, χωρίς ακραίους αποκλεισμούς.', whyEn:'400 mg/day is commonly used for migraine prevention. Balanced macros, no extreme restriction of any food group.'},
+    {n:'Συνένζυμο Q10', nEn:'CoQ10', why:'Πιθανό όφελος σε πρόληψη. Συνήθεις διατροφικοί εκλυτικοί παράγοντες: τυραμίνη, καφεΐνη, αλκοόλ, MSG, παλαιωμένα τυριά, επεξεργασμένα κρέατα, σοκολάτα. Τήρηση ημερολογίου τροφίμων-ημικρανίας.', whyEn:'May help prevention. Common dietary triggers: tyramine, caffeine, alcohol, MSG, aged cheeses, processed meats, chocolate. Keep a food-migraine diary.'}
+  ],
+  NAFLD:       [
+    {n:'Βιταμίνη E', nEn:'Vitamin E', why:'800 IU/ημέρα έχει τεκμηρίωση για μη διαβητικό NAFLD, μόνο με ιατρική/κλινική αξιολόγηση.', whyEn:'800 IU/day has evidence for non-diabetic NAFLD, only with medical/clinical review.'},
+    {n:'Βιταμίνη D', nEn:'Vitamin D', why:'Έλεγχος επιπέδων. Μεσογειακό πρότυπο διατροφής, σημαντική μείωση επεξεργασμένων σακχάρων και φρουκτόζης.', whyEn:'Monitor levels. Mediterranean diet pattern; reduce refined sugars and fructose significantly.'},
+    {n:'Ωμέγα-3 λιπαρά οξέα', nEn:'Omega-3 fatty acids', why:'Μείωση κορεσμένων λιπαρών, αύξηση ακόρεστων λιπαρών (ελαιόλαδο, ξηροί καρποί, ψάρι). Πρωτεΐνη μέτρια 1.0–1.2 g/kg IBW. Αποφυγή αλκοόλ και υπερ-επεξεργασμένων τροφίμων. Απώλεια 7–10% βάρους μπορεί να βελτιώσει σημαντικά δείκτες NAFLD.', whyEn:'Reduce saturated fat, increase unsaturated fat (olive oil, nuts, fish). Moderate protein 1.0-1.2 g/kg IBW. Avoid alcohol and ultra-processed foods. Weight loss of 7-10% body weight can significantly improve NAFLD markers.'}
+  ],
 };
 const VITAMIN_DISCLAIMER = 'ℹ️ Αυτά είναι κλινικές παρατηρήσεις προς εξέταση από τον διαιτολόγο — ΟΧΙ αυτόματες συστάσεις συμπληρωμάτων. Οποιαδήποτε απόφαση για συμπλήρωμα παραμένει αποκλειστικά κλινική κρίση, ιδιαίτερα σε ΧΝΝ, Αιμοκάθαρση και Μεσογειακή Αναιμία όπου ορισμένα συμπληρώματα (σίδηρος, κάλιο, βιταμίνες A/E/K) μπορεί να είναι επιβλαβή.';
 
@@ -6672,6 +6702,18 @@ const NUTRIENT_FOOD_SOURCES = {
   'Κάλιο':        'φρούτα (μπανάνα, πορτοκάλι), πατάτα, όσπρια, γιαούρτι — προσοχή/εξατομίκευση σε CKD/Αιμοκάθαρση',
   'Χολίνη':       'αυγά, κοτόπουλο, ψάρι, γαλακτοκομικά, όσπρια',
   'Νάτριο':       'ηλεκτρολύτες/αλάτι σε εξατομικευμένη ποσότητα ανά ιδρώτα, άσκηση και πίεση',
+  'Vitamin D':    'fatty fish (salmon, sardines), egg yolk, fortified milk, sunlight exposure',
+  'Vitamin B12':  'meat, fish, eggs, dairy, fortified cereals',
+  'Magnesium':    'nuts (almonds, cashews), seeds, leafy greens, legumes, whole grains, dark chocolate',
+  'Calcium':      'dairy, sardines with bones, almonds, broccoli, fortified plant milks',
+  'Vitamin K2':   'fermented foods, selected cheeses, eggs, meat in moderate amounts',
+  'Riboflavin':   'milk, yogurt, eggs, lean meats, almonds, mushrooms',
+  'Vitamin B2':   'milk, yogurt, eggs, lean meats, almonds, mushrooms',
+  'CoQ10':        'fish, meat, whole grains, nuts and seeds',
+  'Folate':       'leafy greens, legumes, citrus fruit, fortified cereals, avocado',
+  'Iron':         'red meat, liver, legumes (lentils, chickpeas), spinach with vitamin C source, fortified cereals',
+  'Omega-3':      'fatty fish (salmon, sardines, mackerel), flaxseed, walnuts, soy',
+  'Vitamin E':    'olive oil, sunflower seeds, almonds, hazelnuts, avocado',
 };
 
 // Returns a food-sources string for a nutrient suggestion, or null if none
@@ -6833,14 +6875,20 @@ function renderVitaminSuggestions(){
   const conditions=(S.conditions&&S.conditions.length)?S.conditions:[];
   let items=[];
   conditions.forEach(c=>{
-    (CONDITION_VITAMINS[c]||[]).forEach(item=>addVitaminItem(items, {...item, source:(isEn?'Condition: ':'Πάθηση: ')+conditionLabel(c)}));
+    (CONDITION_VITAMINS[c]||[]).forEach(item=>addVitaminItem(items, {
+      n:(isEn&&item.nEn)?item.nEn:item.n,
+      why:(isEn&&item.whyEn)?item.whyEn:item.why,
+      source:(isEn?'Condition: ':'Πάθηση: ')+conditionLabel(c)
+    }));
   });
   LAB_TESTS.forEach(t=>{
     const val=S.labValues[t.key];
     const status=labStatus(t,val);
     if(status==='low' && ['b12','folate','vitd','ferritin','iron','magnesium','hgb','calcium'].includes(t.key)){
       const map={b12:'Βιταμίνη Β12',folate:'Φολικό οξύ',vitd:'Βιταμίνη D',ferritin:'Σίδηρος',iron:'Σίδηρος',magnesium:'Μαγνήσιο',hgb:'Σίδηρος/Β12/Φολικό (αναιμία)',calcium:'Ασβέστιο'};
-      addVitaminItem(items, {n:map[t.key], why:`Εργαστηριακά: ${t.gr} = ${val} ${t.unit} (κάτω του φυσιολογικού ${t.low}–${t.high})`, source:isEn?'Blood analysis':'Από αιματολογικό έλεγχο'});
+      const nText=isEn ? ({b12:'Vitamin B12',folate:'Folate',vitd:'Vitamin D',ferritin:'Iron',iron:'Iron',magnesium:'Magnesium',hgb:'Iron/Vitamin B12/Folate (anaemia)',calcium:'Calcium'}[t.key]||map[t.key]) : map[t.key];
+      const whyText=isEn ? `Labs: ${t.en} = ${val} ${t.unit} (below reference range ${t.low}–${t.high})` : `Εργαστηριακά: ${t.gr} = ${val} ${t.unit} (κάτω του φυσιολογικού ${t.low}–${t.high})`;
+      addVitaminItem(items, {n:nText, why:whyText, source:isEn?'Blood analysis':'Από αιματολογικό έλεγχο'});
     }
   });
   const el=document.getElementById('vitamin-suggestions');
@@ -6852,7 +6900,7 @@ function renderVitaminSuggestions(){
   let html=`<table><thead><tr><th>${isEn?'Nutrient':'Θρεπτικό συστατικό'}</th><th>${isEn?'Clinical note':'Κλινική σημείωση'}</th><th>${isEn?'Dietary food sources':'Διατροφικές πηγές'}</th><th>${isEn?'Basis':'Βάση'}</th></tr></thead><tbody>`;
   items.forEach(it=>{
     const foods=getFoodSources(it.n);
-    html+=`<tr><td><strong>${it.n}</strong></td><td style="font-size:12px">${translateClinicalNote(it.why)}</td><td style="font-size:12px">${foods||'—'}</td><td style="font-size:11px;color:var(--text-muted)">${it.source}</td></tr>`;
+    html+=`<tr><td><strong>${it.n}</strong></td><td style="font-size:12px">${isEn?it.why:translateClinicalNote(it.why)}</td><td style="font-size:12px">${foods||'—'}</td><td style="font-size:11px;color:var(--text-muted)">${it.source}</td></tr>`;
   });
   html+='</tbody></table>';
   html+=`<div class="alert info" style="margin-top:10px;font-size:12px">${isEn?'Clinical observations for dietitian review only — not automatic supplement recommendations. Supplement decisions require clinical judgement, especially in CKD, dialysis and thalassemia.':VITAMIN_DISCLAIMER}</div>`;
@@ -7028,9 +7076,10 @@ async function searchFoodDatabase(){
           <button class="btn primary" style="padding:4px 8px;font-size:11px" onclick="toggleFoodAddPanel(${i})">+ Meal plan</button>
         </div>
         <div class="food-add-panel" id="food-add-panel-${i}">
-          <select id="food-add-day-${i}">${extraFoodDayOptionsHtml()}</select>
+          <select id="food-add-day-${i}" onchange="toggleFoodSpecificDays(${i})">${extraFoodDayOptionsHtml()}</select>
           <select id="food-add-slot-${i}">${extraFoodSlotOptionsHtml()}</select>
           <input id="food-add-grams-${i}" type="number" min="1" step="1" value="${Math.round(p.defaultGrams||100)}" placeholder="grams">
+          <div id="food-add-specific-days-${i}" style="display:none;gap:8px;flex-wrap:wrap;width:100%;padding:4px 0">${extraFoodSpecificDaysHtml(i)}</div>
           <button class="btn primary" style="padding:5px 8px;font-size:11px" onclick="addFoodResultToMealPlan(${i})">Add food</button>
         </div>
       </td>
@@ -7046,10 +7095,12 @@ function addFoodResultToMealPlan(index){
   if(!p){ alert('Food result not found.'); return; }
   const grams=foodNumber(v(`food-add-grams-${index}`))||p.defaultGrams||100;
   const foodName=foodDisplayName(p);
-  const food={
-    id:'xf_'+Date.now()+'_'+Math.random().toString(16).slice(2),
-    day:v(`food-add-day-${index}`)||'all',
-    slot:v(`food-add-slot-${index}`)||'brk',
+  const selectedDays=selectedExtraFoodDays(index);
+  if(!selectedDays.length){
+    alert((S.mealLanguage||'GR')==='EN' ? 'Please select at least one day.' : 'Παρακαλώ επιλέξτε τουλάχιστον μία ημέρα.');
+    return;
+  }
+  const baseFood={
     name:foodName,
     brand:p.brand||'USDA FoodData Central',
     grams,
@@ -7059,13 +7110,22 @@ function addFoodResultToMealPlan(index){
     fat100:foodNumber(p.fat100)||0,
   };
   if(!S.extraFoods) S.extraFoods=[];
-  S.extraFoods.push(food);
+  const created=selectedDays.map(day=>({
+    ...baseFood,
+    id:'xf_'+Date.now()+'_'+Math.random().toString(16).slice(2),
+    day,
+    slot:v(`food-add-slot-${index}`)||'brk',
+  }));
+  S.extraFoods.push(...created);
   const panel=document.getElementById(`food-add-panel-${index}`);
   if(panel) panel.classList.remove('open');
   refreshMealPlanViews();
-  const dayLabel=(EXTRA_FOOD_DAYS.find(d=>d.v===String(food.day))||EXTRA_FOOD_DAYS[0]).label;
-  const slotLabel=(EXTRA_FOOD_SLOTS.find(s=>s.v===food.slot)||EXTRA_FOOD_SLOTS[0]).label;
-  setEl('fooddb-status', `${safeHtml(food.name)} added to ${dayLabel} / ${slotLabel}. Meal-plan kcal now include this item.`);
+  const isEn=(S.mealLanguage||'GR')==='EN';
+  const dayLabel=selectedDays.length===1
+    ? ((EXTRA_FOOD_DAYS.find(d=>d.v===String(selectedDays[0]))||EXTRA_FOOD_DAYS[0])[isEn?'en':'gr']||EXTRA_FOOD_DAYS[0].label)
+    : (isEn ? `${selectedDays.length} selected days` : `${selectedDays.length} επιλεγμένες ημέρες`);
+  const slotLabel=(EXTRA_FOOD_SLOTS.find(s=>s.v===created[0].slot)||EXTRA_FOOD_SLOTS[0]).label;
+  setEl('fooddb-status', `${safeHtml(foodName)} added to ${dayLabel} / ${slotLabel}. Meal-plan kcal now include this item.`);
 }
 function removeExtraFood(id){
   S.extraFoods=(S.extraFoods||[]).filter(food=>food.id!==id);
@@ -7858,7 +7918,7 @@ function applyState(state){
   S.extraFoods=Array.isArray(state.extraFoods)?state.extraFoods:[];
   if(state.mealLanguage) S.mealLanguage=state.mealLanguage;
   if(state.reportOptions){
-    S.reportOptions={includeBlood:true,...state.reportOptions};
+    S.reportOptions={includeBlood:true,days:allReportDayIndexes(),...state.reportOptions,oneDay:false,sevenDay:true};
     syncReportModeControls();
   }
   if(state.intake){ S.intake=state.intake; }
@@ -7901,7 +7961,7 @@ function resetForm(){
   S.weekPlans=WEEK_PLANS.map(p=>({...p}));
   S.savedWeeklyPlan=null;
   S.mealLanguage='GR';
-  S.reportOptions={oneDay:false,sevenDay:true,includeBlood:true};
+  S.reportOptions={oneDay:false,sevenDay:true,includeBlood:true,days:allReportDayIndexes()};
   syncReportModeControls();
   if(document.getElementById('page-labs')?.classList.contains('active')) renderLabsTable();
   try{localStorage.removeItem('nutriflow_autosave');}catch(e){}
