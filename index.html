@@ -725,22 +725,22 @@ html[data-theme="dark"] .week-summary-table td:last-child {
   <button class="nav-item" onclick="nav('clients')">🗂️ My Clients</button>
   <div class="nav-group-label">Workflow</div>
   <button class="nav-item active" onclick="nav('dashboard')">📊 Dashboard</button>
-  <button class="nav-item" onclick="nav('profile')">👤 Client Profile <span style="font-size:10px;color:var(--text-muted);font-weight:400">+ Body Comp</span></button>
-  <button class="nav-item" onclick="nav('intake')">📋 Client Notes / Intake</button>
-  <button class="nav-item" onclick="nav('macros')">🎯 Macro Targets</button>
-  <button class="nav-item" onclick="nav('exchanges')">🔄 Exchange System</button>
+  <button class="nav-item" onclick="nav('profile')">👤 Client Profile / Προφίλ Πελάτη <span style="font-size:10px;color:var(--text-muted);font-weight:400">+ Body Comp</span></button>
+  <button class="nav-item" onclick="nav('intake')">📝 Client Notes / Σημειώσεις</button>
+  <button class="nav-item" onclick="nav('labs')">🩸 Blood Analysis / Ανάλυση Αίματος</button>
+  <button class="nav-item" onclick="nav('macros')">⚡ Macro Targets / Στόχοι Μακροθρεπτικών</button>
+  <button class="nav-item" onclick="nav('exchanges')">⚖️ Exchange System / Σύστημα Ισοδυνάμων</button>
   <button class="nav-item" onclick="nav('sevenday')">📅 7-Day Plan</button>
-  <button class="nav-item" onclick="nav('report')">📄 Client Report</button>
-  <button class="nav-item" onclick="nav('labs')">🩸 Blood Analysis</button>
-  <button class="nav-item" onclick="nav('fooddb')">🔎 Food Database</button>
-  <button class="nav-item" onclick="nav('recipes')">🍲 Recipes</button>
-  <button class="nav-item" onclick="nav('appointments')">📅 Appointments</button>
+  <button class="nav-item" onclick="nav('report')">📄 Client Report / Αναφορά</button>
+  <button class="nav-item" onclick="nav('fooddb')">🔍 Food Database / Βάση Τροφίμων</button>
+  <button class="nav-item" onclick="nav('recipes')">🍽️ Recipes / Συνταγές</button>
+  <button class="nav-item" onclick="nav('appointments')">📆 Appointments / Ραντεβού</button>
   <div class="nav-group-label">Reports & Tracking</div>
-  <button class="nav-item" onclick="nav('tracking')">📈 Progress Tracking</button>
-  <button class="nav-item" onclick="nav('equivalents')">📖 Equivalents Guide</button>
+  <button class="nav-item" onclick="nav('tracking')">📈 Progress Tracking / Παρακολούθηση</button>
+  <button class="nav-item" onclick="nav('equivalents')">📋 Equivalents Guide / Οδηγός Ισοδυνάμων</button>
   <div class="nav-group-label">Clinical</div>
-  <button class="nav-item" onclick="nav('account')">💳 Account / Subscription</button>
-  <button class="nav-item" onclick="openFeedbackModal()">💬 Feedback</button>
+  <button class="nav-item" onclick="nav('account')">💳 Account / Λογαριασμός</button>
+  <button class="nav-item" onclick="openFeedbackModal()">💬 Feedback / Σχόλια</button>
   <div class="sidebar-footer">NutriFlow v1 · Your clinical nutrition tool</div>
 </nav>
 
@@ -1165,6 +1165,10 @@ html[data-theme="dark"] .week-summary-table td:last-child {
             <input type="checkbox" id="rep-include-blood" checked onchange="onReportOptionsChange()" style="width:16px;height:16px;accent-color:var(--teal-600)">
             <span id="report-include-blood-label">Include Blood Analysis summary</span>
           </label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;cursor:pointer">
+            <input type="checkbox" id="rep-include-equivalents" onchange="onReportOptionsChange()" style="width:16px;height:16px;accent-color:var(--teal-600)">
+            <span id="report-include-equivalents-label">Include Equivalents Guide in report</span>
+          </label>
           <button class="btn primary" onclick="printPage()" id="report-print-btn">🖨️ Print Full Report</button>
         </div>
         <div class="field-note" id="report-options-note" style="margin-top:8px">Check/uncheck to choose which meal plan appears in the printed report. Use Print / Save PDF and choose “Save as PDF” in the browser print dialog.</div>
@@ -1440,7 +1444,7 @@ const S = {
   exAuto:{starch:true,protein:true,fat:true},
   exMeta:null, lastDairyType:'Moderate-fat', lastMeatType:'Lean', weightSuggestionLocked:false, bcManual:{fatmass:false,ffm:false,muscle:false},
   bc:{bf:null,water:null,fatmass:null,ffm:null,muscle:null,metage:null,visceral:null},
-  tracking:[],intake:{},notes:{},labValues:{},foodResults:[],recipes:[],recipeDraft:[],editingRecipeId:null,extraFoods:[],appointments:[],mealLanguage:'GR',reportOptions:{oneDay:false,sevenDay:true,includeBlood:true,days:[0,1,2,3,4,5,6]},
+  tracking:[],intake:{},notes:{},labValues:{},foodResults:[],recipes:[],recipeDraft:[],editingRecipeId:null,extraFoods:[],appointments:[],mealLanguage:'GR',reportOptions:{oneDay:false,sevenDay:true,includeBlood:true,includeEquivalents:false,days:[0,1,2,3,4,5,6]},
   sevenDayView:'day', sevenDayActiveIndex:0, weekViewTheme:'light', aiPlanStatus:'',
   customMeals:[], customMealDraft:[], customMealContext:null,
   mealSel:{breakfast:'BRK_TOAST',lunch:'LUN_CHICKEN_RICE',dinner:'DIN_FISH_POTATO',snack1Extras:['fruit'],snack2Extras:['fruit'],sleepExtras:['fruit']}
@@ -2692,15 +2696,11 @@ function formatCups(exCount) {
 function formatPotatoPortion(exCount, lang='GR') {
   const n=Number(exCount||0);
   if(n<=0) return '';
-  const units=[
-    {max:1, gr:'1 μικρή πατάτα (~80g)', en:'1 small potato (~80g)'},
-    {max:2, gr:'1 μέτρια πατάτα (~150g)', en:'1 medium potato (~150g)'},
-    {max:3, gr:'1 μεγάλη πατάτα (~200g)', en:'1 large potato (~200g)'}
-  ];
-  if(n<=3) return (units.find(u=>n<=u.max)||units[2])[lang==='EN'?'en':'gr'];
-  return lang==='EN'
-    ? '1 medium potato (~150g)'
-    : '1 μέτρια πατάτα (~150g)';
+  const isEn=lang==='EN';
+  if(n<=1) return isEn ? '1 medium potato (~150g)' : '1 μέτρια πατάτα (~150g)';
+  if(n<=2) return isEn ? '1 large potato (~200g)' : '1 μεγάλη πατάτα (~200g)';
+  if(n===3) return isEn ? '1 large potato (~200g) + 1 medium potato (~150g)' : '1 μεγάλη πατάτα (~200g) + 1 μέτρια πατάτα (~150g)';
+  return isEn ? `${n} potato starch exchanges` : `${n} ισοδύναμα αμύλου από πατάτα`;
 }
 
 function mealSuffix(ex, p, veg, proteinSource, carbName, proteinLabel, isFishProtein) {
@@ -2920,7 +2920,7 @@ function printPage(){
 }
 function printReportSevenDayLandscape(){
   const oldOptions={...(S.reportOptions||{})};
-  S.reportOptions={oneDay:false,sevenDay:true,includeBlood:oldOptions.includeBlood!==false,days:allReportDayIndexes()};
+  S.reportOptions={oneDay:false,sevenDay:true,includeBlood:oldOptions.includeBlood!==false,includeEquivalents:oldOptions.includeEquivalents===true,days:allReportDayIndexes()};
   nav('report');
   buildReport();
   const week=document.querySelector('#report-body .report-week-section');
@@ -2935,7 +2935,7 @@ function printReportSevenDayLandscape(){
 }
 function printReportOneDayPortrait(){
   const oldOptions={...(S.reportOptions||{})};
-  S.reportOptions={oneDay:false,sevenDay:true,includeBlood:oldOptions.includeBlood!==false,days:[0]};
+  S.reportOptions={oneDay:false,sevenDay:true,includeBlood:oldOptions.includeBlood!==false,includeEquivalents:oldOptions.includeEquivalents===true,days:[0]};
   nav('report');
   buildReport();
   const day=document.querySelector('#report-body .report-day-section');
@@ -3138,6 +3138,22 @@ function buildEquivalents(){
     </div>`;
   });
   setEl('equivalents-body', html);
+}
+function reportEquivalentsGuideHtml(isEn){
+  const lang=isEn?'en':'gr';
+  return `<div class="report-equivalents-section" style="break-before:page;page-break-before:always;margin-top:16px">
+    <div style="padding-bottom:12px;border-bottom:3px solid var(--teal-600);margin-bottom:14px">
+      <div style="font-size:18px;font-weight:800;color:var(--teal-800)">${isEn?'Equivalents Guide':'Οδηγός Ισοδυνάμων / Equivalents Guide'}</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:3px">${isEn?'Foods within each exchange category can be swapped in the listed amounts.':'Τα τρόφιμα μέσα στην ίδια κατηγορία ισοδυνάμων μπορούν να αντικατασταθούν στις αναγραφόμενες ποσότητες.'}</div>
+    </div>
+    ${EQUIVALENTS_DATA.map(cat=>`
+      <div style="break-inside:avoid;page-break-inside:avoid;margin-bottom:12px">
+        <div style="font-weight:800;font-size:13px;color:var(--teal-800);margin-bottom:5px;padding-bottom:3px;border-bottom:1px solid var(--border)">${cat.icon} ${safeHtml(lang==='en'?cat.en:cat.gr)}</div>
+        <table style="width:100%;border-collapse:collapse;font-size:11px;background:var(--bg-surface);border:1px solid var(--border)">
+          <tbody>${cat.items.map(it=>`<tr style="border-bottom:1px solid var(--border)"><td style="padding:4px 6px">${safeHtml(lang==='en'?it.en:it.gr)}</td></tr>`).join('')}</tbody>
+        </table>
+      </div>`).join('')}
+  </div>`;
 }
 // Single source of truth for breakfast/lunch/dinner dropdowns, used by both
 // the 1-Day Plan and the 7-Day Plan (per-day dropdowns). To add new meal
@@ -3571,6 +3587,7 @@ function updateMealLanguageButtons(){
   setEl('report-days-title', isEn ? 'Print days from 7-day plan:' : 'Εκτύπωση ημερών από το 7ήμερο πλάνο:');
   setEl('report-days-note', isEn ? 'Select one or more days to print from the weekly plan. Single-day print hides the weekday name.' : 'Επιλέξτε μία ή περισσότερες ημέρες από το εβδομαδιαίο πλάνο. Σε μία ημέρα δεν εμφανίζεται το όνομα ημέρας.');
   setEl('report-include-blood-label', isEn ? 'Include Blood Analysis summary' : 'Συμπερίληψη σύνοψης αιματολογικού ελέγχου');
+  setEl('report-include-equivalents-label', isEn ? 'Include Equivalents Guide in report' : 'Συμπερίληψη Οδηγού Ισοδυνάμων στην αναφορά');
   setEl('report-print-btn', isEn ? '🖨️ Print Full Report' : '🖨️ Εκτύπωση πλήρους αναφοράς');
   setEl('report-options-note', isEn ? 'Use Print / Save PDF and choose “Save as PDF” in the browser print dialog.' : 'Χρησιμοποιήστε Εκτύπωση / Αποθήκευση PDF και επιλέξτε “Save as PDF” στο παράθυρο εκτύπωσης.');
   setEl('report-print-title', isEn ? '📄 PRINT — Clinical Nutrition Report' : '📄 PRINT — Κλινική Αναφορά Διατροφής');
@@ -6144,6 +6161,8 @@ function renderReportDaySelector(){
 function syncReportModeControls(){
   const blood=document.getElementById('rep-include-blood');
   if(blood) blood.checked = S.reportOptions?.includeBlood!==false;
+  const equivalents=document.getElementById('rep-include-equivalents');
+  if(equivalents) equivalents.checked = S.reportOptions?.includeEquivalents===true;
   renderReportDaySelector();
 }
 function onReportOptionsChange(){
@@ -6152,6 +6171,7 @@ function onReportOptionsChange(){
     oneDay:false,
     sevenDay:true,
     includeBlood: document.getElementById('rep-include-blood')?.checked !== false,
+    includeEquivalents: document.getElementById('rep-include-equivalents')?.checked === true,
     days: checked.length ? checked : allReportDayIndexes(),
   };
   updateMealLanguageButtons();
@@ -6239,6 +6259,7 @@ function buildReport(){
   const dayUnit=isEn?'kcal/day':'kcal/ημέρα';
   const abnormalLabsHtml=S.reportOptions?.includeBlood!==false ? reportAbnormalLabsHtml(isEn) : '';
   const bodyCompositionHtml=reportBodyCompositionHtml(isEn);
+  const equivalentsGuideHtml=S.reportOptions?.includeEquivalents===true ? reportEquivalentsGuideHtml(isEn) : '';
   const reportGuidelinesHtml=`<div style="font-size:14px;font-weight:700;color:var(--teal-800);margin:14px 0 6px;border-bottom:2px solid var(--teal-600);padding-bottom:4px">📋 ${isEn?'GENERAL GUIDANCE':'ΓΕΝΙΚΕΣ ΟΔΗΓΙΕΣ'}</div>
     <div style="columns:2;column-gap:20px;font-size:12px;line-height:1.65;margin-bottom:14px">
       ${reportRules.map(r=>`<div style="break-inside:avoid;margin-bottom:4px">✔ ${r}</div>`).join('')}
@@ -6335,6 +6356,7 @@ function buildReport(){
     ${n.clinician_notes?`
     <div style="font-size:14px;font-weight:700;color:var(--teal-800);margin:14px 0 6px;border-bottom:2px solid var(--teal-600);padding-bottom:4px">📝 ${isEn?'DIETITIAN NOTES':'ΣΗΜΕΙΩΣΕΙΣ ΔΙΑΙΤΟΛΟΓΟΥ'}</div>
     <div style="font-size:13px;padding:10px;background:var(--teal-50);border-radius:6px">${n.clinician_notes}</div>`:''}
+    ${equivalentsGuideHtml}
   </div>`);
 }
 
@@ -7933,7 +7955,7 @@ function applyState(state){
   S.extraFoods=Array.isArray(state.extraFoods)?state.extraFoods:[];
   if(state.mealLanguage) S.mealLanguage=state.mealLanguage;
   if(state.reportOptions){
-    S.reportOptions={includeBlood:true,days:allReportDayIndexes(),...state.reportOptions,oneDay:false,sevenDay:true};
+    S.reportOptions={includeBlood:true,includeEquivalents:false,days:allReportDayIndexes(),...state.reportOptions,oneDay:false,sevenDay:true};
     syncReportModeControls();
   }
   if(state.intake){ S.intake=state.intake; }
@@ -7976,7 +7998,7 @@ function resetForm(){
   S.weekPlans=WEEK_PLANS.map(p=>({...p}));
   S.savedWeeklyPlan=null;
   S.mealLanguage='GR';
-  S.reportOptions={oneDay:false,sevenDay:true,includeBlood:true,days:allReportDayIndexes()};
+  S.reportOptions={oneDay:false,sevenDay:true,includeBlood:true,includeEquivalents:false,days:allReportDayIndexes()};
   syncReportModeControls();
   if(document.getElementById('page-labs')?.classList.contains('active')) renderLabsTable();
   try{localStorage.removeItem('nutriflow_autosave');}catch(e){}
