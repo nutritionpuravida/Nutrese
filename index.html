@@ -1236,7 +1236,10 @@ html[data-theme="dark"] .week-summary-table td:last-child {
         </div>
         <div class="form-field" style="margin-top:12px">
           <label>Search food / Αναζήτηση τροφίμου</label>
-          <input type="text" id="eq-search" placeholder="e.g. avocado, αβοκάντο" oninput="buildEquivalents()">
+          <div style="display:flex;gap:8px;align-items:center">
+            <input type="text" id="eq-search" placeholder="e.g. avocado, αβοκάντο" oninput="buildEquivalents()" style="flex:1">
+            <button class="btn" type="button" onclick="clearEquivalentsSearch()" title="Clear search">✕</button>
+          </div>
         </div>
       </div>
     </div>
@@ -1451,7 +1454,7 @@ const S = {
   exAuto:{starch:true,protein:true,fat:true},
   exMeta:null, lastDairyType:'Moderate-fat', lastMeatType:'Lean', weightSuggestionLocked:false, bcManual:{fatmass:false,ffm:false,muscle:false},
   bc:{bf:null,water:null,fatmass:null,ffm:null,muscle:null,metage:null,visceral:null},
-  tracking:[],intake:{},notes:{},labValues:{},foodResults:[],recipes:[],recipeDraft:[],editingRecipeId:null,extraFoods:[],appointments:[],mealLanguage:'GR',reportOptions:{oneDay:false,sevenDay:true,includeBlood:true,includeEquivalents:false,days:[0,1,2,3,4,5,6]},
+  tracking:[],intake:{},notes:{},labValues:{},foodResults:[],recipes:[],recipeDraft:[],editingRecipeId:null,extraFoods:[],appointments:[],equivalentNotes:{},mealLanguage:'GR',reportOptions:{oneDay:false,sevenDay:true,includeBlood:true,includeEquivalents:false,days:[0,1,2,3,4,5,6]},
   sevenDayView:'day', sevenDayActiveIndex:0, weekViewTheme:'light', aiPlanStatus:'',
   customMeals:[], customMealDraft:[], customMealContext:null,
   mealSel:{breakfast:'BRK_TOAST',lunch:'LUN_CHICKEN_RICE',dinner:'DIN_FISH_POTATO',snack1Extras:['fruit'],snack2Extras:['fruit'],sleepExtras:['fruit']}
@@ -3210,11 +3213,22 @@ function equivalentsSearchMatches(query){
   if(!q) return [];
   const matches=[];
   EQUIVALENTS_DATA.forEach(cat=>{
-    cat.items.forEach(item=>{
+    equivalentItemsForCategory(cat).forEach(item=>{
       if(equivalentMatchesQuery(cat,item,q)) matches.push({cat,item});
     });
   });
   return matches;
+}
+
+function equivalentItemsForCategory(cat){
+  const custom=(S.equivalentNotes&&Array.isArray(S.equivalentNotes[cat.key])) ? S.equivalentNotes[cat.key] : [];
+  return [...cat.items, ...custom];
+}
+
+function clearEquivalentsSearch(){
+  const input=document.getElementById('eq-search');
+  if(input) input.value='';
+  buildEquivalents();
 }
 
 function equivalentsCompactTableHtml(lang='gr', searchQuery=''){
@@ -3222,12 +3236,13 @@ function equivalentsCompactTableHtml(lang='gr', searchQuery=''){
   const portionLabel=isEn?'1 exchange':'1 μερίδα';
   const q=String(searchQuery||'').trim();
   const categories=q ? EQUIVALENTS_DATA
-    .map(cat=>({...cat,items:cat.items.filter(item=>equivalentMatchesQuery(cat,item,q))}))
+    .map(cat=>({...cat,items:equivalentItemsForCategory(cat).filter(item=>equivalentMatchesQuery(cat,item,q))}))
     .filter(cat=>cat.items.length || equivalentMatchesQuery(cat,null,q))
     : EQUIVALENTS_DATA;
   const rows=categories.map(cat=>{
     const title=isEn?cat.en:cat.gr;
-    const examples=cat.items.map(it=>isEn?it.en:it.gr);
+    const sourceItems=q ? cat.items : equivalentItemsForCategory(cat);
+    const examples=sourceItems.map(it=>isEn?(it.en||it.gr):(it.gr||it.en));
     const split=Math.ceil(examples.length/2);
     const colHtml=list=>list.map(x=>`<div style="margin-bottom:3px">• ${highlightEquivalentText(x,q)}</div>`).join('');
     return `<tr style="break-inside:avoid;page-break-inside:avoid">
@@ -3268,7 +3283,7 @@ function buildEquivalents(){
         const foodAlt=isEn?m.item.gr:m.item.en;
         return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--border);border-radius:8px;padding:8px 10px;background:var(--bg-surface)">
           <div style="font-size:13px;line-height:1.35"><strong>${highlightEquivalentText(foodMain,query)}</strong><div style="font-size:11px;color:var(--text-muted)">${safeHtml(foodAlt)} · ${m.cat.icon} ${safeHtml(catTitle)}</div></div>
-          <button class="btn" style="font-size:11px;padding:5px 8px" onclick="addEquivalentToCustomNotes(decodeURIComponent('${encodeURIComponent(foodMain)}'),decodeURIComponent('${encodeURIComponent(catTitle)}'))">${isEn?'Add to custom notes':'Προσθήκη στις σημειώσεις'}</button>
+          <button class="btn" style="font-size:11px;padding:5px 8px" onclick="addEquivalentToGuide('${m.cat.key}',decodeURIComponent('${encodeURIComponent(m.item.gr||foodMain)}'),decodeURIComponent('${encodeURIComponent(m.item.en||foodMain)}'))">${isEn?'Add to custom notes':'Προσθήκη στις σημειώσεις'}</button>
         </div>`;
       }).join('')}</div>`;
     }
@@ -3277,15 +3292,14 @@ function buildEquivalents(){
   setEl('equivalents-body', html);
 }
 
-function addEquivalentToCustomNotes(food, category){
-  const line=`Equivalent note: ${food} → ${category}`;
-  const existing=(S.notes&&S.notes.clinician_notes)||v('n-clinician-notes')||'';
-  const next=existing && !existing.includes(line) ? `${existing}\n${line}` : (existing||line);
-  S.notes={...(S.notes||{}),clinician_notes:next};
-  const el=document.getElementById('n-clinician-notes');
-  if(el) el.value=next;
-  saveNotes();
-  alert('Added to custom notes');
+function addEquivalentToGuide(categoryKey, grText, enText){
+  if(!categoryKey || !grText) return;
+  S.equivalentNotes=S.equivalentNotes||{};
+  const list=Array.isArray(S.equivalentNotes[categoryKey]) ? S.equivalentNotes[categoryKey] : [];
+  const exists=list.some(item=>String(item.gr||'').trim()===String(grText||'').trim() || String(item.en||'').trim()===String(enText||'').trim());
+  if(!exists) S.equivalentNotes[categoryKey]=[...list,{gr:grText,en:enText||grText,custom:true}];
+  S_isDirty=true;
+  buildEquivalents();
 }
 function reportEquivalentsGuideHtml(isEn){
   const lang=isEn?'en':'gr';
@@ -8134,7 +8148,7 @@ return {
     weekPlans:S.weekPlans, savedWeeklyPlan:S.savedWeeklyPlan, customMeals:S.customMeals, mealLanguage:S.mealLanguage, reportOptions:S.reportOptions,
     sevenDayView:S.sevenDayView, sevenDayActiveIndex:S.sevenDayActiveIndex, aiPlanStatus:S.aiPlanStatus,
     weightSuggestionLocked:S.weightSuggestionLocked, calAdjAutoValue:S.calAdjAutoValue, bcManual:S.bcManual,
-    intake:S.intake, notes:S.notes, labValues:S.labValues, extraFoods:S.extraFoods,
+    intake:S.intake, notes:S.notes, labValues:S.labValues, extraFoods:S.extraFoods, equivalentNotes:S.equivalentNotes,
     savedAt:new Date().toISOString()
   };
 }
@@ -8181,6 +8195,7 @@ function applyState(state){
   if(state.sevenDayActiveIndex!==undefined) S.sevenDayActiveIndex=Number(state.sevenDayActiveIndex)||0;
   if(state.aiPlanStatus!==undefined) S.aiPlanStatus=state.aiPlanStatus;
   S.extraFoods=Array.isArray(state.extraFoods)?state.extraFoods:[];
+  S.equivalentNotes=state.equivalentNotes&&typeof state.equivalentNotes==='object' ? state.equivalentNotes : {};
   if(state.mealLanguage) S.mealLanguage=state.mealLanguage;
   if(state.reportOptions){
     S.reportOptions={includeBlood:true,includeEquivalents:false,days:allReportDayIndexes(),...state.reportOptions,oneDay:false,sevenDay:true};
@@ -8221,7 +8236,7 @@ function resetForm(){
   S.exAuto={starch:true,protein:true,fat:true};
   S.exMeta=makeExMeta();
   S.lastDairyType='Moderate-fat'; S.lastMeatType='Lean';
-  S.tracking=[]; S.intake={}; S.notes={}; S.labValues={}; S.extraFoods=[];
+  S.tracking=[]; S.intake={}; S.notes={}; S.labValues={}; S.extraFoods=[]; S.equivalentNotes={};
   S.mealSel={breakfast:'BRK_TOAST',lunch:'LUN_CHICKEN_RICE',dinner:'DIN_FISH_POTATO',snack1Extras:['fruit'],snack2Extras:['fruit'],sleepExtras:['fruit']};
   S.weekPlans=WEEK_PLANS.map(p=>({...p}));
   S.savedWeeklyPlan=null;
