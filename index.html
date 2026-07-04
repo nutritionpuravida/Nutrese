@@ -156,7 +156,7 @@ select option { background-color: var(--bg-surface); color: var(--text-primary);
 /* ─── METRICS ─── */
 .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
 .metric { background: var(--metric-bg); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 12px 14px; }
-.metric .m-label { font-size: 10px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
+.metric .m-label { font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
 .metric .m-value { font-size: 24px; font-weight: 700; color: var(--text-primary); line-height: 1; }
 .metric .m-sub { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
 .metric .m-value.warn { color: var(--amber-text); }
@@ -221,6 +221,9 @@ td { padding: 9px 10px; border-bottom: 1px solid var(--border); color: var(--tex
 tr:last-child td { border-bottom: none; }
 tr:hover td { background: var(--bg-hover); }
 .week-summary-table tr:hover td { background: inherit !important; }
+.week-summary-table,
+.week-summary-table th,
+.week-summary-table td { font-size: 13px !important; }
 [data-week-theme="light"] .week-summary-table,
 [data-week-theme="light"] .week-summary-table tbody tr {
   background: #ffffff !important;
@@ -5980,7 +5983,7 @@ function renderSevenDayWeekSummary(lang='GR'){
   const important=value=>`${value} !important`;
   const thStyle=`padding:9px;text-align:left;border-bottom:1px solid ${pal.border} !important;background:${important(pal.head)};color:${important(pal.text)}`;
   const tdStyleFor=bg=>`padding:9px;color:${important(pal.body)};background:${important(bg)};line-height:1.45;vertical-align:top;border-bottom:1px solid ${pal.border} !important`;
-  return `<div class="week-summary-wrap" data-lang="${lang}" data-week-theme="${weekTheme}" style="overflow-x:auto;background:${important(pal.table)};color:${important(pal.text)}"><table class="week-summary-table" data-lang="${lang}" style="width:100%;border-collapse:collapse;font-size:12px;background:${important(pal.table)};color:${important(pal.text)};border:1px solid ${pal.border} !important">
+  return `<div class="week-summary-wrap" data-lang="${lang}" data-week-theme="${weekTheme}" style="overflow-x:auto;background:${important(pal.table)};color:${important(pal.text)}"><table class="week-summary-table" data-lang="${lang}" style="width:100%;border-collapse:collapse;font-size:13px;background:${important(pal.table)};color:${important(pal.text)};border:1px solid ${pal.border} !important">
     <thead><tr style="background:${important(pal.head)};color:${important(pal.text)}">
       <th style="${thStyle}">${lang==='EN'?'Day':'Ημέρα'}</th>
       <th style="${thStyle}">${lang==='EN'?'Breakfast':'Πρωινό'}</th>
@@ -7087,7 +7090,7 @@ function renderVitaminSuggestions(){
   let html=`<table><thead><tr><th>${isEn?'Nutrient':'Θρεπτικό συστατικό'}</th><th>${isEn?'Clinical note':'Κλινική σημείωση'}</th><th>${isEn?'Dietary food sources':'Διατροφικές πηγές'}</th><th>${isEn?'Basis':'Βάση'}</th></tr></thead><tbody>`;
   items.forEach(it=>{
     const foods=getFoodSources(it.n);
-    html+=`<tr><td><strong>${it.n}</strong></td><td style="font-size:12px">${isEn?it.why:translateClinicalNote(it.why)}</td><td style="font-size:12px">${foods||'—'}</td><td style="font-size:11px;color:var(--text-muted)">${it.source}</td></tr>`;
+    html+=`<tr><td><strong>${it.n}</strong></td><td style="font-size:13px">${isEn?it.why:translateClinicalNote(it.why)}</td><td style="font-size:12px">${foods||'—'}</td><td style="font-size:11px;color:var(--text-muted)">${it.source}</td></tr>`;
   });
   html+='</tbody></table>';
   html+=`<div class="alert info" style="margin-top:10px;font-size:12px">${isEn?'Clinical observations for dietitian review only — not automatic supplement recommendations. Supplement decisions require clinical judgement, especially in CKD, dialysis and thalassemia.':VITAMIN_DISCLAIMER}</div>`;
