@@ -2380,7 +2380,7 @@ function mealText(key, portions, lang){
   let text = map[key] ? map[key](S.ex, textPortions) : '';
   const extraProt=Number(portions?.prot||0);
   const extraFat=Number(portions?.fat||0);
-  const noFixedExtraDisplay=new Set(['DIN_SOUVLAKI_PITA','DIN_FISH_POTATO','LUN_TUNA_POTATO','DIN_OMELETTE']);
+  const noFixedExtraDisplay=new Set(['DIN_SOUVLAKI_PITA','DIN_FISH_POTATO','LUN_TUNA_POTATO','DIN_OMELETTE','DIN_BIFTEKI_BULGUR']);
   if(text && FIXED_COMPOSITION_MEALS.has(key) && extraProt>0 && !noFixedExtraDisplay.has(key)){
     const gramsPerEx = Math.round(30 * (((S.exMeta && S.exMeta.protein && S.exMeta.protein.pro) || 7)/7));
     if((lang||S.mealLanguage)==='EN'){
@@ -2420,7 +2420,7 @@ function customMealKcal(key){
 function effectivePortionsForKcal(mealKey, portions){
   if(isCustomMealKey(mealKey)) return null;
   if(FIXED_COMPOSITION_MEALS.has(mealKey)){
-    if(['DIN_FISH_POTATO','LUN_TUNA_POTATO','DIN_OMELETTE'].includes(mealKey)) return null;
+    if(['DIN_FISH_POTATO','LUN_TUNA_POTATO','DIN_OMELETTE','DIN_BIFTEKI_BULGUR'].includes(mealKey)) return null;
     const prot=Number(portions?.prot||0);
     const fat=Number(portions?.fat||0);
     return (prot>0 || fat>0) ? {prot,starch:0,fat,veg:undefined} : null;
@@ -2460,7 +2460,7 @@ const MEAL_EXCHANGES = {
   DIN_TUNA_POTATO:    {protein:0, starch:0, fat:0, fruit:0, dairy:0, veg:1},
   DIN_PASTA_MINCE:    {protein:0, starch:0, fat:0, fruit:0, dairy:0, veg:1},
   DIN_SOUVLAKI_PITA:  {protein:4, starch:2, fat:0, fruit:0, dairy:0, veg:3}, // fixed: 140g chicken + small pita minimum (2 starch) + salad
-  DIN_BIFTEKI_BULGUR: {protein:0, starch:0, fat:0, fruit:0, dairy:0, veg:1},
+  DIN_BIFTEKI_BULGUR: {protein:3, starch:2, fat:4, fruit:0, dairy:0, veg:1},
   // Vegetarian/Vegan options — legumes provide both starch AND protein
   // (standard exchange convention: ½ cup cooked legumes = 1 starch + 1 protein)
   LUN_LENTILS_RICE:   {protein:1, starch:0, fat:0, fruit:0, dairy:0, veg:1}, // lentils add their own starch+protein via portions
@@ -2505,7 +2505,7 @@ const MEAL_EXCHANGES = {
 // printed recipe describes (274 kcal) — with no indication anywhere in the
 // plan. These meals must NOT receive dynamic portions, same as breakfast.
 const FIXED_COMPOSITION_MEALS = new Set([
-  'DIN_OMELETTE', 'DIN_SOUVLAKI_PITA', 'DIN_FISH_POTATO', 'LUN_TUNA_POTATO',
+  'DIN_OMELETTE', 'DIN_SOUVLAKI_PITA', 'DIN_FISH_POTATO', 'LUN_TUNA_POTATO', 'DIN_BIFTEKI_BULGUR',
   'LUN_CHICKPEA_STEW', 'LUN_BEAN_SALAD',
   'DIN_CHICKPEA_STEW', 'DIN_HALLOUMI_SALAD',
   'LUN_CHICKEN_QUINOA', 'LUN_SALMON_QUINOA', 'LUN_LENTIL_SOUP',
