@@ -1234,6 +1234,10 @@ html[data-theme="dark"] .week-summary-table td:last-child {
           </div>
           <button class="btn" onclick="printPage()">🖨️ Print for client</button>
         </div>
+        <div class="form-field" style="margin-top:12px">
+          <label>Search food / Αναζήτηση τροφίμου</label>
+          <input type="text" id="eq-search" placeholder="e.g. avocado, αβοκάντο" oninput="buildEquivalents()">
+        </div>
       </div>
     </div>
     <div class="card">
@@ -3184,14 +3188,48 @@ function setEquivalentsLang(lang){
   buildEquivalents();
 }
 
-function equivalentsCompactTableHtml(lang='gr'){
+function equivalentMatchesQuery(cat, item, query){
+  const q=String(query||'').trim().toLowerCase();
+  if(!q) return true;
+  const hay=[cat?.gr,cat?.en,item?.gr,item?.en].join(' ').toLowerCase();
+  return hay.includes(q);
+}
+
+function highlightEquivalentText(text, query){
+  const src=String(text||'');
+  const q=String(query||'').trim();
+  if(!q) return safeHtml(src);
+  const lower=src.toLowerCase();
+  const idx=lower.indexOf(q.toLowerCase());
+  if(idx<0) return safeHtml(src);
+  return `${safeHtml(src.slice(0,idx))}<mark style="background:var(--amber-bg);color:var(--amber-text);padding:0 2px;border-radius:3px">${safeHtml(src.slice(idx,idx+q.length))}</mark>${safeHtml(src.slice(idx+q.length))}`;
+}
+
+function equivalentsSearchMatches(query){
+  const q=String(query||'').trim();
+  if(!q) return [];
+  const matches=[];
+  EQUIVALENTS_DATA.forEach(cat=>{
+    cat.items.forEach(item=>{
+      if(equivalentMatchesQuery(cat,item,q)) matches.push({cat,item});
+    });
+  });
+  return matches;
+}
+
+function equivalentsCompactTableHtml(lang='gr', searchQuery=''){
   const isEn=lang==='en';
   const portionLabel=isEn?'1 exchange':'1 μερίδα';
-  const rows=EQUIVALENTS_DATA.map(cat=>{
+  const q=String(searchQuery||'').trim();
+  const categories=q ? EQUIVALENTS_DATA
+    .map(cat=>({...cat,items:cat.items.filter(item=>equivalentMatchesQuery(cat,item,q))}))
+    .filter(cat=>cat.items.length || equivalentMatchesQuery(cat,null,q))
+    : EQUIVALENTS_DATA;
+  const rows=categories.map(cat=>{
     const title=isEn?cat.en:cat.gr;
     const examples=cat.items.map(it=>isEn?it.en:it.gr);
     const split=Math.ceil(examples.length/2);
-    const colHtml=list=>list.map(x=>`<div style="margin-bottom:3px">• ${safeHtml(x)}</div>`).join('');
+    const colHtml=list=>list.map(x=>`<div style="margin-bottom:3px">• ${highlightEquivalentText(x,q)}</div>`).join('');
     return `<tr style="break-inside:avoid;page-break-inside:avoid">
       <td style="padding:7px 8px;border:1px solid var(--border);font-weight:800;color:var(--teal-800);vertical-align:top;width:18%">${cat.icon} ${safeHtml(title)}</td>
       <td style="padding:7px 6px;border:1px solid var(--border);vertical-align:top;width:8%;white-space:nowrap;font-size:11px">${portionLabel}</td>
@@ -3199,6 +3237,7 @@ function equivalentsCompactTableHtml(lang='gr'){
       <td style="padding:7px 8px;border:1px solid var(--border);vertical-align:top;width:37%;line-height:1.45">${colHtml(examples.slice(split))}</td>
     </tr>`;
   }).join('');
+  if(q && !rows) return `<div class="alert warn">${isEn?'No matching foods found in the Equivalents Guide.':'Δεν βρέθηκαν τρόφιμα στον Οδηγό Ισοδυνάμων.'}</div>`;
   return `<table class="equivalents-compact-table" style="width:100%;border-collapse:collapse;font-size:12px;background:var(--bg-surface);border:1px solid var(--border)">
     <thead>
       <tr style="background:var(--bg-muted);color:var(--text-muted);text-transform:uppercase;font-size:10px;letter-spacing:.04em">
@@ -3214,9 +3253,39 @@ function equivalentsCompactTableHtml(lang='gr'){
 
 function buildEquivalents(){
   const lang=equivalentsLang;
+  const query=(document.getElementById('eq-search')?.value||'').trim();
+  const isEn=lang==='en';
   let html=`<div class="alert info">ℹ️ ${lang==='en'?'Within each category, foods can be swapped for one another in the listed amounts.':'Μέσα στην ίδια κατηγορία, τα τρόφιμα μπορούν να αντικατασταθούν μεταξύ τους στις αναγραφόμενες ποσότητες.'}</div>`;
-  html+=equivalentsCompactTableHtml(lang);
+  if(query){
+    const matches=equivalentsSearchMatches(query);
+    html+=`<div class="alert ${matches.length?'ok':'warn'}">${matches.length
+      ? (isEn?`${matches.length} match(es) found. Matching rows are filtered below.`:`Βρέθηκαν ${matches.length} αποτέλεσμα/α. Οι αντίστοιχες γραμμές εμφανίζονται παρακάτω.`)
+      : (isEn?'No matches found. Try a different Greek or English food name.':'Δεν βρέθηκαν αποτελέσματα. Δοκιμάστε άλλο όνομα στα Ελληνικά ή Αγγλικά.')}</div>`;
+    if(matches.length){
+      html+=`<div style="display:grid;gap:8px;margin-bottom:12px">${matches.slice(0,12).map((m,i)=>{
+        const catTitle=isEn?m.cat.en:m.cat.gr;
+        const foodMain=isEn?m.item.en:m.item.gr;
+        const foodAlt=isEn?m.item.gr:m.item.en;
+        return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--border);border-radius:8px;padding:8px 10px;background:var(--bg-surface)">
+          <div style="font-size:13px;line-height:1.35"><strong>${highlightEquivalentText(foodMain,query)}</strong><div style="font-size:11px;color:var(--text-muted)">${safeHtml(foodAlt)} · ${m.cat.icon} ${safeHtml(catTitle)}</div></div>
+          <button class="btn" style="font-size:11px;padding:5px 8px" onclick="addEquivalentToCustomNotes(decodeURIComponent('${encodeURIComponent(foodMain)}'),decodeURIComponent('${encodeURIComponent(catTitle)}'))">${isEn?'Add to custom notes':'Προσθήκη στις σημειώσεις'}</button>
+        </div>`;
+      }).join('')}</div>`;
+    }
+  }
+  html+=equivalentsCompactTableHtml(lang, query);
   setEl('equivalents-body', html);
+}
+
+function addEquivalentToCustomNotes(food, category){
+  const line=`Equivalent note: ${food} → ${category}`;
+  const existing=(S.notes&&S.notes.clinician_notes)||v('n-clinician-notes')||'';
+  const next=existing && !existing.includes(line) ? `${existing}\n${line}` : (existing||line);
+  S.notes={...(S.notes||{}),clinician_notes:next};
+  const el=document.getElementById('n-clinician-notes');
+  if(el) el.value=next;
+  saveNotes();
+  alert('Added to custom notes');
 }
 function reportEquivalentsGuideHtml(isEn){
   const lang=isEn?'en':'gr';
