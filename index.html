@@ -646,6 +646,17 @@ html[data-theme="dark"] .week-summary-table td:last-child {
   .appointment-block { font-size: 10px; padding: 4px 5px; }
 }
 
+.section-label,
+.metric .m-label,
+table th,
+#labs-table table th,
+.metrics-grid .m-label,
+.macro-bar-top strong {
+  font-weight: 700 !important;
+  font-size: 13px !important;
+  letter-spacing: 0.5px !important;
+}
+
 </style>
 
 <link rel="manifest" id="pwa-manifest">
@@ -7015,7 +7026,7 @@ function renderLabsTable(){
     const val=S.labValues[t.key];
     const status=labStatus(t,val);
     html+=`<tr>
-      <td><strong style="font-size:14px;font-weight:600">${t.gr}</strong><div style="font-size:12px;font-weight:600;color:var(--text-muted)">${t.en}</div></td>
+      <td><strong style="font-size:14px !important;font-weight:600 !important">${t.gr}</strong><div style="font-size:12px;font-weight:600;color:var(--text-muted)">${t.en}</div></td>
       <td><input type="number" id="${id}" value="${val!=null?val:''}" step="0.1" style="width:80px;padding:5px;text-align:center;border:1px solid var(--border-strong);border-radius:5px;background:var(--bg-input);color:var(--text-primary)" oninput="onLabInput('${t.key}')"></td>
       <td style="font-size:12px;color:var(--text-muted)">${t.unit}</td>
       <td style="font-size:12px">${t.low}–${t.high}</td>
