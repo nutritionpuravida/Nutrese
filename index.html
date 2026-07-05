@@ -5,13 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Nutrese - Smart Nutrition Software">
+<meta name="apple-mobile-web-app-title" content="Nutrese - Professional Nutrition Platform">
 <meta name="theme-color" content="#4CAF50">
-<title>Nutrese — Smart Nutrition Software</title>
+<title>Nutrese — Professional Nutrition Platform</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%234CAF50'/%3E%3Ctext x='50' y='62' font-size='50' text-anchor='middle'%3E%F0%9F%8C%BF%3C/text%3E%3C/svg%3E">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='6' y='6' width='88' height='88' rx='20' fill='%23FFFFFF'/%3E%3Cpath d='M28 58C25 39 42 24 73 24C75 52 57 75 35 70C43 58 55 47 68 36C54 43 40 52 28 58Z' fill='%234CAF50'/%3E%3C/svg%3E">
 <style>
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -37,16 +37,16 @@
 
 /* ─── DARK MODE TOKENS ─── */
 [data-theme="dark"] {
-  --bg-page: #0F1A13; --bg-surface: #17241B; --bg-sidebar: #101D14;
-  --bg-input: #1D2B21; --bg-hover: #1D2B21; --bg-active: #203D27;
-  --border: #2D3A31; --border-strong: #3A4A3F;
+  --bg-page: #0f1117; --bg-surface: #1a1d27; --bg-sidebar: #151820;
+  --bg-input: #20232f; --bg-hover: #20232f; --bg-active: #203D27;
+  --border: #2a2d3a; --border-strong: #363944;
   --text-primary: #F5F5F5; --text-secondary: #B8C4B9; --text-muted: #7F8B80;
   --text-active: #E8F5E9; --text-link: #81C784;
   --amber-bg: #2a1f00; --amber-border: #4a3500; --amber-text: #F59F00;
   --red-bg: #2a0f0f; --red-border: #4a1818; --red-text: #FA5252; --red-badge: #FA5252;
   --green-bg: #132A18; --green-border: #2E7D32; --green-text: #A5D6A7; --green-badge: #4CAF50;
   --blue-bg: #0a1a2a; --blue-border: #1a304a; --blue-text: #228BE6;
-  --metric-bg: #17241B;
+  --metric-bg: #1a1d27;
   --teal-50: #203D27; --teal-100: #2E7D32;
 }
 
@@ -68,7 +68,8 @@ select option { background-color: var(--bg-surface); color: var(--text-primary);
 
 /* ─── SIDEBAR ELEMENTS ─── */
 .logo-area { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
-.logo-icon { width: 32px; height: 32px; border-radius: 8px; background: var(--teal-600); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #fff; font-size: 16px; }
+.logo-icon { width: 32px; height: 32px; border-radius: 8px; background: #FFFFFF; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #4CAF50; font-size: 16px; border: 1px solid var(--border); }
+[data-theme="dark"] .logo-icon { background: #0F1A13; color: #4CAF50; border-color: #1F3525; }
 .logo-text { font-family: var(--font-logo); font-weight: 600; font-size: 19px; color: var(--text-active); line-height: 1.05; letter-spacing: .01em; }
 [data-theme="dark"] .logo-text { color: #F5F5F5; }
 .logo-text span { font-family: var(--font); font-weight: 400; font-size: 11px; color: var(--text-muted); display: block; letter-spacing: 0; margin-top: 1px; }
@@ -693,7 +694,7 @@ table th,
     <div class="auth-logo">
       <div class="icon">🌿</div>
       <div class="title">Nutrese</div>
-      <div class="sub">Smart Nutrition Software</div>
+      <div class="sub">Professional Nutrition Platform</div>
     </div>
     <div class="auth-tabs">
       <div class="auth-tab active" id="tab-signin" onclick="setAuthTab('signin')">Sign In</div>
@@ -719,7 +720,7 @@ table th,
     <div class="auth-logo">
       <div class="icon">🌿</div>
       <div class="title">Nutrese</div>
-      <div class="sub">Smart Nutrition Software</div>
+      <div class="sub">Professional Nutrition Platform</div>
     </div>
     <div class="subscription-status" id="subscription-message">Checking subscription…</div>
     <div class="subscription-plan">
@@ -747,7 +748,7 @@ table th,
 <nav class="sidebar">
   <div class="logo-area">
     <div class="logo-icon">🌿</div>
-    <div class="logo-text">Nutrese <span>Smart Nutrition Software</span></div>
+    <div class="logo-text">Nutrese <span>Professional Nutrition Platform</span></div>
   </div>
   <div class="client-chip">
     <div class="cc-label">Active client</div>
@@ -6554,7 +6555,7 @@ function buildReport(){
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
       <div>
         <div style="font-size:20px;font-weight:700;color:var(--teal-800)">Nutrese</div>
-        <div style="font-size:11px;color:var(--text-muted);margin-top:2px">Smart Nutrition Software</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:2px">Professional Nutrition Platform</div>
       </div>
       <div style="text-align:right;font-size:12px;color:var(--text-muted)">
         <div><strong>${S.name||'—'}</strong></div>
@@ -7727,7 +7728,7 @@ function printRecipe(id){
         <div>Fat: ${formatFoodNumber(per.fat,'g')}</div>
       </div>
     </div>
-    <div style="margin-top:18px;border-top:1px solid #ddd;padding-top:8px;font-size:11px;color:#777;text-align:center">Nutrese · Smart Nutrition Software</div>
+    <div style="margin-top:18px;border-top:1px solid #ddd;padding-top:8px;font-size:11px;color:#777;text-align:center">Nutrese · Professional Nutrition Platform</div>
   </div>`;
   document.body.appendChild(area);
   let styleEl=document.getElementById('recipe-print-style');
@@ -8918,22 +8919,28 @@ function makeIcon(size) {
   c.width = c.height = size;
   const ctx = c.getContext('2d');
   const r = size * 0.18;
+  ctx.clearRect(0, 0, size, size);
   ctx.beginPath();
-  ctx.moveTo(r, 0); ctx.lineTo(size-r, 0);
-  ctx.quadraticCurveTo(size,0,size,r);
-  ctx.lineTo(size, size-r);
-  ctx.quadraticCurveTo(size,size,size-r,size);
-  ctx.lineTo(r, size);
-  ctx.quadraticCurveTo(0,size,0,size-r);
-  ctx.lineTo(0, r);
-  ctx.quadraticCurveTo(0,0,r,0);
+  ctx.moveTo(r, r * 0.35); ctx.lineTo(size - r, r * 0.35);
+  ctx.quadraticCurveTo(size - r * 0.35, r * 0.35, size - r * 0.35, r);
+  ctx.lineTo(size - r * 0.35, size - r);
+  ctx.quadraticCurveTo(size - r * 0.35, size - r * 0.35, size - r, size - r * 0.35);
+  ctx.lineTo(r, size - r * 0.35);
+  ctx.quadraticCurveTo(r * 0.35, size - r * 0.35, r * 0.35, size - r);
+  ctx.lineTo(r * 0.35, r);
+  ctx.quadraticCurveTo(r * 0.35, r * 0.35, r, r * 0.35);
   ctx.closePath();
-  ctx.fillStyle = '#4CAF50';
+  ctx.fillStyle = '#FFFFFF';
   ctx.fill();
-  ctx.font = `${Math.round(size*0.6)}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('🌿', size/2, size/2 + size*0.04);
+  ctx.fillStyle = '#4CAF50';
+  ctx.beginPath();
+  ctx.moveTo(size * 0.28, size * 0.58);
+  ctx.bezierCurveTo(size * 0.25, size * 0.39, size * 0.42, size * 0.24, size * 0.73, size * 0.24);
+  ctx.bezierCurveTo(size * 0.75, size * 0.52, size * 0.57, size * 0.75, size * 0.35, size * 0.70);
+  ctx.bezierCurveTo(size * 0.43, size * 0.58, size * 0.55, size * 0.47, size * 0.68, size * 0.36);
+  ctx.bezierCurveTo(size * 0.54, size * 0.43, size * 0.40, size * 0.52, size * 0.28, size * 0.58);
+  ctx.closePath();
+  ctx.fill();
   return c.toDataURL('image/png');
 }
 
@@ -8947,9 +8954,9 @@ if (appleIcon) appleIcon.href = icon192;
 
 // ── Inline Web App Manifest ──
 const manifest = {
-  name: "Nutrese - Smart Nutrition Software",
+  name: "Nutrese - Professional Nutrition Platform",
   short_name: "Nutrese",
-  description: "Smart Nutrition Software",
+  description: "Professional Nutrition Platform",
   id: "./",
   start_url: "./",
   scope: "./",
@@ -9087,6 +9094,7 @@ updateOnlineStatus();
 
 </body>
 </html>
+
 
 
 
