@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='6' y='6' width='88' height='88' rx='20' fill='%23FFFFFF'/%3E%3Cpath d='M28 58C25 39 42 24 73 24C75 52 57 75 35 70C43 58 55 47 68 36C54 43 40 52 28 58Z' fill='%234CAF50'/%3E%3C/svg%3E">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='6' y='6' width='88' height='88' rx='20' fill='%23FFFFFF'/%3E%3Ctext x='50' y='62' font-size='50' text-anchor='middle'%3E%F0%9F%8C%BF%3C/text%3E%3C/svg%3E">
 <style>
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -68,9 +68,12 @@ select option { background-color: var(--bg-surface); color: var(--text-primary);
 
 /* ─── SIDEBAR ELEMENTS ─── */
 .logo-area { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
-.logo-icon { width: 32px; height: 32px; border-radius: 8px; background: #FFFFFF; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #4CAF50; font-size: 16px; border: 1px solid var(--border); }
-[data-theme="dark"] .logo-icon { background: #0F1A13; color: #4CAF50; border-color: #1F3525; }
-.logo-text { font-family: var(--font-logo); font-weight: 600; font-size: 19px; color: var(--text-active); line-height: 1.05; letter-spacing: .01em; }
+.logo-icon { width: 32px; height: 32px; border-radius: 8px; background: #FFFFFF; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #4CAF50; font-size: 20px; border: 1px solid var(--border); }
+[data-theme="dark"] .logo-icon { background: #1a1a1a; color: #4CAF50; border-color: #2a2d3a; }
+.topbar-logo { color: #4CAF50; }
+.auth-logo .icon { width: 48px; height: 48px; border-radius: 12px; background: #FFFFFF; border: 1px solid var(--border); color: #4CAF50; display: inline-flex; align-items: center; justify-content: center; margin: 0 auto; font-size: 30px; }
+[data-theme="dark"] .auth-logo .icon { background: #1a1a1a; border-color: #2a2d3a; }
+.logo-text { font-family: var(--font-logo); font-weight: 600; font-size: 19px; color: var(--text-primary); line-height: 1.05; letter-spacing: .01em; }
 [data-theme="dark"] .logo-text { color: #F5F5F5; }
 .logo-text span { font-family: var(--font); font-weight: 400; font-size: 11px; color: var(--text-muted); display: block; letter-spacing: 0; margin-top: 1px; }
 .client-chip { margin: 10px; background: var(--teal-50); border: 1px solid var(--teal-100); border-radius: var(--radius); padding: 9px 11px; }
@@ -8932,15 +8935,10 @@ function makeIcon(size) {
   ctx.closePath();
   ctx.fillStyle = '#FFFFFF';
   ctx.fill();
-  ctx.fillStyle = '#4CAF50';
-  ctx.beginPath();
-  ctx.moveTo(size * 0.28, size * 0.58);
-  ctx.bezierCurveTo(size * 0.25, size * 0.39, size * 0.42, size * 0.24, size * 0.73, size * 0.24);
-  ctx.bezierCurveTo(size * 0.75, size * 0.52, size * 0.57, size * 0.75, size * 0.35, size * 0.70);
-  ctx.bezierCurveTo(size * 0.43, size * 0.58, size * 0.55, size * 0.47, size * 0.68, size * 0.36);
-  ctx.bezierCurveTo(size * 0.54, size * 0.43, size * 0.40, size * 0.52, size * 0.28, size * 0.58);
-  ctx.closePath();
-  ctx.fill();
+  ctx.font = `${Math.round(size*0.6)}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('🌿', size/2, size/2 + size*0.04);
   return c.toDataURL('image/png');
 }
 
@@ -9094,6 +9092,7 @@ updateOnlineStatus();
 
 </body>
 </html>
+
 
 
 
