@@ -1497,6 +1497,8 @@ table th,
         <button class="btn primary" onclick="startStripeCheckout('price_1ToMPVDwBpsAKvLemjXMV2Rg')" id="account-monthly-trial-btn">Start monthly trial</button>
         <button class="btn primary" onclick="startStripeCheckout('price_1ToMPWDwBpsAKvLe4Ial8JRS')" id="account-yearly-trial-btn">Start yearly trial</button>
         <button class="btn" onclick="openBillingPortal()" id="account-manage-billing-btn" style="display:none">Manage billing</button>
+        <button class="btn" onclick="connectGoogleCalendar()" id="account-connect-calendar-btn">Connect Google Calendar</button>
+        <div id="calendar-connect-status" style="font-size:12px;color:var(--text-muted);margin-top:6px"></div>
       </div>
     </div>
   </div>
@@ -2206,6 +2208,24 @@ async function openBillingPortal(){
   if(error){ setEl('subscription-message','Billing portal unavailable: '+error.message); return; }
   if(data && data.url){ isIntentionalNavigation = true; window.location.href=data.url; return; }
   setEl('subscription-message','Billing portal function did not return a URL.');
+}
+async function connectGoogleCalendar(){
+  if(!currentUser){ showAuthScreen(); return; }
+  const url = `https://xlskjhhijpiwdkfpkezo.supabase.co/functions/v1/google-calendar-callback?start=true&user_id=${currentUser.id}`;
+  isIntentionalNavigation = true;
+  window.location.href = url;
+}
+function checkCalendarConnectionStatus(){
+  const hash = window.location.hash;
+  const statusEl = document.getElementById('calendar-connect-status');
+  if(!statusEl) return;
+  if(hash.includes('calendar-connected')){
+    statusEl.textContent = 'Google Calendar connected successfully.';
+    statusEl.style.color = 'var(--text-active)';
+  } else if(hash.includes('calendar-error')){
+    statusEl.textContent = 'Could not connect Google Calendar. Please try again.';
+    statusEl.style.color = 'var(--red-text)';
+  }
 }
 function updateAccountPage(){
   console.log('[Nutrese account] account DOM fields', {
@@ -9113,6 +9133,7 @@ window.onload=function(){
   document.getElementById('t-date').value=new Date().toISOString().split('T')[0];
   const apptDateEl=document.getElementById('appt-date'); if(apptDateEl) apptDateEl.value=todayISO();
   const apptTimeEl=document.getElementById('appt-time'); if(apptTimeEl) apptTimeEl.value=new Date().toTimeString().slice(0,5);
+  checkCalendarConnectionStatus();
   document.getElementById('s-breakfast').innerHTML=mealOptionsHtml(filteredMealOptions(BREAKFAST_OPTIONS,v('p-diet')||'Omnivore'),'BRK_TOAST');
   document.getElementById('s-lunch').innerHTML=mealOptionsHtml(filteredMealOptions(LUNCH_OPTIONS,v('p-diet')||'Omnivore'),'LUN_CHICKEN_RICE');
   document.getElementById('s-dinner').innerHTML=mealOptionsHtml(filteredMealOptions(DINNER_OPTIONS,v('p-diet')||'Omnivore'),'DIN_FISH_POTATO');
