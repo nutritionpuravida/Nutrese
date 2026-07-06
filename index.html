@@ -2266,18 +2266,19 @@ supabaseClient.auth.onAuthStateChange(async (event, session)=>{
   currentUser = session ? session.user : null;
   if(currentUser){
     hadSession = true;
-    hideAuthScreen();
     const userChip=document.getElementById('user-chip');
     if(userChip) userChip.style.display='flex';
     setEl('user-email', currentUser.email || '');
     loadSubscriptionCache();
     try{
       await refreshSubscriptionGate();
+      hideAuthScreen();
       updateTrialBanner();
       updateAccountPage();
       console.log('[Nutrese auth] subscriptionState after refreshSubscriptionGate', subscriptionState);
     }catch(err){
       console.error('[Nutrese auth] refreshSubscriptionGate failed during auth event', err);
+      hideAuthScreen();
       updateTrialBanner();
       updateAccountPage();
     }
@@ -9141,9 +9142,10 @@ function toggleTheme() {
 (function() {
   try {
     const saved = localStorage.getItem('nutriflow-theme');
-    if (saved) { document.documentElement.setAttribute('data-theme', saved); }
-    else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      document.documentElement.setAttribute('data-theme', 'dark');
+    if (saved === 'dark' || saved === 'light') {
+      document.documentElement.setAttribute('data-theme', saved);
+    } else {
+      document.documentElement.setAttribute('data-theme', 'light');
     }
     const btn = document.getElementById('theme-btn');
     if (btn) btn.textContent = document.documentElement.getAttribute('data-theme') === 'dark' ? '☀️ Light' : '🌙 Dark';
