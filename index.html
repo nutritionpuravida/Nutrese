@@ -8225,7 +8225,8 @@ function normalizeAppointment(row){
     type: row.type || 'Follow-up',
     notes: row.notes || '',
     created_at: row.created_at || row.updated_at || new Date().toISOString(),
-    localOnly: !!row.localOnly
+    localOnly: !!row.localOnly,
+    google_event_id: row.google_event_id || null
   };
 }
 function persistAppointmentsLocal(){
@@ -8369,7 +8370,40 @@ function clearAppointmentForm(){
 }
 function appointmentClientUuid(){
   return isUuid(S.activeClientId) ? S.activeClientId : null;
-}async function saveAppointmentFromForm(){
+}
+async function syncAppointmentToGoogleCalendar(appt, action){
+  try{
+    if(!currentUser) return null;
+    const startDate = new Date(`${appt.date}T${appt.time}:00`);
+    const endDate = new Date(startDate.getTime() + (Number(appt.duration)||45)*60000);
+    const payload = {
+      action,
+      google_event_id: appt.google_event_id || null,
+      appointment: {
+        title: `${appt.client_name||'Appointment'} — ${appt.type||''}`.trim(),
+        notes: appt.notes||'',
+        start_time: startDate.toISOString(),
+        end_time: endDate.toISOString()
+      }
+    };
+    const {data, error} = await supabaseClient.functions.invoke('sync-calendar-event', {body:payload});
+    if(error){ console.warn('[Nutrese calendar sync] invoke error', error); return null; }
+    if(data && data.synced && data.google_event_id) return data.google_event_id;
+    return null;
+  }catch(e){
+    console.warn('[Nutrese calendar sync] exception', e);
+    return null;
+  }
+}
+async function syncAppointmentDeletionToGoogleCalendar(appt){
+  try{
+    if(!currentUser || !appt.google_event_id) return;
+    await supabaseClient.functions.invoke('sync-calendar-event', {body:{action:'delete', google_event_id: appt.google_event_id}});
+  }catch(e){
+    console.warn('[Nutrese calendar sync] delete exception', e);
+  }
+}
+async function saveAppointmentFromForm(){
   const clientName=(v('appt-client')||'').trim();
   if(!clientName){ alert('Enter a client name.'); return; }
   const id=v('appt-id') || ('appt_'+Date.now());
@@ -8391,13 +8425,13 @@ function appointmentClientUuid(){
       let result;
       if(String(id).startsWith('appt_')){
         result=await withTimeout(
-          supabaseClient.from('appointments').insert(row).select('id,user_id,client_id,client_name,date,time,duration,type,notes,created_at').maybeSingle(),
+          supabaseClient.from('appointments').insert(row).select('id,user_id,client_id,client_name,date,time,duration,type,notes,created_at,google_event_id').maybeSingle(),
           5000,
           'saveAppointment insert'
         );
       } else {
         result=await withTimeout(
-          supabaseClient.from('appointments').update(row).eq('id',id).eq('user_id',currentUser.id).select('id,user_id,client_id,client_name,date,time,duration,type,notes,created_at').maybeSingle(),
+          supabaseClient.from('appointments').update(row).eq('id',id).eq('user_id',currentUser.id).select('id,user_id,client_id,client_name,date,time,duration,type,notes,created_at,google_event_id').maybeSingle(),
           5000,
           'saveAppointment update'
         );
@@ -8410,6 +8444,17 @@ function appointmentClientUuid(){
     }catch(e){
       console.error('[Nutrese appointments] Supabase save exception', e);
       saved.localOnly=true;
+    }
+  }
+  if(currentUser && !saved.localOnly){
+    const wasInsert = String(id).startsWith('appt_');
+    const syncAction = (wasInsert || !saved.google_event_id) ? 'create' : 'update';
+    const newGoogleEventId = await syncAppointmentToGoogleCalendar(saved, syncAction);
+    if(newGoogleEventId && newGoogleEventId !== saved.google_event_id){
+      saved.google_event_id = newGoogleEventId;
+      try{
+        await supabaseClient.from('appointments').update({google_event_id:newGoogleEventId}).eq('id',saved.id).eq('user_id',currentUser.id);
+      }catch(e){ console.warn('[Nutrese calendar sync] failed to persist google_event_id', e); }
     }
   }
   S.appointments=[saved,...(S.appointments||[]).filter(a=>String(a.id)!==String(id))].sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
@@ -8430,6 +8475,7 @@ async function deleteAppointment(id){
   if(!appt) return;
   if(!confirm('Delete this appointment?')) return;
   if(currentUser && !String(id).startsWith('appt_')) await supabaseClient.from('appointments').delete().eq('id',id).eq('user_id',currentUser.id);
+  await syncAppointmentDeletionToGoogleCalendar(appt);
   S.appointments=(S.appointments||[]).filter(a=>String(a.id)!==String(id));
   persistAppointmentsLocal();
   clearAppointmentForm();
