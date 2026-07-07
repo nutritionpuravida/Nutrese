@@ -829,7 +829,7 @@ table th,
     </div>
   </div>
   <div class="nav-group-label">Clients</div>
-  <button class="nav-item" onclick="nav('clients')">🗂️ My Clients</button>
+  <button class="nav-item" onclick="nav('clients')">👥 My Clients</button>
   <div class="nav-group-label">Workflow</div>
   <button class="nav-item active" onclick="nav('dashboard')">📊 Dashboard</button>
   <button class="nav-item" onclick="nav('profile')">👤 Client Profile</button>
@@ -928,13 +928,13 @@ table th,
   <!-- MY CLIENTS -->
   <div class="page" id="page-clients">
     <div class="card">
-      <div class="card-header"><span class="card-title">🗂️ My Clients</span><span class="card-action" onclick="newClient()">+ New client</span></div>
+      <div class="card-header"><span class="card-title">👥 My Clients</span><span class="card-action" onclick="newClient()">+ New client</span></div>
       <div class="card-body">
         <div class="alert info" style="font-size:12px;padding:8px 10px;margin-bottom:8px">ℹ️ Clients save automatically to your account. "Load" restores a client's full data anytime.</div>
         <div class="alert warn" id="local-backup-warning" style="display:none;font-size:12px;padding:8px 10px;margin-bottom:8px"><span>⚠️ Some clients are only saved in this browser. <strong>Download a backup</strong> before switching devices or clearing browser data.</span></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
-          <button class="btn" style="padding:6px 10px;font-size:12px" onclick="exportAllClients()">⬇️ Download Backup</button>
-          <label class="btn" style="cursor:pointer;margin:0;padding:6px 10px;font-size:12px">⬆️ Restore from Backup<input type="file" accept=".json" onchange="importClientsFile(this)" style="display:none"></label>
+          <button class="btn" style="padding:6px 10px;font-size:12px" onclick="exportAllClients()">💾 Download Backup</button>
+          <label class="btn" style="cursor:pointer;margin:0;padding:6px 10px;font-size:12px">📥 Restore from Backup<input type="file" accept=".json" onchange="importClientsFile(this)" style="display:none"></label>
         </div>
         <div class="form-field" style="max-width:340px;margin-bottom:14px">
           <label>🔍 Search clients by name</label>
@@ -9186,7 +9186,7 @@ function renderClientListRows(clients){
   });
   const tableHtml='<table><thead><tr><th></th><th>Name</th><th>Reference</th><th>Last saved</th><th></th></tr></thead><tbody>'+
     rows.map(({c,cond,savedAt,badge})=>`<tr><td style="width:44px">${clientAvatarHtml(c.data&&c.data.clientPhoto, c.name, 32)}</td><td><strong>${safeHtml(c.name||'Unnamed client')}</strong>${badge}<div style="font-size:11px;color:var(--text-muted)">${safeHtml(cond)}</div></td><td>${safeHtml(c.client_ref||'—')}</td><td>${safeHtml(savedAt)}</td>
-        <td style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn primary" style="padding:5px 10px;font-size:12px" onclick="loadClientById('${c.id}')">📂 Load</button><button class="btn" style="padding:5px 10px;font-size:12px" onclick="deleteClientById('${c.id}')">🗑️ Delete</button></td></tr>`).join('')+
+        <td style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn primary" style="padding:5px 10px;font-size:12px" onclick="loadClientById('${c.id}')">👁️ Load</button><button class="btn" style="padding:5px 10px;font-size:12px" onclick="deleteClientById('${c.id}')">🗑️ Delete</button></td></tr>`).join('')+
     '</tbody></table>';
   const cardsHtml='<div class="client-cards-mobile">'+rows.map(({c,cond,savedAt,badge})=>`<div class="client-card-mobile">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
@@ -9194,7 +9194,7 @@ function renderClientListRows(clients){
       <div class="client-card-title" style="margin:0">${safeHtml(c.name||'Unnamed client')}</div>
     </div>${badge}
     <div class="client-card-meta">${safeHtml(c.client_ref||'—')} · ${safeHtml(cond)}<br>Last saved: ${safeHtml(savedAt)}</div>
-    <div class="client-card-actions"><button class="btn primary" style="padding:6px 10px;font-size:12px" onclick="loadClientById('${c.id}')">📂 Load</button><button class="btn" style="padding:6px 10px;font-size:12px" onclick="deleteClientById('${c.id}')">🗑️ Delete</button></div>
+    <div class="client-card-actions"><button class="btn primary" style="padding:6px 10px;font-size:12px" onclick="loadClientById('${c.id}')">👁️ Load</button><button class="btn" style="padding:6px 10px;font-size:12px" onclick="deleteClientById('${c.id}')">🗑️ Delete</button></div>
   </div>`).join('')+'</div>';
   el.innerHTML=tableHtml+cardsHtml;
 }
@@ -9398,11 +9398,11 @@ function toggleTheme() {
   html.setAttribute('data-theme', isDark ? 'light' : 'dark');
   const btn = document.getElementById('theme-btn');
   if (btn) btn.textContent = isDark ? '🌙 Dark' : '☀️ Light';
-  try { localStorage.setItem('nutriflow-theme', isDark ? 'light' : 'dark'); } catch(e) {}
+  try { localStorage.setItem('nutrese-theme', isDark ? 'light' : 'dark'); } catch(e) {}
 }
 (function() {
   try {
-    const saved = localStorage.getItem('nutriflow-theme');
+    const saved = localStorage.getItem('nutrese-theme');
     if (saved === 'dark' || saved === 'light') {
       document.documentElement.setAttribute('data-theme', saved);
     } else {
