@@ -905,11 +905,11 @@ table th,
     <div class="card">
       <div class="card-header"><span class="card-title">🗂️ My Clients</span><span class="card-action" onclick="newClient()">+ New client</span></div>
       <div class="card-body">
-        <div class="alert info">ℹ️ Clients are saved to your secure cloud account. Click "💾 Save Client" (top-right of the Client Profile page) any time you make changes — including before switching to a different client. "Load" restores all their data (profile, body comp, exchanges, meal plans, labs, notes).</div>
-        <div class="alert warn"><span>⚠️ Browser storage can be lost if you clear your browser data, or isn't shared between devices. <strong>Download a backup regularly</strong> — especially before clearing your browser cache or switching to a new phone/laptop.</span></div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
-          <button class="btn primary" onclick="exportAllClients()">⬇️ Download Backup (all clients)</button>
-          <label class="btn" style="cursor:pointer;margin:0">⬆️ Restore from Backup<input type="file" accept=".json" onchange="importClientsFile(this)" style="display:none"></label>
+        <div class="alert info" style="font-size:12px;padding:8px 10px;margin-bottom:8px">ℹ️ Clients save automatically to your account. "Load" restores a client's full data anytime.</div>
+        <div class="alert warn" id="local-backup-warning" style="display:none;font-size:12px;padding:8px 10px;margin-bottom:8px"><span>⚠️ Some clients are only saved in this browser. <strong>Download a backup</strong> before switching devices or clearing browser data.</span></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+          <button class="btn" style="padding:6px 10px;font-size:12px" onclick="exportAllClients()">⬇️ Download Backup</button>
+          <label class="btn" style="cursor:pointer;margin:0;padding:6px 10px;font-size:12px">⬆️ Restore from Backup<input type="file" accept=".json" onchange="importClientsFile(this)" style="display:none"></label>
         </div>
         <div class="form-field" style="max-width:340px;margin-bottom:14px">
           <label>🔍 Search clients by name</label>
@@ -9087,6 +9087,8 @@ async function renderClientList(){
 function renderClientListRows(clients){
   const el=document.getElementById('clients-table');
   if(!el) return;
+  const backupWarning=document.getElementById('local-backup-warning');
+  if(backupWarning) backupWarning.style.display = (clients||[]).some(c=>c.localOnly) ? 'block' : 'none';
   if(!clients || !clients.length){
     const hasCache = S.clientListCache && S.clientListCache.length>0;
     el.innerHTML = hasCache
