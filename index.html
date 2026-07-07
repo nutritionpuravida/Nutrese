@@ -1,6 +1,7 @@
 ﻿<!DOCTYPE html>
 <html lang="el" data-theme="light">
 <head>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -101,6 +102,7 @@ select option { background-color: var(--bg-surface); color: var(--text-primary);
 .client-tab:hover { color: var(--text-primary); }
 .client-tab.active { color: var(--text-active); border-bottom-color: var(--text-active); font-weight: 700; }
 
+.btn i.ti, .nav-item i.ti, .client-tab i.ti, .card-title i.ti, .bnav-item i.ti { vertical-align: -2px; }
 /* ─── TOPBAR ─── */
 .hamburger { display: none; background: none; border: none; cursor: pointer; font-size: 20px; color: var(--text-primary); padding: 4px; flex-shrink: 0; }
 .topbar-title { font-size: 15px; font-weight: 700; color: var(--text-primary); }
@@ -161,7 +163,7 @@ select option { background-color: var(--bg-surface); color: var(--text-primary);
 .user-chip button:hover { background: var(--bg-hover); }
 
 /* ─── BUTTONS ─── */
-.btn { padding: 7px 13px; border-radius: 6px; border: 1px solid var(--border-strong); background: var(--bg-surface); color: var(--text-secondary); cursor: pointer; font-size: 13px; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; transition: all .12s; }
+.btn { padding: 8px 16px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg-surface); color: var(--text-secondary); cursor: pointer; font-size: 13px; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; transition: all .12s; }
 .btn:hover { background: var(--bg-hover); color: var(--text-primary); }
 .btn.primary { background: var(--teal-600); color: #fff; border-color: var(--teal-600); }
 .btn.primary:hover { background: var(--teal-800); }
@@ -177,7 +179,7 @@ select option { background-color: var(--bg-surface); color: var(--text-primary);
 
 /* ─── METRICS ─── */
 .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
-.metric { background: var(--metric-bg); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 12px 14px; }
+.metric { background: var(--bg-page); border: none; border-radius: var(--radius-lg); padding: 12px 14px; }
 .metric .m-label { font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
 .metric .m-value { font-size: 24px; font-weight: 700; color: var(--text-primary); line-height: 1; }
 .metric .m-sub { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
@@ -833,63 +835,62 @@ table th,
   </div>
   <div class="nav-group-card">
     <div class="nav-group-label">Clients</div>
-    <button class="nav-item" onclick="nav('clients')">👥 My Clients</button>
+    <button class="nav-item" onclick="nav('clients')"><i class="ti ti-users" aria-hidden="true"></i> My Clients</button>
   </div>
   <div class="nav-group-card">
     <div class="nav-group-label">Workflow</div>
-    <button class="nav-item active" onclick="nav('dashboard')">📊 Dashboard</button>
-    <button class="nav-item" onclick="nav('profile')">👤 Client Profile</button>
-    <button class="nav-item" onclick="nav('fooddb')">🔍 Food Database</button>
-    <button class="nav-item" onclick="nav('recipes')">🍽️ Recipes</button>
-    <button class="nav-item" onclick="nav('appointments')">📆 Appointments</button>
+    <button class="nav-item active" onclick="nav('dashboard')"><i class="ti ti-chart-bar" aria-hidden="true"></i> Dashboard</button>
+    <button class="nav-item" onclick="nav('profile')"><i class="ti ti-user" aria-hidden="true"></i> Client Profile</button>
+    <button class="nav-item" onclick="nav('fooddb')"><i class="ti ti-search" aria-hidden="true"></i> Food Database</button>
+    <button class="nav-item" onclick="nav('recipes')"><i class="ti ti-chef-hat" aria-hidden="true"></i> Recipes</button>
+    <button class="nav-item" onclick="nav('appointments')"><i class="ti ti-calendar-event" aria-hidden="true"></i> Appointments</button>
   </div>
   <div class="nav-group-card">
     <div class="nav-group-label">Reports & Tracking</div>
-    <button class="nav-item" onclick="nav('equivalents')">📋 Equivalents Guide</button>
+    <button class="nav-item" onclick="nav('equivalents')"><i class="ti ti-clipboard-list" aria-hidden="true"></i> Equivalents Guide</button>
   </div>
   <div class="nav-group-card">
     <div class="nav-group-label">Clinical</div>
-    <button class="nav-item" onclick="nav('account')">💳 Account / Subscription</button>
-    <button class="nav-item" onclick="openFeedbackModal()">💬 Feedback</button>
+    <button class="nav-item" onclick="nav('account')"><i class="ti ti-credit-card" aria-hidden="true"></i> Account / Subscription</button>
+    <button class="nav-item" onclick="openFeedbackModal()"><i class="ti ti-message-circle" aria-hidden="true"></i> Feedback</button>
   </div>
   <div class="sidebar-footer">Nutrese v1 · Your clinical nutrition tool</div>
 </nav>
 
 <div class="main">
-  <div class="topbar"><button class="hamburger" onclick="openSidebar()" aria-label="Menu">☰</button>
+  <div class="topbar"><button class="hamburger" onclick="openSidebar()" aria-label="Menu"><i class="ti ti-menu-2" aria-hidden="true"></i></button>
     <div class="topbar-logo"><img src="data:image/png;base64,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" alt="Nutrese" style="width:22px;height:auto;display:block"></div>
     <div>
       <div class="topbar-title" id="page-title">Dashboard</div>
       <div class="topbar-sub" id="page-sub">Quick overview · Engine status · Today's plan</div>
     </div>
     <div class="topbar-actions">
-      <span class="no-print" style="font-size:11px;color:var(--text-muted);background:var(--bg-page);padding:4px 8px;border-radius:6px;border:1px solid var(--border)" title="Opened-on date — this is today's date, whenever you happen to open this file. It does NOT tell you when the content was last edited; use the fingerprint next to it for that (identical content always produces an identical fingerprint).">📅 <span id="opened-date-topbar">—</span></span>
-      <span class="no-print" style="font-size:11px;color:var(--text-muted);background:var(--bg-page);padding:4px 8px;border-radius:6px;border:1px solid var(--border);font-family:monospace" title="Content fingerprint — computed fresh from this exact file's content every time it loads, so it can never be a stale label. Two files with identical content always show the same fingerprint.">v1 · <span id="build-date-topbar">—</span></span>
+      <span class="no-print" style="font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:6px;padding:4px 10px" title="Opened-on date — this is today's date, whenever you happen to open this file. Build fingerprint is computed fresh from this file's exact content, so identical content always produces an identical fingerprint."><i class="ti ti-info-circle" aria-hidden="true"></i> <span id="opened-date-topbar">—</span><span style="opacity:.5">·</span><span id="build-date-topbar" style="font-family:monospace">—</span></span>
       <div class="user-chip no-print" id="user-chip" style="display:none">
         <span id="user-email"></span>
         <button onclick="handleSignOut()">Sign out</button>
       </div>
-      <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn" title="Toggle dark mode">🌙 Dark</button>
-      <button class="btn primary no-print" onclick="saveCurrentClient()" id="topbar-save-client-btn" title="Save complete current client state">💾 Save Client</button>
-      <button class="btn" onclick="printPage()" id="topbar-print-btn" title="Print current page">🖨️ Print</button>
+      <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn" title="Toggle dark mode"><i class="ti ti-moon" aria-hidden="true"></i> Dark</button>
+      <button class="btn primary no-print" onclick="saveCurrentClient()" id="topbar-save-client-btn" title="Save complete current client state"><i class="ti ti-device-floppy" aria-hidden="true"></i> Save Client</button>
+      <button class="btn" onclick="printPage()" id="topbar-print-btn" title="Print current page"><i class="ti ti-printer" aria-hidden="true"></i> Print</button>
     </div>
   </div>
 
   <div class="trial-banner no-print" id="trial-banner">
-    <span id="trial-banner-text">🎁 Free trial — 0 days remaining. Subscribe to continue after your trial.</span>
+    <span id="trial-banner-text"><i class="ti ti-gift" aria-hidden="true"></i> Free trial — 0 days remaining. Subscribe to continue after your trial.</span>
     <button onclick="openTrialSubscribe()">Subscribe now</button>
   </div>
 
   <div class="client-tabbar no-print" id="client-tabbar">
-    <button class="client-tab" data-tab-for="profile" onclick="nav('profile')">👤 Profile</button>
-    <button class="client-tab" data-tab-for="bodycomp" onclick="nav('bodycomp')">⚖️ Body Comp</button>
-    <button class="client-tab" data-tab-for="intake" onclick="nav('intake')">📝 Notes</button>
-    <button class="client-tab" data-tab-for="labs" onclick="nav('labs')">🩸 Labs</button>
-    <button class="client-tab" data-tab-for="macros" onclick="nav('macros')">🎯 Targets</button>
-    <button class="client-tab" data-tab-for="exchanges" onclick="nav('exchanges')">🔄 Exchanges</button>
-    <button class="client-tab" data-tab-for="sevenday" onclick="nav('sevenday')">📅 7-Day Plan</button>
-    <button class="client-tab" data-tab-for="tracking" onclick="nav('tracking')">📈 Follow-up</button>
-    <button class="client-tab" data-tab-for="report" onclick="nav('report')">🖨️ Client Report</button>
+    <button class="client-tab" data-tab-for="profile" onclick="nav('profile')"><i class="ti ti-user" aria-hidden="true"></i> Profile</button>
+    <button class="client-tab" data-tab-for="bodycomp" onclick="nav('bodycomp')"><i class="ti ti-scale" aria-hidden="true"></i> Body Comp</button>
+    <button class="client-tab" data-tab-for="intake" onclick="nav('intake')"><i class="ti ti-notes" aria-hidden="true"></i> Notes</button>
+    <button class="client-tab" data-tab-for="labs" onclick="nav('labs')"><i class="ti ti-droplet" aria-hidden="true"></i> Labs</button>
+    <button class="client-tab" data-tab-for="macros" onclick="nav('macros')"><i class="ti ti-target" aria-hidden="true"></i> Targets</button>
+    <button class="client-tab" data-tab-for="exchanges" onclick="nav('exchanges')"><i class="ti ti-refresh" aria-hidden="true"></i> Exchanges</button>
+    <button class="client-tab" data-tab-for="sevenday" onclick="nav('sevenday')"><i class="ti ti-calendar" aria-hidden="true"></i> 7-Day Plan</button>
+    <button class="client-tab" data-tab-for="tracking" onclick="nav('tracking')"><i class="ti ti-trending-up" aria-hidden="true"></i> Follow-up</button>
+    <button class="client-tab" data-tab-for="report" onclick="nav('report')"><i class="ti ti-printer" aria-hidden="true"></i> Client Report</button>
   </div>
 
   <div class="content">
@@ -902,12 +903,12 @@ table th,
       <div class="metric" style="cursor:pointer" onclick="nav('appointments')"><div class="m-label">Today</div><div class="m-value" id="d-today-appts">—</div><div class="m-sub" id="d-today-appts-sub">Appointments today</div></div>
     </div>
     <div class="card" style="margin-bottom:10px">
-      <div class="card-header"><span class="card-title">📅 Today's appointments</span><span class="card-action" onclick="nav('appointments')">Calendar →</span></div>
+      <div class="card-header"><span class="card-title"><i class="ti ti-calendar" aria-hidden="true"></i> Today's appointments</span><span class="card-action" onclick="nav('appointments')">Calendar →</span></div>
       <div class="card-body" id="dash-appointments"><div style="color:var(--text-muted);font-size:13px">No appointments today.</div></div>
     </div>
     <div id="dash-no-client-prompt" class="card" style="display:none">
       <div class="card-body" style="text-align:center;padding:40px 20px">
-        <div style="font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:8px">👤 No client loaded</div>
+        <div style="font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:8px"><i class="ti ti-user" aria-hidden="true"></i> No client loaded</div>
         <div style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Load an existing client or create a new one to see their clinical dashboard here.</div>
         <button class="btn primary" onclick="nav('clients')">Go to My Clients</button>
       </div>
@@ -921,16 +922,16 @@ table th,
     </div>
     <div class="two-col">
       <div class="card">
-        <div class="card-header"><span class="card-title">🛡️ Safety checks</span></div>
+        <div class="card-header"><span class="card-title"><i class="ti ti-shield-check" aria-hidden="true"></i> Safety checks</span></div>
         <div class="card-body" id="dash-engine-checks"><div style="color:var(--gray-400);font-size:13px">Fill client profile to run checks</div></div>
       </div>
       <div class="card">
-        <div class="card-header"><span class="card-title">🎯 Macro distribution</span><span class="card-action" onclick="nav('macros')">Edit →</span></div>
+        <div class="card-header"><span class="card-title"><i class="ti ti-target" aria-hidden="true"></i> Macro distribution</span><span class="card-action" onclick="nav('macros')">Edit →</span></div>
         <div class="card-body" id="dash-macros"></div>
       </div>
     </div>
       <div class="card">
-        <div class="card-header"><span class="card-title">☀️ Today's meal plan — <span id="dash-day">Monday</span></span><span class="card-action" onclick="nav('sevenday')">Weekly plan →</span></div>
+        <div class="card-header"><span class="card-title"><i class="ti ti-sun" aria-hidden="true"></i> Today's meal plan — <span id="dash-day">Monday</span></span><span class="card-action" onclick="nav('sevenday')">Weekly plan →</span></div>
       <div class="card-body" id="dash-meals"><div style="color:var(--gray-400);font-size:13px">Fill Client Profile and Exchange System to generate plan</div></div>
     </div>
     </div>
@@ -939,16 +940,16 @@ table th,
   <!-- MY CLIENTS -->
   <div class="page" id="page-clients">
     <div class="card">
-      <div class="card-header"><span class="card-title">👥 My Clients</span><span class="card-action" onclick="newClient()">+ New client</span></div>
+      <div class="card-header"><span class="card-title"><i class="ti ti-users" aria-hidden="true"></i> My Clients</span><span class="card-action" onclick="newClient()">+ New client</span></div>
       <div class="card-body">
-        <div class="alert info" style="font-size:12px;padding:8px 10px;margin-bottom:8px">ℹ️ Clients save automatically to your account. "Load" restores a client's full data anytime.</div>
-        <div class="alert warn" id="local-backup-warning" style="display:none;font-size:12px;padding:8px 10px;margin-bottom:8px"><span>⚠️ Some clients are only saved in this browser. <strong>Download a backup</strong> before switching devices or clearing browser data.</span></div>
+        <div class="alert info" style="font-size:12px;padding:8px 10px;margin-bottom:8px"><i class="ti ti-info-circle" aria-hidden="true"></i> Clients save automatically to your account. "Load" restores a client's full data anytime.</div>
+        <div class="alert warn" id="local-backup-warning" style="display:none;font-size:12px;padding:8px 10px;margin-bottom:8px"><span><i class="ti ti-alert-triangle" aria-hidden="true"></i> Some clients are only saved in this browser. <strong>Download a backup</strong> before switching devices or clearing browser data.</span></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
-          <button class="btn" style="padding:6px 10px;font-size:12px" onclick="exportAllClients()">💾 Download Backup</button>
-          <label class="btn" style="cursor:pointer;margin:0;padding:6px 10px;font-size:12px">📥 Restore from Backup<input type="file" accept=".json" onchange="importClientsFile(this)" style="display:none"></label>
+          <button class="btn" style="padding:6px 10px;font-size:12px" onclick="exportAllClients()"><i class="ti ti-device-floppy" aria-hidden="true"></i> Download Backup</button>
+          <label class="btn" style="cursor:pointer;margin:0;padding:6px 10px;font-size:12px"><i class="ti ti-file-import" aria-hidden="true"></i> Restore from Backup<input type="file" accept=".json" onchange="importClientsFile(this)" style="display:none"></label>
         </div>
         <div class="form-field" style="max-width:340px;margin-bottom:14px">
-          <label>🔍 Search clients by name</label>
+          <label><i class="ti ti-search" aria-hidden="true"></i> Search clients by name</label>
           <input type="text" id="client-search" placeholder="Type a name…" oninput="filterClientList()" autocomplete="off">
         </div>
         <div id="clients-table"></div>
@@ -959,9 +960,9 @@ table th,
   <!-- INTAKE -->
   <div class="page" id="page-intake">
     <div class="card">
-      <div class="card-header"><span class="card-title">📋 CLIENT INTAKE | ΠΡΩΤΗ ΑΞΙΟΛΟΓΗΣΗ</span></div>
+      <div class="card-header"><span class="card-title"><i class="ti ti-clipboard-list" aria-hidden="true"></i> CLIENT INTAKE | ΠΡΩΤΗ ΑΞΙΟΛΟΓΗΣΗ</span></div>
       <div class="card-body">
-        <div class="alert info">ℹ️ Fill in during first consultation. Greek + English bilingual. Notes appear in Client Report.</div>
+        <div class="alert info"><i class="ti ti-info-circle" aria-hidden="true"></i> Fill in during first consultation. Greek + English bilingual. Notes appear in Client Report.</div>
         <div class="section-label">ΣΤΟΧΟΣ / GOAL</div>
         <div class="form-grid">
           <div class="form-field full"><label>Βασικός στόχος / Main goal</label><input type="text" id="i-goal" placeholder="e.g. Weight loss, maintenance, muscle gain…" oninput="saveIntake()"></div>
@@ -995,7 +996,7 @@ table th,
         <div class="section-label">ΣΗΜΕΙΩΣΕΙΣ ΔΙΑΙΤΟΛΟΓΟΥ / CLINICIAN NOTES</div>
         <div class="form-field"><label>Ελεύθερες σημειώσεις / Free notes</label><textarea id="i-coach-notes" rows="4" placeholder="Internal notes, priorities, follow-up…" oninput="saveIntake()" style="resize:vertical;width:100%"></textarea></div>
         <div style="margin-top:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-          <button class="btn primary" onclick="saveClientIntake()">💾 Save Intake</button>
+          <button class="btn primary" onclick="saveClientIntake()"><i class="ti ti-device-floppy" aria-hidden="true"></i> Save Intake</button>
           <button class="btn" onclick="nav('macros')">Continue to Macro Targets →</button>
           <span id="intake-save-note" style="font-size:12px;color:var(--text-muted)"></span>
         </div>
@@ -1004,7 +1005,7 @@ table th,
 
     <!-- CLINICAL NOTES (merged below Client Intake per dietitian feedback — same page now, just a second card) -->
     <div class="card">
-      <div class="card-header"><span class="card-title">🔬 INPUT — Clinical Notes / Labs</span></div>
+      <div class="card-header"><span class="card-title"><i class="ti ti-microscope" aria-hidden="true"></i> INPUT — Clinical Notes / Labs</span></div>
       <div class="card-body">
         <div class="section-label">DIAGNOSES & MEDICATION</div>
         <div class="form-grid">
@@ -1016,9 +1017,9 @@ table th,
         </div>
         <div class="section-label">CLINICIAN NOTES</div>
         <div class="form-field"><label>Free text</label><textarea id="n-clinician-notes" rows="5" placeholder="Clinical context, session summary, next steps…" oninput="saveNotes()" style="width:100%;resize:vertical"></textarea></div>
-        <div class="alert info" style="margin-top:14px">ℹ️ Blood test results have their own page — <a onclick="nav('labs')" style="color:inherit;text-decoration:underline;cursor:pointer">Blood Analysis →</a></div>
+        <div class="alert info" style="margin-top:14px"><i class="ti ti-info-circle" aria-hidden="true"></i> Blood test results have their own page — <a onclick="nav('labs')" style="color:inherit;text-decoration:underline;cursor:pointer">Blood Analysis →</a></div>
         <div style="margin-top:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-          <button class="btn primary" onclick="saveClientIntake()">💾 Save Intake & Clinical Notes</button>
+          <button class="btn primary" onclick="saveClientIntake()"><i class="ti ti-device-floppy" aria-hidden="true"></i> Save Intake & Clinical Notes</button>
           <button class="btn" onclick="nav('macros')">Continue to Macro Targets →</button>
         </div>
       </div>
@@ -1028,14 +1029,14 @@ table th,
   <!-- PROFILE -->
   <div class="page" id="page-profile">
     <div class="card">
-      <div class="card-header"><span class="card-title">👤 INPUT — Client Profile</span><span class="card-action" onclick="saveCurrentClient()" style="margin-left:auto">💾 Save Client</span></div>
+      <div class="card-header"><span class="card-title"><i class="ti ti-user" aria-hidden="true"></i> INPUT — Client Profile</span><span class="card-action" onclick="saveCurrentClient()" style="margin-left:auto"><i class="ti ti-device-floppy" aria-hidden="true"></i> Save Client</span></div>
       <div class="card-body">
         <div class="section-label">PHOTO</div>
         <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
           <div id="client-photo-preview"></div>
           <div>
             <label class="btn" style="cursor:pointer;display:inline-block;padding:6px 12px;font-size:13px">
-              📷 Upload photo
+              <i class="ti ti-camera" aria-hidden="true"></i> Upload photo
               <input type="file" id="client-photo-input" accept="image/png,image/jpeg" style="display:none" onchange="handleClientPhotoUpload(this)">
             </label>
             <button class="btn" style="padding:6px 12px;font-size:13px;margin-left:6px" onclick="removeClientPhoto()">Remove</button>
@@ -1155,26 +1156,26 @@ table th,
   <!-- BODY COMP -->
   <div class="page" id="page-bodycomp">
     <div class="card">
-      <div class="card-header"><span class="card-title">⚖️ INPUT — Body Composition</span></div>
+      <div class="card-header"><span class="card-title"><i class="ti ti-scale" aria-hidden="true"></i> INPUT — Body Composition</span></div>
       <div class="card-body">
-        <div class="alert info">ℹ️ Enter Tanita or other device values. Fat mass auto-calculates from Weight × Body Fat % if left blank.</div>
+        <div class="alert info"><i class="ti ti-info-circle" aria-hidden="true"></i> Enter Tanita or other device values. Fat mass auto-calculates from Weight × Body Fat % if left blank.</div>
         <div class="form-grid three">
-          <div class="form-field"><label>⚖ Body Fat %</label><input type="number" id="bc-bf" placeholder="Men: 10–20%, Women: 18–28%" step="0.1" oninput="calcBodyComp()"><div class="field-note" id="bc-bf-note"></div></div>
-          <div class="form-field"><label>💧 Body Water %</label><input type="number" id="bc-water" placeholder="Men: 50–65%, Women: 45–60%" step="0.1" oninput="calcBodyComp()"><div class="field-note" id="bc-water-note"></div></div>
-          <div class="form-field"><label>⚖ Fat Mass kg (auto)</label><input type="number" id="bc-fatmass" placeholder="Auto = Weight × BF%" step="0.1" inputmode="decimal" oninput="onBodyCompManualInput('fatmass')"></div>
-          <div class="form-field"><label>🧬 Fat-Free Mass kg (auto)</label><input type="number" id="bc-ffm" placeholder="Auto = Weight − Fat mass" step="0.1" inputmode="decimal" oninput="onBodyCompManualInput('ffm')"></div>
-          <div class="form-field"><label>🦾 Muscle Mass (kg)</label><input type="number" id="bc-muscle" placeholder="Manual Tanita/device value" step="0.1" inputmode="decimal" oninput="onBodyCompManualInput('muscle')"></div>
-          <div class="form-field"><label>⏱ Metabolic Age</label><input type="number" id="bc-metage" placeholder="—" oninput="calcBodyComp()"><div class="field-note" id="bc-metage-note"></div></div>
-          <div class="form-field"><label>🔥 Visceral Fat Score</label><input type="number" id="bc-visceral" placeholder="1–12 healthy, 13+ excess" oninput="calcBodyComp()"><div class="field-note" id="bc-visceral-note"></div></div>
-          <div class="form-field"><label>🏃 Physique Rating (1–9)</label><input type="number" id="bc-physique" placeholder="Tanita 1–9" min="1" max="9"></div>
-          <div class="form-field"><label>🦴 Οστική Μάζα / Bone Mass (kg)</label><input type="number" id="bc-bone" placeholder="Tanita/device value" step="0.1" oninput="calcBodyComp()"></div>
+          <div class="form-field"><label><i class="ti ti-scale" aria-hidden="true"></i> Body Fat %</label><input type="number" id="bc-bf" placeholder="Men: 10–20%, Women: 18–28%" step="0.1" oninput="calcBodyComp()"><div class="field-note" id="bc-bf-note"></div></div>
+          <div class="form-field"><label><i class="ti ti-droplet" aria-hidden="true"></i> Body Water %</label><input type="number" id="bc-water" placeholder="Men: 50–65%, Women: 45–60%" step="0.1" oninput="calcBodyComp()"><div class="field-note" id="bc-water-note"></div></div>
+          <div class="form-field"><label><i class="ti ti-scale" aria-hidden="true"></i> Fat Mass kg (auto)</label><input type="number" id="bc-fatmass" placeholder="Auto = Weight × BF%" step="0.1" inputmode="decimal" oninput="onBodyCompManualInput('fatmass')"></div>
+          <div class="form-field"><label><i class="ti ti-activity" aria-hidden="true"></i> Fat-Free Mass kg (auto)</label><input type="number" id="bc-ffm" placeholder="Auto = Weight − Fat mass" step="0.1" inputmode="decimal" oninput="onBodyCompManualInput('ffm')"></div>
+          <div class="form-field"><label><i class="ti ti-barbell" aria-hidden="true"></i> Muscle Mass (kg)</label><input type="number" id="bc-muscle" placeholder="Manual Tanita/device value" step="0.1" inputmode="decimal" oninput="onBodyCompManualInput('muscle')"></div>
+          <div class="form-field"><label><i class="ti ti-clock" aria-hidden="true"></i> Metabolic Age</label><input type="number" id="bc-metage" placeholder="—" oninput="calcBodyComp()"><div class="field-note" id="bc-metage-note"></div></div>
+          <div class="form-field"><label><i class="ti ti-flame" aria-hidden="true"></i> Visceral Fat Score</label><input type="number" id="bc-visceral" placeholder="1–12 healthy, 13+ excess" oninput="calcBodyComp()"><div class="field-note" id="bc-visceral-note"></div></div>
+          <div class="form-field"><label><i class="ti ti-run" aria-hidden="true"></i> Physique Rating (1–9)</label><input type="number" id="bc-physique" placeholder="Tanita 1–9" min="1" max="9"></div>
+          <div class="form-field"><label><i class="ti ti-bone" aria-hidden="true"></i> Οστική Μάζα / Bone Mass (kg)</label><input type="number" id="bc-bone" placeholder="Tanita/device value" step="0.1" oninput="calcBodyComp()"></div>
         </div>
         <div class="section-label">AUTO INTERPRETATION</div>
         <div id="bc-interpretation"></div>
         <div class="section-label">RECOMMENDED TARGETS</div>
         <div id="bc-targets"></div>
         <div style="margin-top:14px;display:flex;gap:8px;">
-          <button class="btn primary" onclick="saveBodyComp()">💾 Save Measurements</button>
+          <button class="btn primary" onclick="saveBodyComp()"><i class="ti ti-device-floppy" aria-hidden="true"></i> Save Measurements</button>
           <button class="btn" onclick="nav('tracking')">View history →</button>
           <button class="btn" onclick="nav('macros')">Continue to Targets →</button>
         </div>
@@ -1186,9 +1187,9 @@ table th,
   <div class="page" id="page-macros">
     <div class="two-col">
       <div class="card">
-        <div class="card-header"><span class="card-title">🎯 SYSTEM — Macro Targets</span></div>
+        <div class="card-header"><span class="card-title"><i class="ti ti-target" aria-hidden="true"></i> SYSTEM — Macro Targets</span></div>
         <div class="card-body">
-          <div class="alert info" style="margin-bottom:14px">ℹ️ Goal calories linked from Client Profile. Enter Carbs % and Protein % — Fat % completes automatically to 100%.</div>
+          <div class="alert info" style="margin-bottom:14px"><i class="ti ti-info-circle" aria-hidden="true"></i> Goal calories linked from Client Profile. Enter Carbs % and Protein % — Fat % completes automatically to 100%.</div>
           <div class="form-grid three" style="margin-bottom:16px">
             <div class="form-field"><label>Carbs % 🌾</label><input type="number" id="m-carb" value="45" min="0" max="100" oninput="onMacroManualInput()"></div>
             <div class="form-field"><label>Protein % 🥩</label><input type="number" id="m-protein" value="20" min="0" max="100" oninput="onMacroManualInput()"></div>
@@ -1201,7 +1202,7 @@ table th,
           <table><thead><tr><th>Macro</th><th>%</th><th>kcal</th><th>grams</th></tr></thead><tbody id="macro-table-body"></tbody></table>
           <div style="margin-top:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
             <button class="btn" onclick="applyConditionMacros()">Apply suggested for selected condition</button>
-            <button class="btn primary" onclick="saveMacroTargets()">💾 Save Macro Targets</button>
+            <button class="btn primary" onclick="saveMacroTargets()"><i class="ti ti-device-floppy" aria-hidden="true"></i> Save Macro Targets</button>
             <span style="font-size:12px;color:var(--text-muted)">← fills the % fields above based on selected conditions</span>
             <span id="macro-save-note" style="font-size:12px;color:var(--text-muted)"></span>
           </div>
@@ -1209,7 +1210,7 @@ table th,
         </div>
       </div>
       <div class="card">
-        <div class="card-header"><span class="card-title">📊 Clinical Macro Suggestions</span></div>
+        <div class="card-header"><span class="card-title"><i class="ti ti-chart-bar" aria-hidden="true"></i> Clinical Macro Suggestions</span></div>
         <div class="card-body">
           <table><thead><tr><th>Condition</th><th>Carb</th><th>Prot</th><th>Fat</th></tr></thead><tbody id="clinical-macro-suggestions-body"></tbody></table>
         </div>
@@ -1220,12 +1221,12 @@ table th,
   <!-- EXCHANGES -->
   <div class="page" id="page-exchanges">
     <div class="card">
-      <div class="card-header"><span class="card-title">🔄 SYSTEM — Exchange System (Σύστημα Ισοδυνάμων)</span></div>
+      <div class="card-header"><span class="card-title"><i class="ti ti-refresh" aria-hidden="true"></i> SYSTEM — Exchange System (Σύστημα Ισοδυνάμων)</span></div>
       <div class="card-body">
-        <div class="alert info">ℹ️ Enter Fruit, Vegetables, Dairy servings. Starch, Protein, Fat auto-calculate from remaining macros. Uses condition-aware clinical caps.</div>
+        <div class="alert info"><i class="ti ti-info-circle" aria-hidden="true"></i> Enter Fruit, Vegetables, Dairy servings. Starch, Protein, Fat auto-calculate from remaining macros. Uses condition-aware clinical caps.</div>
         <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px">
           <button class="btn" onclick="applySuggestedExchangeServings()">✨ Suggested servings</button>
-          <button class="btn primary" onclick="refreshExchangePlansNow()">🔄 Apply to Meal Plans</button>
+          <button class="btn primary" onclick="refreshExchangePlansNow()"><i class="ti ti-refresh" aria-hidden="true"></i> Apply to Meal Plans</button>
           <button class="btn primary" onclick="generateAiSevenDayPlan()">✨ Generate AI Plan</button>
           <span style="font-size:12px;color:var(--text-muted)">Click after changing servings to push updates into the 7-Day plan and Report</span>
         </div>
@@ -1244,9 +1245,9 @@ table th,
   <!-- 1-DAY PLAN -->
   <div class="page" id="page-oneday">
     <div class="card">
-      <div class="card-header"><span class="card-title">☀️ SYSTEM — 1-Day Auto Plan</span></div>
+      <div class="card-header"><span class="card-title"><i class="ti ti-sun" aria-hidden="true"></i> SYSTEM — 1-Day Auto Plan</span></div>
       <div class="card-body">
-        <div class="alert info">ℹ️ Dropdowns change meal combinations. Exchange totals come from Exchange System. Main meals absorb starch/protein/fat. Snacks use fruit/dairy.</div>
+        <div class="alert info"><i class="ti ti-info-circle" aria-hidden="true"></i> Dropdowns change meal combinations. Exchange totals come from Exchange System. Main meals absorb starch/protein/fat. Snacks use fruit/dairy.</div>
         <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:12px">
           <button class="btn primary" id="meal-lang-gr-1day" onclick="setMealLanguage('GR')">GR</button>
           <button class="btn" id="meal-lang-en-1day" onclick="setMealLanguage('EN')">EN</button>
@@ -1278,7 +1279,7 @@ table th,
         <div class="section-label">EXCHANGE COVERAGE CHECK</div>
         <div id="oneday-check"></div>
         <div style="margin-top:14px;display:flex;gap:8px;">
-          <button class="btn primary" onclick="printPage()">🖨️ Print plan</button>
+          <button class="btn primary" onclick="printPage()"><i class="ti ti-printer" aria-hidden="true"></i> Print plan</button>
           <button class="btn" onclick="nav('report')">Full report →</button>
         </div>
       </div>
@@ -1288,7 +1289,7 @@ table th,
   <!-- 7-DAY PLAN -->
   <div class="page" id="page-sevenday">
     <div class="card">
-      <div class="card-header"><span class="card-title">📅 7-Day Meal Plan</span></div>
+      <div class="card-header"><span class="card-title"><i class="ti ti-calendar" aria-hidden="true"></i> 7-Day Meal Plan</span></div>
       <div class="card-body">
         <div id="sevenday-body"></div>
       </div>
@@ -1299,7 +1300,7 @@ table th,
   <div class="page" id="page-report">
     <div class="card no-print" style="border:2px solid var(--teal-600)">
       <div class="card-header" style="background:var(--teal-50)">
-        <span class="card-title" id="report-options-title">⚙️ Report Options — Choose what to print</span>
+        <span class="card-title" id="report-options-title"><i class="ti ti-settings" aria-hidden="true"></i> Report Options — Choose what to print</span>
       </div>
       <div class="card-body">
         <div style="display:flex;flex-wrap:wrap;gap:24px;align-items:center">
@@ -1327,13 +1328,13 @@ table th,
             <span id="report-logo-status" class="field-note" style="margin-left:0"></span>
             <div id="report-logo-preview" style="width:100%;display:none;margin-top:4px"></div>
           </div>
-          <button class="btn primary" onclick="printPage()" id="report-print-btn">🖨️ Print Full Report</button>
+          <button class="btn primary" onclick="printPage()" id="report-print-btn"><i class="ti ti-printer" aria-hidden="true"></i> Print Full Report</button>
         </div>
         <div class="field-note" id="report-options-note" style="margin-top:8px">Check/uncheck to choose which meal plan appears in the printed report. Use Print / Save PDF and choose “Save as PDF” in the browser print dialog.</div>
       </div>
     </div>
     <div class="card">
-      <div class="card-header"><span class="card-title" id="report-print-title">📄 PRINT — Κλινική Αναφορά Διατροφής</span></div>
+      <div class="card-header"><span class="card-title" id="report-print-title"><i class="ti ti-file-text" aria-hidden="true"></i> PRINT — Κλινική Αναφορά Διατροφής</span></div>
       <div class="card-body" id="report-body"><div style="color:var(--gray-400)">Navigate here after filling client profile to generate report.</div></div>
     </div>
   </div>
@@ -1341,9 +1342,9 @@ table th,
   <!-- TRACKING -->
   <div class="page" id="page-tracking">
     <div class="card">
-      <div class="card-header"><span class="card-title">📈 TRACKING — Progress / Body Composition History</span></div>
+      <div class="card-header"><span class="card-title"><i class="ti ti-trending-up" aria-hidden="true"></i> TRACKING — Progress / Body Composition History</span></div>
       <div class="card-body">
-        <div class="alert info"><span>ℹ️ <strong>For follow-up visits:</strong> load the client from "My Clients", come here, add a new entry below for today's visit, then go to Client Profile and click "💾 Save Client" to keep this update permanently.</span></div>
+        <div class="alert info"><span><i class="ti ti-info-circle" aria-hidden="true"></i> <strong>For follow-up visits:</strong> load the client from "My Clients", come here, add a new entry below for today's visit, then go to Client Profile and click "<i class="ti ti-device-floppy" aria-hidden="true"></i> Save Client" to keep this update permanently.</span></div>
         <div class="form-grid three" style="margin-bottom:14px">
           <div class="form-field"><label>Visit Date</label><input type="date" id="t-date"></div>
           <div class="form-field"><label>Weight (kg)</label><input type="number" id="t-weight" step="0.1" placeholder="—"></div>
@@ -1366,9 +1367,9 @@ table th,
   <!-- BLOOD ANALYSIS -->
   <div class="page" id="page-labs">
     <div class="card">
-      <div class="card-header"><span class="card-title">🩸 INPUT — Blood Analysis (Αιματολογικός Έλεγχος)</span></div>
+      <div class="card-header"><span class="card-title"><i class="ti ti-droplet" aria-hidden="true"></i> INPUT — Blood Analysis (Αιματολογικός Έλεγχος)</span></div>
       <div class="card-body">
-        <div class="alert info">ℹ️ Enter available lab values. Reference ranges are general adult ranges — always confirm against the lab's own reference range. Status updates live as you type.</div>
+        <div class="alert info"><i class="ti ti-info-circle" aria-hidden="true"></i> Enter available lab values. Reference ranges are general adult ranges — always confirm against the lab's own reference range. Status updates live as you type.</div>
         <div id="labs-table"></div>
         <div class="section-label">NUTRIENTS TO CONSIDER (CLINICAL REFERENCE ONLY)</div>
         <div id="vitamin-suggestions"></div>
@@ -1379,7 +1380,7 @@ table th,
   <!-- EQUIVALENTS GUIDE -->
   <div class="page" id="page-equivalents">
     <div class="card no-print">
-      <div class="card-header"><span class="card-title">📖 Equivalents Guide — Options</span></div>
+      <div class="card-header"><span class="card-title"><i class="ti ti-book-2" aria-hidden="true"></i> Equivalents Guide — Options</span></div>
       <div class="card-body">
         <div class="field-note" style="margin-bottom:8px">A printable food exchange list to give clients — shows what foods can be swapped 1-for-1 within each exchange category.</div>
         <div style="display:flex;flex-wrap:wrap;gap:18px;align-items:center">
@@ -1387,28 +1388,28 @@ table th,
             <button class="btn primary" id="eq-btn-gr" onclick="setEquivalentsLang('gr')">Ελληνικά</button>
             <button class="btn" id="eq-btn-en" onclick="setEquivalentsLang('en')">English</button>
           </div>
-          <button class="btn" onclick="printPage()">🖨️ Print for client</button>
+          <button class="btn" onclick="printPage()"><i class="ti ti-printer" aria-hidden="true"></i> Print for client</button>
         </div>
         <div class="form-field" style="margin-top:12px">
           <label>Search food / Αναζήτηση τροφίμου</label>
           <div style="display:flex;gap:8px;align-items:center">
             <input type="text" id="eq-search" placeholder="e.g. avocado, αβοκάντο" oninput="buildEquivalents()" style="flex:1">
-            <button class="btn" type="button" onclick="clearEquivalentsSearch()" title="Clear search">✕</button>
+            <button class="btn" type="button" onclick="clearEquivalentsSearch()" title="Clear search"><i class="ti ti-x" aria-hidden="true"></i></button>
           </div>
         </div>
       </div>
     </div>
     <div class="card">
-      <div class="card-header"><span class="card-title">📖 Λίστα Ισοδυνάμων Τροφίμων / Food Exchange List</span></div>
+      <div class="card-header"><span class="card-title"><i class="ti ti-book-2" aria-hidden="true"></i> Λίστα Ισοδυνάμων Τροφίμων / Food Exchange List</span></div>
       <div class="card-body" id="equivalents-body"></div>
     </div>
   </div>
   <!-- FOOD DATABASE -->
   <div class="page" id="page-fooddb">
     <div class="card">
-      <div class="card-header"><span class="card-title">🔎 Food Database — USDA FoodData Central</span></div>
+      <div class="card-header"><span class="card-title"><i class="ti ti-search" aria-hidden="true"></i> Food Database — USDA FoodData Central</span></div>
       <div class="card-body">
-        <div class="alert info">ℹ️ Search uses USDA FoodData Central Foundation/SR Legacy data. Values are per 100g and should be reviewed clinically before use.</div>
+        <div class="alert info"><i class="ti ti-info-circle" aria-hidden="true"></i> Search uses USDA FoodData Central Foundation/SR Legacy data. Values are per 100g and should be reviewed clinically before use.</div>
         <div class="form-grid two">
           <div class="form-field"><label>Food search</label><input type="text" id="food-search" placeholder="e.g. oats, yogurt, halloumi" onkeydown="if(event.key==='Enter') searchFoodDatabase()"></div>
           <div class="form-field" style="display:flex;align-items:flex-end"><button class="btn primary" onclick="searchFoodDatabase()">Search foods</button></div>
@@ -1435,7 +1436,7 @@ table th,
     <div class="card">
       <div class="card-header"><span class="card-title">🍲 Recipes</span></div>
       <div class="card-body">
-        <div class="alert info">ℹ️ Build custom recipes from manual ingredients or foods found in USDA FoodData Central. Nutrition is calculated from kcal/carbs/protein/fat per 100g.</div>
+        <div class="alert info"><i class="ti ti-info-circle" aria-hidden="true"></i> Build custom recipes from manual ingredients or foods found in USDA FoodData Central. Nutrition is calculated from kcal/carbs/protein/fat per 100g.</div>
         <h3 style="margin:4px 0 14px;font-size:16px;color:var(--text-primary)">Create New Recipe</h3>
         <div class="form-grid two">
           <div class="form-field"><label>Recipe name</label><input type="text" id="recipe-name" placeholder="e.g. Chicken rice bowl" oninput="renderRecipeDraft()"></div>
@@ -1463,7 +1464,7 @@ table th,
         </div>
         <div id="recipe-draft"></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin:14px 0">
-          <button class="btn primary" onclick="saveRecipe()" id="save-recipe-btn">💾 Save recipe</button>
+          <button class="btn primary" onclick="saveRecipe()" id="save-recipe-btn"><i class="ti ti-device-floppy" aria-hidden="true"></i> Save recipe</button>
           <button class="btn" onclick="loadRecipes()">↻ Refresh recipes</button>
         </div>
         <div id="recipe-save-status" class="field-note"></div>
@@ -1495,7 +1496,7 @@ table th,
         <div class="section-label">Ingredients</div>
         <div id="custom-meal-draft"></div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:14px">
-          <button class="btn primary" onclick="saveCustomMeal()">💾 Save custom meal</button>
+          <button class="btn primary" onclick="saveCustomMeal()"><i class="ti ti-device-floppy" aria-hidden="true"></i> Save custom meal</button>
           <span id="custom-meal-save-status" class="field-note"></span>
         </div>
       </div>
@@ -1505,7 +1506,7 @@ table th,
   <!-- APPOINTMENTS -->
   <div class="page" id="page-appointments">
     <div class="card">
-      <div class="card-header"><span class="card-title">📅 Appointments</span><span class="card-action" onclick="openAppointmentForm(todayISO())">+ New appointment</span></div>
+      <div class="card-header"><span class="card-title"><i class="ti ti-calendar" aria-hidden="true"></i> Appointments</span><span class="card-action" onclick="openAppointmentForm(todayISO())">+ New appointment</span></div>
       <div class="card-body">
         <div class="calendar-toolbar">
           <div class="calendar-title" id="calendar-title">Appointments</div>
@@ -1556,7 +1557,7 @@ table th,
   <!-- ACCOUNT / SUBSCRIPTION -->
   <div class="page" id="page-account">
     <div class="card">
-      <div class="card-header"><span class="card-title">💳 Account / Subscription</span></div>
+      <div class="card-header"><span class="card-title"><i class="ti ti-credit-card" aria-hidden="true"></i> Account / Subscription</span></div>
       <div class="card-body">
         <div class="form-grid two">
           <div class="form-field"><label>Signed in as</label><input type="text" id="acct-email" readonly style="background:var(--bg-page);cursor:not-allowed"></div>
@@ -1597,20 +1598,20 @@ table th,
 
 <!-- BOTTOM NAV (mobile) -->
 <nav class="bottom-nav" id="bottom-nav">
-  <button class="bnav-item active" onclick="nav('dashboard');setBnav(this)"><span>📊</span><span>Home</span></button>
-  <button class="bnav-item" onclick="nav('clients');setBnav(this)"><span>🗂️</span><span>Clients</span></button>
-  <button class="bnav-item" onclick="nav('profile');setBnav(this)"><span>👤</span><span>Profile</span></button>
-  <button class="bnav-item" onclick="nav('intake');setBnav(this)"><span>📋</span><span>Intake</span></button>
-  <button class="bnav-item" onclick="nav('macros');setBnav(this)"><span>🎯</span><span>Macros</span></button>
-  <button class="bnav-item" onclick="nav('exchanges');setBnav(this)"><span>🔄</span><span>Exchange</span></button>
-  <button class="bnav-item" onclick="nav('sevenday');setBnav(this)"><span>📅</span><span>7-Day</span></button>
-  <button class="bnav-item" onclick="nav('report');setBnav(this)"><span>📄</span><span>Report</span></button>
-  <button class="bnav-item" onclick="nav('labs');setBnav(this)"><span>🩸</span><span>Labs</span></button>
-  <button class="bnav-item" onclick="nav('fooddb');setBnav(this)"><span>🔎</span><span>Foods</span></button>
+  <button class="bnav-item active" onclick="nav('dashboard');setBnav(this)"><span><i class="ti ti-chart-bar" aria-hidden="true"></i></span><span>Home</span></button>
+  <button class="bnav-item" onclick="nav('clients');setBnav(this)"><span><i class="ti ti-users" aria-hidden="true"></i></span><span>Clients</span></button>
+  <button class="bnav-item" onclick="nav('profile');setBnav(this)"><span><i class="ti ti-user" aria-hidden="true"></i></span><span>Profile</span></button>
+  <button class="bnav-item" onclick="nav('intake');setBnav(this)"><span><i class="ti ti-clipboard-list" aria-hidden="true"></i></span><span>Intake</span></button>
+  <button class="bnav-item" onclick="nav('macros');setBnav(this)"><span><i class="ti ti-target" aria-hidden="true"></i></span><span>Macros</span></button>
+  <button class="bnav-item" onclick="nav('exchanges');setBnav(this)"><span><i class="ti ti-refresh" aria-hidden="true"></i></span><span>Exchange</span></button>
+  <button class="bnav-item" onclick="nav('sevenday');setBnav(this)"><span><i class="ti ti-calendar" aria-hidden="true"></i></span><span>7-Day</span></button>
+  <button class="bnav-item" onclick="nav('report');setBnav(this)"><span><i class="ti ti-file-text" aria-hidden="true"></i></span><span>Report</span></button>
+  <button class="bnav-item" onclick="nav('labs');setBnav(this)"><span><i class="ti ti-droplet" aria-hidden="true"></i></span><span>Labs</span></button>
+  <button class="bnav-item" onclick="nav('fooddb');setBnav(this)"><span><i class="ti ti-search" aria-hidden="true"></i></span><span>Foods</span></button>
   <button class="bnav-item" onclick="nav('recipes');setBnav(this)"><span>🍲</span><span>Recipes</span></button>
-  <button class="bnav-item" onclick="nav('appointments');setBnav(this)"><span>📅</span><span>Appts</span></button>
-  <button class="bnav-item" onclick="nav('account');setBnav(this)"><span>💳</span><span>Account</span></button>
-  <button class="bnav-item" onclick="openFeedbackModal();setBnav(this)"><span>💬</span><span>Feedback</span></button>
+  <button class="bnav-item" onclick="nav('appointments');setBnav(this)"><span><i class="ti ti-calendar" aria-hidden="true"></i></span><span>Appts</span></button>
+  <button class="bnav-item" onclick="nav('account');setBnav(this)"><span><i class="ti ti-credit-card" aria-hidden="true"></i></span><span>Account</span></button>
+  <button class="bnav-item" onclick="openFeedbackModal();setBnav(this)"><span><i class="ti ti-message-circle" aria-hidden="true"></i></span><span>Feedback</span></button>
 </nav>
 <script>
 const S = {
@@ -1743,7 +1744,7 @@ async function handleAuthSubmit(){
     }
     const {error} = signUpResult || {};
     if(error){ setAuthMessage(friendlyAuthError(error, 'Sign up failed. Please try again.'),'error'); btn.disabled=false; btn.textContent='Create Account'; return; }
-    setAuthMessage('✅ Account created! You can now sign in.','success');
+    setAuthMessage('<i class="ti ti-circle-check" aria-hidden="true"></i> Account created! You can now sign in.','success');
     const resendBtn=document.getElementById('resend-confirmation-btn');
     if(resendBtn) resendBtn.style.display='none';
     btn.disabled=false; btn.textContent='Create Account';
@@ -1763,7 +1764,7 @@ async function resendConfirmationEmail(){
   if(error){
     setAuthMessage(friendlyAuthError(error),'error');
   } else {
-    setAuthMessage('✅ Confirmation email sent. Please check your inbox and spam folder.','success');
+    setAuthMessage('<i class="ti ti-circle-check" aria-hidden="true"></i> Confirmation email sent. Please check your inbox and spam folder.','success');
   }
   if(btn){ btn.disabled=false; btn.textContent='Resend confirmation email'; btn.style.display='block'; }
 }
@@ -2009,7 +2010,7 @@ function updateTrialBanner(){
   const days=subscriptionState.trialDaysRemaining;
   const show=subscriptionState.trialActive && days<=10 && !subscriptionState.ownerBypass;
   banner.style.display=show ? 'flex' : 'none';
-  if(show && text) text.textContent=`🎁 Free trial — ${days} day${days===1?'':'s'} remaining. Subscribe to continue after your trial.`;
+  if(show && text) text.textContent=`<i class="ti ti-gift" aria-hidden="true"></i> Free trial — ${days} day${days===1?'':'s'} remaining. Subscribe to continue after your trial.`;
 }
 function updateSubscriptionCheckoutButtons(){
   const trialAlreadyUsed=!!(subscriptionState?.trialUsedExpired || subscriptionState?.trialExpired);
@@ -2718,7 +2719,7 @@ function getCustomMealByKey(key){
 function customMealText(key, lang='GR'){
   const meal=getCustomMealByKey(key);
   if(!meal) return '';
-  return `${safeHtml(meal.name||'Custom meal')} ✏️`;
+  return `${safeHtml(meal.name||'Custom meal')} <i class="ti ti-pencil" aria-hidden="true"></i>`;
 }
 function customMealKcal(key){
   const meal=getCustomMealByKey(key);
@@ -3567,7 +3568,7 @@ function buildEquivalents(){
   const lang=equivalentsLang;
   const query=(document.getElementById('eq-search')?.value||'').trim();
   const isEn=lang==='en';
-  let html=`<div class="alert info">ℹ️ ${lang==='en'?'Within each category, foods can be swapped for one another in the listed amounts.':'Μέσα στην ίδια κατηγορία, τα τρόφιμα μπορούν να αντικατασταθούν μεταξύ τους στις αναγραφόμενες ποσότητες.'}</div>`;
+  let html=`<div class="alert info"><i class="ti ti-info-circle" aria-hidden="true"></i> ${lang==='en'?'Within each category, foods can be swapped for one another in the listed amounts.':'Μέσα στην ίδια κατηγορία, τα τρόφιμα μπορούν να αντικατασταθούν μεταξύ τους στις αναγραφόμενες ποσότητες.'}</div>`;
   if(query){
     const matches=equivalentsSearchMatches(query);
     html+=`<div class="alert ${matches.length?'ok':'warn'}">${matches.length
@@ -3702,7 +3703,7 @@ function mealOptionsHtml(options, current){
   const customCreate=`<option value="__CUSTOM__">＋ Custom meal</option>`;
   const custom=(S.customMeals||[]).map(m=>{
     const v='CUSTOM_'+m.id;
-    return `<option value="${v}" ${v===current?'selected':''}>✏️ Custom — ${safeHtml(m.name||'Meal')}</option>`;
+    return `<option value="${v}" ${v===current?'selected':''}><i class="ti ti-pencil" aria-hidden="true"></i> Custom — ${safeHtml(m.name||'Meal')}</option>`;
   }).join('');
   return noneOption + base + customCreate + custom;
 }
@@ -4036,14 +4037,14 @@ function updateMealLanguageButtons(){
     if(gr){ gr.classList.toggle('primary', !isEn); }
     if(en){ en.classList.toggle('primary', isEn); }
   });
-  setEl('report-options-title', isEn ? '⚙️ Report Options — Choose what to print' : '⚙️ Επιλογές Αναφοράς — Επιλέξτε τι θα εκτυπωθεί');
+  setEl('report-options-title', isEn ? '<i class="ti ti-settings" aria-hidden="true"></i> Report Options — Choose what to print' : '<i class="ti ti-settings" aria-hidden="true"></i> Επιλογές Αναφοράς — Επιλέξτε τι θα εκτυπωθεί');
   setEl('report-days-title', isEn ? 'Print days from 7-day plan:' : 'Εκτύπωση ημερών από το 7ήμερο πλάνο:');
   setEl('report-days-note', isEn ? 'Select one or more days to print from the weekly plan. Single-day print hides the weekday name.' : 'Επιλέξτε μία ή περισσότερες ημέρες από το εβδομαδιαίο πλάνο. Σε μία ημέρα δεν εμφανίζεται το όνομα ημέρας.');
   setEl('report-include-blood-label', isEn ? 'Include Blood Analysis summary' : 'Συμπερίληψη σύνοψης αιματολογικού ελέγχου');
   setEl('report-include-equivalents-label', isEn ? 'Include Equivalents Guide in report' : 'Συμπερίληψη Οδηγού Ισοδυνάμων στην αναφορά');
-  setEl('report-print-btn', isEn ? '🖨️ Print Full Report' : '🖨️ Εκτύπωση πλήρους αναφοράς');
+  setEl('report-print-btn', isEn ? '<i class="ti ti-printer" aria-hidden="true"></i> Print Full Report' : '<i class="ti ti-printer" aria-hidden="true"></i> Εκτύπωση πλήρους αναφοράς');
   setEl('report-options-note', isEn ? 'Use Print / Save PDF and choose “Save as PDF” in the browser print dialog.' : 'Χρησιμοποιήστε Εκτύπωση / Αποθήκευση PDF και επιλέξτε “Save as PDF” στο παράθυρο εκτύπωσης.');
-  setEl('report-print-title', isEn ? '📄 PRINT — Clinical Nutrition Report' : '📄 PRINT — Κλινική Αναφορά Διατροφής');
+  setEl('report-print-title', isEn ? '<i class="ti ti-file-text" aria-hidden="true"></i> PRINT — Clinical Nutrition Report' : '<i class="ti ti-file-text" aria-hidden="true"></i> PRINT — Κλινική Αναφορά Διατροφής');
   renderReportDaySelector();
 }
 
@@ -4663,13 +4664,13 @@ function renderCombinedGuidance(conditions) {
   items.forEach(cg => {
     html += `<div style="margin-bottom:${items.length>1?'10px':'0'};${items.length>1?'padding-bottom:10px;border-bottom:1px solid var(--border)':''}">
       <strong style="color:var(--text-active)">${isEn?(cg.name||conditionLabel(cg.key)):cg.gr}</strong><br>
-      ✔ <strong>${isEn?'Main guidance':'Κύρια οδηγία'}:</strong> ${cg.main}<br>
-      ✔ <strong>${isEn?'Prefer':'Προτίμησε'}:</strong> ${cg.prefer}<br>
-      ⚠ <strong>${isEn?'Limit / avoid':'Αποφυγή'}:</strong> ${cg.avoid}
+      <i class="ti ti-check" aria-hidden="true"></i> <strong>${isEn?'Main guidance':'Κύρια οδηγία'}:</strong> ${cg.main}<br>
+      <i class="ti ti-check" aria-hidden="true"></i> <strong>${isEn?'Prefer':'Προτίμησε'}:</strong> ${cg.prefer}<br>
+      <i class="ti ti-alert-triangle" aria-hidden="true"></i> <strong>${isEn?'Limit / avoid':'Αποφυγή'}:</strong> ${cg.avoid}
     </div>`;
     if(cg.key==='Pregnancy'){
       const tri=v('p-trimester')||'1';
-      html += `<div style="margin-bottom:10px;padding:8px 10px;background:var(--teal-50);border-radius:6px;font-size:12px"><strong>📅 ${isEn?'Trimester':'Στάδιο'} ${tri}</strong><br>${PREGNANCY_TRIMESTER_NOTES[tri]||''}</div>`;
+      html += `<div style="margin-bottom:10px;padding:8px 10px;background:var(--teal-50);border-radius:6px;font-size:12px"><strong><i class="ti ti-calendar" aria-hidden="true"></i> ${isEn?'Trimester':'Στάδιο'} ${tri}</strong><br>${PREGNANCY_TRIMESTER_NOTES[tri]||''}</div>`;
     }
   });
   html += `<div style="margin-top:8px;font-size:10px;color:var(--text-muted);font-style:italic">${guidanceSourcesForConditions(list, lang)}</div>`;
@@ -4841,12 +4842,12 @@ function renderExpectedProgress(goal, tdee, goalKcal){
   }
   const deficit=Math.round(actualTdee-actualGoal);
   let note='';
-  if(deficit<300) note='<div style="margin-top:8px;color:var(--amber-text);font-weight:700">⚠️ Small deficit — weight loss will be gradual</div>';
-  else if(deficit>1000) note='<div style="margin-top:8px;color:var(--amber-text);font-weight:700">⚠️ Large deficit — consider increasing calories for sustainability</div>';
+  if(deficit<300) note='<div style="margin-top:8px;color:var(--amber-text);font-weight:700"><i class="ti ti-alert-triangle" aria-hidden="true"></i> Small deficit — weight loss will be gradual</div>';
+  else if(deficit>1000) note='<div style="margin-top:8px;color:var(--amber-text);font-weight:700"><i class="ti ti-alert-triangle" aria-hidden="true"></i> Large deficit — consider increasing calories for sustainability</div>';
   box.style.display='block';
   box.innerHTML=`
     <div style="line-height:1.55">
-      <strong>📉 Expected weight loss:</strong>
+      <strong><i class="ti ti-trending-down" aria-hidden="true"></i> Expected weight loss:</strong>
       <ul style="margin:6px 0 0 18px;padding:0">
         <li>Week 1: 0.5–1.5 kg (includes water weight)</li>
         <li>Weeks 2–4: 0.3–0.8 kg/week (fat loss)</li>
@@ -4961,7 +4962,7 @@ function calcAll() {
     if(noteEl){
       if(isPregnant){
         noteEl.textContent = calAdjIsManual
-          ? `Manual override: ${calAdj>0?'+':''}${calAdj} kcal + ${pregAdj} kcal (pregnancy trimester ${v('p-trimester')||'1'})${calAdj<0?' — ⚠ this is a caloric deficit during pregnancy; ACOG/DGA guidance recommends against this unless specifically medically indicated':''}.`
+          ? `Manual override: ${calAdj>0?'+':''}${calAdj} kcal + ${pregAdj} kcal (pregnancy trimester ${v('p-trimester')||'1'})${calAdj<0?' — <i class="ti ti-alert-triangle" aria-hidden="true"></i> this is a caloric deficit during pregnancy; ACOG/DGA guidance recommends against this unless specifically medically indicated':''}.`
           : `Suggested (editable): +0 kcal base adjustment (ACOG/DGA: no caloric restriction or goal-driven surplus during pregnancy) + ${pregAdj} kcal (pregnancy trimester ${v('p-trimester')||'1'}). Goal "${goal}" is intentionally NOT applied as a deficit/surplus while pregnant. Edit the number above only if a deficit/surplus is specifically medically indicated.`;
       } else {
         noteEl.textContent = calAdjIsManual
@@ -5004,7 +5005,7 @@ function calcMacros(){
   S.carbG=kcal*(c/100)/4; S.protG=kcal*(p/100)/4; S.fatG=kcal*(f/100)/9;
   const ok=Math.abs(total-100)<=1;
   const checkEl=document.getElementById('macro-check-row');
-  if(checkEl) checkEl.innerHTML=`<div class="alert ${ok?'ok':'err'}">${ok?'✅':'❌'} Total: ${total}% — ${ok?'OK: adds up to 100%':'Must equal 100%'}</div>`;
+  if(checkEl) checkEl.innerHTML=`<div class="alert ${ok?'ok':'err'}">${ok?'<i class="ti ti-circle-check" aria-hidden="true"></i>':'<i class="ti ti-circle-x" aria-hidden="true"></i>'} Total: ${total}% — ${ok?'OK: adds up to 100%':'Must equal 100%'}</div>`;
   const barsEl=document.getElementById('macro-bars');
   if(barsEl) barsEl.innerHTML=['🌾 Carbohydrates','🥩 Protein','🫒 Fat'].map((label,i)=>{
     const pct=[c,p,f][i]; const col=['var(--teal-400)','#5DCAA5','var(--teal-100)'][i];
@@ -5132,7 +5133,7 @@ function applySuggestedExchangeServings(){
   renderExchanges();
   refreshExchangePlansNow();
   const note=document.getElementById('exchange-check');
-  if(note) note.insertAdjacentHTML('afterbegin',`<div class="alert ok">✅ Suggested servings applied: Starch ${starch}, Protein ${protein}, Fat ${fat}. Review clinically and adjust if needed.</div>`);
+  if(note) note.insertAdjacentHTML('afterbegin',`<div class="alert ok"><i class="ti ti-circle-check" aria-hidden="true"></i> Suggested servings applied: Starch ${starch}, Protein ${protein}, Fat ${fat}. Review clinically and adjust if needed.</div>`);
 }
 
 // Called on every keystroke in the Exchange System table.
@@ -5181,7 +5182,7 @@ function refreshExchangePlansNow(){
   const btn=document.querySelector('button[onclick="refreshExchangePlansNow()"]');
   if(btn){
     const orig=btn.textContent;
-    btn.textContent='✅ Applied!';
+    btn.textContent='<i class="ti ti-circle-check" aria-hidden="true"></i> Applied!';
     setTimeout(()=>{btn.textContent=orig;},1500);
   }
 }
@@ -5300,13 +5301,13 @@ function calcBodyComp(){
   if(ffm!==null && ffmEl && (!S.bcManual?.ffm || !String(ffmEl.value||'').trim())) ffmEl.value=ffm.toFixed(1);
   const muscle=parseFloat(v('bc-muscle'))||null;
   S.bc={bf,water,fatmass,ffm,muscle,metage,visceral,bone};
-  if(bf!==null){const lo=isMale?10:18,hi=isMale?20:28; setEl('bc-bf-note',bf<lo?'⚠ Low — review energy availability':bf>hi?'⚠ High — metabolic risk':'✅ Within normal range');}
-  if(water!==null){const lo=isMale?50:45,hi=isMale?65:60; setEl('bc-water-note',water<lo?'⚠ May indicate dehydration':water>hi?'⚠ Review clinically':'✅ Adequate');}
+  if(bf!==null){const lo=isMale?10:18,hi=isMale?20:28; setEl('bc-bf-note',bf<lo?'<i class="ti ti-alert-triangle" aria-hidden="true"></i> Low — review energy availability':bf>hi?'<i class="ti ti-alert-triangle" aria-hidden="true"></i> High — metabolic risk':'<i class="ti ti-circle-check" aria-hidden="true"></i> Within normal range');}
+  if(water!==null){const lo=isMale?50:45,hi=isMale?65:60; setEl('bc-water-note',water<lo?'<i class="ti ti-alert-triangle" aria-hidden="true"></i> May indicate dehydration':water>hi?'<i class="ti ti-alert-triangle" aria-hidden="true"></i> Review clinically':'<i class="ti ti-circle-check" aria-hidden="true"></i> Adequate');}
   if(visceral!==null){
-    const msg=visceral<=8?'✅ Healthy level':visceral<=12?'⚠ Borderline / upper-limit — monitor cardiometabolic risk':'⚠ Elevated — cardiometabolic risk';
+    const msg=visceral<=8?'<i class="ti ti-circle-check" aria-hidden="true"></i> Healthy level':visceral<=12?'<i class="ti ti-alert-triangle" aria-hidden="true"></i> Borderline / upper-limit — monitor cardiometabolic risk':'<i class="ti ti-alert-triangle" aria-hidden="true"></i> Elevated — cardiometabolic risk';
     setEl('bc-visceral-note',msg);
   }
-  if(metage!==null&&S.age) setEl('bc-metage-note',metage<=S.age?'✅ Favorable':'⚠ Metabolic age above chronological');
+  if(metage!==null&&S.age) setEl('bc-metage-note',metage<=S.age?'<i class="ti ti-circle-check" aria-hidden="true"></i> Favorable':'<i class="ti ti-alert-triangle" aria-hidden="true"></i> Metabolic age above chronological');
 
   const rangeBarHtml=(value,min,max,b1,b2,colors,labels)=>{
     const n=Number(value);
@@ -5367,7 +5368,7 @@ function onBodyCompManualInput(field){
 }
 function saveBodyComp(){
   S.tracking.unshift({date:new Date().toLocaleDateString('el-GR'),weight:S.weight,bf:v('bc-bf'),muscle:v('bc-muscle'),visceral:v('bc-visceral'),notes:'Body comp entry'});
-  alert('✅ Measurements saved! View in Progress Tracking.');
+  alert('<i class="ti ti-circle-check" aria-hidden="true"></i> Measurements saved! View in Progress Tracking.');
 }
 
 function buildOneDayPlan(){
@@ -5427,14 +5428,14 @@ function buildOneDayPlan(){
   // (see buildSlotSnack()), independent of which extras checkboxes are ticked.
   if(day.warnings&&day.warnings.length){
     gapAdvice+=`<div style="margin-top:8px;padding:8px 12px;background:var(--amber-bg);border-radius:6px;font-size:12px;color:var(--amber-text)">
-      ⚠️ <strong>Exchange allocation warning:</strong> ${day.warnings.map(safeHtml).join(' · ')}
+      <i class="ti ti-alert-triangle" aria-hidden="true"></i> <strong>Exchange allocation warning:</strong> ${day.warnings.map(safeHtml).join(' · ')}
     </div>`;
   }
   if(Math.abs(day.exchangeGap||0)>5){
     const explained=(day.addOnKcal||0)+(day.extraFoodKcal||0);
     const unexplained=(day.exchangeGap||0)-explained;
     gapAdvice+=`<div style="margin-top:8px;padding:8px 12px;background:var(--amber-bg);border-radius:6px;font-size:12px;color:var(--amber-text)">
-      ⚠️ <strong>Exchange reconciliation:</strong> Exchange System total is <strong>${day.exchangeTotalKcal} kcal</strong>, meal-plan total is <strong>${day.totalKcal} kcal</strong> (${day.exchangeGap>0?'+':''}${day.exchangeGap} kcal).
+      <i class="ti ti-alert-triangle" aria-hidden="true"></i> <strong>Exchange reconciliation:</strong> Exchange System total is <strong>${day.exchangeTotalKcal} kcal</strong>, meal-plan total is <strong>${day.totalKcal} kcal</strong> (${day.exchangeGap>0?'+':''}${day.exchangeGap} kcal).
       ${explained?`Extras/add-ons explain ${explained} kcal. `:''}${Math.abs(unexplained)>5?`Unexplained difference: ${unexplained>0?'+':''}${unexplained} kcal — review exchange allocation before giving this plan to a client.`:'No hidden exchange loss detected.'}
     </div>`;
   }
@@ -5442,17 +5443,17 @@ function buildOneDayPlan(){
     const starchNeeded=Math.round(Math.abs(displayedGap)/81);
     const fatNeeded=Math.round(Math.abs(displayedGap)/45);
     gapAdvice+=`<div style="margin-top:8px;padding:8px 12px;background:var(--amber-bg);border-radius:6px;font-size:12px;color:var(--amber-text)">
-      💡 <strong>How to close this gap:</strong> Go to Exchange System and manually increase:
+      <i class="ti ti-bulb" aria-hidden="true"></i> <strong>How to close this gap:</strong> Go to Exchange System and manually increase:
       <ul style="margin:4px 0 0 16px;line-height:1.8">
         <li>Starch by <strong>+${starchNeeded} exchange${starchNeeded>1?'s':''}</strong> (+${starchNeeded*81} kcal) — e.g. add ${starchNeeded} more slice${starchNeeded>1?'s':''} of bread or ⅓ cup rice per serving</li>
         <li>OR Fat by <strong>+${fatNeeded} exchange${fatNeeded>1?'s':''}</strong> (+${fatNeeded*45} kcal) — e.g. add ${fatNeeded} more tsp olive oil</li>
         <li>OR review the Exchange System servings; nuts replace one fat exchange rather than adding extra kcal.</li>
       </ul>
-      Use the <strong>↻ button</strong> in Exchange System to unlock manual override per category, then click "🔄 Apply to Meal Plans".
+      Use the <strong>↻ button</strong> in Exchange System to unlock manual override per category, then click "<i class="ti ti-refresh" aria-hidden="true"></i> Apply to Meal Plans".
     </div>`;
   } else if(!gapOk && displayedGap>0){
     gapAdvice+=`<div style="margin-top:8px;padding:8px 12px;background:var(--amber-bg);border-radius:6px;font-size:12px;color:var(--amber-text)">
-      💡 <strong>Slightly over target:</strong> Reduce starch/fat exchanges or review any added foods from the Food Database.
+      <i class="ti ti-bulb" aria-hidden="true"></i> <strong>Slightly over target:</strong> Reduce starch/fat exchanges or review any added foods from the Food Database.
     </div>`;
   }
   const chkEl=document.getElementById('oneday-check');
@@ -5462,7 +5463,7 @@ function buildOneDayPlan(){
       <div style="font-size:13px;color:var(--text-muted)">Target: ${day.target} kcal</div>
       <div style="font-size:13px;color:var(--text-muted)">Exchange System: ${day.exchangeTotalKcal} kcal</div>
       <span class="badge ${gapBadge}">${displayedGap>0?'+':''}${displayedGap} kcal</span>
-      ${gapOk?'<span style="font-size:12px;color:var(--teal-600)">✅ Within ±100 kcal of target</span>':'<span style="font-size:12px;color:'+gapColor+'">'+(displayedGap<0?'Below':'Above')+' target</span>'}
+      ${gapOk?'<span style="font-size:12px;color:var(--teal-600)"><i class="ti ti-circle-check" aria-hidden="true"></i> Within ±100 kcal of target</span>':'<span style="font-size:12px;color:'+gapColor+'">'+(displayedGap<0?'Below':'Above')+' target</span>'}
     </div>
     ${gapAdvice}
     <table><thead><tr><th>Meal</th><th>kcal</th><th>% of day</th></tr></thead><tbody>
@@ -5591,7 +5592,7 @@ function buildSevenDay(){
     const gapOk=Math.abs(dt.gap)<=100;
     const dayLabel=weekDayLabel(p, di, lang);
     html+=`<th style="background:var(--teal-600);color:#fff;padding:8px;min-width:190px;text-align:center">
-      ${dayLabel}<div style="font-size:10px;font-weight:400;margin-top:2px;color:${gapOk?'#E8F5E9':'#FFD580'}">${dt.totalKcal} kcal ${gapOk?'✅':dt.gap>0?'▲':'▼'}</div>
+      ${dayLabel}<div style="font-size:10px;font-weight:400;margin-top:2px;color:${gapOk?'#E8F5E9':'#FFD580'}">${dt.totalKcal} kcal ${gapOk?'<i class="ti ti-circle-check" aria-hidden="true"></i>':dt.gap>0?'▲':'▼'}</div>
       <button type="button" class="btn seven-day-expand-btn" data-day-index="${di}" style="margin-top:5px;padding:3px 7px;font-size:10px;background:rgba(255,255,255,.14);color:#fff;border-color:rgba(255,255,255,.35)">${lang==='EN'?'Expand':'Άνοιγμα'}</button>
     </th>`;
   });
@@ -5604,7 +5605,7 @@ function buildSevenDay(){
     {key:'snk2', label:lang==='EN'?'🍊 Snack 2':'🍊 Σνακ 2'},
     {key:'din',  label:lang==='EN'?'🌙 Dinner':'🌙 Βραδινό'},
     {key:'sleep',label:lang==='EN'?'😴 Before sleep':'😴 Πριν ύπνο'},
-    {key:'kcal', label:lang==='EN'?'📊 Total kcal':'📊 Σύνολο kcal'},
+    {key:'kcal', label:lang==='EN'?'<i class="ti ti-chart-bar" aria-hidden="true"></i> Total kcal':'<i class="ti ti-chart-bar" aria-hidden="true"></i> Σύνολο kcal'},
   ];
 
   rows.forEach((row,ri)=>{
@@ -5630,7 +5631,7 @@ function buildSevenDay(){
         cell=`<div style="font-weight:700;font-size:12px">${dt.totalKcal} kcal</div>
           <div style="font-size:10px;color:var(--text-muted)">Target: ${dt.target}</div>
           <div style="font-size:10px;color:var(--text-muted)">Exchange: ${dt.exchangeTotalKcal}</div>
-          <div style="font-size:10px;color:${gapOk?'var(--teal-600)':Math.abs(dt.gap)<=200?'var(--warn)':'var(--err)'}">${dt.gap>0?'+':''}${dt.gap} ${gapOk?'✅':'⚠'}</div>
+          <div style="font-size:10px;color:${gapOk?'var(--teal-600)':Math.abs(dt.gap)<=200?'var(--warn)':'var(--err)'}">${dt.gap>0?'+':''}${dt.gap} ${gapOk?'<i class="ti ti-circle-check" aria-hidden="true"></i>':'<i class="ti ti-alert-triangle" aria-hidden="true"></i>'}</div>
           ${Math.abs(dt.exchangeGap||0)>5?`<div style="font-size:10px;color:var(--err);margin-top:2px">Exchange gap: ${dt.exchangeGap>0?'+':''}${dt.exchangeGap} kcal</div>`:''}
           ${dt.warnings&&dt.warnings.length?`<div style="font-size:9px;color:var(--warn);margin-top:3px">${dt.warnings.map(safeHtml).join(' · ')}</div>`:''}`;
       }
@@ -5661,7 +5662,7 @@ function buildSevenDay(){
       </div>
     </div>`;
   }
-  html+=`<div class="field-note" style="margin-top:8px">Each day shows kcal per meal and daily total vs target. ✅ = within ±100 kcal. Fruit/dairy snack choices draw from the Exchange System totals. Change any meal dropdown or snack checkbox and kcal updates live, per day.</div>`;
+  html+=`<div class="field-note" style="margin-top:8px">Each day shows kcal per meal and daily total vs target. <i class="ti ti-circle-check" aria-hidden="true"></i> = within ±100 kcal. Fruit/dairy snack choices draw from the Exchange System totals. Change any meal dropdown or snack checkbox and kcal updates live, per day.</div>`;
   setEl('sevenday-body',html);
   bindSevenDayExpandButtons();
 }
@@ -5709,7 +5710,7 @@ function openSevenDayModal(dayIndex){
         <div style="font-size:18px;font-weight:900">${safeHtml(dayLabel)}</div>
         <div style="font-size:12px;opacity:.9">${lang==='EN'?'Daily total':'Σύνολο ημέρας'}: ${dt.totalKcal} kcal · ${lang==='EN'?'Target':'Στόχος'}: ${dt.target} · ${dt.gap>0?'+':''}${dt.gap}</div>
       </div>
-      <button type="button" class="btn" aria-label="Close expanded day" title="Close" style="background:#ffffff!important;color:#0F6E56!important;border:2px solid #0F6E56!important;font-size:18px;font-weight:900;line-height:1;min-width:34px;height:34px;padding:4px 9px;display:flex;align-items:center;justify-content:center" onclick="closeSevenDayModal()">✕</button>
+      <button type="button" class="btn" aria-label="Close expanded day" title="Close" style="background:#ffffff!important;color:#0F6E56!important;border:2px solid #0F6E56!important;font-size:18px;font-weight:900;line-height:1;min-width:34px;height:34px;padding:4px 9px;display:flex;align-items:center;justify-content:center" onclick="closeSevenDayModal()"><i class="ti ti-x" aria-hidden="true"></i></button>
     </div>
     <div style="padding:16px;display:flex;flex-direction:column;gap:10px">
       ${rows.map(([label,text,kcal])=>`<div style="display:grid;grid-template-columns:150px 1fr;gap:12px;padding:12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-page)">
@@ -6191,14 +6192,14 @@ async function saveWeeklyPlan(){
       upsertLocalClient(localRow);
     }
     S_isDirty=false;
-    setWeeklyPlanSaveStatus('✅ Το πλάνο αποθηκεύτηκε');
+    setWeeklyPlanSaveStatus('<i class="ti ti-circle-check" aria-hidden="true"></i> Το πλάνο αποθηκεύτηκε');
     if(document.getElementById('page-report')?.classList.contains('active')) buildReport();
     await renderClientList();
   }catch(e){
     console.error('[Nutrese weekly plan] save failed; using local fallback', e);
     upsertLocalClient(localRow);
     S_isDirty=false;
-    setWeeklyPlanSaveStatus('✅ Το πλάνο αποθηκεύτηκε τοπικά', true);
+    setWeeklyPlanSaveStatus('<i class="ti ti-circle-check" aria-hidden="true"></i> Το πλάνο αποθηκεύτηκε τοπικά', true);
   }
 }
 window.saveWeeklyPlan=saveWeeklyPlan;
@@ -6308,14 +6309,14 @@ function buildSevenDay(){
   let html=`<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:12px">
     <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
       <button class="btn primary" onclick="generateAiSevenDayPlan()">✨ Generate AI Plan</button>
-      <button class="btn primary" onclick="saveWeeklyPlan()">💾 Αποθήκευση Πλάνου</button>
+      <button class="btn primary" onclick="saveWeeklyPlan()"><i class="ti ti-device-floppy" aria-hidden="true"></i> Αποθήκευση Πλάνου</button>
       <button class="btn" onclick="setSevenDayView('${isWeek?'day':'week'}')">${isWeek?(lang==='EN'?'Day view':'Προβολή ημέρας'):(lang==='EN'?'Week view':'Προβολή εβδομάδας')}</button>
       <span id="weekly-plan-save-status" style="font-size:13px;font-weight:800;color:var(--teal-700)"></span>
     </div>
     <div style="display:flex;gap:8px">
       <button class="btn ${lang==='EN'?'':'primary'}" id="meal-lang-gr-7day" onclick="setMealLanguage('GR')">GR</button>
       <button class="btn ${lang==='EN'?'primary':''}" id="meal-lang-en-7day" onclick="setMealLanguage('EN')">EN</button>
-      ${isWeek?`<button class="btn" title="${weekTheme==='dark'?'Switch week view to light mode':'Switch week view to dark mode'}" onclick="toggleWeekViewTheme()">${weekTheme==='dark'?'☀️':'🌙'}</button>`:''}
+      ${isWeek?`<button class="btn" title="${weekTheme==='dark'?'Switch week view to light mode':'Switch week view to dark mode'}" onclick="toggleWeekViewTheme()">${weekTheme==='dark'?'<i class="ti ti-sun" aria-hidden="true"></i>':'<i class="ti ti-moon" aria-hidden="true"></i>'}</button>`:''}
     </div>
   </div>
   <div style="padding:10px 12px;border:1px solid var(--teal-100);background:var(--teal-50);border-radius:8px;margin-bottom:12px;color:var(--teal-800);font-size:13px;font-weight:700">✨ AI-generated plan — clinical review required before sharing with client.</div>
@@ -6335,7 +6336,7 @@ function buildSevenDay(){
         <div style="font-size:12px;color:var(--text-muted);margin-top:2px">${dayPlan.aiMeals?'AI / manual flexible plan':'Exchange-engine fallback plan'}</div>
       </div>
       <div style="text-align:right;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-page)">
-        <div style="font-size:22px;font-weight:900;color:${statusColor}">${dt.totalKcal} kcal ${statusOk?'✅':'⚠️'}</div>
+        <div style="font-size:22px;font-weight:900;color:${statusColor}">${dt.totalKcal} kcal ${statusOk?'<i class="ti ti-circle-check" aria-hidden="true"></i>':'<i class="ti ti-alert-triangle" aria-hidden="true"></i>'}</div>
         <div style="font-size:12px;color:var(--text-muted)">Target ${dt.target||0} · ${dt.gap>0?'+':''}${dt.gap||0}</div>
       </div>
     </div>
@@ -6374,7 +6375,7 @@ function renderSevenDayMealCard(dayPlan, dt, slot, lang, dayIndex){
         <div style="font-size:12px;font-weight:900;color:var(--text-muted);text-transform:uppercase">${slot.icon} ${lang==='EN'?slot.labelEN:slot.labelGR}</div>
         <div style="font-size:15px;font-weight:900;color:var(--text-primary);margin-top:3px">${safeHtml(data.name||'Meal')}</div>
       </div>
-      <button class="btn" title="Edit meal" style="padding:6px 8px" onclick="openFlexibleMealEditor(${dayIndex},'${slot.key}')">✎</button>
+      <button class="btn" title="Edit meal" style="padding:6px 8px" onclick="openFlexibleMealEditor(${dayIndex},'${slot.key}')"><i class="ti ti-pencil" aria-hidden="true"></i></button>
     </div>
     <div style="font-size:13px;line-height:1.55;color:var(--text-secondary)">${data.text||'—'}</div>
     <div style="font-size:12px;font-weight:900;color:var(--teal-600)">${data.kcal||0} kcal</div>
@@ -6575,7 +6576,7 @@ function openFlexibleMealEditor(dayIndex, slotKey){
   overlay.innerHTML=`<div style="width:min(820px,96vw);max-height:90vh;overflow:auto;background:var(--bg-surface);color:var(--text-primary);border:1px solid var(--border);border-radius:10px;box-shadow:0 18px 70px rgba(0,0,0,.35)">
     <div style="position:sticky;top:0;background:var(--teal-600);color:#fff;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;z-index:1">
       <div><div style="font-size:18px;font-weight:900">${safeHtml(weekDayLabel(dayPlan,dayIndex,lang))} — ${safeHtml(lang==='EN'?slot.labelEN:slot.labelGR)}</div><div style="font-size:12px;opacity:.9">Edit meal text and kcal; daily total updates immediately.</div></div>
-      <button class="btn" style="background:#fff!important;color:#0F6E56!important;font-size:18px;font-weight:900" onclick="closeFlexibleMealEditor()">✕</button>
+      <button class="btn" style="background:#fff!important;color:#0F6E56!important;font-size:18px;font-weight:900" onclick="closeFlexibleMealEditor()"><i class="ti ti-x" aria-hidden="true"></i></button>
     </div>
     <div style="padding:16px;display:grid;gap:12px">
       <div class="form-grid two">
@@ -7011,9 +7012,9 @@ function buildReport(){
   const abnormalLabsHtml=S.reportOptions?.includeBlood!==false ? reportAbnormalLabsHtml(isEn) : '';
   const bodyCompositionHtml=reportBodyCompositionHtml(isEn);
   const equivalentsGuideHtml=S.reportOptions?.includeEquivalents===true ? reportEquivalentsGuideHtml(isEn) : '';
-  const reportGuidelinesHtml=`<div style="font-size:14px;font-weight:700;color:var(--teal-800);margin:14px 0 6px;border-bottom:2px solid var(--teal-600);padding-bottom:4px">📋 ${isEn?'GENERAL GUIDANCE':'ΓΕΝΙΚΕΣ ΟΔΗΓΙΕΣ'}</div>
+  const reportGuidelinesHtml=`<div style="font-size:14px;font-weight:700;color:var(--teal-800);margin:14px 0 6px;border-bottom:2px solid var(--teal-600);padding-bottom:4px"><i class="ti ti-clipboard-list" aria-hidden="true"></i> ${isEn?'GENERAL GUIDANCE':'ΓΕΝΙΚΕΣ ΟΔΗΓΙΕΣ'}</div>
     <div style="columns:2;column-gap:20px;font-size:12px;line-height:1.65;margin-bottom:14px">
-      ${reportRules.map(r=>`<div style="break-inside:avoid;margin-bottom:4px">✔ ${r}</div>`).join('')}
+      ${reportRules.map(r=>`<div style="break-inside:avoid;margin-bottom:4px"><i class="ti ti-check" aria-hidden="true"></i> ${r}</div>`).join('')}
     </div>`;
   const reportBrandHtml=reportLogoHeaderHtml();
   const headerSummaryRows=[
@@ -7058,7 +7059,7 @@ function buildReport(){
     </div>
 
     <div class="report-week-section">
-    ${reportPlanTableTitle ? `<div style="font-size:14px;font-weight:700;color:var(--teal-800);margin:16px 0 6px;border-bottom:2px solid var(--teal-600);padding-bottom:4px">📅 ${reportPlanTableTitle}</div>` : ''}
+    ${reportPlanTableTitle ? `<div style="font-size:14px;font-weight:700;color:var(--teal-800);margin:16px 0 6px;border-bottom:2px solid var(--teal-600);padding-bottom:4px"><i class="ti ti-calendar" aria-hidden="true"></i> ${reportPlanTableTitle}</div>` : ''}
     <table class="report-week-table" style="width:100%;table-layout:fixed;border-collapse:collapse;font-size:10px;background:var(--bg-surface);border:1px solid var(--border)">
       <colgroup>
         <col style="width:6%"><col style="width:14%"><col style="width:14%"><col style="width:14%">
@@ -7099,7 +7100,7 @@ function buildReport(){
     </div>
 
     ${n.clinician_notes?`
-    <div style="font-size:14px;font-weight:700;color:var(--teal-800);margin:14px 0 6px;border-bottom:2px solid var(--teal-600);padding-bottom:4px">📝 ${isEn?'DIETITIAN NOTES':'ΣΗΜΕΙΩΣΕΙΣ ΔΙΑΙΤΟΛΟΓΟΥ'}</div>
+    <div style="font-size:14px;font-weight:700;color:var(--teal-800);margin:14px 0 6px;border-bottom:2px solid var(--teal-600);padding-bottom:4px"><i class="ti ti-notes" aria-hidden="true"></i> ${isEn?'DIETITIAN NOTES':'ΣΗΜΕΙΩΣΕΙΣ ΔΙΑΙΤΟΛΟΓΟΥ'}</div>
     <div style="font-size:13px;padding:10px;background:var(--teal-50);border-radius:6px">${n.clinician_notes}</div>`:''}
     ${equivalentsGuideHtml}
   </div>`);
@@ -7132,7 +7133,7 @@ function renderEngine(){
     {label:'Client profile completeness', val:incomplete?missingProfile.join(', ')+' missing':'Complete', st:incomplete?'warn':'ok', why:'Complete age, sex, height, weight and goal calories for the most reliable plan.'},
     {label:'Macro split total (Carb+Pro+Fat)', val:macroTotal+'%', st:Math.abs(macroTotal-100)<=1?'ok':'err', why:'Must equal 100%.'},
     {label:'Goal calories', val:kcal?Math.round(kcal)+' kcal':'—', st:lowKcal?'err':kcal>800?'ok':'warn', why:'Extreme calorie targets need clinician review.'},
-    {label:'Goal calories vs BMR', val:S.bmr?(kcal>=S.bmr*0.8?'OK — above 80% BMR':'⚠ Below BMR'):'—', st:!S.bmr?'neutral':kcal>=S.bmr*0.8?'ok':'err', why:'Plan below BMR may be too aggressive without medical supervision.'},
+    {label:'Goal calories vs BMR', val:S.bmr?(kcal>=S.bmr*0.8?'OK — above 80% BMR':'<i class="ti ti-alert-triangle" aria-hidden="true"></i> Below BMR'):'—', st:!S.bmr?'neutral':kcal>=S.bmr*0.8?'ok':'err', why:'Plan below BMR may be too aggressive without medical supervision.'},
     {label:'BMI category', val:S.bmiCat||'—', st:'neutral', why:'BMI is a screening tool — review together with body composition.'},
     {label:'Macro kcal vs exchange kcal', val:Math.abs(planKcal-kcal)<=50?'Gap ±'+Math.abs(gap)+' kcal (OK)':'Gap '+gap+' kcal', st:Math.abs(gap)<=50?'ok':'warn', why:'Exchange kcal should reconcile to goal calories (±50 kcal).'},
     {label:'Starch exchanges (cap '+caps.starchDailyMax+'/day)', val:ex.starch+' ex'+(gapData.starchCapped?' (capped)':''), st:gapData.starchCapped?'warn':'ok', why:gapData.starchCapped?`Carb target needs more than ${caps.starchDailyMax} starch exchanges/day — capped for realism${conditions.includes('Diabetes')||conditions.includes('PCOS')?' (lower cap due to Diabetes/PCOS)':''}. ~${gapData.choGap}g carbs not covered by starch alone.`:'Within realistic daily range.'},
@@ -7157,7 +7158,7 @@ function renderEngine(){
     if(capConflicts.length){
       const labelMap={starchDailyMax:'Starch (daily)',starchPerMealMax:'Starch (per meal)',proteinDailyMax:'Protein (daily)',proteinPerMealMax:'Protein (per meal)',fatDailyMax:'Fat (daily)',fatPerMealMax:'Fat (per meal)'};
       conflictBanner.innerHTML = `<div class="alert err" style="margin-bottom:10px">
-        <strong>⚠ Clinical conflict — review required:</strong> the selected conditions specify different limits for the same category. The app is NOT auto-resolving this — please decide which limit applies for this client.
+        <strong><i class="ti ti-alert-triangle" aria-hidden="true"></i> Clinical conflict — review required:</strong> the selected conditions specify different limits for the same category. The app is NOT auto-resolving this — please decide which limit applies for this client.
         <ul style="margin:6px 0 0 18px">
           ${capConflicts.map(c=>`<li><strong>${labelMap[c.metric]||c.metric}:</strong> ${c.entries.map(e=>e.cond+' → '+e.value).join(' vs. ')}. Currently using the most conservative value (${c.suggestedMin}) in Exchange System — override manually in Exchange System if a different value is more appropriate for this client.</li>`).join('')}
         </ul>
@@ -7172,7 +7173,7 @@ function renderEngine(){
   const hasErr=checks.some(c=>c.st==='err'), hasWarn=checks.some(c=>c.st==='warn');
 
   let overallHtml=`<div class="alert ${hasErr?'err':hasWarn?'warn':'ok'}" style="font-size:14px;font-weight:600">
-    ${hasErr?'❌ REVIEW REQUIRED — resolve errors before printing':hasWarn?'⚠️ CHECKS NEEDED — review warnings before printing':'✅ READY — all checks passed. Safe to print.'}
+    ${hasErr?'<i class="ti ti-circle-x" aria-hidden="true"></i> REVIEW REQUIRED — resolve errors before printing':hasWarn?'<i class="ti ti-alert-triangle" aria-hidden="true"></i> CHECKS NEEDED — review warnings before printing':'<i class="ti ti-circle-check" aria-hidden="true"></i> READY — all checks passed. Safe to print.'}
   </div>`;
 if (anyCapped) {
     const targetKcal=Math.round(kcal), planKcalR=Math.round(planKcal), coverage=kcal?Math.round((planKcal/kcal)*100):0;
@@ -7182,7 +7183,7 @@ if (anyCapped) {
     if(gapData.fatCapped) items.push(`<strong>Fat:</strong> target ${Math.round(S.fatG)}g/day, realistic plan covers ~${Math.round(S.fatG-gapData.fatGap)}g/day (${gapData.fatGap}g short).`);
     overallHtml += `<div class="alert warn" style="margin-top:10px">
       <div style="width:100%">
-        <strong>⚠️ Clinical Adjustment Needed — macro target exceeds realistic food portions</strong><br>
+        <strong><i class="ti ti-alert-triangle" aria-hidden="true"></i> Clinical Adjustment Needed — macro target exceeds realistic food portions</strong><br>
         <div style="margin:8px 0;font-size:13px">${items.join('<br>')}</div>
         <div style="font-size:13px">This plan provides <strong>~${planKcalR} kcal</strong> (${coverage}% of the ${targetKcal} kcal target) using clinically realistic portions for this client (≤${caps.proteinPerMealMax*gramsPerEx}g protein food and ≤${caps.fatPerMealMax} tsp oil per main meal).</div>
         <div style="font-size:13px;margin-top:8px"><strong>Suggested next steps:</strong>
@@ -7260,10 +7261,10 @@ function updateDashMetrics(){
   setEl('dash-day',days[new Date().getDay()]);
   const alerts=[];
   if(incomplete) alerts.push('Profile details to complete when available: '+missingProfile.join(', ')+'. Plans can be reviewed once key clinical inputs are ready.');
-  if(lowKcal) alerts.push('⚠ Goal calories very low ('+Math.round(S.goalKcal)+' kcal) — clinical review needed.');
+  if(lowKcal) alerts.push('<i class="ti ti-alert-triangle" aria-hidden="true"></i> Goal calories very low ('+Math.round(S.goalKcal)+' kcal) — clinical review needed.');
   if(anyCapped) alerts.push('Macro target exceeds realistic food portions — review Macro Targets and Exchange System for safer adjustment options.');
   const dashAlert=document.getElementById('dash-alert');
-  if(dashAlert) dashAlert.innerHTML=alerts.map(a=>`<div class="alert warn">⚠️ ${a}</div>`).join('');
+  if(dashAlert) dashAlert.innerHTML=alerts.map(a=>`<div class="alert warn"><i class="ti ti-alert-triangle" aria-hidden="true"></i> ${a}</div>`).join('');
 }
 
 function renderDashboard(){ updateDashMetrics(); updatePracticeOverview(); buildOneDayPlan(); loadAppointments().then(()=>{ renderDashboardAppointments(); updateTodayAppointmentCount(); }); }
@@ -7300,7 +7301,7 @@ function renderTracking(){
     return;
   }
   el.innerHTML='<table><thead><tr><th>Date</th><th>Weight (kg)</th><th>Body Fat %</th><th>Muscle (kg)</th><th>Visceral</th><th>Notes</th><th></th></tr></thead><tbody>'+
-    S.tracking.map((e,i)=>`<tr><td>${e.date}</td><td>${e.weight||'—'}</td><td>${e.bf||'—'}</td><td>${e.muscle||'—'}</td><td>${e.visceral||'—'}</td><td style="font-size:12px">${e.notes||'—'}</td><td><button class="btn" style="padding:3px 8px;font-size:11px" onclick="S.tracking.splice(${i},1);renderTracking()">✕</button></td></tr>`).join('')+
+    S.tracking.map((e,i)=>`<tr><td>${e.date}</td><td>${e.weight||'—'}</td><td>${e.bf||'—'}</td><td>${e.muscle||'—'}</td><td>${e.visceral||'—'}</td><td style="font-size:12px">${e.notes||'—'}</td><td><button class="btn" style="padding:3px 8px;font-size:11px" onclick="S.tracking.splice(${i},1);renderTracking()"><i class="ti ti-x" aria-hidden="true"></i></button></td></tr>`).join('')+
     '</tbody></table>';
   renderTrackingChart();
 }
@@ -7350,8 +7351,8 @@ function renderTrackingChart(){
     return;
   }
   let html='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px">';
-  if(weightSvg) html+=`<div class="card" style="margin:0"><div class="card-header"><span class="card-title" style="font-size:13px">⚖️ Weight (kg)</span></div><div class="card-body">${weightSvg}</div></div>`;
-  if(bfSvg) html+=`<div class="card" style="margin:0"><div class="card-header"><span class="card-title" style="font-size:13px">📊 Body Fat %</span></div><div class="card-body">${bfSvg}</div></div>`;
+  if(weightSvg) html+=`<div class="card" style="margin:0"><div class="card-header"><span class="card-title" style="font-size:13px"><i class="ti ti-scale" aria-hidden="true"></i> Weight (kg)</span></div><div class="card-body">${weightSvg}</div></div>`;
+  if(bfSvg) html+=`<div class="card" style="margin:0"><div class="card-header"><span class="card-title" style="font-size:13px"><i class="ti ti-chart-bar" aria-hidden="true"></i> Body Fat %</span></div><div class="card-body">${bfSvg}</div></div>`;
   html+='</div>';
   el.innerHTML=html;
 }
@@ -7448,7 +7449,7 @@ const CONDITION_VITAMINS = {
     {n:'Φολικό οξύ', nEn:'Folate', why:'Έλεγχος επιπέδων, ιδιαίτερα αν υπάρχουν διατροφικοί περιορισμοί ή αναιμία.', whyEn:'Monitor levels, especially with dietary restriction or anaemia.'},
     {n:'Σίδηρος', nEn:'Iron', why:'Έλεγχος φερριτίνης/σιδήρου. Αποφυγή υψηλού καλίου αν υπάρχει υπερκαλιαιμία. Περιορισμός υψηλού φωσφόρου: επεξεργασμένα τρόφιμα, αναψυκτικά τύπου cola, υπερβολικά γαλακτοκομικά. Το βράσιμο πατάτας και απόρριψη νερού μειώνει το κάλιο.', whyEn:'Check ferritin/iron. Avoid high-potassium foods if hyperkalaemia is present. Limit high-phosphorus foods: processed foods, cola drinks, excess dairy. Boiling potatoes and discarding the water lowers potassium.'}
   ],
-  Hemodialysis:[{n:'⚠ Ενεργή Βιταμίνη D, σίδηρος/EPO', why:'Συνήθως διαχειρίζονται ιατρικά στη μονάδα αιμοκάθαρσης'},{n:'Σύμπλεγμα Β (υδατοδιαλυτές, ειδικά για αιμοκάθαρση)', why:'Απώλειες κατά τη διαδικασία αιμοκάθαρσης'}],
+  Hemodialysis:[{n:'<i class="ti ti-alert-triangle" aria-hidden="true"></i> Ενεργή Βιταμίνη D, σίδηρος/EPO', why:'Συνήθως διαχειρίζονται ιατρικά στη μονάδα αιμοκάθαρσης'},{n:'Σύμπλεγμα Β (υδατοδιαλυτές, ειδικά για αιμοκάθαρση)', why:'Απώλειες κατά τη διαδικασία αιμοκάθαρσης'}],
   Hypertension:[{n:'Μαγνήσιο & Κάλιο από τροφή', why:'Υποστηρίζουν ρύθμιση πίεσης — ΌΧΙ συμπληρώματα καλίου αν συνυπάρχει CKD/Αιμοκάθαρση χωρίς ιατρική οδηγία'}],
   Dyslipidemia:[{n:'Ωμέγα-3 (EPA/DHA)', why:'Μπορεί να μειώσει τα τριγλυκερίδια — συζήτηση δοσολογίας με ιατρό'}],
   PCOS:        [{n:'Βιταμίνη D', why:'Συχνή ανεπάρκεια, σχετίζεται με ινσουλινοαντίσταση'},{n:'Myo-inositol', why:'Πιθανή βελτίωση ωορρηξίας/ινσουλινοαντίστασης — συζήτηση με ιατρό'},{n:'Ωμέγα-3', why:'Αντιφλεγμονώδης δράση'}],
@@ -7458,9 +7459,9 @@ const CONDITION_VITAMINS = {
   ],
   IBS:         [{n:'Προβιοτικά', why:'Επιλογή στελέχους εξατομικευμένα — μπορεί να βοηθήσουν στα συμπτώματα'},{n:'Βιταμίνη D', why:'Έλεγχος επιπέδων αν περιορίζονται γαλακτοκομικά'}],
   Obesity:     [{n:'Βιταμίνη D', why:'Συχνή ανεπάρκεια'},{n:'Σίδηρος', why:'Η ανεπάρκεια σιδήρου είναι συχνή κατά τον θερμιδικό περιορισμό — εξέταση/παρακολούθηση επιπέδων όπου χρειάζεται'}],
-  Thyroid:     [{n:'Σελήνιο', why:'Υποστηρίζει τη μετατροπή Τ4→Τ3, ιδίως στη Hashimoto'},{n:'Ψευδάργυρος, Σίδηρος, Βιταμίνη D', why:'Συχνές ελλείψεις σε αυτοάνοση θυρεοειδίτιδα'},{n:'⚠ Ιώδιο μόνο υπό καθοδήγηση', why:'Υπερβολικό ιώδιο μπορεί να επιδεινώσει την αυτοανοσία'}],
+  Thyroid:     [{n:'Σελήνιο', why:'Υποστηρίζει τη μετατροπή Τ4→Τ3, ιδίως στη Hashimoto'},{n:'Ψευδάργυρος, Σίδηρος, Βιταμίνη D', why:'Συχνές ελλείψεις σε αυτοάνοση θυρεοειδίτιδα'},{n:'<i class="ti ti-alert-triangle" aria-hidden="true"></i> Ιώδιο μόνο υπό καθοδήγηση', why:'Υπερβολικό ιώδιο μπορεί να επιδεινώσει την αυτοανοσία'}],
   Celiac:      [{n:'Σίδηρος, Φολικό οξύ, Βιταμίνη Β12', why:'Συχνές ελλείψεις λόγω δυσαπορρόφησης πριν τη διάγνωση/σε ενεργή νόσο'},{n:'Βιταμίνη D, Ασβέστιο', why:'Υποστήριξη οστικής υγείας'}],
-  Thalassemia: [{n:'Φολικό οξύ', why:'Συχνά απαραίτητο λόγω αυξημένης ερυθροποίησης — υπό καθοδήγηση αιματολόγου'},{n:'⚠ Αποφυγή σιδήρου & υψηλής δόσης βιτ. C', why:'Κίνδυνος επιβάρυνσης σιδήρου σε ασθενείς με τακτικές μεταγγίσεις'}],
+  Thalassemia: [{n:'Φολικό οξύ', why:'Συχνά απαραίτητο λόγω αυξημένης ερυθροποίησης — υπό καθοδήγηση αιματολόγου'},{n:'<i class="ti ti-alert-triangle" aria-hidden="true"></i> Αποφυγή σιδήρου & υψηλής δόσης βιτ. C', why:'Κίνδυνος επιβάρυνσης σιδήρου σε ασθενείς με τακτικές μεταγγίσεις'}],
   FoodIntolerance:[{n:'Ασβέστιο, Βιταμίνη D', why:'Αν αποφεύγονται γαλακτοκομικά'},{n:'Σίδηρος', why:'Αν αποφεύγεται κρέας'},{n:'Βιταμίνη Β12', why:'Αν αποφεύγονται ζωικά τρόφιμα'},{n:'Ψευδάργυρος', why:'Αν αποκλείονται πολλαπλές ομάδες τροφίμων'}],
   Pregnancy:   [{n:'Φολικό οξύ', why:'600 mcg/ημέρα — νευρικός σωλήνας (ACOG)'},{n:'Σίδηρος', why:'27 mg/ημέρα — συχνή ανεπάρκεια στην εγκυμοσύνη'},{n:'Βιταμίνη D', why:'Έλεγχος επιπέδων'},{n:'Ιώδιο', why:'220 mcg/ημέρα — ανάπτυξη θυρεοειδούς εμβρύου'},{n:'Ωμέγα-3', why:'DHA για ανάπτυξη εγκεφάλου εμβρύου'},{n:'Χολίνη', why:'Νευρική ανάπτυξη'},{n:'Ασβέστιο', why:'1000 mg/ημέρα'}],
   Menopause:   [{n:'Ασβέστιο, Βιταμίνη D', why:'Η απώλεια οστικής μάζας επιταχύνεται μετά την εμμηνόπαυση'},{n:'Μαγνήσιο', why:'Οστική υγεία και ύπνος'},{n:'Ωμέγα-3', why:'Ο καρδιαγγειακός κίνδυνος αυξάνεται μετά την εμμηνόπαυση'},{n:'Βιταμίνη Β12', why:'Η απορρόφηση μειώνεται με την ηλικία'}],
@@ -7482,7 +7483,7 @@ const CONDITION_VITAMINS = {
     {n:'Ωμέγα-3 λιπαρά οξέα', nEn:'Omega-3 fatty acids', why:'Μείωση κορεσμένων λιπαρών, αύξηση ακόρεστων λιπαρών (ελαιόλαδο, ξηροί καρποί, ψάρι). Πρωτεΐνη μέτρια 1.0–1.2 g/kg IBW. Αποφυγή αλκοόλ και υπερ-επεξεργασμένων τροφίμων. Απώλεια 7–10% βάρους μπορεί να βελτιώσει σημαντικά δείκτες NAFLD.', whyEn:'Reduce saturated fat, increase unsaturated fat (olive oil, nuts, fish). Moderate protein 1.0-1.2 g/kg IBW. Avoid alcohol and ultra-processed foods. Weight loss of 7-10% body weight can significantly improve NAFLD markers.'}
   ],
 };
-const VITAMIN_DISCLAIMER = 'ℹ️ Αυτά είναι κλινικές παρατηρήσεις προς εξέταση από τον διαιτολόγο — ΟΧΙ αυτόματες συστάσεις συμπληρωμάτων. Οποιαδήποτε απόφαση για συμπλήρωμα παραμένει αποκλειστικά κλινική κρίση, ιδιαίτερα σε ΧΝΝ, Αιμοκάθαρση και Μεσογειακή Αναιμία όπου ορισμένα συμπληρώματα (σίδηρος, κάλιο, βιταμίνες A/E/K) μπορεί να είναι επιβλαβή.';
+const VITAMIN_DISCLAIMER = '<i class="ti ti-info-circle" aria-hidden="true"></i> Αυτά είναι κλινικές παρατηρήσεις προς εξέταση από τον διαιτολόγο — ΟΧΙ αυτόματες συστάσεις συμπληρωμάτων. Οποιαδήποτε απόφαση για συμπλήρωμα παραμένει αποκλειστικά κλινική κρίση, ιδιαίτερα σε ΧΝΝ, Αιμοκάθαρση και Μεσογειακή Αναιμία όπου ορισμένα συμπληρώματα (σίδηρος, κάλιο, βιταμίνες A/E/K) μπορεί να είναι επιβλαβή.';
 
 // ── FOOD SOURCES PER NUTRIENT ──
 // Used to turn "low Vitamin D" / "needs more magnesium" type suggestions
@@ -7518,9 +7519,9 @@ const NUTRIENT_FOOD_SOURCES = {
 };
 
 // Returns a food-sources string for a nutrient suggestion, or null if none
-// apply (e.g. "⚠ Avoid..." entries, or supplement-only items like myo-inositol/probiotics)
+// apply (e.g. "<i class="ti ti-alert-triangle" aria-hidden="true"></i> Avoid..." entries, or supplement-only items like myo-inositol/probiotics)
 function getFoodSources(nutrientText){
-  if(nutrientText.trim().startsWith('⚠')) return null;
+  if(nutrientText.trim().startsWith('<i class="ti ti-alert-triangle" aria-hidden="true"></i>')) return null;
   const matches=[];
   for(const key in NUTRIENT_FOOD_SOURCES){
     if(nutrientText.includes(key)) matches.push(NUTRIENT_FOOD_SOURCES[key]);
@@ -7579,7 +7580,7 @@ function reportAbnormalLabsHtml(isEn){
   const rows=abnormalLabRows();
   if(!rows.length) return '';
   return `<div class="report-labs-section">
-    <div style="font-size:14px;font-weight:700;color:var(--teal-800);margin:14px 0 6px;border-bottom:2px solid var(--teal-600);padding-bottom:4px">🩸 ${isEn?'BLOOD ANALYSIS SUMMARY':'ΣΥΝΟΨΗ ΑΙΜΑΤΟΛΟΓΙΚΟΥ ΕΛΕΓΧΟΥ'}</div>
+    <div style="font-size:14px;font-weight:700;color:var(--teal-800);margin:14px 0 6px;border-bottom:2px solid var(--teal-600);padding-bottom:4px"><i class="ti ti-droplet" aria-hidden="true"></i> ${isEn?'BLOOD ANALYSIS SUMMARY':'ΣΥΝΟΨΗ ΑΙΜΑΤΟΛΟΓΙΚΟΥ ΕΛΕΓΧΟΥ'}</div>
     <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:12px">
       <thead><tr style="background:var(--teal-600);color:#fff">
         <th style="padding:5px;text-align:left">${isEn?'Test':'Εξέταση'}</th>
@@ -7623,15 +7624,15 @@ function nutrientTokens(n){
 // combined "Ψευδάργυρος, Σίδηρος, Βιταμίνη D" both get folded into ONE row
 // (the more complete one), with both conditions' rationale/source kept and
 // concatenated — nothing is silently dropped, just consolidated.
-// Warning entries (prefixed "⚠") are NEVER merged with anything, in either
+// Warning entries (prefixed "<i class="ti ti-alert-triangle" aria-hidden="true"></i>") are NEVER merged with anything, in either
 // direction — cautions always stay fully standalone so they're never
 // diluted or mixed in with a positive food-source recommendation.
 function addVitaminItem(items, item){
-  const isWarning = item.n.trim().startsWith('⚠');
+  const isWarning = item.n.trim().startsWith('<i class="ti ti-alert-triangle" aria-hidden="true"></i>');
   if(!isWarning){
     const newTokens = nutrientTokens(item.n);
     for(const existing of items){
-      if(existing.n.trim().startsWith('⚠')) continue;
+      if(existing.n.trim().startsWith('<i class="ti ti-alert-triangle" aria-hidden="true"></i>')) continue;
       const exTokens = nutrientTokens(existing.n);
       const newCoveredByExisting = newTokens.every(t=>exTokens.includes(t));
       const existingCoveredByNew = exTokens.every(t=>newTokens.includes(t));
@@ -8053,7 +8054,7 @@ function removeRecipeIngredient(index){
 }
 function updateRecipeSaveButton(){
   const btn=document.getElementById('save-recipe-btn');
-  if(btn) btn.textContent = S.editingRecipeId ? '💾 Save updated recipe' : '💾 Save recipe';
+  if(btn) btn.textContent = S.editingRecipeId ? '<i class="ti ti-device-floppy" aria-hidden="true"></i> Save updated recipe' : '<i class="ti ti-device-floppy" aria-hidden="true"></i> Save recipe';
 }
 function clearRecipeDraft(){
   S.recipeDraft=[];
@@ -9066,13 +9067,13 @@ async function saveCurrentClient(options={}){
   const existingLocal=loadLocalClients().find(c=>String(c.id)===String(identity.id));
   if(existingLocal && shouldWarnRiskyClientOverwrite(state, existingLocal)){
     const existingName=existingClientDisplayName(existingLocal);
-    const ok=confirm(`⚠️ This will overwrite the existing client "${existingName}" with blank/incomplete data. Their saved profile, body composition, exchanges, and meal plans may be lost. Continue?`);
+    const ok=confirm(`<i class="ti ti-alert-triangle" aria-hidden="true"></i> This will overwrite the existing client "${existingName}" with blank/incomplete data. Their saved profile, body composition, exchanges, and meal plans may be lost. Continue?`);
     if(!ok) return;
   }
   if(!currentUser){
     upsertLocalClient(localRow);
     S_isDirty=false;
-    alert('✅ Client saved locally: '+name+'\n\nFind it anytime under "My Clients".');
+    alert('<i class="ti ti-circle-check" aria-hidden="true"></i> Client saved locally: '+name+'\n\nFind it anytime under "My Clients".');
     await renderClientList();
     refreshConditionVisualState();
     return;
@@ -9089,7 +9090,7 @@ async function saveCurrentClient(options={}){
     if(existing){
       if(!existingLocal && shouldWarnRiskyClientOverwrite(state, existing)){
         const existingName=existingClientDisplayName(existing);
-        const ok=confirm(`⚠️ This will overwrite the existing client "${existingName}" with blank/incomplete data. Their saved profile, body composition, exchanges, and meal plans may be lost. Continue?`);
+        const ok=confirm(`<i class="ti ti-alert-triangle" aria-hidden="true"></i> This will overwrite the existing client "${existingName}" with blank/incomplete data. Their saved profile, body composition, exchanges, and meal plans may be lost. Continue?`);
         if(!ok) return;
       }
     }
@@ -9102,11 +9103,11 @@ async function saveCurrentClient(options={}){
     console.error('[Nutrese clients] Supabase save failed', error);
     upsertLocalClient(localRow);
     S_isDirty=false;
-    alert('✅ Client saved locally: '+name+'\n\nSupabase clients table is unavailable or not configured yet: '+(error.message||error));
+    alert('<i class="ti ti-circle-check" aria-hidden="true"></i> Client saved locally: '+name+'\n\nSupabase clients table is unavailable or not configured yet: '+(error.message||error));
   } else {
     if(savedRemote) upsertLocalClient({...savedRemote, localOnly:false});
     S_isDirty=false; // changes are now safely in the cloud
-    alert('✅ Client saved: '+name+'\n\nFind it anytime under "My Clients" in the sidebar.');
+    alert('<i class="ti ti-circle-check" aria-hidden="true"></i> Client saved: '+name+'\n\nFind it anytime under "My Clients" in the sidebar.');
   }
   await renderClientList();
   refreshConditionVisualState();
@@ -9117,7 +9118,7 @@ async function loadClientById(rowId){
   // aren't silently lost — same protection newClient() already has.
   const currentName = v('p-name');
   if(currentName && currentName.trim()!==''){
-    if(!confirm(`Switch to a different client?\n\nAny unsaved changes to "${currentName}" will be lost. Click "💾 Save Client" first if you want to keep them.`)) return;
+    if(!confirm(`Switch to a different client?\n\nAny unsaved changes to "${currentName}" will be lost. Click "<i class="ti ti-device-floppy" aria-hidden="true"></i> Save Client" first if you want to keep them.`)) return;
   }
   let data=null;
   const localFallback=()=>loadLocalClients().find(c=>String(c.id)===String(rowId) || String(c.client_ref)===String(rowId));
@@ -9199,7 +9200,7 @@ function renderClientListRows(clients){
     const hasCache = S.clientListCache && S.clientListCache.length>0;
     el.innerHTML = hasCache
       ? '<div style="color:var(--text-muted);text-align:center;padding:24px">No clients match that search.</div>'
-      : '<div style="color:var(--text-muted);text-align:center;padding:24px">No saved clients yet. Fill in Client Profile and click "💾 Save Client".</div>';
+      : '<div style="color:var(--text-muted);text-align:center;padding:24px">No saved clients yet. Fill in Client Profile and click "<i class="ti ti-device-floppy" aria-hidden="true"></i> Save Client".</div>';
     return;
   }
   const rows=clients.map(c=>{
@@ -9211,7 +9212,7 @@ function renderClientListRows(clients){
   });
   const tableHtml='<table><thead><tr><th></th><th>Name</th><th>Reference</th><th>Last saved</th><th></th></tr></thead><tbody>'+
     rows.map(({c,cond,savedAt,badge})=>`<tr><td style="width:44px">${clientAvatarHtml(c.data&&c.data.clientPhoto, c.name, 32)}</td><td><strong>${safeHtml(c.name||'Unnamed client')}</strong>${badge}<div style="font-size:11px;color:var(--text-muted)">${safeHtml(cond)}</div></td><td>${safeHtml(c.client_ref||'—')}</td><td>${safeHtml(savedAt)}</td>
-        <td style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn primary" style="padding:5px 10px;font-size:12px" onclick="loadClientById('${c.id}')">👁️ Load</button><button class="btn" style="padding:5px 10px;font-size:12px" onclick="deleteClientById('${c.id}')">🗑️ Delete</button></td></tr>`).join('')+
+        <td style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn primary" style="padding:5px 10px;font-size:12px" onclick="loadClientById('${c.id}')"><i class="ti ti-eye" aria-hidden="true"></i> Load</button><button class="btn" style="padding:5px 10px;font-size:12px" onclick="deleteClientById('${c.id}')"><i class="ti ti-trash" aria-hidden="true"></i> Delete</button></td></tr>`).join('')+
     '</tbody></table>';
   const cardsHtml='<div class="client-cards-mobile">'+rows.map(({c,cond,savedAt,badge})=>`<div class="client-card-mobile">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
@@ -9219,7 +9220,7 @@ function renderClientListRows(clients){
       <div class="client-card-title" style="margin:0">${safeHtml(c.name||'Unnamed client')}</div>
     </div>${badge}
     <div class="client-card-meta">${safeHtml(c.client_ref||'—')} · ${safeHtml(cond)}<br>Last saved: ${safeHtml(savedAt)}</div>
-    <div class="client-card-actions"><button class="btn primary" style="padding:6px 10px;font-size:12px" onclick="loadClientById('${c.id}')">👁️ Load</button><button class="btn" style="padding:6px 10px;font-size:12px" onclick="deleteClientById('${c.id}')">🗑️ Delete</button></div>
+    <div class="client-card-actions"><button class="btn primary" style="padding:6px 10px;font-size:12px" onclick="loadClientById('${c.id}')"><i class="ti ti-eye" aria-hidden="true"></i> Load</button><button class="btn" style="padding:6px 10px;font-size:12px" onclick="deleteClientById('${c.id}')"><i class="ti ti-trash" aria-hidden="true"></i> Delete</button></div>
   </div>`).join('')+'</div>';
   el.innerHTML=tableHtml+cardsHtml;
 }
@@ -9242,9 +9243,9 @@ function filterClientList(){
 async function exportAllClients(){
   if(!currentUser){ alert('Please sign in first.'); return; }
   const {data:clients, error} = await supabaseClient.from('clients').select('*').eq('user_id',currentUser.id);
-  if(error){ alert('⚠️ Could not fetch clients: '+error.message); return; }
+  if(error){ alert('<i class="ti ti-alert-triangle" aria-hidden="true"></i> Could not fetch clients: '+error.message); return; }
   if(!clients || !clients.length){
-    alert('No saved clients to back up yet. Save at least one client first ("💾 Save Client" on Client Profile).');
+    alert('No saved clients to back up yet. Save at least one client first ("<i class="ti ti-device-floppy" aria-hidden="true"></i> Save Client" on Client Profile).');
     return;
   }
   const backup={app:'Nutrese', version:'v1', exportedAt:new Date().toISOString(), clients:clients.map(c=>({id:c.id, client_ref:c.client_ref, name:c.name, state:c.data}))};
@@ -9270,7 +9271,7 @@ function importClientsFile(input){
       const data=JSON.parse(e.target.result);
       const imported = data.clients || (Array.isArray(data) ? data : null);
       if(!imported || !Array.isArray(imported)){
-        alert('⚠️ This file doesn\'t look like a Nutrese backup.');
+        alert('<i class="ti ti-alert-triangle" aria-hidden="true"></i> This file doesn\'t look like a Nutrese backup.');
         return;
       }
       let added=0, updated=0;
@@ -9284,9 +9285,9 @@ function importClientsFile(input){
         if(existed) updated++; else added++;
       }
       renderClientList();
-      alert(`✅ Restore complete.\n\nAdded: ${added}\nUpdated: ${updated}`);
+      alert(`<i class="ti ti-circle-check" aria-hidden="true"></i> Restore complete.\n\nAdded: ${added}\nUpdated: ${updated}`);
     }catch(err){
-      alert('⚠️ Could not read this file — make sure it\'s an unmodified Nutrese backup JSON.');
+      alert('<i class="ti ti-alert-triangle" aria-hidden="true"></i> Could not read this file — make sure it\'s an unmodified Nutrese backup JSON.');
     }
     input.value='';
   };
@@ -9331,7 +9332,7 @@ function tryRestoreAutosave(){
   applyState(saved);
   const banner=document.createElement('div');
   banner.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--teal-600);color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:600;z-index:200;box-shadow:0 4px 20px rgba(0,0,0,.3);max-width:320px;width:90%;text-align:center';
-  banner.innerHTML='✅ Restored your last session ('+(saved.fields['p-name']||'unnamed client')+')';
+  banner.innerHTML='<i class="ti ti-circle-check" aria-hidden="true"></i> Restored your last session ('+(saved.fields['p-name']||'unnamed client')+')';
   document.body.appendChild(banner);
   setTimeout(()=>banner.remove(), 5000);
 }
@@ -9422,7 +9423,7 @@ function toggleTheme() {
   const isDark = html.getAttribute('data-theme') === 'dark';
   html.setAttribute('data-theme', isDark ? 'light' : 'dark');
   const btn = document.getElementById('theme-btn');
-  if (btn) btn.textContent = isDark ? '🌙 Dark' : '☀️ Light';
+  if (btn) btn.innerHTML = isDark ? '<i class="ti ti-moon" aria-hidden="true"></i> Dark' : '<i class="ti ti-sun" aria-hidden="true"></i> Light';
   try { localStorage.setItem('nutrese-theme', isDark ? 'light' : 'dark'); } catch(e) {}
 }
 (function() {
@@ -9434,7 +9435,7 @@ function toggleTheme() {
       document.documentElement.setAttribute('data-theme', 'light');
     }
     const btn = document.getElementById('theme-btn');
-    if (btn) btn.textContent = document.documentElement.getAttribute('data-theme') === 'dark' ? '☀️ Light' : '🌙 Dark';
+    if (btn) btn.innerHTML = document.documentElement.getAttribute('data-theme') === 'dark' ? '<i class="ti ti-sun" aria-hidden="true"></i> Light' : '<i class="ti ti-moon" aria-hidden="true"></i> Dark';
   } catch(e) {}
 })();
 
@@ -9592,7 +9593,7 @@ function showInstallBanner() {
     animation:slideUp .3s ease;
   `;
   banner.innerHTML = `
-    <span>📲</span>
+    <span><i class="ti ti-device-mobile" aria-hidden="true"></i></span>
     <span style="flex:1">Add Nutrese to your home screen</span>
     <button onclick="installApp()" style="background:#fff;color:#0F6E56;border:none;padding:6px 12px;border-radius:7px;font-weight:700;cursor:pointer;font-size:12px">Install</button>
     <button onclick="this.closest('#install-banner').remove()" style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer;padding:0;line-height:1">×</button>
