@@ -854,9 +854,6 @@ table th,
     <button class="nav-item" onclick="nav('fooddb')"><i class="ti ti-search" aria-hidden="true"></i> Food Database</button>
     <button class="nav-item" onclick="nav('recipes')"><i class="ti ti-chef-hat" aria-hidden="true"></i> Recipes</button>
     <button class="nav-item" onclick="nav('appointments')"><i class="ti ti-calendar-event" aria-hidden="true"></i> Calendar</button>
-  </div>
-  <div class="nav-group-card">
-    <div class="nav-group-label">Reports & Tracking</div>
     <button class="nav-item" onclick="nav('equivalents')"><i class="ti ti-clipboard-list" aria-hidden="true"></i> Equivalents Guide</button>
   </div>
   <div class="nav-group-card">
@@ -3559,7 +3556,7 @@ function equivalentsCompactTableHtml(lang='gr', searchQuery=''){
     const split=Math.ceil(examples.length/2);
     const colHtml=list=>list.map(x=>`<div style="margin-bottom:3px">• ${highlightEquivalentText(x,q)}</div>`).join('');
     return `<tr style="break-inside:avoid;page-break-inside:avoid">
-      <td style="padding:7px 8px;border:1px solid var(--border);font-weight:800;color:var(--teal-800);vertical-align:top;width:18%">${cat.icon} ${safeHtml(title)}</td>
+      <td style="padding:7px 8px;border:1px solid var(--border);font-weight:800;color:var(--text-primary);vertical-align:top;width:18%">${cat.icon} ${safeHtml(title)}</td>
       <td style="padding:7px 6px;border:1px solid var(--border);vertical-align:top;width:8%;white-space:nowrap;font-size:11px">${portionLabel}</td>
       <td style="padding:7px 8px;border:1px solid var(--border);vertical-align:top;width:37%;line-height:1.45">${colHtml(examples.slice(0,split))}</td>
       <td style="padding:7px 8px;border:1px solid var(--border);vertical-align:top;width:37%;line-height:1.45">${colHtml(examples.slice(split))}</td>
