@@ -66,7 +66,8 @@ select option { background-color: var(--bg-surface); color: var(--text-primary);
 .app { display: flex; height: 100vh; overflow: hidden; }
 .sidebar { width: var(--nav-w); background: var(--bg-sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto; transition: transform .25s; z-index: 100; }
 .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-.topbar { height: 56px; background: var(--bg-surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 16px; gap: 10px; flex-shrink: 0; }
+.topbar { height: 56px; background: rgba(255,255,255,.72); backdrop-filter: saturate(180%) blur(14px); -webkit-backdrop-filter: saturate(180%) blur(14px); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 16px; gap: 10px; flex-shrink: 0; position: sticky; top: 0; z-index: 50; }
+[data-theme="dark"] .topbar { background: rgba(26,29,39,.72); }
 .topbar-logo { width: 26px; height: 26px; flex-shrink: 0; display:flex; align-items:center; justify-content:center; font-size:22px; line-height:1; }
 .content { flex: 1; overflow-y: auto; padding: 16px; }
 
@@ -179,6 +180,22 @@ select option { background-color: var(--bg-surface); color: var(--text-primary);
 
 /* ─── METRICS ─── */
 .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
+
+/* ─── DASHBOARD BENTO GRID ─── */
+.bento-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 12px; margin-bottom: 14px; }
+.bento-tile { background: var(--bg-surface); border-radius: 16px; padding: 20px; border: 1px solid var(--border); }
+.bento-span-2 { grid-column: 1 / -1; }
+.bento-row-2 { grid-row: span 2; }
+.bento-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+.bento-eyebrow { font-size: 13px; color: var(--text-muted); margin: 0 0 4px; }
+.bento-title { font-size: 22px; font-weight: 600; margin: 0; color: var(--text-primary); }
+.bento-stats { display: flex; gap: 24px; }
+.bento-stats > div { cursor: pointer; text-align: right; }
+.bento-stats .bs-value { display: block; font-size: 22px; font-weight: 600; color: var(--text-primary); line-height: 1; }
+.bento-stats .bs-label { font-size: 12px; color: var(--text-muted); }
+.bento-accent { background: var(--bg-page); border: none; }
+.bento-tile-head { font-size: 13px; font-weight: 600; color: var(--text-secondary); display: flex; align-items: center; gap: 6px; margin-bottom: 12px; }
+.bento-tile-head .card-action { margin-left: auto; font-weight: 500; }
 .metric { background: var(--bg-page); border: none; border-radius: var(--radius-lg); padding: 12px 14px; }
 .metric .m-label { font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
 .metric .m-value { font-size: 24px; font-weight: 700; color: var(--text-primary); line-height: 1; }
@@ -898,19 +915,27 @@ table th,
   <!-- DASHBOARD -->
   <div class="page active" id="page-dashboard">
     <div id="dash-alert"></div>
-    <div class="metrics-grid" style="grid-template-columns:repeat(2,1fr);margin-bottom:10px">
-      <div class="metric" style="cursor:pointer" onclick="nav('clients')"><div class="m-label">Clients</div><div class="m-value" id="d-total-clients">—</div><div class="m-sub">Total in your practice</div></div>
-      <div class="metric" style="cursor:pointer" onclick="nav('appointments')"><div class="m-label">Today</div><div class="m-value" id="d-today-appts">—</div><div class="m-sub" id="d-today-appts-sub">Appointments today</div></div>
-    </div>
-    <div class="card" style="margin-bottom:10px">
-      <div class="card-header"><span class="card-title"><i class="ti ti-calendar" aria-hidden="true"></i> Today's appointments</span><span class="card-action" onclick="nav('appointments')">Calendar →</span></div>
-      <div class="card-body" id="dash-appointments"><div style="color:var(--text-muted);font-size:13px">No appointments today.</div></div>
-    </div>
-    <div id="dash-no-client-prompt" class="card" style="display:none">
-      <div class="card-body" style="text-align:center;padding:40px 20px">
-        <div style="font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:8px"><i class="ti ti-user" aria-hidden="true"></i> No client loaded</div>
-        <div style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Load an existing client or create a new one to see their clinical dashboard here.</div>
-        <button class="btn primary" onclick="nav('clients')">Go to My Clients</button>
+    <div class="bento-grid">
+      <div class="bento-tile bento-span-2 bento-header">
+        <div>
+          <p class="bento-eyebrow">Overview</p>
+          <p class="bento-title">Your practice</p>
+        </div>
+        <div class="bento-stats">
+          <div onclick="nav('clients')"><span class="bs-value" id="d-total-clients">—</span><span class="bs-label">Clients</span></div>
+          <div onclick="nav('appointments')"><span class="bs-value" id="d-today-appts">—</span><span class="bs-label" id="d-today-appts-sub">Today</span></div>
+        </div>
+      </div>
+      <div class="bento-tile bento-row-2">
+        <div class="bento-tile-head"><i class="ti ti-calendar" aria-hidden="true"></i> Today's appointments <span class="card-action" onclick="nav('appointments')">Calendar →</span></div>
+        <div id="dash-appointments"><div style="color:var(--text-muted);font-size:13px">No appointments today.</div></div>
+      </div>
+      <div id="dash-no-client-prompt" class="bento-tile bento-accent" style="display:none">
+        <div style="text-align:center;padding:20px 10px">
+          <div style="font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:8px"><i class="ti ti-user" aria-hidden="true"></i> No client loaded</div>
+          <div style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Load an existing client or create a new one to see their clinical dashboard here.</div>
+          <button class="btn primary" onclick="nav('clients')">Go to My Clients</button>
+        </div>
       </div>
     </div>
     <div id="dash-client-section">
