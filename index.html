@@ -874,6 +874,10 @@ table th,
   <!-- DASHBOARD -->
   <div class="page active" id="page-dashboard">
     <div id="dash-alert"></div>
+    <div class="metrics-grid" style="grid-template-columns:repeat(2,1fr);margin-bottom:10px">
+      <div class="metric" style="cursor:pointer" onclick="nav('clients')"><div class="m-label">Clients</div><div class="m-value" id="d-total-clients">—</div><div class="m-sub">Total in your practice</div></div>
+      <div class="metric" style="cursor:pointer" onclick="nav('appointments')"><div class="m-label">Today</div><div class="m-value" id="d-today-appts">—</div><div class="m-sub" id="d-today-appts-sub">Appointments today</div></div>
+    </div>
     <div class="metrics-grid">
       <div class="metric"><div class="m-label">Goal kcal/day</div><div class="m-value" id="d-kcal">—</div><div class="m-sub" id="d-kcal-sub">Enter client profile</div></div>
       <div class="metric"><div class="m-label">BMI</div><div class="m-value" id="d-bmi">—</div><div class="m-sub" id="d-bmi-cat">—</div></div>
@@ -4681,7 +4685,7 @@ function getMacroSuggestionExplanation(conditions){
 
 const PAGE_INFO = {
   dashboard:{title:'Dashboard',sub:'Quick overview · Engine status · Today\'s plan'},
-  clients:{title:'My Clients',sub:'Saved clients in this browser'},
+  clients:{title:'My Clients',sub:'Saved clients on your account'},
   intake:{title:'Client Intake',sub:'ΠΡΩΤΗ ΑΞΙΟΛΟΓΗΣΗ — First consultation questionnaire + Clinical Notes'},
   profile:{title:'Client Profile',sub:'Demographics · Anthropometrics · Auto BMR/TDEE/BMI/IBW + Body Composition'},
   macros:{title:'Macro Targets',sub:'Calorie split · Carbs / Protein / Fat breakdown'},
@@ -7185,7 +7189,27 @@ function updateDashMetrics(){
   if(dashAlert) dashAlert.innerHTML=alerts.map(a=>`<div class="alert warn">⚠️ ${a}</div>`).join('');
 }
 
-function renderDashboard(){ updateDashMetrics(); buildOneDayPlan(); loadAppointments().then(renderDashboardAppointments); }
+function renderDashboard(){ updateDashMetrics(); updatePracticeOverview(); buildOneDayPlan(); loadAppointments().then(()=>{ renderDashboardAppointments(); updateTodayAppointmentCount(); }); }
+function updateTodayAppointmentCount(){
+  const count=appointmentsForDate(todayISO()).length;
+  setEl('d-today-appts', String(count));
+  setEl('d-today-appts-sub', count===1 ? '1 appointment today' : count+' appointments today');
+}
+async function updatePracticeOverview(){
+  updateTodayAppointmentCount();
+  try{
+    let count;
+    if(currentUser){
+      count = (S.clientListCache && S.clientListCache.length) ? S.clientListCache.length : (await fetchSupabaseClients()).length;
+    } else {
+      count = loadLocalClients().length;
+    }
+    setEl('d-total-clients', String(count));
+  }catch(e){
+    console.warn('[Nutrese dashboard] client count failed', e);
+    setEl('d-total-clients', String((S.clientListCache||[]).length || loadLocalClients().length || 0));
+  }
+}
 
 function addTracking(){
   S.tracking.unshift({date:v('t-date')||new Date().toLocaleDateString('el-GR'),weight:v('t-weight'),bf:v('t-bf'),muscle:v('t-muscle'),visceral:v('t-visceral'),notes:v('t-notes')});
