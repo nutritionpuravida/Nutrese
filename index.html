@@ -218,16 +218,7 @@ select option { background-color: var(--bg-surface); color: var(--text-primary);
 .form-grid.three { grid-template-columns: 1fr 1fr 1fr; }
 .form-field { display: flex; flex-direction: column; gap: 5px; }
 .form-field.full { grid-column: span 2; }
-.form-field label { font-size: 12px; color: var(--text-secondary); font-weight: 600; }
-#page-profile .form-field > label,
-#page-intake .form-field > label {
-  font-weight: 700 !important;
-  color: var(--text-primary) !important;
-}
-[data-theme="dark"] #page-profile .form-field > label,
-[data-theme="dark"] #page-intake .form-field > label {
-  color: var(--text-primary) !important;
-}
+.form-field label { font-size: 13px; color: var(--text-primary); font-weight: 700; }
 .form-field input, .form-field select, .form-field textarea {
   padding: 9px 11px; border: 1px solid var(--border-strong); border-radius: 6px;
   background: var(--bg-input); color: var(--text-primary);
@@ -4804,7 +4795,7 @@ function nav(id) {
   if(id==='labs') renderLabsTable();
   if(id==='fooddb') { loadRecipes({render:false, mergeLocal:true}); }
   if(id==='recipes') { renderRecipeDraft(); loadRecipes(); }
-  if(id==='appointments') { loadAppointments(true).then(renderAppointments); }
+  if(id==='appointments') { loadAppointments(true).then(()=>{renderAppointments(); if(!document.getElementById('appt-id')?.value) openAppointmentForm(todayISO());}); }
   if(id==='account') { setTimeout(()=>refreshAccountSubscriptionPage().catch(err=>console.error('[Nutrese account] deferred refresh failed', err)), 0); }
   if(id==='profile') { renderConditionRadios(); refreshConditionVisualState(); }
   if(id==='bodycomp') calcBodyComp();
