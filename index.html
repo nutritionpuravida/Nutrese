@@ -1619,20 +1619,14 @@ table th,
 
 <!-- BOTTOM NAV (mobile) -->
 <nav class="bottom-nav" id="bottom-nav">
-  <button class="bnav-item active" onclick="nav('dashboard');setBnav(this)"><span><i class="ti ti-chart-bar" aria-hidden="true"></i></span><span>Home</span></button>
-  <button class="bnav-item" onclick="nav('clients');setBnav(this)"><span><i class="ti ti-users" aria-hidden="true"></i></span><span>Clients</span></button>
-  <button class="bnav-item" onclick="nav('profile');setBnav(this)"><span><i class="ti ti-user" aria-hidden="true"></i></span><span>Profile</span></button>
-  <button class="bnav-item" onclick="nav('intake');setBnav(this)"><span><i class="ti ti-clipboard-list" aria-hidden="true"></i></span><span>Intake</span></button>
-  <button class="bnav-item" onclick="nav('macros');setBnav(this)"><span><i class="ti ti-target" aria-hidden="true"></i></span><span>Macros</span></button>
-  <button class="bnav-item" onclick="nav('exchanges');setBnav(this)"><span><i class="ti ti-refresh" aria-hidden="true"></i></span><span>Exchange</span></button>
-  <button class="bnav-item" onclick="nav('sevenday');setBnav(this)"><span><i class="ti ti-calendar" aria-hidden="true"></i></span><span>7-Day</span></button>
-  <button class="bnav-item" onclick="nav('report');setBnav(this)"><span><i class="ti ti-file-text" aria-hidden="true"></i></span><span>Report</span></button>
-  <button class="bnav-item" onclick="nav('labs');setBnav(this)"><span><i class="ti ti-droplet" aria-hidden="true"></i></span><span>Labs</span></button>
-  <button class="bnav-item" onclick="nav('fooddb');setBnav(this)"><span><i class="ti ti-search" aria-hidden="true"></i></span><span>Foods</span></button>
-  <button class="bnav-item" onclick="nav('recipes');setBnav(this)"><span>🍲</span><span>Recipes</span></button>
-  <button class="bnav-item" onclick="nav('appointments');setBnav(this)"><span><i class="ti ti-calendar" aria-hidden="true"></i></span><span>Calendar</span></button>
-  <button class="bnav-item" onclick="nav('account');setBnav(this)"><span><i class="ti ti-credit-card" aria-hidden="true"></i></span><span>Account</span></button>
-  <button class="bnav-item" onclick="openFeedbackModal();setBnav(this)"><span><i class="ti ti-message-circle" aria-hidden="true"></i></span><span>Feedback</span></button>
+  <button class="bnav-item active" onclick="nav('dashboard');setBnav(this)"><span><i class="ti ti-chart-bar" aria-hidden="true"></i></span><span class="i18n" data-en="Home" data-gr="Αρχική">Home</span></button>
+  <button class="bnav-item" onclick="nav('clients');setBnav(this)"><span><i class="ti ti-users" aria-hidden="true"></i></span><span class="i18n" data-en="Clients" data-gr="Πελάτες">Clients</span></button>
+  <button class="bnav-item" onclick="nav('profile');setBnav(this)"><span><i class="ti ti-user" aria-hidden="true"></i></span><span class="i18n" data-en="Profile" data-gr="Προφίλ">Profile</span></button>
+  <button class="bnav-item" onclick="nav('fooddb');setBnav(this)"><span><i class="ti ti-search" aria-hidden="true"></i></span><span class="i18n" data-en="Foods" data-gr="Τρόφιμα">Foods</span></button>
+  <button class="bnav-item" onclick="nav('recipes');setBnav(this)"><span>🍲</span><span class="i18n" data-en="Recipes" data-gr="Συνταγές">Recipes</span></button>
+  <button class="bnav-item" onclick="nav('appointments');setBnav(this)"><span><i class="ti ti-calendar" aria-hidden="true"></i></span><span class="i18n" data-en="Calendar" data-gr="Ημερολόγιο">Calendar</span></button>
+  <button class="bnav-item" onclick="nav('account');setBnav(this)"><span><i class="ti ti-credit-card" aria-hidden="true"></i></span><span class="i18n" data-en="Account" data-gr="Λογαριασμός">Account</span></button>
+  <button class="bnav-item" onclick="openFeedbackModal();setBnav(this)"><span><i class="ti ti-message-circle" aria-hidden="true"></i></span><span class="i18n" data-en="Feedback" data-gr="Σχόλια">Feedback</span></button>
 </nav>
 <script>
 const S = {
