@@ -6427,12 +6427,16 @@ function previewRebalanceWeek(){
 }
 function applyRebalanceWeek(){
   const pending=S._rebalancePending;
-  if(!pending){ document.getElementById('rebalance-preview').innerHTML=''; return; }
+  const el=document.getElementById('rebalance-preview');
+  if(!pending){ if(el) el.innerHTML=''; return; }
+  const isGr = window.appLang!=='en';
+  const dayCount=pending.days.length;
   pending.days.forEach(dayIndex=>{
     toggleWeekPlanExtra(dayIndex, 'snk2Extras', 'fruit', pending.addMode);
   });
   S._rebalancePending=null;
-  document.getElementById('rebalance-preview').innerHTML='';
+  if(el) el.innerHTML=`<div class="alert ok"><i class="ti ti-circle-check" aria-hidden="true"></i> ${isGr?`Εφαρμόστηκε — ενημερώθηκαν ${dayCount} ημέρα${dayCount===1?'':'ες'}. Το πλάνο ανανεώθηκε.`:`Applied — updated ${dayCount} day${dayCount===1?'':'s'}. Plan refreshed.`}</div>`;
+  setTimeout(()=>{ if(el && el.innerHTML.includes('ti-circle-check')) el.innerHTML=''; }, 4000);
 }
 function renderPlanQualitySummary(){
   const el=document.getElementById('plan-quality-summary'); if(!el) return;
