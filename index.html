@@ -206,6 +206,9 @@ i.ti-circle-x { color: var(--red-text); }
 .bento-tile-head { font-size: 13px; font-weight: 600; color: var(--text-secondary); display: flex; align-items: center; gap: 6px; margin-bottom: 12px; }
 .bento-tile-head .card-action { margin-left: auto; font-weight: 500; }
 .metric { background: var(--bg-page); border: none; border-radius: var(--radius-lg); padding: 12px 14px; }
+#page-dashboard .metrics-grid .metric { background: var(--bg-surface); border-radius: 16px; padding: 16px 18px; box-shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04); }
+#page-dashboard .metrics-grid { margin-top: 4px; }
+#page-dashboard .dash-section-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; margin: 22px 0 10px; padding-left: 2px; }
 .metric .m-label { font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
 .metric .m-value { font-size: 24px; font-weight: 700; color: var(--text-primary); line-height: 1; }
 .metric .m-sub { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
@@ -934,16 +937,17 @@ table th,
       </div>
     </div>
     <div id="dash-client-section">
+    <div class="dash-section-label"><span class="i18n" data-en="Client Overview" data-gr="Επισκόπηση Πελάτη">Client Overview</span></div>
     <div class="metrics-grid">
-      <div class="metric"><div class="m-label">Goal kcal/day</div><div class="m-value" id="d-kcal">—</div><div class="m-sub" id="d-kcal-sub">Enter client profile</div></div>
+      <div class="metric"><div class="m-label"><span class="i18n" data-en="Goal kcal/day" data-gr="Στόχος kcal/ημέρα">Goal kcal/day</span></div><div class="m-value" id="d-kcal">—</div><div class="m-sub" id="d-kcal-sub"><span class="i18n" data-en="Enter client profile" data-gr="Συμπληρώστε το προφίλ">Enter client profile</span></div></div>
       <div class="metric"><div class="m-label">BMI</div><div class="m-value" id="d-bmi">—</div><div class="m-sub" id="d-bmi-cat">—</div></div>
-      <div class="metric"><div class="m-label">Body Fat %</div><div class="m-value" id="d-bf">—</div><div class="m-sub">Enter in Body Comp</div></div>
-      <div class="metric"><div class="m-label">Condition</div><div class="m-value ok" id="d-cond" style="font-size:15px;padding-top:5px">General</div><div class="m-sub" id="d-goal-sub">Maintenance</div></div>
+      <div class="metric"><div class="m-label"><span class="i18n" data-en="Body Fat %" data-gr="Ποσοστό Λίπους %">Body Fat %</span></div><div class="m-value" id="d-bf">—</div><div class="m-sub"><span class="i18n" data-en="Enter in Body Comp" data-gr="Εισάγετε στη Σύσταση Σώματος">Enter in Body Comp</span></div></div>
+      <div class="metric"><div class="m-label"><span class="i18n" data-en="Condition" data-gr="Πάθηση">Condition</span></div><div class="m-value ok" id="d-cond" style="font-size:15px;padding-top:5px"><span class="i18n" data-en="General" data-gr="Γενικό">General</span></div><div class="m-sub" id="d-goal-sub"><span class="i18n" data-en="Maintenance" data-gr="Συντήρηση">Maintenance</span></div></div>
     </div>
     <div class="two-col">
       <div class="card">
         <div class="card-header"><span class="card-title"><i class="ti ti-shield-check" aria-hidden="true"></i> <span class="i18n" data-en="Safety checks" data-gr="Έλεγχοι ασφαλείας">Safety checks</span></span></div>
-        <div class="card-body" id="dash-engine-checks"><div style="color:var(--gray-400);font-size:13px">Fill client profile to run checks</div></div>
+        <div class="card-body" id="dash-engine-checks"><div style="color:var(--gray-400);font-size:13px"><span class="i18n" data-en="Fill client profile to run checks" data-gr="Συμπληρώστε το προφίλ πελάτη για έλεγχο">Fill client profile to run checks</span></div></div>
       </div>
       <div class="card">
         <div class="card-header"><span class="card-title"><i class="ti ti-target" aria-hidden="true"></i> <span class="i18n" data-en="Macro distribution" data-gr="Κατανομή μακροθρεπτικών">Macro distribution</span></span><span class="card-action" onclick="nav('macros')"><span class="i18n" data-en="Edit →" data-gr="Επεξεργασία →">Edit →</span></span></div>
@@ -952,7 +956,7 @@ table th,
     </div>
       <div class="card">
         <div class="card-header"><span class="card-title"><i class="ti ti-sun" aria-hidden="true"></i> <span class="i18n" data-en="Today's meal plan" data-gr="Σημερινό πλάνο γευμάτων">Today's meal plan</span> — <span id="dash-day">Monday</span></span><span class="card-action" onclick="nav('sevenday')"><span class="i18n" data-en="Weekly plan →" data-gr="Εβδομαδιαίο πλάνο →">Weekly plan →</span></span></div>
-      <div class="card-body" id="dash-meals"><div style="color:var(--gray-400);font-size:13px">Fill Client Profile and Exchange System to generate plan</div></div>
+      <div class="card-body" id="dash-meals"><div style="color:var(--gray-400);font-size:13px"><span class="i18n" data-en="Fill Client Profile and Exchange System to generate plan" data-gr="Συμπληρώστε το Προφίλ Πελάτη και το Σύστημα Ισοδυνάμων για να δημιουργηθεί πλάνο">Fill Client Profile and Exchange System to generate plan</span></div></div>
     </div>
     </div>
   </div>
@@ -7422,16 +7426,18 @@ function updateDashMetrics(){
   setEl('d-kcal',kcal?Math.round(kcal).toLocaleString():'—');
   const kcalEl=document.getElementById('d-kcal');
   if(kcalEl) kcalEl.className='m-value '+(kcal&&kcal<1200?'err':kcal?'ok':'');
-  setEl('d-kcal-sub',kcal?'kcal/day (TDEE + adjustment)':'Enter client profile');
+  const isGrDash = window.appLang==='gr';
+  setEl('d-kcal-sub',kcal?(isGrDash?'kcal/ημέρα (TDEE + προσαρμογή)':'kcal/day (TDEE + adjustment)'):(isGrDash?'Συμπληρώστε το προφίλ':'Enter client profile'));
   setEl('d-bmi',S.bmi?S.bmi.toFixed(1):'—');
   const bmiEl=document.getElementById('d-bmi');
   if(bmiEl&&S.bmi) bmiEl.className='m-value '+(S.bmi<18.5||S.bmi>=30?'err':S.bmi<25?'ok':'warn');
   setEl('d-bmi-cat',S.bmiCat||'—');
   const condList=(S.conditions&&S.conditions.length)?S.conditions:['General'];
-  setEl('d-cond', condList.length>1 ? condList.length+' conditions' : conditionLabel(condList[0]));
+  setEl('d-cond', condList.length>1 ? condList.length+(isGrDash?' παθήσεις':' conditions') : conditionLabel(condList[0]));
   const dCondEl=document.getElementById('d-cond');
   if(dCondEl) dCondEl.title=condList.map(conditionLabel).join(', ');
-  setEl('d-goal-sub',S.goal);
+  const goalLabelMap=(typeof DROPDOWN_TRANSLATIONS!=='undefined' && DROPDOWN_TRANSLATIONS['p-goal']) || {};
+  setEl('d-goal-sub', goalLabelMap[S.goal] ? (isGrDash?goalLabelMap[S.goal].gr:goalLabelMap[S.goal].en) : (S.goal||''));
   const missingProfile=missingCriticalProfileFields();
   const incomplete=missingProfile.length>0;
   const macroOk=Math.abs(S.carbPct+S.protPct+S.fatPct-100)<=1;
