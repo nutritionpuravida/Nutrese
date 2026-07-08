@@ -91,7 +91,6 @@ select option { background-color: var(--bg-surface); color: var(--text-primary);
 .nav-item.active { background: var(--bg-active); color: var(--text-active); font-weight: 700; }
 .nav-badge { margin-left: auto; font-size: 10px; padding: 2px 6px; border-radius: 10px; background: var(--red-bg); color: var(--red-badge); font-weight: 700; }
 .nav-badge.ok { background: var(--green-bg); color: var(--green-badge); }
-.sidebar-footer { margin-top: auto; padding: 10px 13px; border-top: 1px solid var(--border); font-size: 11px; color: var(--text-muted); text-align: center; }
 .nav-group-card { background: var(--bg-page); border-radius: var(--radius); padding: 4px; margin: 0 5px 10px; }
 .nav-group-card .nav-group-label { padding: 7px 9px 5px; margin: 0; }
 .nav-group-card .nav-item { margin: 1px 0; width: 100%; }
@@ -683,7 +682,6 @@ html[data-theme="dark"] .week-summary-table td:last-child {
   :root { --nav-w: 260px; }
   .sidebar { position: fixed; top: 0; left: 0; bottom: 0; transform: translateX(-100%); transition: transform .25s; box-shadow: 4px 0 20px rgba(0,0,0,.2); padding-bottom: env(safe-area-inset-bottom, 12px); }
   .sidebar.open { transform: translateX(0); }
-  .sidebar-footer { display: none; }
   .client-tabbar { padding: 0 10px; }
   .client-tab { padding: 10px 10px; font-size: 12px; gap: 4px; }
   .hamburger { display: flex; }
@@ -871,11 +869,8 @@ table th,
     <div class="nav-group-label"><span class="i18n" data-en="Settings" data-gr="Ρυθμίσεις">Settings</span></div>
     <button class="nav-item" onclick="nav('account')"><i class="ti ti-credit-card" aria-hidden="true"></i> <span class="i18n" data-en="Account / Subscription" data-gr="Λογαριασμός / Συνδρομή">Account / Subscription</span></button>
     <button class="nav-item" onclick="openFeedbackModal()"><i class="ti ti-message-circle" aria-hidden="true"></i> <span class="i18n" data-en="Feedback" data-gr="Σχόλια">Feedback</span></button>
-  </div>
-  <div class="nav-group-card" style="margin-top:auto">
     <button class="nav-item" onclick="handleSignOut()"><i class="ti ti-logout" aria-hidden="true"></i> <span class="i18n" data-en="Log out" data-gr="Αποσύνδεση">Log out</span></button>
   </div>
-  <div class="sidebar-footer"><span class="i18n" data-en="Nutrese v1 · Your clinical nutrition tool" data-gr="Nutrese v1 · Το κλινικό σας εργαλείο διατροφής">Nutrese v1 · Your clinical nutrition tool</span></div>
 </nav>
 
 <div class="main">
@@ -1625,7 +1620,7 @@ table th,
   <button class="bnav-item" onclick="nav('clients');setBnav(this)"><span><i class="ti ti-users" aria-hidden="true"></i></span><span class="i18n" data-en="Clients" data-gr="Πελάτες">Clients</span></button>
   <button class="bnav-item" onclick="nav('profile');setBnav(this)"><span><i class="ti ti-user" aria-hidden="true"></i></span><span class="i18n" data-en="Profile" data-gr="Προφίλ">Profile</span></button>
   <button class="bnav-item" onclick="nav('fooddb');setBnav(this)"><span><i class="ti ti-search" aria-hidden="true"></i></span><span class="i18n" data-en="Foods" data-gr="Τρόφιμα">Foods</span></button>
-  <button class="bnav-item" onclick="nav('recipes');setBnav(this)"><span>🍲</span><span class="i18n" data-en="Recipes" data-gr="Συνταγές">Recipes</span></button>
+  <button class="bnav-item" onclick="nav('recipes');setBnav(this)"><span><i class="ti ti-chef-hat" aria-hidden="true"></i></span><span class="i18n" data-en="Recipes" data-gr="Συνταγές">Recipes</span></button>
   <button class="bnav-item" onclick="nav('appointments');setBnav(this)"><span><i class="ti ti-calendar" aria-hidden="true"></i></span><span class="i18n" data-en="Calendar" data-gr="Ημερολόγιο">Calendar</span></button>
   <button class="bnav-item" onclick="nav('account');setBnav(this)"><span><i class="ti ti-credit-card" aria-hidden="true"></i></span><span class="i18n" data-en="Account" data-gr="Λογαριασμός">Account</span></button>
   <button class="bnav-item" onclick="openFeedbackModal();setBnav(this)"><span><i class="ti ti-message-circle" aria-hidden="true"></i></span><span class="i18n" data-en="Feedback" data-gr="Σχόλια">Feedback</span></button>
