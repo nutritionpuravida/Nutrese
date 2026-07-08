@@ -1299,6 +1299,8 @@ table th,
     <div class="card">
       <div class="card-header"><span class="card-title"><i class="ti ti-calendar" aria-hidden="true"></i> 7-Day Meal Plan</span></div>
       <div class="card-body">
+        <div id="plan-quality-summary" style="margin-bottom:16px"></div>
+        <div id="rebalance-preview" style="margin-bottom:16px"></div>
         <div id="sevenday-body"></div>
       </div>
     </div>
@@ -6371,6 +6373,112 @@ function calcDayTotalsForPlanDisplay(dayPlan, lang='GR', dayIndex=0){
   return calcDayTotalsForPlan(dayPlan, lang, dayIndex);
 }
 
+function previewRebalanceWeek(){
+  const el=document.getElementById('rebalance-preview'); if(!el) return;
+  const isGr = window.appLang!=='en';
+  if(!S.weekPlans || !S.goalKcal){ el.innerHTML=`<div class="alert warn">${isGr?'Δημιουργήστε πρώτα ένα πλάνο 7 ημερών.':'Generate a 7-day plan first.'}</div>`; return; }
+  const dayTotals=S.weekPlans.map((day,i)=>calcDayTotalsForPlanDisplay(day, S.mealLanguage||'GR', i).totalKcal);
+  const weekAvg=Math.round(dayTotals.reduce((a,b)=>a+b,0)/dayTotals.length);
+  const target=Math.round(S.goalKcal);
+  const gap=weekAvg-target;
+  const tolerance=50;
+  if(Math.abs(gap)<=tolerance){
+    el.innerHTML=`<div class="alert ok"><i class="ti ti-circle-check" aria-hidden="true"></i> ${isGr?`Η εβδομάδα είναι ήδη καλά ισορροπημένη (μέσος όρος ${weekAvg} kcal/ημέρα έναντι στόχου ${target}). Δεν χρειάζονται αλλαγές.`:`Your week is already well balanced (averaging ${weekAvg} kcal/day vs a ${target} target). No changes needed.`}</div>`;
+    return;
+  }
+  const fruitKcal=(S.exMeta?.fruit?.kcal)||60;
+  const servingsNeeded=Math.min(7, Math.max(1, Math.round(Math.abs(gap)/fruitKcal)));
+  const addMode=gap<0; // weekly average below target -> add fruit; above target -> remove fruit
+  // Pick the days with fewest existing snk2 extras first, so we touch the lightest-edited days
+  const candidateDays=S.weekPlans.map((day,i)=>({i, count:(day.snk2Extras||day.snack2Extras||[]).length}))
+    .sort((a,b)=>addMode ? a.count-b.count : b.count-a.count);
+  const targetDays=[];
+  for(const c of candidateDays){
+    const extras=S.weekPlans[c.i].snk2Extras||S.weekPlans[c.i].snack2Extras||[];
+    const hasFruit=extras.includes('fruit');
+    if(addMode && !hasFruit) targetDays.push(c.i);
+    if(!addMode && hasFruit) targetDays.push(c.i);
+    if(targetDays.length>=servingsNeeded) break;
+  }
+  if(!targetDays.length){
+    el.innerHTML=`<div class="alert warn">${isGr?'Δεν βρέθηκε απλή προσαρμογή. Χρειάζεται χειροκίνητη επανεξέταση των γευμάτων.':'No simple adjustment found — this needs manual review of the meals.'}</div>`;
+    return;
+  }
+  S._rebalancePending={days:targetDays, addMode};
+  const dayNames=targetDays.map(i=>weekDayLabel(S.weekPlans[i], i, S.mealLanguage||'GR')).join(', ');
+  const actionText=addMode
+    ? (isGr?`Προσθήκη 1 μερίδας φρούτου στο Σνακ 2`:`Add 1 fruit serving to Snack 2`)
+    : (isGr?`Αφαίρεση 1 μερίδας φρούτου από το Σνακ 2`:`Remove 1 fruit serving from Snack 2`);
+  el.innerHTML=`<div class="card" style="margin:0;border:1px solid var(--teal-300, var(--border))">
+    <div class="card-body" style="padding:14px 16px">
+      <div style="font-weight:700;font-size:14px;margin-bottom:6px"><i class="ti ti-sparkles" aria-hidden="true"></i> ${isGr?'Προεπισκόπηση Επαναϊσορρόπησης':'Rebalance Preview'}</div>
+      <div style="font-size:13px;color:var(--text-secondary);margin-bottom:10px">
+        ${isGr
+          ? `Η εβδομάδα σας έχει μέσο όρο ${weekAvg} kcal/ημέρα έναντι στόχου ${target} kcal (${gap>0?'+':''}${gap} kcal). Προτεινόμενη προσαρμογή: ${actionText} στις ημέρες: ${dayNames}.`
+          : `Your week averages ${weekAvg} kcal/day vs your ${target} kcal target (${gap>0?'+':''}${gap} kcal). Suggested adjustment: ${actionText} on: ${dayNames}.`}
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn primary" onclick="applyRebalanceWeek()"><i class="ti ti-circle-check" aria-hidden="true"></i> ${isGr?'Εφαρμογή':'Apply'}</button>
+        <button class="btn" onclick="document.getElementById('rebalance-preview').innerHTML=''">${isGr?'Ακύρωση':'Cancel'}</button>
+      </div>
+    </div>
+  </div>`;
+}
+function applyRebalanceWeek(){
+  const pending=S._rebalancePending;
+  if(!pending){ document.getElementById('rebalance-preview').innerHTML=''; return; }
+  pending.days.forEach(dayIndex=>{
+    toggleWeekPlanExtra(dayIndex, 'snk2Extras', 'fruit', pending.addMode);
+  });
+  S._rebalancePending=null;
+  document.getElementById('rebalance-preview').innerHTML='';
+}
+function renderPlanQualitySummary(){
+  const el=document.getElementById('plan-quality-summary'); if(!el) return;
+  if(!S.ex || !S.exMeta){ el.innerHTML=''; return; }
+  const isGr = window.appLang!=='en';
+  const ex=S.ex, m=S.exMeta;
+  const totalKcal = ex.fruit*m.fruit.kcal + ex.veg*m.veg.kcal + ex.dairy*m.dairy.kcal + ex.starch*m.starch.kcal + ex.protein*m.protein.kcal + ex.fat*m.fat.kcal;
+  const totalCHO  = ex.fruit*m.fruit.cho + ex.veg*m.veg.cho + ex.dairy*m.dairy.cho + ex.starch*m.starch.cho;
+  const totalPRO  = ex.veg*m.veg.pro + ex.dairy*m.dairy.pro + ex.starch*m.starch.pro + ex.protein*m.protein.pro;
+  const totalFAT  = ex.dairy*m.dairy.fat + ex.starch*m.starch.fat + ex.protein*m.protein.fat + ex.fat*m.fat.fat;
+  const goal=S.goalKcal||0;
+  const metrics=[
+    [isGr?'Θερμίδες':'Calories', goal, totalKcal, 50],
+    [isGr?'Υδατάνθρακες':'Carbs', S.carbG, totalCHO, 10],
+    [isGr?'Πρωτεΐνη':'Protein', S.protG, totalPRO, 10],
+    [isGr?'Λίπος':'Fat', S.fatG, totalFAT, 5],
+  ];
+  const scored=metrics.map(([label,tgt,plan,tol])=>{
+    const diff=Math.abs(plan-tgt);
+    const level = diff<=tol ? 'ok' : diff<=tol*2 ? 'warn' : 'err';
+    return {label,level};
+  });
+  const anyErr=scored.some(s=>s.level==='err');
+  const anyWarn=scored.some(s=>s.level==='warn');
+  const overall = anyErr ? 'err' : anyWarn ? 'warn' : 'ok';
+  const overallText = {
+    ok: isGr?'Ισχυρό αρχικό πλάνο':'Strong starting plan',
+    warn: isGr?'Καλό πλάνο — μικρές προσαρμογές προτείνονται':'Good plan — minor adjustments suggested',
+    err: isGr?'Χρειάζεται επανεξέταση πριν την κοινοποίηση':'Needs review before sharing with client',
+  }[overall];
+  const iconFor = level => level==='ok' ? '<i class="ti ti-circle-check" aria-hidden="true"></i>' : level==='warn' ? '<i class="ti ti-alert-triangle" aria-hidden="true"></i>' : '<i class="ti ti-circle-x" aria-hidden="true"></i>';
+  const textFor = (label,level) => {
+    if(level==='ok') return isGr?`${label}: εντός στόχου`:`${label}: On target`;
+    if(level==='warn') return isGr?`${label}: ελαφρώς εκτός στόχου`:`${label}: Slightly off target`;
+    return isGr?`${label}: σημαντική απόκλιση`:`${label}: Significantly off target`;
+  };
+  el.innerHTML=`<div class="card" style="margin:0;border:1px solid var(--border)">
+    <div class="card-body" style="padding:14px 16px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;font-weight:700;font-size:14px">
+        ${iconFor(overall)} <span>${isGr?'Ποιότητα Πλάνου':'Plan Quality'}: ${overallText}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px 16px;font-size:13px">
+        ${scored.map(s=>`<div style="display:flex;align-items:center;gap:6px">${iconFor(s.level)} <span>${textFor(s.label,s.level)}</span></div>`).join('')}
+      </div>
+    </div>
+  </div>`;
+}
 function buildSevenDay(){
   updateMealLanguageButtons();
   ensureWeekPlans();
@@ -6391,7 +6499,8 @@ function buildSevenDay(){
   let html=`<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:12px">
     <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
       <button class="btn primary" onclick="generateAiSevenDayPlan()">✨ Generate AI Plan</button>
-      <button class="btn primary" onclick="saveWeeklyPlan()"><i class="ti ti-device-floppy" aria-hidden="true"></i> Αποθήκευση Πλάνου</button>
+      <button class="btn primary" onclick="saveWeeklyPlan()"><i class="ti ti-device-floppy" aria-hidden="true"></i> ${lang==='EN'?'Save Plan':'Αποθήκευση Πλάνου'}</button>
+      <button class="btn" onclick="previewRebalanceWeek()">✨ ${lang==='EN'?'Rebalance Week':'Επαναϊσορρόπηση Εβδομάδας'}</button>
       <button class="btn" onclick="setSevenDayView('${isWeek?'day':'week'}')">${isWeek?(lang==='EN'?'Day view':'Προβολή ημέρας'):(lang==='EN'?'Week view':'Προβολή εβδομάδας')}</button>
       <span id="weekly-plan-save-status" style="font-size:13px;font-weight:800;color:var(--teal-700)"></span>
     </div>
@@ -6431,6 +6540,7 @@ function buildSevenDay(){
   const sevenBody=document.getElementById('sevenday-body');
   if(sevenBody) sevenBody.textContent='';
   setEl('sevenday-body', html);
+  renderPlanQualitySummary();
   updateMealLanguageButtons();
 }
 
