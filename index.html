@@ -214,6 +214,8 @@ i.ti-circle-x { color: var(--red-text); }
 #p-condition-chevron { transition: transform .15s ease; display: inline-block; }
 #page-bodycomp .metrics-grid .metric,
 #page-bodycomp .form-grid .metric { background: var(--bg-surface); border-radius: 16px; padding: 16px 18px; box-shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04); }
+#page-recipes .metric,
+#page-sevenday .metric { background: var(--bg-surface); border-radius: 12px; padding: 10px 14px; box-shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04); }
 @media (min-width: 901px) {
   #page-profile .metrics-grid { grid-template-columns: repeat(5, 1fr); }
 }
@@ -795,19 +797,19 @@ table th,
     </div>
     <div id="auth-message"></div>
     <div class="auth-field" id="auth-email-field">
-      <label>Email</label>
+      <label><span class="i18n" data-en="Email" data-gr="Email">Email</span></label>
       <input type="email" id="auth-email" placeholder="you@example.com" autocomplete="email">
     </div>
     <div class="auth-field" id="auth-password-field">
-      <label>Password</label>
+      <label><span class="i18n" data-en="Password" data-gr="Κωδικός">Password</span></label>
       <input type="password" id="auth-password" placeholder="••••••••" autocomplete="current-password">
     </div>
-    <button class="auth-submit" id="auth-submit-btn" onclick="handleAuthSubmit()">Sign In</button>
-    <button type="button" id="forgot-password-btn" onclick="sendPasswordResetEmail()" style="display:block;margin:10px auto 0;border:0;background:none;color:var(--text-link);font-size:12px;font-weight:700;cursor:pointer">Forgot password?</button>
-    <button class="auth-submit secondary" id="resend-confirmation-btn" onclick="resendConfirmationEmail()" style="display:none;margin-top:8px">Resend confirmation email</button>
+    <button class="auth-submit" id="auth-submit-btn" onclick="handleAuthSubmit()"><span class="i18n" data-en="Sign In" data-gr="Σύνδεση">Sign In</span></button>
+    <button type="button" id="forgot-password-btn" onclick="sendPasswordResetEmail()" style="display:block;margin:10px auto 0;border:0;background:none;color:var(--text-link);font-size:12px;font-weight:700;cursor:pointer"><span class="i18n" data-en="Forgot password?" data-gr="Ξεχάσατε τον κωδικό;">Forgot password?</span></button>
+    <button class="auth-submit secondary" id="resend-confirmation-btn" onclick="resendConfirmationEmail()" style="display:none;margin-top:8px"><span class="i18n" data-en="Resend confirmation email" data-gr="Επαναποστολή email επιβεβαίωσης">Resend confirmation email</span></button>
     <div id="password-reset-panel" style="display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
       <div class="auth-field">
-        <label>New password</label>
+        <label><span class="i18n" data-en="New password" data-gr="Νέος κωδικός">New password</span></label>
         <input type="password" id="reset-new-password" placeholder="New password" autocomplete="new-password">
       </div>
       <div class="auth-field">
@@ -975,10 +977,10 @@ table th,
   <!-- MY CLIENTS -->
   <div class="page" id="page-clients">
     <div class="card">
-      <div class="card-header"><span class="card-title"><i class="ti ti-users" aria-hidden="true"></i> <span class="i18n" data-en="My Clients" data-gr="Οι Πελάτες μου">My Clients</span></span><span class="card-action" onclick="newClient()">+ <span class="i18n" data-en="New client" data-gr="Νέος πελάτης">New client</span></span></div>
+      <div class="card-header"><span class="card-title"><i class="ti ti-users" aria-hidden="true"></i> <span class="i18n" data-en="My Clients" data-gr="Οι Πελάτες μου">My Clients</span></span><button class="btn primary" style="padding:6px 12px;font-size:12px;margin-left:auto" onclick="newClient()"><i class="ti ti-plus" aria-hidden="true"></i> <span class="i18n" data-en="New client" data-gr="Νέος πελάτης">New client</span></button></div>
       <div class="card-body">
         <div class="alert info" style="font-size:12px;padding:8px 10px;margin-bottom:8px"><i class="ti ti-info-circle" aria-hidden="true"></i> <span class="i18n" data-en="Clients save automatically to your account. &quot;Open&quot; restores a client's full data anytime." data-gr="Οι πελάτες αποθηκεύονται αυτόματα στον λογαριασμό σας. Το «Άνοιγμα» επαναφέρει πλήρως τα δεδομένα ενός πελάτη ανά πάσα στιγμή.">Clients save automatically to your account. "Open" restores a client's full data anytime.</span></div>
-        <div class="alert warn" id="local-backup-warning" style="display:none;font-size:12px;padding:8px 10px;margin-bottom:8px"><span><i class="ti ti-alert-triangle" aria-hidden="true"></i> Some clients are only saved in this browser. <strong>Download a backup</strong> before switching devices or clearing browser data.</span></div>
+        <div class="alert warn" id="local-backup-warning" style="display:none;font-size:12px;padding:8px 10px;margin-bottom:8px"><span><i class="ti ti-alert-triangle" aria-hidden="true"></i> <span class="i18n" data-en="Some clients are only saved in this browser." data-gr="Ορισμένοι πελάτες είναι αποθηκευμένοι μόνο σε αυτόν τον browser."><strong>Some clients are only saved in this browser.</strong></span> <span class="i18n" data-en="Download a backup before switching devices or clearing browser data." data-gr="Κατεβάστε αντίγραφο ασφαλείας πριν αλλάξετε συσκευή ή διαγράψετε δεδομένα browser.">Download a backup before switching devices or clearing browser data.</span></span></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
           <button class="btn" style="padding:6px 10px;font-size:12px" onclick="exportAllClients()"><i class="ti ti-device-floppy" aria-hidden="true"></i> <span class="i18n" data-en="Download Backup" data-gr="Λήψη Αντιγράφου">Download Backup</span></button>
           <label class="btn" style="cursor:pointer;margin:0;padding:6px 10px;font-size:12px"><i class="ti ti-file-import" aria-hidden="true"></i> <span class="i18n" data-en="Restore from Backup" data-gr="Επαναφορά από Αντίγραφο">Restore from Backup</span><input type="file" accept=".json" onchange="importClientsFile(this)" style="display:none"></label>
@@ -1205,22 +1207,14 @@ table th,
         <div class="alert info"><i class="ti ti-info-circle" aria-hidden="true"></i> <span class="i18n" data-en="Enter Tanita or other device values. Fat mass auto-calculates from Weight × Body Fat % if left blank." data-gr="Εισάγετε τιμές από Tanita ή άλλη συσκευή. Η μάζα λίπους υπολογίζεται αυτόματα από Βάρος × Ποσοστό Λίπους % αν αφεθεί κενό.">Enter Tanita or other device values. Fat mass auto-calculates from Weight × Body Fat % if left blank.</span></div>
         <div class="form-grid three">
           <div class="form-field"><label><i class="ti ti-scale" aria-hidden="true"></i> <span class="i18n" data-en="Body Fat %" data-gr="Ποσοστό Λίπους %">Body Fat %</span></label><input type="number" id="bc-bf" class="i18n-ph" data-en-ph="Men: 10–20%, Women: 18–28%" data-gr-ph="Άνδρες: 10–20%, Γυναίκες: 18–28%" placeholder="Men: 10–20%, Women: 18–28%" step="0.1" oninput="calcBodyComp()"><div class="field-note" id="bc-bf-note"></div></div>
+          <div class="form-field"><label><i class="ti ti-scale" aria-hidden="true"></i> <span class="i18n" data-en="Fat Mass kg (auto)" data-gr="Μάζα Λίπους κιλά (αυτόματο)">Fat Mass kg (auto)</span></label><input type="number" id="bc-fatmass" class="i18n-ph" data-en-ph="Auto = Weight × BF%" data-gr-ph="Αυτόματο = Βάρος × ΠΛ%" placeholder="Auto = Weight × BF%" step="0.1" inputmode="decimal" oninput="onBodyCompManualInput('fatmass')" style="background:var(--bg-page)" title="Auto-calculated — type a device value here to override"></div>
+          <div class="form-field"><label><i class="ti ti-activity" aria-hidden="true"></i> <span class="i18n" data-en="Fat-Free Mass kg (auto)" data-gr="Άλιπη Μάζα κιλά (αυτόματο)">Fat-Free Mass kg (auto)</span></label><input type="number" id="bc-ffm" class="i18n-ph" data-en-ph="Auto = Weight − Fat mass" data-gr-ph="Αυτόματο = Βάρος − Μάζα λίπους" placeholder="Auto = Weight − Fat mass" step="0.1" inputmode="decimal" oninput="onBodyCompManualInput('ffm')" style="background:var(--bg-page)" title="Auto-calculated — type a device value here to override"></div>
           <div class="form-field"><label><i class="ti ti-droplet" aria-hidden="true"></i> <span class="i18n" data-en="Body Water %" data-gr="Ποσοστό Νερού %">Body Water %</span></label><input type="number" id="bc-water" class="i18n-ph" data-en-ph="Men: 50–65%, Women: 45–60%" data-gr-ph="Άνδρες: 50–65%, Γυναίκες: 45–60%" placeholder="Men: 50–65%, Women: 45–60%" step="0.1" oninput="calcBodyComp()"><div class="field-note" id="bc-water-note"></div></div>
-          <div class="form-field"><label><i class="ti ti-scale" aria-hidden="true"></i> <span class="i18n" data-en="Fat Mass kg (auto)" data-gr="Μάζα Λίπους κιλά (αυτόματο)">Fat Mass kg (auto)</span></label><input type="number" id="bc-fatmass" class="i18n-ph" data-en-ph="Auto = Weight × BF%" data-gr-ph="Αυτόματο = Βάρος × ΠΛ%" placeholder="Auto = Weight × BF%" step="0.1" inputmode="decimal" oninput="onBodyCompManualInput('fatmass')"></div>
-          <div class="form-field"><label><i class="ti ti-activity" aria-hidden="true"></i> <span class="i18n" data-en="Fat-Free Mass kg (auto)" data-gr="Άλιπη Μάζα κιλά (αυτόματο)">Fat-Free Mass kg (auto)</span></label><input type="number" id="bc-ffm" class="i18n-ph" data-en-ph="Auto = Weight − Fat mass" data-gr-ph="Αυτόματο = Βάρος − Μάζα λίπους" placeholder="Auto = Weight − Fat mass" step="0.1" inputmode="decimal" oninput="onBodyCompManualInput('ffm')"></div>
-        </div>
-        <div id="bc-advanced-summary" onclick="toggleBodyCompAdvanced()" style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 14px;border:1px solid var(--border-strong);border-radius:8px;background:var(--bg-input);cursor:pointer;margin-top:6px">
-          <span style="font-size:12.5px;font-weight:600;color:var(--text-secondary)"><i class="ti ti-device-tablet" aria-hidden="true"></i> <span class="i18n" data-en="Advanced device measurements (Tanita/InBody)" data-gr="Προηγμένες μετρήσεις συσκευής (Tanita/InBody)">Advanced device measurements (Tanita/InBody)</span></span>
-          <span style="font-size:12px;color:var(--teal-600);font-weight:600;white-space:nowrap"><span class="i18n" data-en="Show" data-gr="Εμφάνιση">Show</span> <i class="ti ti-chevron-down" aria-hidden="true" id="bc-advanced-chevron" style="transition:transform .15s ease;display:inline-block"></i></span>
-        </div>
-        <div id="bc-advanced-fields" style="display:none;margin-top:10px">
-        <div class="form-grid three">
           <div class="form-field"><label><i class="ti ti-clock" aria-hidden="true"></i> <span class="i18n" data-en="Metabolic Age" data-gr="Μεταβολική Ηλικία">Metabolic Age</span></label><input type="number" id="bc-metage" placeholder="—" oninput="calcBodyComp()"><div class="field-note" id="bc-metage-note"></div></div>
           <div class="form-field"><label><i class="ti ti-barbell" aria-hidden="true"></i> <span class="i18n" data-en="Muscle Mass (kg)" data-gr="Μυϊκή Μάζα (κιλά)">Muscle Mass (kg)</span></label><input type="number" id="bc-muscle" class="i18n-ph" data-en-ph="Manual Tanita/device value" data-gr-ph="Χειροκίνητη τιμή Tanita/συσκευής" placeholder="Manual Tanita/device value" step="0.1" inputmode="decimal" oninput="onBodyCompManualInput('muscle')"></div>
           <div class="form-field"><label><i class="ti ti-flame" aria-hidden="true"></i> <span class="i18n" data-en="Visceral Fat Score" data-gr="Δείκτης Σπλαχνικού Λίπους">Visceral Fat Score</span></label><input type="number" id="bc-visceral" class="i18n-ph" data-en-ph="1–12 healthy, 13+ excess" data-gr-ph="1–12 υγιές, 13+ αυξημένο" placeholder="1–12 healthy, 13+ excess" oninput="calcBodyComp()"><div class="field-note" id="bc-visceral-note"></div></div>
           <div class="form-field"><label><i class="ti ti-run" aria-hidden="true"></i> <span class="i18n" data-en="Physique Rating (1–9)" data-gr="Βαθμολογία Σωματότυπου (1–9)">Physique Rating (1–9)</span></label><input type="number" id="bc-physique" class="i18n-ph" data-en-ph="Tanita 1–9" data-gr-ph="Tanita 1–9" placeholder="Tanita 1–9" min="1" max="9"></div>
           <div class="form-field"><label><i class="ti ti-bone" aria-hidden="true"></i> <span class="i18n" data-en="Bone Mass (kg)" data-gr="Οστική Μάζα (κιλά)">Bone Mass (kg)</span></label><input type="number" id="bc-bone" class="i18n-ph" data-en-ph="Tanita/device value" data-gr-ph="Τιμή Tanita/συσκευής" placeholder="Tanita/device value" step="0.1" oninput="calcBodyComp()"></div>
-        </div>
         </div>
         <div class="section-label"><span class="i18n" data-en="Auto Interpretation" data-gr="Αυτόματη Ερμηνεία">Auto Interpretation</span></div>
         <div id="bc-interpretation"></div>
@@ -1278,7 +1272,7 @@ table th,
         <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px">
           <button class="btn" onclick="applySuggestedExchangeServings()">✨ <span class="i18n" data-en="Suggested servings" data-gr="Προτεινόμενες μερίδες">Suggested servings</span></button>
           <button class="btn primary" onclick="refreshExchangePlansNow()"><i class="ti ti-refresh" aria-hidden="true"></i> <span class="i18n" data-en="Apply to Meal Plans" data-gr="Εφαρμογή στα Πλάνα Γευμάτων">Apply to Meal Plans</span></button>
-          <button class="btn primary" onclick="generateAiSevenDayPlan()">✨ Generate AI Plan</button>
+          <button class="btn primary" onclick="generateAiSevenDayPlan()">✨ <span class="i18n" data-en="Generate AI Plan" data-gr="Δημιουργία Πλάνου με AI">Generate AI Plan</span></button>
           <span style="font-size:12px;color:var(--text-muted)"><span class="i18n" data-en="Click after changing servings to push updates into the 7-Day plan and Report" data-gr="Πατήστε μετά την αλλαγή μερίδων για ενημέρωση του Πλάνου 7 Ημερών και της Αναφοράς">Click after changing servings to push updates into the 7-Day plan and Report</span></span>
         </div>
         <div id="exchange-rows"></div>
@@ -1293,9 +1287,9 @@ table th,
   <!-- 1-DAY PLAN -->
   <div class="page" id="page-oneday">
     <div class="card">
-      <div class="card-header"><span class="card-title"><i class="ti ti-sun" aria-hidden="true"></i> SYSTEM — 1-Day Auto Plan</span></div>
+      <div class="card-header"><span class="card-title"><i class="ti ti-sun" aria-hidden="true"></i> <span class="i18n" data-en="1-Day Auto Plan" data-gr="Αυτόματο Πλάνο 1 Ημέρας">1-Day Auto Plan</span></span></div>
       <div class="card-body">
-        <div class="alert info"><i class="ti ti-info-circle" aria-hidden="true"></i> Dropdowns change meal combinations. Exchange totals come from Exchange System. Main meals absorb starch/protein/fat. Snacks use fruit/dairy.</div>
+        <div class="alert info"><i class="ti ti-info-circle" aria-hidden="true"></i> <span class="i18n" data-en="Dropdowns change meal combinations. Exchange totals come from Exchange System. Main meals absorb starch/protein/fat. Snacks use fruit/dairy." data-gr="Τα αναπτυσσόμενα μενού αλλάζουν συνδυασμούς γευμάτων. Τα σύνολα ισοδυνάμων προέρχονται από το Σύστημα Ισοδυνάμων. Τα κύρια γεύματα απορροφούν άμυλο/πρωτεΐνη/λίπος. Τα σνακ χρησιμοποιούν φρούτο/γαλακτοκομικά.">Dropdowns change meal combinations. Exchange totals come from Exchange System. Main meals absorb starch/protein/fat. Snacks use fruit/dairy.</span></div>
         <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:12px">
         </div>
         <div class="form-grid three" style="margin-bottom:16px">
@@ -1325,8 +1319,8 @@ table th,
         <div class="section-label">EXCHANGE COVERAGE CHECK</div>
         <div id="oneday-check"></div>
         <div style="margin-top:14px;display:flex;gap:8px;">
-          <button class="btn primary" onclick="printPage()"><i class="ti ti-printer" aria-hidden="true"></i> Print plan</button>
-          <button class="btn" onclick="nav('report')">Full report →</button>
+          <button class="btn primary" onclick="printPage()"><i class="ti ti-printer" aria-hidden="true"></i> <span class="i18n" data-en="Print plan" data-gr="Εκτύπωση πλάνου">Print plan</span></button>
+          <button class="btn" onclick="nav('report')"><span class="i18n" data-en="Full report →" data-gr="Πλήρης αναφορά →">Full report →</span></button>
         </div>
       </div>
     </div>
@@ -1539,18 +1533,18 @@ table th,
         <button class="btn" onclick="closeCustomMealBuilder()" style="margin-left:auto">× Close</button>
       </div>
       <div class="card-body">
-        <div class="alert info">Build a meal from USDA FoodData Central ingredients. Values are stored for your account and can be reused in the meal dropdowns.</div>
+        <div class="alert info"><span class="i18n" data-en="Build a meal from USDA FoodData Central ingredients. Values are stored for your account and can be reused in the meal dropdowns." data-gr="Δημιουργήστε ένα γεύμα από συστατικά USDA FoodData Central. Οι τιμές αποθηκεύονται στον λογαριασμό σας και μπορούν να επαναχρησιμοποιηθούν στα αναπτυσσόμενα μενού γευμάτων.">Build a meal from USDA FoodData Central ingredients. Values are stored for your account and can be reused in the meal dropdowns.</span></div>
         <div class="form-grid two">
-          <div class="form-field"><label>Meal name</label><input type="text" id="custom-meal-name" placeholder="e.g. Salmon quinoa bowl" oninput="renderCustomMealDraft()"></div>
-          <div class="form-field"><label>Ingredient search</label><input type="text" id="custom-meal-search" placeholder="e.g. chicken breast, potato, oats" onkeydown="if(event.key==='Enter') searchCustomMealFoods()"></div>
+          <div class="form-field"><label><span class="i18n" data-en="Meal name" data-gr="Όνομα γεύματος">Meal name</span></label><input type="text" id="custom-meal-name" class="i18n-ph" data-en-ph="e.g. Salmon quinoa bowl" data-gr-ph="π.χ. Μπολ σολομού με κινόα" placeholder="e.g. Salmon quinoa bowl" oninput="renderCustomMealDraft()"></div>
+          <div class="form-field"><label><span class="i18n" data-en="Ingredient search" data-gr="Αναζήτηση συστατικού">Ingredient search</span></label><input type="text" id="custom-meal-search" class="i18n-ph" data-en-ph="e.g. chicken breast, potato, oats" data-gr-ph="π.χ. στήθος κοτόπουλο, πατάτα, βρώμη" placeholder="e.g. chicken breast, potato, oats" onkeydown="if(event.key==='Enter') searchCustomMealFoods()"></div>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 12px">
-          <button class="btn" onclick="searchCustomMealFoods()">Search USDA ingredient</button>
-          <button class="btn" onclick="clearCustomMealDraft()">Clear draft</button>
+          <button class="btn" onclick="searchCustomMealFoods()"><span class="i18n" data-en="Search USDA ingredient" data-gr="Αναζήτηση συστατικού USDA">Search USDA ingredient</span></button>
+          <button class="btn" onclick="clearCustomMealDraft()"><span class="i18n" data-en="Clear draft" data-gr="Επαναφορά προσχεδίου">Clear draft</span></button>
         </div>
         <div id="custom-meal-search-status" class="field-note"></div>
         <div id="custom-meal-search-results" style="margin-bottom:12px"></div>
-        <div class="section-label">Ingredients</div>
+        <div class="section-label"><span class="i18n" data-en="Ingredients" data-gr="Συστατικά">Ingredients</span></div>
         <div id="custom-meal-draft"></div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:14px">
           <button class="btn primary" onclick="saveCustomMeal()"><i class="ti ti-device-floppy" aria-hidden="true"></i> Save custom meal</button>
@@ -1563,7 +1557,7 @@ table th,
   <!-- APPOINTMENTS -->
   <div class="page" id="page-appointments">
     <div class="card">
-      <div class="card-header"><span class="card-title"><i class="ti ti-calendar" aria-hidden="true"></i> Calendar</span>
+      <div class="card-header"><span class="card-title"><i class="ti ti-calendar" aria-hidden="true"></i> <span class="i18n" data-en="Calendar" data-gr="Ημερολόγιο">Calendar</span></span>
         <button class="btn" onclick="connectGoogleCalendar()" id="account-connect-calendar-btn" style="padding:6px 10px;font-size:12px;margin-left:auto"><i class="ti ti-brand-google" aria-hidden="true"></i> <span class="i18n" data-en="Connect Google Calendar" data-gr="Σύνδεση Google Calendar">Connect Google Calendar</span></button>
       </div>
       <div id="calendar-connect-status" style="font-size:12px;color:var(--text-muted);padding:0 16px 8px"></div>
@@ -1594,10 +1588,10 @@ table th,
               </div>
               <div class="form-field" style="margin-bottom:10px"><label><span class="i18n" data-en="Type" data-gr="Τύπος">Type</span></label>
                 <select id="appt-type">
-                  <option>First consultation</option>
-                  <option>Follow-up</option>
-                  <option>Online</option>
-                  <option>Phone</option>
+                  <option value="First consultation">First consultation</option>
+                  <option value="Follow-up">Follow-up</option>
+                  <option value="Online">Online</option>
+                  <option value="Phone">Phone</option>
                 </select>
               </div>
               <div class="form-field" style="margin-bottom:12px"><label><span class="i18n" data-en="Notes" data-gr="Σημειώσεις">Notes</span></label><textarea id="appt-notes" rows="4" class="i18n-ph" data-en-ph="Notes for this appointment" data-gr-ph="Σημειώσεις για αυτό το ραντεβού" placeholder="Notes for this appointment" style="resize:vertical"></textarea></div>
@@ -1623,7 +1617,7 @@ table th,
           <div class="form-field"><label><span class="i18n" data-en="Signed in as" data-gr="Συνδεδεμένος ως">Signed in as</span></label><input type="text" id="acct-email" readonly style="background:var(--bg-page);cursor:not-allowed"></div>
           <div class="form-field"><label><span class="i18n" data-en="Subscription status" data-gr="Κατάσταση Συνδρομής">Subscription status</span></label><input type="text" id="acct-subscription" readonly style="background:var(--bg-page);cursor:not-allowed"></div>
         </div>
-        <div id="account-subscription-detail" class="subscription-status">Subscription status will appear here after sign in.</div>
+        <div id="account-subscription-detail" class="subscription-status"><span class="i18n" data-en="Subscription status will appear here after sign in." data-gr="Η κατάσταση συνδρομής θα εμφανιστεί εδώ μετά τη σύνδεση.">Subscription status will appear here after sign in.</span></div>
         <button class="btn primary" onclick="startStripeCheckout('price_1ToMPVDwBpsAKvLemjXMV2Rg')" id="account-monthly-trial-btn"><span class="i18n" data-en="Start monthly trial" data-gr="Έναρξη μηνιαίας δοκιμής">Start monthly trial</span></button>
         <button class="btn primary" onclick="startStripeCheckout('price_1ToMPWDwBpsAKvLe4Ial8JRS')" id="account-yearly-trial-btn"><span class="i18n" data-en="Start yearly trial" data-gr="Έναρξη ετήσιας δοκιμής">Start yearly trial</span></button>
         <button class="btn" onclick="openBillingPortal()" id="account-manage-billing-btn" style="display:none"><span class="i18n" data-en="Manage billing" data-gr="Διαχείριση χρέωσης">Manage billing</span></button>
@@ -4604,21 +4598,6 @@ function generateRecommendedPlan(){
     status.textContent = isGr?'Έτοιμο — δείτε τους Στόχους και το Σύστημα Ισοδυνάμων για επεξεργασία.':'Done — review Targets and Exchange System to adjust.';
   }
 }
-function toggleBodyCompAdvanced(forceOpen){
-  const fields=document.getElementById('bc-advanced-fields');
-  const chevron=document.getElementById('bc-advanced-chevron');
-  const summaryLabel=document.getElementById('bc-advanced-summary')?.querySelector('.i18n[data-en="Show"], .i18n[data-en="Hide"]');
-  if(!fields) return;
-  const open = forceOpen!==undefined ? forceOpen : fields.style.display==='none';
-  fields.style.display = open ? 'block' : 'none';
-  if(chevron) chevron.style.transform = open ? 'rotate(180deg)' : 'rotate(0deg)';
-  if(summaryLabel){
-    const isGr = window.appLang==='gr';
-    summaryLabel.setAttribute('data-en', open?'Hide':'Show');
-    summaryLabel.setAttribute('data-gr', open?'Απόκρυψη':'Εμφάνιση');
-    summaryLabel.textContent = isGr ? (open?'Απόκρυψη':'Εμφάνιση') : (open?'Hide':'Show');
-  }
-}
 function toggleConditionPicker(forceOpen){
   const picker=document.getElementById('p-condition-picker');
   const chevron=document.getElementById('p-condition-chevron');
@@ -4917,11 +4896,7 @@ function nav(id) {
   if(id==='appointments') { loadAppointments(true).then(()=>{renderAppointments(); if(!document.getElementById('appt-id')?.value) openAppointmentForm(todayISO());}); checkCalendarConnectionStatus(); }
   if(id==='account') { setTimeout(()=>refreshAccountSubscriptionPage().catch(err=>console.error('[Nutrese account] deferred refresh failed', err)), 0); }
   if(id==='profile') { renderConditionRadios(); refreshConditionVisualState(); }
-  if(id==='bodycomp'){
-    calcBodyComp();
-    const hasAdvancedData = ['bc-metage','bc-muscle','bc-visceral','bc-physique','bc-bone'].some(fid=>document.getElementById(fid)?.value);
-    if(hasAdvancedData) toggleBodyCompAdvanced(true);
-  }
+  if(id==='bodycomp') calcBodyComp();
   if(id==='macros') renderClinicalMacroSuggestions();
   if(id==='exchanges') renderExchanges();
   // Always sync exchange inputs → S.ex before building meal plans
@@ -5274,6 +5249,7 @@ function resetExAuto(key){
 function applySuggestedExchangeServings(){
   syncExchangeInputsToState();
   calcMacros();
+  const isGr = window.appLang==='gr';
   const ex=S.ex;
   const m=S.exMeta || makeExMeta();
   const caps=getEffectiveCaps(S.conditions);
@@ -5306,7 +5282,7 @@ function applySuggestedExchangeServings(){
   renderExchanges();
   refreshExchangePlansNow();
   const note=document.getElementById('exchange-check');
-  if(note) note.insertAdjacentHTML('afterbegin',`<div class="alert ok"><i class="ti ti-circle-check" aria-hidden="true"></i> Suggested servings applied: Starch ${starch}, Protein ${protein}, Fat ${fat}. Review clinically and adjust if needed.</div>`);
+  if(note) note.insertAdjacentHTML('afterbegin',`<div class="alert ok"><i class="ti ti-circle-check" aria-hidden="true"></i> ${isGr?`Εφαρμόστηκαν προτεινόμενες μερίδες: Άμυλο ${starch}, Πρωτεΐνη ${protein}, Λίπος ${fat}. Ελέγξτε κλινικά και προσαρμόστε αν χρειάζεται.`:`Suggested servings applied: Starch ${starch}, Protein ${protein}, Fat ${fat}. Review clinically and adjust if needed.`}</div>`);
 }
 
 // Called on every keystroke in the Exchange System table.
@@ -6609,7 +6585,7 @@ function buildSevenDay(){
   }).join('');
   let html=`<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:12px">
     <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
-      <button class="btn primary" onclick="generateAiSevenDayPlan()">✨ Generate AI Plan</button>
+      <button class="btn primary" onclick="generateAiSevenDayPlan()">✨ ${lang==='EN'?'Generate AI Plan':'Δημιουργία Πλάνου με AI'}</button>
       <button class="btn primary" onclick="saveWeeklyPlan()"><i class="ti ti-device-floppy" aria-hidden="true"></i> ${lang==='EN'?'Save Plan':'Αποθήκευση Πλάνου'}</button>
       <button class="btn" onclick="previewRebalanceWeek()">✨ ${lang==='EN'?'Rebalance Week':'Επαναϊσορρόπηση Εβδομάδας'}</button>
       <button class="btn" onclick="setSevenDayView('${isWeek?'day':'week'}')">${isWeek?(lang==='EN'?'Day view':'Προβολή ημέρας'):(lang==='EN'?'Week view':'Προβολή εβδομάδας')}</button>
@@ -6862,6 +6838,7 @@ let flexibleMealSearchResults=[];
 function openFlexibleMealEditor(dayIndex, slotKey){
   ensureWeekPlans();
   const lang=S.mealLanguage||'GR';
+  const isGr = lang==='GR';
   const dayPlan=S.weekPlans[dayIndex];
   const dt=calcDayTotalsForPlanDisplay(dayPlan, lang, dayIndex);
   const slot=SEVEN_DAY_SLOTS.find(s=>s.key===slotKey);
@@ -6881,26 +6858,26 @@ function openFlexibleMealEditor(dayIndex, slotKey){
     </div>
     <div style="padding:16px;display:grid;gap:12px">
       <div class="form-grid two">
-        <div class="form-field"><label>Meal name</label><input id="flex-meal-name" type="text" value="${safeHtml(current.name||'')}"></div>
+        <div class="form-field"><label>${isGr?'Όνομα γεύματος':'Meal name'}</label><input id="flex-meal-name" type="text" value="${safeHtml(current.name||'')}"></div>
         <div class="form-field"><label>kcal</label><input id="flex-meal-kcal" type="number" min="0" step="1" value="${Math.round(current.kcal||0)}"></div>
       </div>
-      <div class="form-field"><label>Greek description</label><textarea id="flex-meal-desc-gr" rows="3">${safeHtml(current.text||'')}</textarea></div>
-      <div class="form-field"><label>English description</label><textarea id="flex-meal-desc-en" rows="3">${safeHtml(current.text||'')}</textarea></div>
+      <div class="form-field"><label>${isGr?'Ελληνική περιγραφή':'Greek description'}</label><textarea id="flex-meal-desc-gr" rows="3">${safeHtml(current.text||'')}</textarea></div>
+      <div class="form-field"><label>${isGr?'Αγγλική περιγραφή':'English description'}</label><textarea id="flex-meal-desc-en" rows="3">${safeHtml(current.text||'')}</textarea></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:end">
-        <div class="form-field" style="min-width:240px;flex:1"><label>Saved custom meals</label><select id="flex-saved-meal"><option value="">Select saved meal...</option>${savedOptions}</select></div>
-        <button class="btn" onclick="useSavedCustomMealInFlexibleEditor()">Use saved meal</button>
-        <button class="btn" onclick="regenerateFlexibleMealSlot()">Regenerate this meal</button>
+        <div class="form-field" style="min-width:240px;flex:1"><label>${isGr?'Αποθηκευμένα προσαρμοσμένα γεύματα':'Saved custom meals'}</label><select id="flex-saved-meal"><option value="">${isGr?'Επιλέξτε αποθηκευμένο γεύμα...':'Select saved meal...'}</option>${savedOptions}</select></div>
+        <button class="btn" onclick="useSavedCustomMealInFlexibleEditor()">${isGr?'Χρήση αποθηκευμένου γεύματος':'Use saved meal'}</button>
+        <button class="btn" onclick="regenerateFlexibleMealSlot()">${isGr?'Αναδημιουργία αυτού του γεύματος':'Regenerate this meal'}</button>
       </div>
-      <div class="section-label">USDA ingredient search</div>
+      <div class="section-label">${isGr?'Αναζήτηση συστατικού USDA':'USDA ingredient search'}</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <input id="flex-usda-search" type="text" placeholder="e.g. chicken breast, potato, oats" style="flex:1;min-width:220px" onkeydown="if(event.key==='Enter')searchFlexibleMealFoods()">
-        <button class="btn" onclick="searchFlexibleMealFoods()">Search USDA</button>
+        <input id="flex-usda-search" type="text" class="i18n-ph" data-en-ph="e.g. chicken breast, potato, oats" data-gr-ph="π.χ. στήθος κοτόπουλο, πατάτα, βρώμη" placeholder="e.g. chicken breast, potato, oats" style="flex:1;min-width:220px" onkeydown="if(event.key==='Enter')searchFlexibleMealFoods()">
+        <button class="btn" onclick="searchFlexibleMealFoods()">${isGr?'Αναζήτηση USDA':'Search USDA'}</button>
       </div>
       <div id="flex-usda-status" class="field-note"></div>
       <div id="flex-usda-results"></div>
       <div style="display:flex;gap:8px;justify-content:flex-end">
-        <button class="btn" onclick="closeFlexibleMealEditor()">Cancel</button>
-        <button class="btn primary" onclick="saveFlexibleMealEdit()">Save meal</button>
+        <button class="btn" onclick="closeFlexibleMealEditor()">${isGr?'Ακύρωση':'Cancel'}</button>
+        <button class="btn primary" onclick="saveFlexibleMealEdit()">${isGr?'Αποθήκευση γεύματος':'Save meal'}</button>
       </div>
     </div>
   </div>`;
@@ -6962,11 +6939,12 @@ window.searchFlexibleMealFoods=searchFlexibleMealFoods;
 
 function renderFlexibleMealFoodResults(){
   const el=document.getElementById('flex-usda-results'); if(!el) return;
-  el.innerHTML=`<table><thead><tr><th>Food</th><th>kcal/100g</th><th>Grams</th><th></th></tr></thead><tbody>${flexibleMealSearchResults.slice(0,8).map((p,i)=>`<tr>
+  const isGr = window.appLang==='gr';
+  el.innerHTML=`<table><thead><tr><th>${isGr?'Τρόφιμο':'Food'}</th><th>kcal/100g</th><th>${isGr?'Γραμμάρια':'Grams'}</th><th></th></tr></thead><tbody>${flexibleMealSearchResults.slice(0,8).map((p,i)=>`<tr>
     <td><strong>${safeHtml(p.name)}</strong><div style="font-size:11px;color:var(--text-muted)">${safeHtml(p.brand||'USDA')}</div></td>
     <td>${formatFoodNumber(p.kcal100,'')}</td>
     <td><input id="flex-food-g-${i}" type="number" min="1" step="1" value="100" style="width:80px"></td>
-    <td><button class="btn" onclick="useFlexibleMealFood(${i})">Use</button></td>
+    <td><button class="btn" onclick="useFlexibleMealFood(${i})">${isGr?'Χρήση':'Use'}</button></td>
   </tr>`).join('')}</tbody></table>`;
 }
 
@@ -7414,6 +7392,7 @@ function buildReport(){
 
 function renderEngine(){
   calcExchanges();
+  const isGr = window.appLang==='gr';
   const ex=S.ex;
   const caps=S.effCaps||getEffectiveCaps(S.conditions);
   const gramsPerEx = Math.round(30 * ((S.exMeta.protein.pro||7)/7));
@@ -7457,8 +7436,13 @@ function renderEngine(){
   const conflictBanner=document.getElementById('cap-conflict-banner');
   if(conflictBanner){
     if(capConflicts.length){
-      const labelMap={starchDailyMax:'Starch (daily)',starchPerMealMax:'Starch (per meal)',proteinDailyMax:'Protein (daily)',proteinPerMealMax:'Protein (per meal)',fatDailyMax:'Fat (daily)',fatPerMealMax:'Fat (per meal)'};
-      conflictBanner.innerHTML = `<div class="alert err" style="margin-bottom:10px">
+      const labelMap={starchDailyMax:isGr?'Άμυλο (ημερήσιο)':'Starch (daily)',starchPerMealMax:isGr?'Άμυλο (ανά γεύμα)':'Starch (per meal)',proteinDailyMax:isGr?'Πρωτεΐνη (ημερήσια)':'Protein (daily)',proteinPerMealMax:isGr?'Πρωτεΐνη (ανά γεύμα)':'Protein (per meal)',fatDailyMax:isGr?'Λίπος (ημερήσιο)':'Fat (daily)',fatPerMealMax:isGr?'Λίπος (ανά γεύμα)':'Fat (per meal)'};
+      conflictBanner.innerHTML = isGr ? `<div class="alert err" style="margin-bottom:10px">
+        <strong><i class="ti ti-alert-triangle" aria-hidden="true"></i> Κλινική σύγκρουση — απαιτείται επανεξέταση:</strong> οι επιλεγμένες παθήσεις ορίζουν διαφορετικά όρια για την ίδια κατηγορία. Η εφαρμογή ΔΕΝ επιλύει αυτόματα — αποφασίστε ποιο όριο ισχύει για αυτόν τον πελάτη.
+        <ul style="margin:6px 0 0 18px">
+          ${capConflicts.map(c=>`<li><strong>${labelMap[c.metric]||c.metric}:</strong> ${c.entries.map(e=>e.cond+' → '+e.value).join(' vs. ')}. Χρησιμοποιείται προσωρινά η πιο συντηρητική τιμή (${c.suggestedMin}) στο Σύστημα Ισοδυνάμων — παρακάμψτε χειροκίνητα στο Σύστημα Ισοδυνάμων αν άλλη τιμή είναι καταλληλότερη για αυτόν τον πελάτη.</li>`).join('')}
+        </ul>
+      </div>` : `<div class="alert err" style="margin-bottom:10px">
         <strong><i class="ti ti-alert-triangle" aria-hidden="true"></i> Clinical conflict — review required:</strong> the selected conditions specify different limits for the same category. The app is NOT auto-resolving this — please decide which limit applies for this client.
         <ul style="margin:6px 0 0 18px">
           ${capConflicts.map(c=>`<li><strong>${labelMap[c.metric]||c.metric}:</strong> ${c.entries.map(e=>e.cond+' → '+e.value).join(' vs. ')}. Currently using the most conservative value (${c.suggestedMin}) in Exchange System — override manually in Exchange System if a different value is more appropriate for this client.</li>`).join('')}
@@ -7479,10 +7463,24 @@ function renderEngine(){
 if (anyCapped) {
     const targetKcal=Math.round(kcal), planKcalR=Math.round(planKcal), coverage=kcal?Math.round((planKcal/kcal)*100):0;
     const items=[];
-    if(gapData.proteinCapped) items.push(`<strong>Protein:</strong> target ${Math.round(S.protG)}g/day, realistic plan covers ~${Math.round(S.protG-gapData.proGap)}g/day (${gapData.proGap}g short).`);
-    if(gapData.starchCapped) items.push(`<strong>Carbs:</strong> target ${Math.round(S.carbG)}g/day, realistic plan covers ~${Math.round(S.carbG-gapData.choGap)}g/day (${gapData.choGap}g short).`);
-    if(gapData.fatCapped) items.push(`<strong>Fat:</strong> target ${Math.round(S.fatG)}g/day, realistic plan covers ~${Math.round(S.fatG-gapData.fatGap)}g/day (${gapData.fatGap}g short).`);
-    overallHtml += `<div class="alert warn" style="margin-top:10px">
+    if(gapData.proteinCapped) items.push(isGr?`<strong>Πρωτεΐνη:</strong> στόχος ${Math.round(S.protG)}g/ημέρα, το ρεαλιστικό πλάνο καλύπτει ~${Math.round(S.protG-gapData.proGap)}g/ημέρα (${gapData.proGap}g έλλειψη).`:`<strong>Protein:</strong> target ${Math.round(S.protG)}g/day, realistic plan covers ~${Math.round(S.protG-gapData.proGap)}g/day (${gapData.proGap}g short).`);
+    if(gapData.starchCapped) items.push(isGr?`<strong>Υδατάνθρακες:</strong> στόχος ${Math.round(S.carbG)}g/ημέρα, το ρεαλιστικό πλάνο καλύπτει ~${Math.round(S.carbG-gapData.choGap)}g/ημέρα (${gapData.choGap}g έλλειψη).`:`<strong>Carbs:</strong> target ${Math.round(S.carbG)}g/day, realistic plan covers ~${Math.round(S.carbG-gapData.choGap)}g/day (${gapData.choGap}g short).`);
+    if(gapData.fatCapped) items.push(isGr?`<strong>Λίπος:</strong> στόχος ${Math.round(S.fatG)}g/ημέρα, το ρεαλιστικό πλάνο καλύπτει ~${Math.round(S.fatG-gapData.fatGap)}g/ημέρα (${gapData.fatGap}g έλλειψη).`:`<strong>Fat:</strong> target ${Math.round(S.fatG)}g/day, realistic plan covers ~${Math.round(S.fatG-gapData.fatGap)}g/day (${gapData.fatGap}g short).`);
+    overallHtml += isGr ? `<div class="alert warn" style="margin-top:10px">
+      <div style="width:100%">
+        <strong><i class="ti ti-alert-triangle" aria-hidden="true"></i> Απαιτείται Κλινική Προσαρμογή — ο στόχος μακροθρεπτικών υπερβαίνει ρεαλιστικές μερίδες τροφίμων</strong><br>
+        <div style="margin:8px 0;font-size:13px">${items.join('<br>')}</div>
+        <div style="font-size:13px">Αυτό το πλάνο παρέχει <strong>~${planKcalR} kcal</strong> (${coverage}% του στόχου ${targetKcal} kcal) χρησιμοποιώντας κλινικά ρεαλιστικές μερίδες για αυτόν τον πελάτη (≤${caps.proteinPerMealMax*gramsPerEx}g πρωτεϊνούχο τρόφιμο και ≤${caps.fatPerMealMax} κ.γ. λάδι ανά κύριο γεύμα).</div>
+        <div style="font-size:13px;margin-top:8px"><strong>Προτεινόμενα επόμενα βήματα:</strong>
+          <ul style="margin:6px 0 0 18px;padding:0">
+            <li>Μειώστε το Πρωτεΐνη % ή/και Λίπος % στους <em>Στόχους Μακροθρεπτικών</em> και αυξήστε το Υδατάνθρακες % (το σώμα εξακολουθεί να λαμβάνει επαρκή ενέργεια από υδατάνθρακες/φρούτα/γαλακτοκομικά).</li>
+            <li>Ή μειώστε ελαφρώς τον συνολικό στόχο θερμίδων στο <em>Προφίλ Πελάτη</em> (μικρότερο έλλειμμα/πλεόνασμα) ώστε η κατανομή μακροθρεπτικών να είναι εφικτή με τροφή.</li>
+            <li>Ή προσθέστε ένα επιπλέον σνακ/γεύμα για να κατανείμετε την πρωτεΐνη και το λίπος σε περισσότερες φορές.</li>
+            ${gapData.proteinCapped&&(conditions.includes('CKD')||conditions.includes('Hemodialysis'))?'<li><strong>Σημείωση:</strong> το όριο πρωτεΐνης εδώ είναι σκόπιμα χαμηλό λόγω ΧΝΝ/Αιμοκάθαρσης — μην το αυξήσετε χωρίς καθοδήγηση νεφρολόγου.</li>':''}
+          </ul>
+        </div>
+      </div>
+    </div>` : `<div class="alert warn" style="margin-top:10px">
       <div style="width:100%">
         <strong><i class="ti ti-alert-triangle" aria-hidden="true"></i> Clinical Adjustment Needed — macro target exceeds realistic food portions</strong><br>
         <div style="margin:8px 0;font-size:13px">${items.join('<br>')}</div>
@@ -9853,6 +9851,12 @@ const DROPDOWN_TRANSLATIONS = {
     'Pescatarian':{en:'Pescatarian',gr:'Ψαροφάγος'},
     'Vegetarian':{en:'Vegetarian',gr:'Χορτοφάγος'},
     'Vegan':{en:'Vegan',gr:'Αυστηρά Χορτοφάγος'},
+  },
+  'appt-type': {
+    'First consultation':{en:'First consultation',gr:'Πρώτη συνεδρία'},
+    'Follow-up':{en:'Follow-up',gr:'Παρακολούθηση'},
+    'Online':{en:'Online',gr:'Διαδικτυακά'},
+    'Phone':{en:'Phone',gr:'Τηλεφωνικά'},
   },
   'p-trimester': {
     '1':{en:'1st Trimester (1–13 wks)',gr:'1ο Τρίμηνο (1–13 εβδ.)'},
