@@ -937,13 +937,12 @@ table th,
         <div id="dash-appointments"><div style="color:var(--text-muted);font-size:13px"><span class="i18n" data-en="No appointments today." data-gr="Κανένα ραντεβού σήμερα.">No appointments today.</span></div></div>
       </div>
       <div id="dash-no-client-prompt" class="bento-tile bento-accent" style="display:none">
-        <div style="text-align:center;padding:16px 10px 8px">
+        <div style="text-align:center;padding:20px 10px">
           <div style="font-size:22px;line-height:1;margin-bottom:6px">🌿</div>
           <div style="font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:6px"><span class="i18n" data-en="No client selected" data-gr="Δεν έχει επιλεγεί πελάτης">No client selected</span></div>
           <div style="font-size:13px;color:var(--text-muted);margin-bottom:14px"><span class="i18n" data-en="Select an existing client or create a new one to begin meal planning." data-gr="Επιλέξτε έναν υπάρχοντα πελάτη ή δημιουργήστε νέο για να ξεκινήσετε τον σχεδιασμό γευμάτων.">Select an existing client or create a new one to begin meal planning.</span></div>
           <button class="btn primary" onclick="nav('clients')"><span class="i18n" data-en="Go to My Clients" data-gr="Μετάβαση στους Πελάτες μου">Go to My Clients</span></button>
         </div>
-        <div id="dash-recent-clients" style="text-align:left;padding:0 6px 4px"></div>
       </div>
     </div>
     <div id="dash-client-section">
@@ -7508,34 +7507,17 @@ async function updatePracticeOverview(){
   updateTodayAppointmentCount();
   try{
     if(window.authReadyPromise) await window.authReadyPromise;
-    let count, list;
+    let count;
     if(currentUser){
-      list = (S.clientListCache && S.clientListCache.length) ? S.clientListCache : (S.clientListCache = await fetchSupabaseClients());
-      count = list.length;
+      count = (S.clientListCache && S.clientListCache.length) ? S.clientListCache.length : (await fetchSupabaseClients()).length;
     } else {
-      list = loadLocalClients();
-      count = list.length;
+      count = loadLocalClients().length;
     }
     setEl('d-total-clients', String(count));
-    renderDashRecentClients(list);
   }catch(e){
     console.warn('[Nutrese dashboard] client count failed', e);
-    const fallback = S.clientListCache||loadLocalClients()||[];
-    setEl('d-total-clients', String(fallback.length || 0));
-    renderDashRecentClients(fallback);
+    setEl('d-total-clients', String((S.clientListCache||[]).length || loadLocalClients().length || 0));
   }
-}
-function renderDashRecentClients(list){
-  const el=document.getElementById('dash-recent-clients'); if(!el) return;
-  if(!list || !list.length){ el.innerHTML=''; return; }
-  const isGr = window.appLang==='gr';
-  const recent = [...list].sort((a,b)=>new Date(b.updated_at||0)-new Date(a.updated_at||0)).slice(0,3);
-  const label = isGr?'Πρόσφατοι πελάτες':'Recent clients';
-  el.innerHTML=`<div style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;padding:8px 8px 4px;border-top:1px solid var(--border);margin-top:8px">${label}</div>` +
-    recent.map(c=>`<div onclick="loadClientById('${c.id}')" style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;cursor:pointer;font-size:12.5px" onmouseover="this.style.background='var(--bg-page)'" onmouseout="this.style.background='transparent'">
-      <span style="width:22px;height:22px;border-radius:50%;background:var(--bg-page);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--text-secondary);flex-shrink:0">${safeHtml((c.name||'?').charAt(0).toUpperCase())}</span>
-      <span style="flex:1;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${safeHtml(c.name||(isGr?'Χωρίς όνομα':'Unnamed'))}</span>
-    </div>`).join('');
 }
 
 function addTracking(){
