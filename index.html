@@ -191,7 +191,8 @@ i.ti-circle-x { color: var(--red-text); }
 
 /* ─── DASHBOARD BENTO GRID ─── */
 .bento-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 12px; margin-bottom: 14px; }
-.bento-tile { background: var(--bg-surface); border-radius: 16px; padding: 20px; border: none; box-shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04); }
+.bento-tile { background: var(--bg-surface); border-radius: 16px; padding: 20px; border: none; box-shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04); transition: box-shadow .18s ease, transform .18s ease; }
+#page-dashboard .bento-tile:hover { box-shadow: 0 4px 12px rgba(0,0,0,.08), 0 2px 4px rgba(0,0,0,.05); transform: translateY(-1px); }
 [data-theme="dark"] .bento-tile { box-shadow: none; border: 1px solid var(--border); }
 .bento-span-2 { grid-column: 1 / -1; }
 .bento-row-2 { grid-row: span 2; }
@@ -199,7 +200,7 @@ i.ti-circle-x { color: var(--red-text); }
 .bento-eyebrow { font-size: 13px; color: var(--text-muted); margin: 0 0 4px; }
 .bento-title { font-size: 22px; font-weight: 600; margin: 0; color: var(--text-primary); }
 .bento-stats { display: flex; gap: 24px; }
-.bento-stats > div { cursor: pointer; text-align: center; padding: 4px 10px; border-radius: 10px; transition: background .12s; }
+.bento-stats > div { cursor: pointer; text-align: center; padding: 8px 16px; border-radius: 10px; transition: background .12s; }
 .bento-stats > div:hover { background: var(--bg-page); }
 .bento-stats .bs-value { display: block; font-size: 22px; font-weight: 600; color: var(--text-primary); line-height: 1; }
 .bento-stats .bs-label { font-size: 12px; color: var(--text-muted); }
@@ -207,7 +208,7 @@ i.ti-circle-x { color: var(--red-text); }
 .bento-tile-head { font-size: 13px; font-weight: 600; color: var(--text-secondary); display: flex; align-items: center; gap: 6px; margin-bottom: 12px; }
 .bento-tile-head .card-action { margin-left: auto; font-weight: 500; }
 .metric { background: var(--bg-page); border: none; border-radius: var(--radius-lg); padding: 12px 14px; }
-#page-dashboard .metrics-grid .metric { background: var(--bg-surface); border-radius: 16px; padding: 16px 18px; box-shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04); }
+#page-dashboard .metrics-grid .metric { background: var(--bg-surface); border-radius: 16px; padding: 16px 18px; box-shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04); transition: box-shadow .18s ease, transform .18s ease; }
 #page-dashboard .metrics-grid { margin-top: 4px; }
 #page-profile .metrics-grid .metric { background: var(--bg-surface); border-radius: 16px; padding: 16px 18px; box-shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04); }
 #page-bodycomp .metrics-grid .metric,
@@ -224,11 +225,11 @@ i.ti-circle-x { color: var(--red-text); }
 .metric .m-value.ok { color: var(--teal-400); }
 
 /* ─── ALERTS ─── */
-.alert { padding: 10px 13px; border-radius: var(--radius); display: flex; align-items: flex-start; gap: 10px; font-size: 13px; margin-bottom: 12px; }
-.alert.warn { background: var(--amber-bg); color: var(--amber-text); border: 1px solid var(--amber-border); }
-.alert.err  { background: var(--red-bg);   color: var(--red-text);   border: 1px solid var(--red-border); }
-.alert.ok   { background: var(--green-bg); color: var(--green-text); border: 1px solid var(--green-border); }
-.alert.info { background: var(--blue-bg);  color: var(--blue-text);  border: 1px solid var(--blue-border); }
+.alert { padding: 9px 12px; border-radius: var(--radius); display: flex; align-items: flex-start; gap: 9px; font-size: 13px; margin-bottom: 12px; border: none; border-left: 3px solid transparent; }
+.alert.warn { background: var(--amber-bg); color: var(--amber-text); border-left-color: var(--amber-text); }
+.alert.err  { background: var(--red-bg);   color: var(--red-text);   border-left-color: var(--red-text); }
+.alert.ok   { background: var(--green-bg); color: var(--green-text); border-left-color: var(--green-text); }
+.alert.info { background: var(--blue-bg);  color: var(--blue-text);  border-left-color: var(--blue-text); }
 
 /* ─── FORMS ─── */
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -925,10 +926,10 @@ table th,
     <div class="bento-grid">
       <div class="bento-tile bento-span-2 bento-header" style="justify-content:space-evenly">
         <div class="bento-stats">
-          <div onclick="nav('clients')"><span class="bs-value" id="d-total-clients">—</span><span class="bs-label"><span class="i18n" data-en="Clients" data-gr="Πελάτες">Clients</span></span></div>
+          <div onclick="nav('clients')"><span class="bs-value" id="d-total-clients">—</span><span class="bs-label"><i class="ti ti-users" aria-hidden="true" style="font-size:11px;vertical-align:-1px;margin-right:3px"></i><span class="i18n" data-en="Clients" data-gr="Πελάτες">Clients</span></span></div>
         </div>
         <div class="bento-stats">
-          <div onclick="nav('appointments')"><span class="bs-value" id="d-today-appts">—</span><span class="bs-label" id="d-today-appts-sub"><span class="i18n" data-en="Today" data-gr="Σήμερα">Today</span></span></div>
+          <div onclick="nav('appointments')"><span class="bs-value" id="d-today-appts">—</span><span class="bs-label"><i class="ti ti-calendar-event" aria-hidden="true" style="font-size:11px;vertical-align:-1px;margin-right:3px"></i><span id="d-today-appts-sub"><span class="i18n" data-en="Today" data-gr="Σήμερα">Today</span></span></span></div>
         </div>
       </div>
       <div class="bento-tile bento-row-2">
@@ -936,11 +937,13 @@ table th,
         <div id="dash-appointments"><div style="color:var(--text-muted);font-size:13px"><span class="i18n" data-en="No appointments today." data-gr="Κανένα ραντεβού σήμερα.">No appointments today.</span></div></div>
       </div>
       <div id="dash-no-client-prompt" class="bento-tile bento-accent" style="display:none">
-        <div style="text-align:center;padding:20px 10px">
-          <div style="font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:8px"><i class="ti ti-user" aria-hidden="true"></i> <span class="i18n" data-en="No client loaded" data-gr="Δεν έχει φορτωθεί πελάτης">No client loaded</span></div>
-          <div style="font-size:13px;color:var(--text-muted);margin-bottom:16px"><span class="i18n" data-en="Load an existing client or create a new one to see their clinical dashboard here." data-gr="Φορτώστε έναν υπάρχοντα πελάτη ή δημιουργήστε νέο για να δείτε τον κλινικό πίνακα εδώ.">Load an existing client or create a new one to see their clinical dashboard here.</span></div>
+        <div style="text-align:center;padding:16px 10px 8px">
+          <div style="font-size:22px;line-height:1;margin-bottom:6px">🌿</div>
+          <div style="font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:6px"><span class="i18n" data-en="No client selected" data-gr="Δεν έχει επιλεγεί πελάτης">No client selected</span></div>
+          <div style="font-size:13px;color:var(--text-muted);margin-bottom:14px"><span class="i18n" data-en="Select an existing client or create a new one to begin meal planning." data-gr="Επιλέξτε έναν υπάρχοντα πελάτη ή δημιουργήστε νέο για να ξεκινήσετε τον σχεδιασμό γευμάτων.">Select an existing client or create a new one to begin meal planning.</span></div>
           <button class="btn primary" onclick="nav('clients')"><span class="i18n" data-en="Go to My Clients" data-gr="Μετάβαση στους Πελάτες μου">Go to My Clients</span></button>
         </div>
+        <div id="dash-recent-clients" style="text-align:left;padding:0 6px 4px"></div>
       </div>
     </div>
     <div id="dash-client-section">
@@ -7488,7 +7491,7 @@ function updateDashMetrics(){
   const daysEn=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   setEl('dash-day',(isGr?days:daysEn)[new Date().getDay()]);
   const alerts=[];
-  if(incomplete) alerts.push(isGr?'Στοιχεία προφίλ προς συμπλήρωση όταν είναι διαθέσιμα: '+missingProfile.join(', ')+'. Τα πλάνα μπορούν να ελεγχθούν μόλις είναι έτοιμα τα βασικά κλινικά δεδομένα.':'Profile details to complete when available: '+missingProfile.join(', ')+'. Plans can be reviewed once key clinical inputs are ready.');
+  if(incomplete) alerts.push(isGr?'Λείπουν: '+missingProfile.join(', ')+'. Συμπληρώστε το Προφίλ Πελάτη για να ξεκλειδώσετε τα πλάνα.':'Missing: '+missingProfile.join(', ')+'. Complete Client Profile to unlock plans.');
   if(lowKcal) alerts.push(isGr?'<i class="ti ti-alert-triangle" aria-hidden="true"></i> Πολύ χαμηλός στόχος θερμίδων ('+Math.round(S.goalKcal)+' kcal) — χρειάζεται κλινική επανεξέταση.':'<i class="ti ti-alert-triangle" aria-hidden="true"></i> Goal calories very low ('+Math.round(S.goalKcal)+' kcal) — clinical review needed.');
   if(anyCapped) alerts.push(isGr?'Ο στόχος μακροθρεπτικών υπερβαίνει ρεαλιστικές μερίδες τροφίμων — ελέγξτε τους Στόχους και το Σύστημα Ισοδυνάμων για ασφαλέστερες προσαρμογές.':'Macro target exceeds realistic food portions — review Macro Targets and Exchange System for safer adjustment options.');
   const dashAlert=document.getElementById('dash-alert');
@@ -7505,17 +7508,34 @@ async function updatePracticeOverview(){
   updateTodayAppointmentCount();
   try{
     if(window.authReadyPromise) await window.authReadyPromise;
-    let count;
+    let count, list;
     if(currentUser){
-      count = (S.clientListCache && S.clientListCache.length) ? S.clientListCache.length : (await fetchSupabaseClients()).length;
+      list = (S.clientListCache && S.clientListCache.length) ? S.clientListCache : (S.clientListCache = await fetchSupabaseClients());
+      count = list.length;
     } else {
-      count = loadLocalClients().length;
+      list = loadLocalClients();
+      count = list.length;
     }
     setEl('d-total-clients', String(count));
+    renderDashRecentClients(list);
   }catch(e){
     console.warn('[Nutrese dashboard] client count failed', e);
-    setEl('d-total-clients', String((S.clientListCache||[]).length || loadLocalClients().length || 0));
+    const fallback = S.clientListCache||loadLocalClients()||[];
+    setEl('d-total-clients', String(fallback.length || 0));
+    renderDashRecentClients(fallback);
   }
+}
+function renderDashRecentClients(list){
+  const el=document.getElementById('dash-recent-clients'); if(!el) return;
+  if(!list || !list.length){ el.innerHTML=''; return; }
+  const isGr = window.appLang==='gr';
+  const recent = [...list].sort((a,b)=>new Date(b.updated_at||0)-new Date(a.updated_at||0)).slice(0,3);
+  const label = isGr?'Πρόσφατοι πελάτες':'Recent clients';
+  el.innerHTML=`<div style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;padding:8px 8px 4px;border-top:1px solid var(--border);margin-top:8px">${label}</div>` +
+    recent.map(c=>`<div onclick="loadClientById('${c.id}')" style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;cursor:pointer;font-size:12.5px" onmouseover="this.style.background='var(--bg-page)'" onmouseout="this.style.background='transparent'">
+      <span style="width:22px;height:22px;border-radius:50%;background:var(--bg-page);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--text-secondary);flex-shrink:0">${safeHtml((c.name||'?').charAt(0).toUpperCase())}</span>
+      <span style="flex:1;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${safeHtml(c.name||(isGr?'Χωρίς όνομα':'Unnamed'))}</span>
+    </div>`).join('');
 }
 
 function addTracking(){
