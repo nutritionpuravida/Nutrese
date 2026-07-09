@@ -4953,7 +4953,7 @@ function nav(id) {
     loadCustomMeals({render:false});
   }
   if(id==='oneday') buildOneDayPlan();
-  if(id==='sevenday') { if(S.sevenDayView==='week') S.weekViewTheme='light'; buildSevenDay(); }
+  if(id==='sevenday') { if(S.sevenDayView==='week') S.weekViewTheme=currentAppTheme(); buildSevenDay(); }
   if(id==='report') { loadReportLogo().finally(()=>buildReport()); }
   if(id==='tracking') renderTracking();
 }
@@ -6883,7 +6883,7 @@ function setSevenDayActive(index){ S.sevenDayActiveIndex=Number(index)||0; if(S.
 function shiftSevenDay(delta){ S.sevenDayActiveIndex=(Number(S.sevenDayActiveIndex||0)+Number(delta)+7)%7; buildSevenDay(); }
 function setSevenDayView(view){
   S.sevenDayView=view==='week'?'week':'day';
-  if(S.sevenDayView==='week') S.weekViewTheme='light';
+  if(S.sevenDayView==='week') S.weekViewTheme=currentAppTheme();
   buildSevenDay();
 }
 function toggleWeekViewTheme(){
@@ -10006,6 +10006,9 @@ window.onload=function(){
 
 <script>
 // ─── DARK MODE ───
+function currentAppTheme(){
+  return document.documentElement.getAttribute('data-theme')==='dark' ? 'dark' : 'light';
+}
 function toggleTheme() {
   const html = document.documentElement;
   const isDark = html.getAttribute('data-theme') === 'dark';
