@@ -211,6 +211,7 @@ i.ti-circle-x { color: var(--red-text); }
 #page-dashboard .metrics-grid .metric { background: var(--bg-surface); border-radius: 16px; padding: 16px 18px; box-shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04); transition: box-shadow .18s ease, transform .18s ease; }
 #page-dashboard .metrics-grid { margin-top: 4px; }
 #page-profile .metrics-grid .metric { background: var(--bg-surface); border-radius: 16px; padding: 16px 18px; box-shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04); }
+#p-condition-chevron { transition: transform .15s ease; display: inline-block; }
 #page-bodycomp .metrics-grid .metric,
 #page-bodycomp .form-grid .metric { background: var(--bg-surface); border-radius: 16px; padding: 16px 18px; box-shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04); }
 @media (min-width: 901px) {
@@ -1093,7 +1094,7 @@ table th,
             </select>
           </div>
         </div>
-        <div class="section-label"><span class="i18n" data-en="Anthropometrics" data-gr="Ανθρωπομετρικά">Anthropometrics</span></div>
+        <div class="section-label"><span class="i18n" data-en="Measurements" data-gr="Μετρήσεις">Measurements</span></div>
         <div class="form-grid three">
           <div class="form-field"><label><span class="i18n" data-en="Height (cm)" data-gr="Ύψος (εκ)">Height (cm)</span></label><input type="number" id="p-height" placeholder="170" oninput="calcAll()"></div>
           <div class="form-field"><label><span class="i18n" data-en="Weight (kg)" data-gr="Βάρος (κιλά)">Weight (kg)</span></label><input type="number" id="p-weight" placeholder="70" step="0.1" oninput="onWeightInput()"><div class="field-note suggested" id="weight-suggestion-note"></div></div>
@@ -1101,28 +1102,34 @@ table th,
             <div class="field-note" id="cal-adj-note" style="margin-top:4px"></div>
           </div>
         </div>
-        <div class="section-label"><span class="i18n" data-en="Clinical Settings" data-gr="Κλινικές Ρυθμίσεις">Clinical Settings</span></div>
+        <div class="section-label"><span class="i18n" data-en="Clinical Information" data-gr="Κλινικές Πληροφορίες">Clinical Information</span></div>
         <div class="form-grid">
           <div class="form-field full">
             <label><span class="i18n" data-en="Primary condition (select one)" data-gr="Κύρια πάθηση (επιλέξτε μία)">Primary condition (select one)</span></label>
+            <div id="p-condition-summary" onclick="toggleConditionPicker()" style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border:1px solid var(--border-strong);border-radius:8px;background:var(--bg-input);cursor:pointer">
+              <span id="p-condition-summary-text" style="font-size:13px;font-weight:600;color:var(--text-primary)">—</span>
+              <span style="font-size:12px;color:var(--teal-600);font-weight:600;white-space:nowrap"><span class="i18n" data-en="Change" data-gr="Αλλαγή">Change</span> <i class="ti ti-chevron-down" aria-hidden="true" id="p-condition-chevron"></i></span>
+            </div>
+            <div id="p-condition-picker" style="display:none;margin-top:10px">
             <div id="p-conditions" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px 18px;padding:14px 16px;border:1px solid var(--border-strong);border-radius:8px;background:var(--bg-input)">
-              <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:400;cursor:pointer;white-space:nowrap"><input type="radio" name="p-condition" value="Obesity" onclick="onConditionRadioClick(this)" style="width:auto"> Weight Management</label>
-              <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:400;cursor:pointer;white-space:nowrap"><input type="radio" name="p-condition" value="Diabetes" onclick="onConditionRadioClick(this)" style="width:auto"> Diabetes Type 2</label>
-              <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:400;cursor:pointer;white-space:nowrap"><input type="radio" name="p-condition" value="Dyslipidemia" onclick="onConditionRadioClick(this)" style="width:auto"> High Cholesterol (Dyslipidemia)</label>
-              <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:400;cursor:pointer;white-space:nowrap"><input type="radio" name="p-condition" value="Hypertension" onclick="onConditionRadioClick(this)" style="width:auto"> Hypertension</label>
-              <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:400;cursor:pointer;white-space:nowrap"><input type="radio" name="p-condition" value="PCOS" onclick="onConditionRadioClick(this)" style="width:auto"> PCOS</label>
-              <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:400;cursor:pointer;white-space:nowrap"><input type="radio" name="p-condition" value="Thyroid" onclick="onConditionRadioClick(this)" style="width:auto"> Hypothyroidism / Hashimoto's</label>
-              <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:400;cursor:pointer;white-space:nowrap"><input type="radio" name="p-condition" value="IBS" onclick="onConditionRadioClick(this)" style="width:auto"> IBS / Digestive Issues</label>
-              <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:400;cursor:pointer;white-space:nowrap"><input type="radio" name="p-condition" value="FoodIntolerance" onclick="onConditionRadioClick(this)" style="width:auto"> Food Intolerances / Allergies</label>
-              <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:400;cursor:pointer;white-space:nowrap"><input type="radio" name="p-condition" value="Pregnancy" onclick="onConditionRadioClick(this)" style="width:auto"> Pregnancy</label>
-              <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:400;cursor:pointer;white-space:nowrap"><input type="radio" name="p-condition" value="Menopause" onclick="onConditionRadioClick(this)" style="width:auto"> Menopause</label>
-              <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:400;cursor:pointer;white-space:nowrap"><input type="radio" name="p-condition" value="Sports" onclick="onConditionRadioClick(this)" style="width:auto"> Sports Nutrition / Performance</label>
-              <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:400;cursor:pointer;white-space:nowrap"><input type="radio" name="p-condition" value="GERD" onclick="onConditionRadioClick(this)" style="width:auto"> ΓΟΠ / GERD</label>
-              <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:400;cursor:pointer;white-space:nowrap"><input type="radio" name="p-condition" value="Osteoporosis" onclick="onConditionRadioClick(this)" style="width:auto"> Οστεοπόρωση</label>
-              <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:400;cursor:pointer;white-space:nowrap"><input type="radio" name="p-condition" value="Migraines" onclick="onConditionRadioClick(this)" style="width:auto"> Ημικρανίες</label>
-              <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:400;cursor:pointer;white-space:nowrap"><input type="radio" name="p-condition" value="CKD" onclick="onConditionRadioClick(this)" style="width:auto"> Χρόνια Νεφρική Νόσος (ΧΝΝ)</label>
-              <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:400;cursor:pointer;white-space:nowrap"><input type="radio" name="p-condition" value="NAFLD" onclick="onConditionRadioClick(this)" style="width:auto"> Λιπώδης Ηπατοπάθεια (NAFLD)</label>
-              <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:400;cursor:pointer;white-space:nowrap"><input type="radio" name="p-condition" value="General" onclick="onConditionRadioClick(this)" style="width:auto"> Healthy Eating (no condition)</label>
+              <label style="display:flex;align-items:flex-start;gap:7px;font-size:13px;font-weight:400;cursor:pointer;line-height:1.35"><input type="radio" name="p-condition" value="Obesity" onclick="onConditionRadioClick(this)" style="width:auto;margin-top:2px;flex-shrink:0"> Weight Management</label>
+              <label style="display:flex;align-items:flex-start;gap:7px;font-size:13px;font-weight:400;cursor:pointer;line-height:1.35"><input type="radio" name="p-condition" value="Diabetes" onclick="onConditionRadioClick(this)" style="width:auto;margin-top:2px;flex-shrink:0"> Diabetes Type 2</label>
+              <label style="display:flex;align-items:flex-start;gap:7px;font-size:13px;font-weight:400;cursor:pointer;line-height:1.35"><input type="radio" name="p-condition" value="Dyslipidemia" onclick="onConditionRadioClick(this)" style="width:auto;margin-top:2px;flex-shrink:0"> High Cholesterol (Dyslipidemia)</label>
+              <label style="display:flex;align-items:flex-start;gap:7px;font-size:13px;font-weight:400;cursor:pointer;line-height:1.35"><input type="radio" name="p-condition" value="Hypertension" onclick="onConditionRadioClick(this)" style="width:auto;margin-top:2px;flex-shrink:0"> Hypertension</label>
+              <label style="display:flex;align-items:flex-start;gap:7px;font-size:13px;font-weight:400;cursor:pointer;line-height:1.35"><input type="radio" name="p-condition" value="PCOS" onclick="onConditionRadioClick(this)" style="width:auto;margin-top:2px;flex-shrink:0"> PCOS</label>
+              <label style="display:flex;align-items:flex-start;gap:7px;font-size:13px;font-weight:400;cursor:pointer;line-height:1.35"><input type="radio" name="p-condition" value="Thyroid" onclick="onConditionRadioClick(this)" style="width:auto;margin-top:2px;flex-shrink:0"> Hypothyroidism / Hashimoto's</label>
+              <label style="display:flex;align-items:flex-start;gap:7px;font-size:13px;font-weight:400;cursor:pointer;line-height:1.35"><input type="radio" name="p-condition" value="IBS" onclick="onConditionRadioClick(this)" style="width:auto;margin-top:2px;flex-shrink:0"> IBS / Digestive Issues</label>
+              <label style="display:flex;align-items:flex-start;gap:7px;font-size:13px;font-weight:400;cursor:pointer;line-height:1.35"><input type="radio" name="p-condition" value="FoodIntolerance" onclick="onConditionRadioClick(this)" style="width:auto;margin-top:2px;flex-shrink:0"> Food Intolerances / Allergies</label>
+              <label style="display:flex;align-items:flex-start;gap:7px;font-size:13px;font-weight:400;cursor:pointer;line-height:1.35"><input type="radio" name="p-condition" value="Pregnancy" onclick="onConditionRadioClick(this)" style="width:auto;margin-top:2px;flex-shrink:0"> Pregnancy</label>
+              <label style="display:flex;align-items:flex-start;gap:7px;font-size:13px;font-weight:400;cursor:pointer;line-height:1.35"><input type="radio" name="p-condition" value="Menopause" onclick="onConditionRadioClick(this)" style="width:auto;margin-top:2px;flex-shrink:0"> Menopause</label>
+              <label style="display:flex;align-items:flex-start;gap:7px;font-size:13px;font-weight:400;cursor:pointer;line-height:1.35"><input type="radio" name="p-condition" value="Sports" onclick="onConditionRadioClick(this)" style="width:auto;margin-top:2px;flex-shrink:0"> Sports Nutrition / Performance</label>
+              <label style="display:flex;align-items:flex-start;gap:7px;font-size:13px;font-weight:400;cursor:pointer;line-height:1.35"><input type="radio" name="p-condition" value="GERD" onclick="onConditionRadioClick(this)" style="width:auto;margin-top:2px;flex-shrink:0"> ΓΟΠ / GERD</label>
+              <label style="display:flex;align-items:flex-start;gap:7px;font-size:13px;font-weight:400;cursor:pointer;line-height:1.35"><input type="radio" name="p-condition" value="Osteoporosis" onclick="onConditionRadioClick(this)" style="width:auto;margin-top:2px;flex-shrink:0"> Οστεοπόρωση</label>
+              <label style="display:flex;align-items:flex-start;gap:7px;font-size:13px;font-weight:400;cursor:pointer;line-height:1.35"><input type="radio" name="p-condition" value="Migraines" onclick="onConditionRadioClick(this)" style="width:auto;margin-top:2px;flex-shrink:0"> Ημικρανίες</label>
+              <label style="display:flex;align-items:flex-start;gap:7px;font-size:13px;font-weight:400;cursor:pointer;line-height:1.35"><input type="radio" name="p-condition" value="CKD" onclick="onConditionRadioClick(this)" style="width:auto;margin-top:2px;flex-shrink:0"> Χρόνια Νεφρική Νόσος (ΧΝΝ)</label>
+              <label style="display:flex;align-items:flex-start;gap:7px;font-size:13px;font-weight:400;cursor:pointer;line-height:1.35"><input type="radio" name="p-condition" value="NAFLD" onclick="onConditionRadioClick(this)" style="width:auto;margin-top:2px;flex-shrink:0"> Λιπώδης Ηπατοπάθεια (NAFLD)</label>
+              <label style="display:flex;align-items:flex-start;gap:7px;font-size:13px;font-weight:400;cursor:pointer;line-height:1.35"><input type="radio" name="p-condition" value="General" onclick="onConditionRadioClick(this)" style="width:auto;margin-top:2px;flex-shrink:0"> Healthy Eating (no condition)</label>
+            </div>
             </div>
             <div id="pregnancy-trimester-field" class="form-field" style="display:none;margin-top:10px;max-width:260px">
               <label><span class="i18n" data-en="Pregnancy stage" data-gr="Στάδιο εγκυμοσύνης">Pregnancy stage</span></label>
@@ -1134,6 +1141,9 @@ table th,
             </div>
             <div class="field-note"><span class="i18n" data-en="Leave unselected for a general/healthy population plan. Nutrese supports one primary condition at a time for clearer clinical logic." data-gr="Αφήστε το κενό για γενικό/υγιεινό πληθυσμιακό πλάνο. Το Nutrese υποστηρίζει μία κύρια πάθηση κάθε φορά για σαφέστερη κλινική λογική.">Leave unselected for a general/healthy population plan. Nutrese supports one primary condition at a time for clearer clinical logic.</span></div>
           </div>
+        </div>
+        <div class="section-label"><span class="i18n" data-en="Goals &amp; Preferences" data-gr="Στόχοι &amp; Προτιμήσεις">Goals &amp; Preferences</span></div>
+        <div class="form-grid">
           <div class="form-field"><label><span class="i18n" data-en="Goal" data-gr="Στόχος">Goal</span></label>
             <select id="p-goal" onchange="calcAll()">
               <option value="Maintenance">Maintenance</option>
@@ -1176,6 +1186,12 @@ table th,
         </div>
         <div id="expected-progress-box" class="alert info" style="display:none;margin-top:-4px;margin-bottom:12px"></div>
                 <div id="condition-guidance" style="padding:12px;background:var(--teal-50);border:1px solid var(--teal-100);border-radius:var(--radius);font-size:13px;color:var(--teal-800);margin-top:8px"></div>
+        <div style="margin-top:20px;padding:16px;border:1px solid var(--teal-100);border-radius:12px;background:var(--teal-50)">
+          <div style="font-weight:700;font-size:14px;color:var(--text-primary);margin-bottom:4px"><i class="ti ti-sparkles" aria-hidden="true"></i> <span class="i18n" data-en="Ready to generate a plan?" data-gr="Έτοιμοι για δημιουργία πλάνου;">Ready to generate a plan?</span></div>
+          <div style="font-size:13px;color:var(--text-secondary);margin-bottom:12px"><span class="i18n" data-en="Nutrese will suggest starting macros and exchange servings based on this profile — you can review and adjust everything before saving." data-gr="Το Nutrese θα προτείνει αρχικά μακροθρεπτικά και μερίδες ισοδυνάμων βάσει αυτού του προφίλ — μπορείτε να τα ελέγξετε και να τα προσαρμόσετε πριν την αποθήκευση.">Nutrese will suggest starting macros and exchange servings based on this profile — you can review and adjust everything before saving.</span></div>
+          <button class="btn primary" onclick="generateRecommendedPlan()"><i class="ti ti-sparkles" aria-hidden="true"></i> <span class="i18n" data-en="Generate Recommended Plan" data-gr="Δημιουργία Προτεινόμενου Πλάνου">Generate Recommended Plan</span></button>
+          <span id="generate-plan-status" style="font-size:12px;color:var(--green-800);margin-left:8px"></span>
+        </div>
       </div>
     </div>
   </div>
@@ -1191,11 +1207,19 @@ table th,
           <div class="form-field"><label><i class="ti ti-droplet" aria-hidden="true"></i> <span class="i18n" data-en="Body Water %" data-gr="Ποσοστό Νερού %">Body Water %</span></label><input type="number" id="bc-water" class="i18n-ph" data-en-ph="Men: 50–65%, Women: 45–60%" data-gr-ph="Άνδρες: 50–65%, Γυναίκες: 45–60%" placeholder="Men: 50–65%, Women: 45–60%" step="0.1" oninput="calcBodyComp()"><div class="field-note" id="bc-water-note"></div></div>
           <div class="form-field"><label><i class="ti ti-scale" aria-hidden="true"></i> <span class="i18n" data-en="Fat Mass kg (auto)" data-gr="Μάζα Λίπους κιλά (αυτόματο)">Fat Mass kg (auto)</span></label><input type="number" id="bc-fatmass" class="i18n-ph" data-en-ph="Auto = Weight × BF%" data-gr-ph="Αυτόματο = Βάρος × ΠΛ%" placeholder="Auto = Weight × BF%" step="0.1" inputmode="decimal" oninput="onBodyCompManualInput('fatmass')"></div>
           <div class="form-field"><label><i class="ti ti-activity" aria-hidden="true"></i> <span class="i18n" data-en="Fat-Free Mass kg (auto)" data-gr="Άλιπη Μάζα κιλά (αυτόματο)">Fat-Free Mass kg (auto)</span></label><input type="number" id="bc-ffm" class="i18n-ph" data-en-ph="Auto = Weight − Fat mass" data-gr-ph="Αυτόματο = Βάρος − Μάζα λίπους" placeholder="Auto = Weight − Fat mass" step="0.1" inputmode="decimal" oninput="onBodyCompManualInput('ffm')"></div>
-          <div class="form-field"><label><i class="ti ti-barbell" aria-hidden="true"></i> <span class="i18n" data-en="Muscle Mass (kg)" data-gr="Μυϊκή Μάζα (κιλά)">Muscle Mass (kg)</span></label><input type="number" id="bc-muscle" class="i18n-ph" data-en-ph="Manual Tanita/device value" data-gr-ph="Χειροκίνητη τιμή Tanita/συσκευής" placeholder="Manual Tanita/device value" step="0.1" inputmode="decimal" oninput="onBodyCompManualInput('muscle')"></div>
+        </div>
+        <div id="bc-advanced-summary" onclick="toggleBodyCompAdvanced()" style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 14px;border:1px solid var(--border-strong);border-radius:8px;background:var(--bg-input);cursor:pointer;margin-top:6px">
+          <span style="font-size:12.5px;font-weight:600;color:var(--text-secondary)"><i class="ti ti-device-tablet" aria-hidden="true"></i> <span class="i18n" data-en="Advanced device measurements (Tanita/InBody)" data-gr="Προηγμένες μετρήσεις συσκευής (Tanita/InBody)">Advanced device measurements (Tanita/InBody)</span></span>
+          <span style="font-size:12px;color:var(--teal-600);font-weight:600;white-space:nowrap"><span class="i18n" data-en="Show" data-gr="Εμφάνιση">Show</span> <i class="ti ti-chevron-down" aria-hidden="true" id="bc-advanced-chevron" style="transition:transform .15s ease;display:inline-block"></i></span>
+        </div>
+        <div id="bc-advanced-fields" style="display:none;margin-top:10px">
+        <div class="form-grid three">
           <div class="form-field"><label><i class="ti ti-clock" aria-hidden="true"></i> <span class="i18n" data-en="Metabolic Age" data-gr="Μεταβολική Ηλικία">Metabolic Age</span></label><input type="number" id="bc-metage" placeholder="—" oninput="calcBodyComp()"><div class="field-note" id="bc-metage-note"></div></div>
+          <div class="form-field"><label><i class="ti ti-barbell" aria-hidden="true"></i> <span class="i18n" data-en="Muscle Mass (kg)" data-gr="Μυϊκή Μάζα (κιλά)">Muscle Mass (kg)</span></label><input type="number" id="bc-muscle" class="i18n-ph" data-en-ph="Manual Tanita/device value" data-gr-ph="Χειροκίνητη τιμή Tanita/συσκευής" placeholder="Manual Tanita/device value" step="0.1" inputmode="decimal" oninput="onBodyCompManualInput('muscle')"></div>
           <div class="form-field"><label><i class="ti ti-flame" aria-hidden="true"></i> <span class="i18n" data-en="Visceral Fat Score" data-gr="Δείκτης Σπλαχνικού Λίπους">Visceral Fat Score</span></label><input type="number" id="bc-visceral" class="i18n-ph" data-en-ph="1–12 healthy, 13+ excess" data-gr-ph="1–12 υγιές, 13+ αυξημένο" placeholder="1–12 healthy, 13+ excess" oninput="calcBodyComp()"><div class="field-note" id="bc-visceral-note"></div></div>
           <div class="form-field"><label><i class="ti ti-run" aria-hidden="true"></i> <span class="i18n" data-en="Physique Rating (1–9)" data-gr="Βαθμολογία Σωματότυπου (1–9)">Physique Rating (1–9)</span></label><input type="number" id="bc-physique" class="i18n-ph" data-en-ph="Tanita 1–9" data-gr-ph="Tanita 1–9" placeholder="Tanita 1–9" min="1" max="9"></div>
           <div class="form-field"><label><i class="ti ti-bone" aria-hidden="true"></i> <span class="i18n" data-en="Bone Mass (kg)" data-gr="Οστική Μάζα (κιλά)">Bone Mass (kg)</span></label><input type="number" id="bc-bone" class="i18n-ph" data-en-ph="Tanita/device value" data-gr-ph="Τιμή Tanita/συσκευής" placeholder="Tanita/device value" step="0.1" oninput="calcBodyComp()"></div>
+        </div>
         </div>
         <div class="section-label"><span class="i18n" data-en="Auto Interpretation" data-gr="Αυτόματη Ερμηνεία">Auto Interpretation</span></div>
         <div id="bc-interpretation"></div>
@@ -4556,6 +4580,51 @@ function refreshConditionVisualState(){
     const radio=label.querySelector('input[name="p-condition"]');
     label.classList.toggle('condition-selected', !!radio?.checked);
   });
+  updateConditionSummary();
+}
+function updateConditionSummary(){
+  const summaryText=document.getElementById('p-condition-summary-text');
+  if(!summaryText) return;
+  const selected=getSelectedPrimaryCondition();
+  const isGr = window.appLang==='gr';
+  summaryText.textContent = selected ? conditionLabel(selected) : (isGr?'Καμία πάθηση (γενικό/υγιεινό πλάνο)':'No condition (general/healthy plan)');
+}
+function generateRecommendedPlan(){
+  const isGr = window.appLang==='gr';
+  const status=document.getElementById('generate-plan-status');
+  if(!S.goalKcal){
+    if(status){ status.style.color='var(--red-600)'; status.textContent = isGr?'Συμπληρώστε ηλικία, ύψος και βάρος πρώτα.':'Fill in age, height, and weight first.'; }
+    return;
+  }
+  applyConditionMacros();
+  applySuggestedExchangeServings();
+  if(status){
+    status.style.color='var(--green-800)';
+    status.textContent = isGr?'Έτοιμο — δείτε τους Στόχους και το Σύστημα Ισοδυνάμων για επεξεργασία.':'Done — review Targets and Exchange System to adjust.';
+  }
+}
+function toggleBodyCompAdvanced(forceOpen){
+  const fields=document.getElementById('bc-advanced-fields');
+  const chevron=document.getElementById('bc-advanced-chevron');
+  const summaryLabel=document.getElementById('bc-advanced-summary')?.querySelector('.i18n[data-en="Show"], .i18n[data-en="Hide"]');
+  if(!fields) return;
+  const open = forceOpen!==undefined ? forceOpen : fields.style.display==='none';
+  fields.style.display = open ? 'block' : 'none';
+  if(chevron) chevron.style.transform = open ? 'rotate(180deg)' : 'rotate(0deg)';
+  if(summaryLabel){
+    const isGr = window.appLang==='gr';
+    summaryLabel.setAttribute('data-en', open?'Hide':'Show');
+    summaryLabel.setAttribute('data-gr', open?'Απόκρυψη':'Εμφάνιση');
+    summaryLabel.textContent = isGr ? (open?'Απόκρυψη':'Εμφάνιση') : (open?'Hide':'Show');
+  }
+}
+function toggleConditionPicker(forceOpen){
+  const picker=document.getElementById('p-condition-picker');
+  const chevron=document.getElementById('p-condition-chevron');
+  if(!picker) return;
+  const open = forceOpen!==undefined ? forceOpen : picker.style.display==='none';
+  picker.style.display = open ? 'block' : 'none';
+  if(chevron) chevron.style.transform = open ? 'rotate(180deg)' : 'rotate(0deg)';
 }
 function syncPrimaryConditionState(){
   const selected=getSelectedPrimaryCondition();
@@ -4581,6 +4650,7 @@ function onConditionRadioClick(radio){
   syncPrimaryConditionState();
   scheduleAutosave();
   calcAll();
+  toggleConditionPicker(false);
 }
 function onPregnancyToggle(){
   syncPrimaryConditionState();
@@ -4778,7 +4848,7 @@ const PAGE_INFO = {
   dashboard:{title:'Dashboard',sub:'Quick overview · Engine status · Today\'s plan'},
   clients:{title:'My Clients',sub:'Saved clients on your account'},
   intake:{title:'Client Intake',sub:'ΠΡΩΤΗ ΑΞΙΟΛΟΓΗΣΗ — First consultation questionnaire + Clinical Notes'},
-  profile:{title:'Client Profile',sub:'Personal Details · Anthropometrics · Auto BMR/TDEE/BMI/IBW'},
+  profile:{title:'Client Profile',sub:'Personal Details · Measurements · Auto BMR/TDEE/BMI/IBW'},
   bodycomp:{title:'Body Composition',sub:'Body fat, water, muscle mass, visceral fat and metabolic age'},
   macros:{title:'Macro Targets',sub:'Calorie split · Carbs / Protein / Fat breakdown'},
   exchanges:{title:'Exchange System',sub:'Σύστημα Ισοδυνάμων · Auto-calculated from macro targets'},
@@ -4797,7 +4867,7 @@ const PAGE_INFO_GR = {
   dashboard:{title:'Πίνακας Ελέγχου',sub:'Γρήγορη επισκόπηση · Κατάσταση · Σημερινό πλάνο'},
   clients:{title:'Οι Πελάτες μου',sub:'Αποθηκευμένοι πελάτες στον λογαριασμό σας'},
   intake:{title:'Ιστορικό Πελάτη',sub:'ΠΡΩΤΗ ΑΞΙΟΛΟΓΗΣΗ — Ερωτηματολόγιο πρώτης συνεδρίας + Κλινικές Σημειώσεις'},
-  profile:{title:'Προφίλ Πελάτη',sub:'Προσωπικά Στοιχεία · Ανθρωπομετρικά · Αυτόματο BMR/TDEE/BMI/IBW'},
+  profile:{title:'Προφίλ Πελάτη',sub:'Προσωπικά Στοιχεία · Μετρήσεις · Αυτόματο BMR/TDEE/BMI/IBW'},
   bodycomp:{title:'Σύσταση Σώματος',sub:'Λίπος, νερό, μυϊκή μάζα, σπλαχνικό λίπος και μεταβολική ηλικία'},
   macros:{title:'Στόχοι Μακροθρεπτικών',sub:'Κατανομή θερμίδων · Υδατάνθρακες / Πρωτεΐνη / Λίπος'},
   exchanges:{title:'Σύστημα Ισοδυνάμων',sub:'Σύστημα Ισοδυνάμων · Αυτόματος υπολογισμός από στόχους'},
@@ -4846,7 +4916,11 @@ function nav(id) {
   if(id==='appointments') { loadAppointments(true).then(()=>{renderAppointments(); if(!document.getElementById('appt-id')?.value) openAppointmentForm(todayISO());}); checkCalendarConnectionStatus(); }
   if(id==='account') { setTimeout(()=>refreshAccountSubscriptionPage().catch(err=>console.error('[Nutrese account] deferred refresh failed', err)), 0); }
   if(id==='profile') { renderConditionRadios(); refreshConditionVisualState(); }
-  if(id==='bodycomp') calcBodyComp();
+  if(id==='bodycomp'){
+    calcBodyComp();
+    const hasAdvancedData = ['bc-metage','bc-muscle','bc-visceral','bc-physique','bc-bone'].some(fid=>document.getElementById(fid)?.value);
+    if(hasAdvancedData) toggleBodyCompAdvanced(true);
+  }
   if(id==='macros') renderClinicalMacroSuggestions();
   if(id==='exchanges') renderExchanges();
   // Always sync exchange inputs → S.ex before building meal plans
