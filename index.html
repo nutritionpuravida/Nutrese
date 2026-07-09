@@ -276,6 +276,7 @@ html[data-theme="dark"] #condition-guidance a {
 .form-field .field-note { font-size: 11px; color: var(--text-muted); }
 .form-field .field-note.suggested { color: var(--text-muted); font-style: italic; }
 .section-label { font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .07em; margin: 16px 0 9px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+.card-body > .section-label:first-child { margin-top: 0; }
 
 /* ─── TABLES ─── */
 .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -511,6 +512,15 @@ html[data-theme="dark"] .week-summary-table td:last-child {
     background: #fff !important; color: #000 !important; font-size: 12px !important; }
   .app, .main, .content { display: block !important; height: auto !important;
     overflow: visible !important; padding: 0 !important; margin: 0 !important; }
+
+  /* Equivalents Guide print: force solid black text everywhere on this page.
+     Elsewhere in the app, inline styles using var(--text-muted)/var(--text-secondary)
+     etc. don't get caught by the body-level color override above, since setting
+     color on body doesn't touch the custom property values those inline styles
+     reference — they keep resolving to whichever grey the current theme defines,
+     which prints faint and hard to read. This page is a plain client handout with
+     no color-coded statuses to preserve, so it's safe to force everything black. */
+  #page-equivalents, #page-equivalents * { color: #000 !important; }
 
   /* ── Pages ── */
   .page { display: none !important; }
@@ -1362,15 +1372,15 @@ table th,
             <div style="padding-top:10px;border-top:1px solid var(--border)">
               <div style="font-size:12px;color:var(--text-muted)" id="report-branding-status"><span class="i18n" data-en="Report branding:" data-gr="Επωνυμία αναφοράς:">Report branding:</span> <a onclick="nav('account')" style="color:var(--teal-600);text-decoration:underline;cursor:pointer"><span class="i18n" data-en="Manage in Account →" data-gr="Διαχείριση στον Λογαριασμό →">Manage in Account →</span></a></div>
             </div>
+            <div style="padding-top:10px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px">
+              <button class="btn primary" onclick="printPage()" id="report-print-btn" style="align-self:flex-start"><i class="ti ti-printer" aria-hidden="true"></i> Print Full Report</button>
+              <div class="field-note" style="margin:0" id="report-days-note">Select one or more days to print from the weekly plan. Single-day print hides the weekday name.</div>
+            </div>
           </div>
           <div style="border:1px solid var(--border);border-radius:10px;padding:12px">
             <div id="report-days-title" style="font-size:12px;font-weight:800;color:var(--text-secondary);margin-bottom:8px">Print days from 7-day plan:</div>
             <div id="report-day-selector" style="display:grid;grid-template-columns:1fr 1fr;gap:6px 10px"></div>
           </div>
-        </div>
-        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:10px">
-          <button class="btn primary" onclick="printPage()" id="report-print-btn"><i class="ti ti-printer" aria-hidden="true"></i> Print Full Report</button>
-          <div class="field-note" style="margin:0" id="report-days-note">Select one or more days to print from the weekly plan. Single-day print hides the weekday name.</div>
         </div>
         <div class="field-note" id="report-options-note" style="margin-top:8px">Check/uncheck to choose which meal plan appears in the printed report. Use Print / Save PDF and choose “Save as PDF” in the browser print dialog.</div>
       </div>
