@@ -209,6 +209,8 @@ i.ti-circle-x { color: var(--red-text); }
 #page-dashboard .metrics-grid .metric { background: var(--bg-surface); border-radius: 16px; padding: 16px 18px; box-shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04); }
 #page-dashboard .metrics-grid { margin-top: 4px; }
 #page-profile .metrics-grid .metric { background: var(--bg-surface); border-radius: 16px; padding: 16px 18px; box-shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04); }
+#page-bodycomp .metrics-grid .metric,
+#page-bodycomp .form-grid .metric { background: var(--bg-surface); border-radius: 16px; padding: 16px 18px; box-shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04); }
 @media (min-width: 901px) {
   #page-profile .metrics-grid { grid-template-columns: repeat(5, 1fr); }
 }
@@ -1198,7 +1200,6 @@ table th,
         <div id="bc-targets"></div>
         <div style="margin-top:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
           <button class="btn primary" onclick="saveBodyComp()"><i class="ti ti-device-floppy" aria-hidden="true"></i> <span class="i18n" data-en="Save Measurements" data-gr="Αποθήκευση Μετρήσεων">Save Measurements</span></button>
-          <button class="btn" onclick="nav('tracking')"><span class="i18n" data-en="View history →" data-gr="Προβολή ιστορικού →">View history →</span></button>
           <span style="font-size:11px;color:var(--text-muted)"><span class="i18n" data-en="↳ Logs this visit — click Save Client above to keep it permanently" data-gr="↳ Καταγράφει την επίσκεψη — πατήστε Αποθήκευση Πελάτη επάνω για μόνιμη αποθήκευση">↳ Logs this visit — click Save Client above to keep it permanently</span></span>
         </div>
       </div>
@@ -4810,7 +4811,7 @@ const PAGE_INFO_GR = {
 };
 
 const CLIENT_TAB_PAGES = ['profile','bodycomp','intake','labs','macros','exchanges','sevenday','tracking','report'];
-const PRINT_PAGES = ['sevenday','equivalents'];
+const PRINT_PAGES = ['equivalents'];
 
 function nav(id) {
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
