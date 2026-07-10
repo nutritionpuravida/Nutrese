@@ -1344,7 +1344,6 @@ table th,
       <div class="card-header"><span class="card-title"><i class="ti ti-calendar" aria-hidden="true"></i> <span class="i18n" data-en="7-Day Meal Plan" data-gr="Πλάνο Γευμάτων 7 Ημερών">7-Day Meal Plan</span></span></div>
       <div class="card-body">
         <div id="plan-quality-summary" style="margin-bottom:16px"></div>
-        <div id="micro-quality-summary" style="margin-bottom:16px"></div>
         <div id="rebalance-preview" style="margin-bottom:16px"></div>
         <div id="sevenday-body"></div>
       </div>
@@ -1386,6 +1385,7 @@ table th,
         <div class="field-note" id="report-options-note" style="margin-top:8px">Check/uncheck to choose which meal plan appears in the printed report. Use Print / Save PDF and choose “Save as PDF” in the browser print dialog.</div>
       </div>
     </div>
+    <div id="micro-quality-summary" style="margin-bottom:14px"></div>
     <div class="card">
       <div class="card-header"><span class="card-title" id="report-print-title"><i class="ti ti-file-text" aria-hidden="true"></i> Κλινική Αναφορά Διατροφής</span></div>
       <div class="card-body" id="report-body"><div style="color:var(--gray-400)">Navigate here after filling client profile to generate report.</div></div>
@@ -2837,7 +2837,7 @@ const MEAL_EXCHANGES = {
   DIN_OMELETTE:       {protein:4, starch:1, fat:3, fruit:0, dairy:0, veg:2}, // fixed: 3 eggs + turkey protein + bread + oil + veg
   DIN_TUNA_POTATO:    {protein:0, starch:0, fat:0, fruit:0, dairy:0, veg:1},
   DIN_PASTA_MINCE:    {protein:0, starch:0, fat:0, fruit:0, dairy:0, veg:1},
-  DIN_SOUVLAKI_PITA:  {protein:4, starch:2, fat:0, fruit:0, dairy:0, veg:3}, // fixed: 140g chicken + small pita minimum (2 starch) + salad
+  DIN_SOUVLAKI_PITA:  {protein:4, starch:2, fat:3, fruit:0, dairy:0, veg:3}, // fixed: 140g chicken + small pita minimum (2 starch) + salad + 3 tsp olive oil (matches stated text — was fat:0, an accounting mismatch)
   DIN_BIFTEKI_BULGUR: {protein:3, starch:2, fat:4, fruit:0, dairy:0, veg:1},
   // Vegetarian/Vegan options — legumes provide both starch AND protein
   // (standard exchange convention: ½ cup cooked legumes = 1 starch + 1 protein)
@@ -2883,7 +2883,7 @@ const MEAL_EXCHANGES = {
 // printed recipe describes (274 kcal) — with no indication anywhere in the
 // plan. These meals must NOT receive dynamic portions, same as breakfast.
 const FIXED_COMPOSITION_MEALS = new Set([
-  'DIN_OMELETTE', 'DIN_SOUVLAKI_PITA', 'DIN_FISH_POTATO', 'LUN_TUNA_POTATO', 'DIN_BIFTEKI_BULGUR',
+  'DIN_OMELETTE', 'DIN_SOUVLAKI_PITA', 'DIN_FISH_POTATO', 'LUN_TUNA_POTATO',
   'LUN_CHICKPEA_STEW', 'LUN_BEAN_SALAD',
   'DIN_CHICKPEA_STEW', 'DIN_HALLOUMI_SALAD',
   'LUN_CHICKEN_QUINOA', 'LUN_SALMON_QUINOA', 'LUN_LENTIL_SOUP',
@@ -3830,7 +3830,6 @@ const SNACK_EXTRAS = [
   {v:'snk_fruit_crackers_cottage', group:'combo', slots:['snk1'], gr:'🍎 1 φρούτο + κράκερ (4) + τυρί cottage (~100g)', en:'🍎 1 fruit + crackers (4) + cottage cheese (~100g)'}, // 1 fruit + 1 starch + 1 protein
   {v:'snk_fruit_ricecakes_tahini_nuts', group:'combo', slots:['snk1'], gr:'🍎 1 φρούτο + 2 ρυζογκοφρέτες + 1 κ.γ. ταχίνι + 6 αμύγδαλα ή 4 καρύδια', en:'🍎 1 fruit + 2 rice cakes + 1 tsp tahini + 6 almonds or 4 walnuts'}, // 1 fruit + 1 starch + 2 fat
   {v:'snk_anthotyro_rusk_fruit', group:'combo', slots:['snk1'], gr:'🧀 Ανθότυρο (~40g) + παξιμάδι (1) + φρούτο', en:'🧀 Ricotta cheese (~40g) + rusk (1) + fruit'}, // 1 protein + 1 starch + 1 fruit
-  {v:'snk_hummus_veg', group:'combo', slots:['snk1','snk2'], gr:'🥣 Χούμους (2 κ.σ.) + λαχανικά (αγγούρι, καρότο, πιπεριά)', en:'🥣 Hummus (2 tbsp) + vegetables (cucumber, carrot, pepper)'}, // 1 starch + 1 fat + 1 vegetable
   {v:'snk_crackers_cheese', group:'combo', slots:['snk2'], gr:'🍞 4 κράκερ ολικής + 1 φέτα τυρί light', en:'🍞 4 wholegrain crackers + 1 slice light cheese'}, // 1 starch + 1 protein
   {v:'sleep_milk_glass', group:'combo', slots:['sleep'], gr:'🥛 1 ποτήρι γάλα 1,5% (~240ml)', en:'🥛 1 glass semi-skimmed milk 1.5% (~240ml)'}, // 1 dairy
   {v:'sleep_cocoa_milk', group:'combo', slots:['sleep'], gr:'☕ Κακάο με γάλα 1,5% (~240ml, χωρίς ζάχαρη)', en:'☕ Cocoa with semi-skimmed milk 1.5% (~240ml, no sugar)'}, // 1 dairy
@@ -3846,7 +3845,6 @@ const SNACK_COMBO_EXCHANGES = {
   snk_fruit_crackers_cottage:{fruit:1,starch:1,protein:1},
   snk_fruit_ricecakes_tahini_nuts:{fruit:1,starch:1,fat:2},
   snk_anthotyro_rusk_fruit:{protein:1,starch:1,fruit:1},
-  snk_hummus_veg:{starch:1,fat:1,veg:1},
   snk_crackers_cheese:{starch:1,protein:1},
   sleep_milk_glass:{dairy:1},
   sleep_cocoa_milk:{dairy:1},
@@ -4217,8 +4215,8 @@ const CAPS = {
   // oil into a single dish (e.g. 25 tsp) for high-calorie targets such as
   // weight-gain plans. These are a generous but bounded universal ceiling —
   // review/adjust the numbers if your clinical judgment differs.
-  fatDailyMax: 20,       // ≈100g fat / 900 kcal from fat exchanges alone — generous even for high-kcal weight-gain plans
-  fatPerMealMax: 6,      // ≤6 tsp oil per main meal — already a lot of visible oil in one dish
+  fatDailyMax: 12,       // = 2 x fatPerMealMax, so it's always achievable across the day's 2 main meals without overflow — matches the pattern already used for starch/protein above. Also evidence-aligned: PREDIMED (the major Mediterranean-diet CVD trial) found benefits up to ~4 tbsp/day (12 tsp) even for very active adherents; general-population benefit plateaus around 20g/~4.5 tsp/day.
+  fatPerMealMax: 6,      // ≤6 tsp (2 tbsp) oil per main meal — standard single-dish serving is ~1 tbsp (3 tsp) for dressing/sautéing; 2 tbsp covers a more substantial dish without being unrealistic.
 };
 
 // Split a daily exchange total across N main meals, each capped at perMealMax
@@ -4302,7 +4300,7 @@ function mealUsesFishProtein(mealKey){
   return /FISH|TUNA/.test(String(mealKey||''));
 }
 function allowsProteinTopUp(mealKey){
-  return !isCustomMealKey(mealKey) && mealKey!=='DIN_SOUVLAKI_PITA';
+  return !isCustomMealKey(mealKey) && !FIXED_COMPOSITION_MEALS.has(mealKey);
 }
 function allocateProteinRemaining(ex, fixed, scalableSlots, portions, p, caps, warnings){
   const target=Number(ex?.protein||0);
@@ -4317,9 +4315,7 @@ function allocateProteinRemaining(ex, fixed, scalableSlots, portions, p, caps, w
     return allowsProteinTopUp(mealKey);
   });
   if(remaining>0 && !proteinSlots.length){
-    if(p.dinner!=='DIN_SOUVLAKI_PITA'){
-      warnings.push(`${remaining} protein exchange(s) cannot be allocated because both main meals are custom meals.`);
-    }
+    warnings.push(`${remaining} protein exchange(s) cannot be allocated because both main meals are custom or fixed-composition.`);
     return;
   }
   const slotCaps={};
@@ -4334,9 +4330,6 @@ function allocateProteinRemaining(ex, fixed, scalableSlots, portions, p, caps, w
       return base + Number(portions[slot]?.prot||0) < slotCaps[slot];
     });
     if(!available.length){
-      if(p.dinner==='DIN_SOUVLAKI_PITA'){
-        break;
-      }
       const dinnerAvailable=proteinSlots.includes('dinner');
       const slot=dinnerAvailable?'dinner':proteinSlots[proteinSlots.length-1];
       portions[slot].prot += remaining;
@@ -4359,7 +4352,7 @@ function allocateProteinRemaining(ex, fixed, scalableSlots, portions, p, caps, w
     remaining--;
   }
 }
-function allocateFatRemaining(ex, fixed, portions, p, warnings){
+function allocateFatRemaining(ex, fixed, portions, p, warnings, caps){
   const target=Number(ex?.fat||0);
   const alreadyUsed=Number(fixed?.fat||0);
   let remaining=target-alreadyUsed;
@@ -4367,17 +4360,30 @@ function allocateFatRemaining(ex, fixed, portions, p, warnings){
     warnings.push(`fat fixed meals/snacks exceed daily exchange target by ${Math.abs(remaining)} exchange(s).`);
     return;
   }
-  const slots=['lunch','dinner'];
-  const maxPerMeal=5;
+  const slots=['lunch','dinner'].filter(slot=>{
+    const mealKey=slot==='lunch'?p.lunch:p.dinner;
+    return !isCustomMealKey(mealKey) && !FIXED_COMPOSITION_MEALS.has(mealKey);
+  });
+  const maxPerMeal=(caps && Number.isFinite(caps.fatPerMealMax)) ? caps.fatPerMealMax : 6;
+  if(remaining>0 && !slots.length){
+    warnings.push(`${remaining} fat exchange(s) cannot be allocated because both main meals are custom or fixed-composition.`);
+    return;
+  }
   while(remaining>0){
     const available=slots.filter(slot=>{
       const mealKey=slot==='lunch'?p.lunch:p.dinner;
-      if(isCustomMealKey(mealKey)) return false;
       const base=Number(MEAL_EXCHANGES[mealKey]?.fat||0);
       return base + Number(portions[slot]?.fat||0) < maxPerMeal;
     });
     if(!available.length){
-      warnings.push(`Fat target exceeds the 5 tsp olive-oil per-meal display cap; review fat servings or add another fat exchange option.`);
+      // Never silently drop exchanges — assign the remainder anyway so the
+      // displayed kcal always matches the Exchange System total, and flag it
+      // clearly so the clinician knows to review (same principle already
+      // applied to protein above).
+      const slot=slots.includes('dinner')?'dinner':slots[slots.length-1];
+      portions[slot].fat += remaining;
+      warnings.push(`Fat target exceeds the ${maxPerMeal} tsp olive-oil per-meal cap; ${remaining} exchange(s) assigned to ${slot} to preserve the Exchange System total — review clinically.`);
+      remaining=0;
       break;
     }
     for(const slot of available){
@@ -4430,7 +4436,7 @@ function getDayMealAllocation(plan=S.mealSel, lang=S.mealLanguage||'GR'){
   }
   allocateRemainingExchange('starch','starch',ex,fixed,scalableSlots,portions,caps.starchPerMealMax,warnings);
   allocateProteinRemaining(ex,fixed,scalableSlots,portions,p,caps,warnings);
-  allocateFatRemaining(ex,fixed,portions,p,warnings);
+  allocateFatRemaining(ex,fixed,portions,p,warnings,caps);
   allocateRemainingExchange('veg','veg',ex,fixed,scalableSlots,portions,99,warnings);
   const allocated=zeroExchangeUse();
   addExchangeUse(allocated, fixed);
@@ -4446,7 +4452,6 @@ function getDayMealAllocation(plan=S.mealSel, lang=S.mealLanguage||'GR'){
   };
   const exchangeDiff=exchangeUseDiff(exchangeTarget, allocated);
   Object.entries(exchangeDiff).forEach(([key,val])=>{
-    if(key==='protein' && val>0 && p.dinner==='DIN_SOUVLAKI_PITA') return;
     if(val>0) warnings.push(`${val} ${key} exchange(s) remain unallocated.`);
     if(val<0) warnings.push(`${Math.abs(val)} ${key} exchange(s) are over-allocated.`);
   });
@@ -4955,7 +4960,7 @@ function nav(id) {
   }
   if(id==='oneday') buildOneDayPlan();
   if(id==='sevenday') { if(S.sevenDayView==='week') S.weekViewTheme=currentAppTheme(); buildSevenDay(); }
-  if(id==='report') { loadReportLogo().finally(()=>buildReport()); }
+  if(id==='report') { loadReportLogo().finally(()=>buildReport()); renderMicronutrientCoverage(); }
   if(id==='tracking') renderTracking();
 }
 
@@ -5456,7 +5461,7 @@ function renderExchangeChecks(){
       }
       if(i===3){ // Fat
         if(diff<0) fix=gapData.fatCapped
-          ? (caps.fatDailyMax>=90 ? (isGrChk?`Ο στόχος λίπους υπερβαίνει το μη περιοριστικό όριο ασφαλείας — επανεξετάστε θερμίδες/μακροθρεπτικά αντί να προσθέσετε επιπλέον λάδι`:`Fat target exceeds the non-restrictive safety ceiling — review calories/macros rather than forcing extra oil`) : (isGrChk?`Το λίπος έχει όριο ${caps.fatDailyMax} κ.γ./ημέρα (λόγω πάθησης) — χρειάζονται ${Math.round(Math.abs(diff)/5)} επιπλέον μερίδες λίπους`:`Fat capped at ${caps.fatDailyMax} tsp/day (condition limit) — need ${Math.round(Math.abs(diff)/5)} more fat ex`))
+          ? (caps.fatDailyMax>=12 ? (isGrChk?`Ο στόχος λίπους υπερβαίνει το γενικό όριο ρεαλισμού (${caps.fatDailyMax} κ.γ./ημέρα) — επανεξετάστε θερμίδες/μακροθρεπτικά ή κατανείμετε σε περισσότερα γεύματα/σνακ αντί να προσθέσετε επιπλέον λάδι σε ένα πιάτο`:`Fat target exceeds the general realism ceiling (${caps.fatDailyMax} tsp/day) — review calories/macros, or spread across more meals/snacks rather than forcing extra oil into one dish`) : (isGrChk?`Το λίπος έχει όριο ${caps.fatDailyMax} κ.γ./ημέρα (λόγω πάθησης) — χρειάζονται ${Math.round(Math.abs(diff)/5)} επιπλέον μερίδες λίπους`:`Fat capped at ${caps.fatDailyMax} tsp/day (condition limit) — need ${Math.round(Math.abs(diff)/5)} more fat ex`))
           : (isGrChk?`Προσθέστε ${Math.round(Math.abs(diff)/5)} μερίδα(-ες) λίπους (${Math.round(Math.abs(diff)/5)} κ.γ. ελαιόλαδο)`:`Add ${Math.round(Math.abs(diff)/5)} fat exchange(s) (${Math.round(Math.abs(diff)/5)} tsp olive oil)`);
         else fix=isGrChk?`Σκεφτείτε μείωση λίπους κατά ${Math.round(Math.abs(diff)/5)} μερίδα(-ες), ή αποδεχτείτε +${Math.abs(diff)}g αν η ποιότητα λίπους είναι κατάλληλη`:`Consider reducing fat by ${Math.round(Math.abs(diff)/5)} exchange(s), or accept +${Math.abs(diff)}g if fat quality is appropriate`;
       }
@@ -5950,7 +5955,7 @@ function toggleWeekPlanExtra(dayIndex, extrasKey, extraValue, checked){
 // such in the UI.
 const FISH_MEAL_KEYS=new Set(['LUN_FISH_POTATO','LUN_SALMON_POTATO','LUN_BAKED_FISH_VEG','LUN_TUNA_POTATO','LUN_TUNA_RICE','LUN_SALMON_QUINOA','LUN_GRILLED_FISH_RICE','LUN_LOUVI_TUNA','DIN_FISH_POTATO','DIN_SALMON_POTATO','DIN_BAKED_FISH_VEG','DIN_TUNA_POTATO','DIN_TUNA_RICE','DIN_GRILLED_FISH_RICE']);
 const FATTY_FISH_MEAL_KEYS=new Set(['LUN_SALMON_POTATO','LUN_SALMON_QUINOA','DIN_SALMON_POTATO']); // richer vitamin D source than white fish
-const LEGUME_MEAL_KEYS=new Set(['LUN_LOUVI_TUNA','LUN_LENTILS_RICE','LUN_CHICKPEA_STEW','LUN_BEAN_SALAD','LUN_CHICKPEAS_SALAD','LUN_LENTIL_SOUP','LUN_FASOLAKIA_PORK','LUN_FASOLAKIA_CHICKEN','LUN_TOFU_RICE','LUN_PEAS_LADERO','DIN_LENTILS_RICE','DIN_CHICKPEA_STEW','DIN_BEAN_PASTA','DIN_TOFU_STIRFRY','DIN_FASOLAKIA_CHICKEN','DIN_CHICKPEAS_SALAD']);
+const LEGUME_MEAL_KEYS=new Set(['LUN_LOUVI_TUNA','LUN_LENTILS_RICE','LUN_CHICKPEA_STEW','LUN_BEAN_SALAD','LUN_CHICKPEAS_SALAD','LUN_LENTIL_SOUP','LUN_TOFU_RICE','DIN_LENTILS_RICE','DIN_CHICKPEA_STEW','DIN_BEAN_PASTA','DIN_TOFU_STIRFRY','DIN_CHICKPEAS_SALAD']); // fasolakia (green beans) and peas-ladero are vegetable/starch-classified in this app's own exchange tables, not legume/protein — confirmed by checking their actual composition
 const RED_MEAT_MEAL_KEYS=new Set(['LUN_FASOLAKIA_PORK','LUN_PASTA_MINCE','LUN_BIFTEKI_BULGUR','DIN_PASTA_MINCE','DIN_BIFTEKI_BULGUR']); // pork/beef — heme iron
 const HIGH_SODIUM_MEAL_KEYS=new Set(['LUN_HALLOUMI_POTATO','LUN_HALLOUMI_PASTA','LUN_TRACHANAS_HALLOUMI','LUN_AVGOLEMONO_SOUP','LUN_TUNA_POTATO','LUN_TUNA_RICE','LUN_LOUVI_TUNA','DIN_HALLOUMI_POTATO','DIN_HALLOUMI_SALAD','DIN_TRACHANAS_HALLOUMI','DIN_AVGOLEMONO_SOUP','DIN_TUNA_POTATO','DIN_TUNA_RICE','DIN_SOUVLAKI_PITA']); // halloumi/feta/canned fish/cured — naturally higher sodium
 
@@ -6490,7 +6495,7 @@ const MEAL_PLAN_TEMPLATES = {
     nameEn:'Mediterranean Weight Loss', nameGr:'Μεσογειακή Απώλεια Βάρους',
     descEn:'Moderate carb reduction, higher protein for satiety. Fish and vegetable-forward, Mediterranean staples.',
     descGr:'Μέτρια μείωση υδατανθράκων, αυξημένη πρωτεΐνη για κορεσμό. Έμφαση σε ψάρι και λαχανικά, μεσογειακή διατροφή.',
-    macros:{c:40,p:25,f:35}, dietType:null,
+    macros:{c:40,p:25,f:35}, dietType:null, condition:null,
     meals:{brk:['BRK_YOGURT_HONEY_WALNUTS','BRK_BOILED_EGGS_2','BRK_RUSKS_ANTHOTYRO'],
       lun:['LUN_BAKED_FISH_VEG','LUN_GRILLED_FISH_RICE','LUN_CHICKEN_QUINOA','LUN_LENTIL_SOUP'],
       din:['DIN_BAKED_FISH_VEG','DIN_GRILLED_FISH_RICE','DIN_CHICKEN_QUINOA','DIN_VEG_SOUP_CHICKEN']},
@@ -6500,7 +6505,7 @@ const MEAL_PLAN_TEMPLATES = {
     nameEn:'PCOS Balanced', nameGr:'Ισορροπημένο για PCOS',
     descEn:'Moderate carb, protein-forward, lower-glycaemic-load meals to help with insulin sensitivity.',
     descGr:'Μέτριοι υδατάνθρακες, αυξημένη πρωτεΐνη, γεύματα χαμηλού γλυκαιμικού φορτίου για ινσουλινοευαισθησία.',
-    macros:{c:40,p:25,f:35}, dietType:null,
+    macros:{c:40,p:25,f:35}, dietType:null, condition:null,
     meals:{brk:['BRK_EGGS_TOAST','BRK_BOILED_EGGS_2','BRK_YOGURT_HONEY_WALNUTS'],
       lun:['LUN_CHICKEN_QUINOA','LUN_SALMON_QUINOA','LUN_CHICKPEAS_SALAD'],
       din:['DIN_CHICKEN_QUINOA','DIN_BAKED_FISH_VEG','DIN_CHICKPEA_STEW']},
@@ -6510,7 +6515,7 @@ const MEAL_PLAN_TEMPLATES = {
     nameEn:'Diabetes Friendly', nameGr:'Φιλικό για Διαβήτη',
     descEn:'High-fibre carbohydrates, consistent meal structure. Avoids concentrated-sugar snacks like dried fruit.',
     descGr:'Υδατάνθρακες υψηλής περιεκτικότητας σε φυτικές ίνες, σταθερή δομή γευμάτων. Αποφεύγει σνακ με συμπυκνωμένη ζάχαρη όπως αποξηραμένα φρούτα.',
-    macros:{c:40,p:25,f:35}, dietType:null,
+    macros:{c:40,p:25,f:35}, dietType:null, condition:null,
     meals:{brk:['BRK_CEREAL','BRK_RUSKS_ANTHOTYRO','BRK_EGGS_TOAST'],
       lun:['LUN_LENTILS_RICE','LUN_LENTIL_SOUP','LUN_CHICKEN_QUINOA'],
       din:['DIN_LENTILS_RICE','DIN_CHICKEN_QUINOA','DIN_VEG_SOUP_CHICKEN']},
@@ -6520,7 +6525,7 @@ const MEAL_PLAN_TEMPLATES = {
     nameEn:'High Protein', nameGr:'Υψηλή Πρωτεΐνη',
     descEn:'Higher protein share (35%) for muscle maintenance/gain goals. Protein-forward at every meal and snack.',
     descGr:'Αυξημένο ποσοστό πρωτεΐνης (35%) για διατήρηση/αύξηση μυϊκής μάζας. Πρωτεΐνη σε κάθε γεύμα και σνακ.',
-    macros:{c:35,p:35,f:30}, dietType:null,
+    macros:{c:35,p:35,f:30}, dietType:null, condition:null,
     meals:{brk:['BRK_EGGS_TOAST','BRK_BOILED_EGGS_2','BRK_YOGURT_HONEY_WALNUTS'],
       lun:['LUN_CHICKEN_RICE','LUN_CHICKEN_QUINOA','LUN_SALMON_QUINOA'],
       din:['DIN_CHICKEN_MEATBALLS_RICE','DIN_CHICKEN_RICE','DIN_CHICKEN_QUINOA']},
@@ -6528,36 +6533,46 @@ const MEAL_PLAN_TEMPLATES = {
   },
   Vegetarian: {
     nameEn:'Vegetarian', nameGr:'Χορτοφαγική',
-    descEn:'No meat or fish. Eggs and dairy remain. Sets Diet Type to Vegetarian and filters meal dropdowns accordingly.',
-    descGr:'Χωρίς κρέας ή ψάρι. Αυγά και γαλακτοκομικά παραμένουν. Ορίζει Τύπο Διατροφής σε Χορτοφαγική και φιλτράρει τα γεύματα ανάλογα.',
-    macros:{c:45,p:20,f:35}, dietType:'Vegetarian',
+    descEn:'No meat or fish. Eggs and dairy remain. All meals in the pool below are vegetarian; sets Diet Type to Vegetarian for the client record.',
+    descGr:'Χωρίς κρέας ή ψάρι. Αυγά και γαλακτοκομικά παραμένουν. Όλα τα γεύματα παρακάτω είναι χορτοφαγικά· ορίζει Τύπο Διατροφής σε Χορτοφαγική στο προφίλ του πελάτη.',
+    macros:{c:45,p:20,f:35}, dietType:'Vegetarian', condition:null,
     meals:{brk:['BRK_OATS_VEGAN','BRK_CEREAL','BRK_RUSKS_ANTHOTYRO'],
       lun:['LUN_LENTILS_RICE','LUN_CHICKPEA_STEW','LUN_HALLOUMI_PASTA','LUN_BEAN_SALAD'],
       din:['DIN_CHICKPEA_STEW','DIN_HALLOUMI_SALAD','DIN_BEAN_PASTA']},
     snacks:{snk1:['fruit'], snk2:['fruit','nuts'], sleep:['yogurt']}
   },
-  BudgetFriendly: {
-    nameEn:'Budget Friendly', nameGr:'Οικονομική',
-    descEn:'Built around inexpensive staples — legumes, eggs, pasta, seasonal produce. Skips pricier items like nuts.',
-    descGr:'Βασισμένη σε οικονομικά βασικά είδη — όσπρια, αυγά, ζυμαρικά, εποχιακά προϊόντα. Χωρίς ακριβότερα είδη όπως ξηροί καρποί.',
-    macros:{c:45,p:20,f:35}, dietType:null,
-    meals:{brk:['BRK_CEREAL','BRK_BOILED_EGGS_2','BRK_RUSKS_ANTHOTYRO'],
-      lun:['LUN_LENTILS_RICE','LUN_CHICKPEA_STEW','LUN_BEAN_SALAD','LUN_PASTA_MINCE'],
-      din:['DIN_LENTILS_RICE','DIN_CHICKPEA_STEW','DIN_PASTA_MINCE']},
-    snacks:{snk1:['fruit'], snk2:['fruit'], sleep:['milk']}
+  DASHHeartHealthy: {
+    nameEn:'DASH (Heart Healthy)', nameGr:'DASH (Καρδιολογική)',
+    descEn:'Dietary Approaches to Stop Hypertension — high fruit/veg/whole grain, lean protein, low sodium. Uses the same macro split this app already applies for Hypertension.',
+    descGr:'Diet Approaches to Stop Hypertension — υψηλή πρόσληψη φρούτων/λαχανικών/ολικής άλεσης, άπαχη πρωτεΐνη, χαμηλό νάτριο. Χρησιμοποιεί την ίδια κατανομή μακροθρεπτικών που εφαρμόζεται ήδη για Υπέρταση.',
+    macros:{c:45,p:20,f:35}, dietType:null, condition:null,
+    meals:{brk:['BRK_CEREAL','BRK_YOGURT_HONEY_WALNUTS','BRK_BOILED_EGGS_2'],
+      lun:['LUN_BAKED_FISH_VEG','LUN_GRILLED_FISH_RICE','LUN_CHICKEN_QUINOA','LUN_FASOLAKIA_CHICKEN'],
+      din:['DIN_BAKED_FISH_VEG','DIN_GRILLED_FISH_RICE','DIN_CHICKEN_QUINOA','DIN_VEG_SOUP_CHICKEN']},
+    snacks:{snk1:['fruit'], snk2:['fruit','nuts'], sleep:['yogurt']}
+  },
+  IBSLowFODMAP: {
+    nameEn:'IBS (Low-FODMAP)', nameGr:'ΣΕΕ (Low-FODMAP)',
+    descEn:'Sets clinical condition to IBS (activating this app\'s Low-FODMAP guidance) and avoids legumes, wheat-heavy dishes, and onion/garlic-based soups. Monash-informed restriction phase — reintroduction should follow with dietitian guidance.',
+    descGr:'Ορίζει την κλινική πάθηση σε ΣΕΕ (ενεργοποιώντας τις οδηγίες Low-FODMAP της εφαρμογής) και αποφεύγει όσπρια, πιάτα με πολύ σιτάρι, και σούπες με βάση κρεμμύδι/σκόρδο. Φάση περιορισμού βάσει Monash — η επανεισαγωγή πρέπει να γίνεται με καθοδήγηση διαιτολόγου.',
+    macros:{c:45,p:25,f:30}, dietType:null, condition:'IBS',
+    meals:{brk:['BRK_BOILED_EGGS_2','BRK_RUSKS_ANTHOTYRO','BRK_TOAST'],
+      lun:['LUN_CHICKEN_RICE','LUN_GRILLED_FISH_RICE','LUN_SALMON_QUINOA','LUN_CHICKEN_QUINOA'],
+      din:['DIN_CHICKEN_RICE','DIN_GRILLED_FISH_RICE','DIN_SALMON_POTATO','DIN_CHICKEN_QUINOA']},
+    snacks:{snk1:['fruit'], snk2:['fruit','nuts'], sleep:['nuts']}
   },
   GeneralHealthyEating: {
     nameEn:'General Healthy Eating', nameGr:'Γενική Υγιεινή Διατροφή',
     descEn:'Balanced, varied plan with no specific clinical restriction — a sensible default for a healthy population.',
     descGr:'Ισορροπημένο, ποικίλο πλάνο χωρίς συγκεκριμένο κλινικό περιορισμό — λογική επιλογή για υγιή πληθυσμό.',
-    macros:{c:45,p:20,f:35}, dietType:null,
+    macros:{c:45,p:20,f:35}, dietType:null, condition:null,
     meals:{brk:['BRK_TOAST','BRK_CEREAL','BRK_YOGURT_HONEY_WALNUTS'],
       lun:['LUN_CHICKEN_RICE','LUN_FISH_POTATO','LUN_CHICKEN_QUINOA','LUN_GRILLED_FISH_RICE'],
       din:['DIN_FISH_POTATO','DIN_CHICKEN_RICE','DIN_GRILLED_FISH_RICE','DIN_VEG_SOUP_CHICKEN']},
     snacks:{snk1:['fruit'], snk2:['fruit','nuts'], sleep:['fruit']}
   },
 };
-const MEAL_PLAN_TEMPLATE_ORDER=['MediterraneanWeightLoss','PCOSBalanced','DiabetesFriendly','HighProtein','Vegetarian','BudgetFriendly','GeneralHealthyEating'];
+const MEAL_PLAN_TEMPLATE_ORDER=['MediterraneanWeightLoss','PCOSBalanced','DiabetesFriendly','HighProtein','Vegetarian','DASHHeartHealthy','IBSLowFODMAP','GeneralHealthyEating'];
 
 function openTemplatePicker(){
   closeTemplatePicker();
@@ -6572,7 +6587,7 @@ function openTemplatePicker(){
     return `<div style="border:1px solid var(--border);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:8px">
       <div style="font-weight:800;font-size:14px;color:var(--text-primary)">${isGr?t.nameGr:t.nameEn}</div>
       <div style="font-size:12px;color:var(--text-secondary);line-height:1.5">${isGr?t.descGr:t.descEn}</div>
-      <div style="font-size:11px;color:var(--text-muted)">${isGr?'Υδατάνθρακες':'Carbs'} ${t.macros.c}% · ${isGr?'Πρωτεΐνη':'Protein'} ${t.macros.p}% · ${isGr?'Λίπος':'Fat'} ${t.macros.f}%${t.dietType?` · ${isGr?'Τύπος':'Diet'}: ${t.dietType}`:''}</div>
+      <div style="font-size:11px;color:var(--text-muted)">${isGr?'Υδατάνθρακες':'Carbs'} ${t.macros.c}% · ${isGr?'Πρωτεΐνη':'Protein'} ${t.macros.p}% · ${isGr?'Λίπος':'Fat'} ${t.macros.f}%${t.dietType?` · ${isGr?'Τύπος':'Diet'}: ${t.dietType}`:''}${t.condition?` · <span style="color:var(--teal-600);font-weight:700">${isGr?'Πάθηση':'Condition'}: ${t.condition}</span>`:''}</div>
       <button class="btn primary" style="align-self:flex-start" onclick="applyMealPlanTemplate('${key}')">${isGr?'Χρήση προτύπου':'Use this template'}</button>
     </div>`;
   }).join('');
@@ -6593,6 +6608,20 @@ function applyMealPlanTemplate(templateKey){
   const tpl=MEAL_PLAN_TEMPLATES[templateKey];
   if(!tpl) return;
   const isGr = window.appLang==='gr';
+  // 0. Clinical condition, if the template targets one — guard against silently
+  // overwriting a different condition already set for this client (conditions
+  // drive macro/exchange safety caps elsewhere, so this is more consequential
+  // than diet type and deserves a confirmation rather than a silent swap).
+  if(tpl.condition){
+    const current=getSelectedPrimaryCondition && getSelectedPrimaryCondition();
+    const proceed = (!current || current===tpl.condition) || confirm(
+      isGr
+        ? `Ο πελάτης έχει ήδη επιλεγμένη πάθηση "${current}". Να αντικατασταθεί με "${tpl.condition}" για αυτό το πρότυπο;`
+        : `This client already has "${current}" selected as their condition. Replace it with "${tpl.condition}" for this template?`
+    );
+    if(!proceed) return;
+    setPrimaryCondition(tpl.condition);
+  }
   // 1. Macro split
   const carbEl=document.getElementById('m-carb'), protEl=document.getElementById('m-protein');
   if(carbEl) carbEl.value=tpl.macros.c;
@@ -6769,9 +6798,8 @@ function weekMicronutrientSignals(){
       if(RED_MEAT_MEAL_KEYS.has(key)) redMeatCount++;
       if(HIGH_SODIUM_MEAL_KEYS.has(key)) highSodiumCount++;
     });
-    ['snk1Extras','snk2Extras','sleepExtras'].forEach(k=>{
-      if(Array.isArray(p[k]) && p[k].includes('nuts')) nutsCount++;
-    });
+    const snk1=p.snk1Extras||p.snack1Extras||[], snk2=p.snk2Extras||p.snack2Extras||[], sleep=p.sleepExtras||[];
+    if([snk1,snk2,sleep].some(arr=>Array.isArray(arr)&&arr.includes('nuts'))) nutsCount++;
   });
   return {fishCount, fattyFishCount, legumeCount, redMeatCount, highSodiumCount, nutsCount, days:plans.length||7};
 }
@@ -6866,7 +6894,7 @@ function assessMicronutrientQuality(){
   return rows;
 }
 
-function renderMicronutrientSummary(){
+function renderMicronutrientCoverage(){
   const el=document.getElementById('micro-quality-summary'); if(!el) return;
   const rows=assessMicronutrientQuality();
   if(!rows){ el.innerHTML=''; return; }
@@ -6874,43 +6902,23 @@ function renderMicronutrientSummary(){
   const dotColor={ok:'#22c55e',warn:'#facc15',err:'#ef4444'};
   const dotIcon={ok:'<i class="ti ti-circle-check" aria-hidden="true"></i>',warn:'<i class="ti ti-alert-triangle" aria-hidden="true"></i>',err:'<i class="ti ti-alert-triangle" aria-hidden="true"></i>'};
   const flagged=rows.filter(r=>r.level!=='ok');
-  const overall = rows.some(r=>r.level==='err') ? 'err' : rows.some(r=>r.level==='warn') ? 'warn' : 'ok';
-  const overallText={
-    ok: isGr?'Καλή κάλυψη βασικών μικροθρεπτικών':'Key micronutrients look well covered',
-    warn: isGr?`${flagged.length} τομείς προς προσοχή`:`${flagged.length} area${flagged.length===1?'':'s'} worth a look`,
-    err: isGr?`${flagged.length} τομείς χρειάζονται προσοχή`:`${flagged.length} area${flagged.length===1?'':'s'} need attention`,
-  }[overall];
-  const legendRow=`<div style="display:flex;flex-wrap:wrap;gap:10px 14px;margin-top:10px">
+  const legendRow=`<div style="display:flex;flex-wrap:wrap;gap:10px 14px;margin-top:6px">
     ${rows.map(r=>`<span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--text-secondary)"><span style="width:8px;height:8px;border-radius:50%;background:${dotColor[r.level]};flex-shrink:0"></span>${isGr?r.gr:r.en}</span>`).join('')}
   </div>`;
   const suggestionRows = flagged.length ? `<div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
     ${flagged.map(r=>`<div style="font-size:13px;line-height:1.5;padding:8px 10px;background:var(--bg-page);border-radius:6px">
       ${dotIcon[r.level]} <strong>${isGr?r.gr:r.en}:</strong> ${r.level==='err'?(isGr?'Κάτω από τη σύσταση.':'Below recommendation.'):(isGr?'Ελαφρώς χαμηλό.':'Slightly low.')} <span style="color:var(--text-secondary)">${isGr?r.sugGr:r.sugEn}</span>
     </div>`).join('')}
-  </div>` : `<div style="font-size:13px;color:var(--text-muted);margin-top:10px">${isGr?'Καμία σύσταση αυτή τη στιγμή.':'No suggestions right now.'}</div>`;
-  const autoDefault = overall!=='ok';
-  const expandDefault = S.microQualityUserOverride!==undefined ? S.microQualityUserOverride : autoDefault;
-  el.innerHTML=`<div class="card" style="margin:0;border:1px solid var(--border)">
-    <div class="card-body" style="padding:12px 16px;cursor:pointer" onclick="toggleMicroQualityDetail(this)">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;font-weight:700;font-size:14px">
-        <span><i class="ti ti-apple" aria-hidden="true"></i> ${isGr?'Ποιότητα Μικροθρεπτικών':'Micronutrient Quality'}: ${overallText}</span>
-        <i class="ti mq-chevron ${expandDefault?'ti-chevron-up':'ti-chevron-down'}" aria-hidden="true" style="color:var(--text-muted)"></i>
-      </div>
+  </div>` : `<div style="font-size:13px;color:var(--text-muted);margin-top:12px">${isGr?'Καλή κάλυψη σε όλους τους βασικούς τομείς αυτή την εβδομάδα.':'Good coverage across all tracked areas this week.'}</div>`;
+  el.innerHTML=`<div class="card no-print" style="margin:0">
+    <div class="card-header"><span class="card-title"><i class="ti ti-apple" aria-hidden="true"></i> ${isGr?'Κάλυψη Μικροθρεπτικών (Αυτή η Εβδομάδα)':'Micronutrient Coverage (This Week)'}</span></div>
+    <div class="card-body">
+      <div class="field-note" style="margin-bottom:2px">${isGr?'Πληροφοριακή επισκόπηση για εσάς — δεν εμφανίζεται στην τυπωμένη αναφορά πελάτη.':'Informational overview for your reference — not included in the printed client report.'}</div>
       ${legendRow}
-    </div>
-    <div style="display:${expandDefault?'block':'none'};padding:0 16px 14px">
       ${suggestionRows}
       <div style="font-size:11px;color:var(--text-muted);margin-top:10px">${isGr?'Εκτίμηση βάσει σύνθεσης ομάδων τροφίμων (όχι εργαστηριακή ανάλυση) — υποστηρίζει την κλινική σας κρίση, δεν την αντικαθιστά.':'Estimated from food-group composition (not a lab-grade analysis) — supports your clinical judgement, doesn\'t replace it.'}</div>
     </div>
   </div>`;
-}
-function toggleMicroQualityDetail(headerEl){
-  const detail=headerEl.nextElementSibling;
-  const chevron=headerEl.querySelector('.mq-chevron');
-  const show=detail.style.display==='none';
-  detail.style.display=show?'block':'none';
-  if(chevron) chevron.className='ti mq-chevron '+(show?'ti-chevron-up':'ti-chevron-down');
-  S.microQualityUserOverride=show;
 }
 
 function buildSevenDay(){
@@ -6975,7 +6983,6 @@ function buildSevenDay(){
   if(sevenBody) sevenBody.textContent='';
   setEl('sevenday-body', html);
   renderPlanQualitySummary();
-  renderMicronutrientSummary();
   updateMealLanguageButtons();
 }
 
@@ -7786,7 +7793,7 @@ function renderEngine(){
     {label:'Macro kcal vs exchange kcal', val:Math.abs(planKcal-kcal)<=50?'Gap ±'+Math.abs(gap)+' kcal (OK)':'Gap '+gap+' kcal', st:Math.abs(gap)<=50?'ok':'warn', why:'Exchange kcal should reconcile to goal calories (±50 kcal).'},
     {label:'Starch exchanges (cap '+caps.starchDailyMax+'/day)', val:ex.starch+' ex'+(gapData.starchCapped?' (capped)':''), st:gapData.starchCapped?'warn':'ok', why:gapData.starchCapped?`Carb target needs more than ${caps.starchDailyMax} starch exchanges/day — capped for realism${conditions.includes('Diabetes')||conditions.includes('PCOS')?' (lower cap due to Diabetes/PCOS)':''}. ~${gapData.choGap}g carbs not covered by starch alone.`:'Within realistic daily range.'},
     {label:'Protein exchanges (cap '+caps.proteinDailyMax+'/day)', val:ex.protein+' ex'+(gapData.proteinCapped?' (capped)':''), st:gapData.proteinCapped?'warn':'ok', why:gapData.proteinCapped?`Protein target needs more than ${caps.proteinDailyMax} exchanges/day (~${caps.proteinDailyMax*gramsPerEx}g cooked meat/fish) — capped at realistic portions${conditions.includes('CKD')||conditions.includes('Hemodialysis')?' (lower cap due to CKD/Hemodialysis)':''}. ~${gapData.proGap}g protein/day not covered.`:'Within realistic daily range.'},
-    {label:'Fat exchanges '+(caps.fatDailyMax>=90?'(no condition cap)':'(cap '+caps.fatDailyMax+'/day)'), val:ex.fat+' ex'+(gapData.fatCapped?' (capped)':''), st:gapData.fatCapped?'warn':'ok', why:gapData.fatCapped?`Fat target needs more than ${caps.fatDailyMax} tsp oil/day equivalent — capped${conditions.includes('Dyslipidemia')||conditions.includes('CKD')||conditions.includes('Hemodialysis')?' (lower cap due to selected conditions)':''}. ~${gapData.fatGap}g fat/day not covered.`:'Within realistic daily range.'},
+    {label:'Fat exchanges '+(caps.fatDailyMax>=12?'(general cap '+caps.fatDailyMax+'/day)':'(condition cap '+caps.fatDailyMax+'/day)'), val:ex.fat+' ex'+(gapData.fatCapped?' (capped)':''), st:gapData.fatCapped?'warn':'ok', why:gapData.fatCapped?`Fat target needs more than ${caps.fatDailyMax} tsp oil/day equivalent — capped${conditions.includes('Dyslipidemia')||conditions.includes('CKD')||conditions.includes('Hemodialysis')?' (lower cap due to selected conditions)':''}. ~${gapData.fatGap}g fat/day not covered.`:'Within realistic daily range.'},
     {label:'Meal realism — protein cap', val:`≤${caps.proteinPerMealMax*gramsPerEx}g per main meal`, st:'ok', why:`Clinical cap for this client: ≤${caps.proteinPerMealMax} protein exchanges (≈${caps.proteinPerMealMax*gramsPerEx}g cooked meat/fish) per main meal.`},
     {label:'Meal realism — oil cap', val:`≤${caps.fatPerMealMax} tsp per main meal`, st:'ok', why:`Clinical cap for this client: ≤${caps.fatPerMealMax} tsp olive oil per main meal.`},
     {label:'Exchange kcal gap vs target', val:gap+' kcal (plan vs target)', st:Math.abs(gap)<=100?'ok':'warn', why:'Do not fill this gap automatically with protein/fat — review target instead.'},
@@ -9547,7 +9554,6 @@ function applyState(state){
   S.labValues=state.labValues||{};
   resetMacroExplanation();
   S.planQualityUserOverride=undefined;
-  S.microQualityUserOverride=undefined;
   if(document.getElementById('page-labs')?.classList.contains('active')) renderLabsTable();
   calcAll(); calcBodyComp(); calcMacros();
 }
@@ -9561,7 +9567,6 @@ function resetForm(){
   S.bcManual = {fatmass:false,ffm:false,muscle:false};
   resetMacroExplanation();
   S.planQualityUserOverride=undefined;
-  S.microQualityUserOverride=undefined;
   SAVE_FIELD_IDS.forEach(id=>{
     const el=document.getElementById(id);
     if(!el) return;
