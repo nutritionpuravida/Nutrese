@@ -480,6 +480,14 @@ html[data-theme="dark"] .week-summary-table td:last-child {
 .calendar-day.today { box-shadow: inset 0 0 0 2px var(--teal-400); }
 .calendar-day-number { font-size: 12px; font-weight: 800; margin-bottom: 6px; }
 .calendar-day.week { min-height: 360px; }
+.calendar-grid.day-view { grid-template-columns: 1fr; }
+.calendar-day.day { min-height: 420px; border-right: none; cursor: default; }
+.calendar-day.day .appointment-block { max-width: 560px; }
+.calendar-agenda { display: flex; flex-direction: column; gap: 6px; }
+.calendar-time-row { display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 6px; align-items: start; }
+.calendar-time-label { font-size: 11px; font-weight: 800; color: var(--text-muted); padding-top: 5px; font-variant-numeric: tabular-nums; }
+.calendar-day.week .calendar-time-row { grid-template-columns: 40px minmax(0, 1fr); gap: 4px; }
+.calendar-day.week .calendar-time-label { font-size: 10px; }
 .appointment-block { display: block; width: 100%; border: none; border-radius: 6px; padding: 5px 6px; margin-bottom: 5px; color: #fff; cursor: pointer; text-align: left; font-size: 11px; line-height: 1.25; overflow: hidden; }
 .appointment-block strong { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .appt-first { background: var(--teal-600); }
@@ -911,8 +919,6 @@ table th,
       <span class="no-print" id="user-email" style="display:none"></span>
       <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn" title="Toggle dark mode"><i class="ti ti-moon" aria-hidden="true"></i> Dark</button>
       <button class="btn" onclick="toggleLanguage()" id="lang-btn" title="Switch language">GR</button>
-      <button class="btn primary no-print" onclick="saveCurrentClient()" id="topbar-save-client-btn" title="Save complete current client state"><i class="ti ti-device-floppy" aria-hidden="true"></i> <span class="i18n" data-en="Save Client" data-gr="Αποθήκευση Πελάτη">Save Client</span></button>
-      <button class="btn" onclick="printPage()" id="topbar-print-btn" title="Print current page"><i class="ti ti-printer" aria-hidden="true"></i> <span class="i18n" data-en="Print" data-gr="Εκτύπωση">Print</span></button>
     </div>
   </div>
 
@@ -1031,6 +1037,12 @@ table th,
         <div class="form-grid">
           <div class="form-field"><label><span class="i18n" data-en="Sleep hours" data-gr="Ώρες ύπνου">Sleep hours</span></label><input type="number" id="i-sleep" placeholder="7" oninput="saveIntake()"></div>
           <div class="form-field"><label><span class="i18n" data-en="Stress level (1–10)" data-gr="Άγχος (1–10)">Stress level (1–10)</span></label><input type="number" id="i-stress" min="1" max="10" placeholder="5" oninput="saveIntake()"></div>
+          <div class="form-field"><label><span class="i18n" data-en="Smoking status" data-gr="Κάπνισμα">Smoking status</span></label>
+            <select id="i-smoking" onchange="saveIntake()"><option value="">—</option><option value="Non-smoker" data-en="Non-smoker" data-gr="Μη καπνιστής/ρια">Non-smoker</option><option value="Current smoker" data-en="Current smoker" data-gr="Καπνιστής/ρια">Current smoker</option><option value="Former smoker" data-en="Former smoker" data-gr="Πρώην καπνιστής/ρια">Former smoker</option><option value="Passive exposure / household smoke" data-en="Passive exposure / household smoke" data-gr="Παθητική έκθεση / κάπνισμα στο σπίτι">Passive exposure / household smoke</option></select>
+          </div>
+          <div class="form-field"><label><span class="i18n" data-en="Alcohol intake" data-gr="Κατανάλωση αλκοόλ">Alcohol intake</span></label>
+            <select id="i-alcohol" onchange="saveIntake()"><option value="">—</option><option value="None" data-en="None" data-gr="Καθόλου">None</option><option value="Occasional" data-en="Occasional" data-gr="Περιστασιακά">Occasional</option><option value="Weekly moderate" data-en="Weekly moderate" data-gr="Μέτρια εβδομαδιαία">Weekly moderate</option><option value="Frequent / high intake" data-en="Frequent / high intake" data-gr="Συχνή / υψηλή κατανάλωση">Frequent / high intake</option><option value="Prefer not to say" data-en="Prefer not to say" data-gr="Δεν επιθυμεί να απαντήσει">Prefer not to say</option></select>
+          </div>
         </div>
         <div class="section-label"><span class="i18n" data-en="Nutrition Habits" data-gr="Διατροφικές Συνήθειες">Nutrition Habits</span></div>
         <div class="form-grid">
@@ -1326,7 +1338,7 @@ table th,
             <div id="s-sleep" style="display:flex;flex-wrap:wrap;gap:8px;padding:8px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input)" onchange="buildOneDayPlan()"></div>
           </div>
         </div>
-        <div class="field-note" style="margin-bottom:12px">Fruit and dairy servings are assigned with the snack checkboxes and draw from the Exchange System totals. Choose fresh fruit or dried fruit, and milk or yogurt. Starch snacks replace 1 starch serving from the main meals. 🥜 Nuts count as 1 fat exchange and automatically replace 1 tsp olive oil from the main meals — daily calorie total stays unchanged.</div>
+        <div class="field-note" style="margin-bottom:12px"><span class="i18n" data-en="Fruit and dairy servings are assigned with the snack checkboxes and draw from the Exchange System totals. Choose fresh fruit or dried fruit, and milk or yogurt. Crackers replace 1 starch serving only. Oat biscuits and cereal bars replace 1 starch + 1 fat serving. Nuts count as 1 fat exchange and replace 1 tsp olive oil from the main meals — daily calorie total stays unchanged." data-gr="Οι μερίδες φρούτων και γαλακτοκομικών ορίζονται από τα checkbox των σνακ και αντλούνται από το Σύστημα Ισοδυνάμων. Επιλέξτε φρέσκο ή αποξηραμένο φρούτο, και γάλα ή γιαούρτι. Τα κράκερ αντικαθιστούν μόνο 1 μερίδα αμύλου. Τα μπισκότα βρώμης και οι μπάρες δημητριακών αντικαθιστούν 1 μερίδα αμύλου + 1 μερίδα λίπους. Οι ξηροί καρποί μετρούν ως 1 μερίδα λίπους και αντικαθιστούν 1 κ.γ. ελαιόλαδο από τα κύρια γεύματα — το ημερήσιο σύνολο θερμίδων μένει ίδιο.">Fruit and dairy servings are assigned with the snack checkboxes and draw from the Exchange System totals. Choose fresh fruit or dried fruit, and milk or yogurt. Crackers replace 1 starch serving only. Oat biscuits and cereal bars replace 1 starch + 1 fat serving. Nuts count as 1 fat exchange and replace 1 tsp olive oil from the main meals — daily calorie total stays unchanged.</span></div>
         <div id="oneday-plan"></div>
         <div class="section-label"><span class="i18n" data-en="Exchange Coverage Check" data-gr="Έλεγχος Κάλυψης Ισοδυνάμων">Exchange Coverage Check</span></div>
         <div id="oneday-check"></div>
@@ -1577,6 +1589,7 @@ table th,
           <div class="view-toggle" aria-label="Calendar view">
             <button id="calendar-view-month" class="active" onclick="setCalendarView('month')"><span class="i18n" data-en="Month" data-gr="Μήνας">Month</span></button>
             <button id="calendar-view-week" onclick="setCalendarView('week')"><span class="i18n" data-en="Week" data-gr="Εβδομάδα">Week</span></button>
+            <button id="calendar-view-day" onclick="setCalendarView('day')"><span class="i18n" data-en="Day" data-gr="Ημέρα">Day</span></button>
           </div>
           <button class="btn primary" style="margin-left:auto" onclick="openAppointmentForm(todayISO())"><i class="ti ti-plus" aria-hidden="true"></i> <span class="i18n" data-en="New appointment" data-gr="Νέο ραντεβού">New appointment</span></button>
         </div>
@@ -4707,22 +4720,32 @@ const GUIDANCE_SOURCES = 'Πηγές: ADA Standards of Care in Diabetes 2026 · 
 // Shown in the Client Report for every client (alongside any condition-specific
 // guidance above), based on general population dietary guidelines (WHO, DASH/AHA, ACSM).
 const GENERAL_HEALTH_RULES = [
-  'Επαρκής ενυδάτωση: 6–8 ποτήρια (περίπου 1.5–2 λίτρα) νερό/ημέρα, περισσότερο σε ζέστη ή άσκηση.',
-  'Τακτικά γεύματα κάθε 3–4 ώρες — αποφυγή παράλειψης γευμάτων για σταθερό σάκχαρο και όρεξη.',
+  'Τρώτε αργά, σε μικρές μπουκιές/μερίδες, και σταματήστε όταν νιώθετε άνετο κορεσμό.',
+  'Πίνετε νερό σταδιακά μέσα στην ημέρα — 6–8 ποτήρια (περίπου 1.5–2 λίτρα) ημερησίως, περισσότερο σε ζέστη ή άσκηση.',
+  'Τρώτε γεύματα και σνακ σε σταθερό πρόγραμμα κάθε 3–4 ώρες, αποφεύγοντας την παράλειψη γευμάτων.',
+  'Εναλλάσσετε τρόφιμα και τρόπους μαγειρέματος· προτιμήστε βραστά, ψητά, στον ατμό ή κατσαρόλας και αποφύγετε τα τηγανητά.',
+  'Μειώστε το αλάτι χρησιμοποιώντας μυρωδικά, λεμόνι, ξύδι, σκόρδο και μπαχαρικά αντί για επιπλέον αλάτι.',
+  'Αποφύγετε επεισόδια υπερφαγίας· κρατήστε σταθερή δομή γευμάτων και ζητήστε υποστήριξη αν η υπερφαγία επαναλαμβάνεται.',
+  'Διαβάζετε τις ετικέτες τροφίμων: μερίδα, θερμίδες, πρόσθετα σάκχαρα, κορεσμένα λιπαρά και αλάτι/νάτριο.',
   'Αλκοόλ: αν καταναλώνεται, με μέτρο — έως 1 μονάδα/ημέρα για γυναίκες, έως 2 για άνδρες (π.χ. 1 ποτήρι κρασί). Καμία ποσότητα αλκοόλ δεν θεωρείται ασφαλής στην εγκυμοσύνη.',
   'Φυσική δραστηριότητα: τουλάχιστον 150 λεπτά μέτριας έντασης άσκηση/εβδομάδα (π.χ. 30 λεπτά βάδισμα, 5 φορές/εβδομάδα), συν ασκήσεις ενδυνάμωσης 2 φορές/εβδομάδα.',
-  'Φυτικές ίνες: στόχος 25–30g/ημέρα από λαχανικά, φρούτα, όσπρια και δημητριακά ολικής άλεσης.',
-  'Αλάτι: περιορισμός σε <5g/ημέρα (περίπου 1 κ.γ.) — προσοχή σε επεξεργασμένα/έτοιμα τρόφιμα όπου κρύβεται το περισσότερο νάτριο.',
+  'Επιλέγετε συχνά δημητριακά ολικής άλεσης, ολόκληρα φρούτα, όσπρια, ξηρούς καρπούς/σπόρους και ελαιόλαδο.',
+  'Προτιμήστε χαμηλών/μειωμένων λιπαρών γαλακτοκομικά και άπαχα κομμάτια κρέατος χωρίς πέτσα.',
   'Ύπνος: 7–9 ώρες/βράδυ — ο ανεπαρκής ύπνος σχετίζεται με αυξημένη όρεξη και δυσκολία διαχείρισης βάρους.',
   'Περιορισμός πρόσθετων σακχάρων και υπερ-επεξεργασμένων τροφίμων — προτίμηση σε φρέσκα/ελάχιστα επεξεργασμένα τρόφιμα στις περισσότερες περιπτώσεις.',
 ];
 const GENERAL_HEALTH_RULES_EN = [
-  'Adequate hydration: 6-8 glasses (about 1.5-2 litres) of water per day, more in heat or exercise.',
-  'Regular meals every 3-4 hours to support stable appetite and blood glucose.',
+  'Eat slowly, in small bites/portions, and stop when comfortably full.',
+  'Drink water throughout the day: 6-8 glasses (about 1.5-2 litres) daily, more in heat or exercise.',
+  'Eat meals and snacks on a regular schedule every 3-4 hours; avoid skipping meals.',
+  'Alternate foods and cooking methods; choose boiled, baked, steamed or stewed meals and avoid fried foods.',
+  'Reduce salt by using herbs, lemon, vinegar, garlic and spices instead of extra salt.',
+  'Avoid binge-eating episodes; keep a steady meal structure and seek support if binge-eating repeats.',
+  'Read nutrition labels carefully: serving size, calories, added sugars, saturated fat and salt/sodium.',
   'Alcohol: if consumed, keep moderate. Avoid alcohol completely during pregnancy.',
   'Physical activity: at least 150 minutes of moderate exercise per week plus strength training twice weekly, if medically appropriate.',
-  'Fibre: aim for 25-30g/day from vegetables, fruit, pulses and whole grains.',
-  'Salt: limit to <5g/day and watch processed/ready foods where sodium is often hidden.',
+  'Choose whole grains, whole fruits, beans/pulses, nuts/seeds and plant oils such as olive oil often.',
+  'Choose low- or reduced-fat yoghurt, milk and cheese, and skinless lean meats such as chicken/turkey breast, pork tenderloin, beef round, sirloin or tenderloin.',
   'Sleep: aim for 7-9 hours/night; inadequate sleep can increase appetite and make weight management harder.',
   'Limit added sugars and ultra-processed foods; prefer fresh or minimally processed foods most of the time.',
 ];
@@ -5092,9 +5115,9 @@ function nav(id) {
     });
   }
   const saveBtn = document.getElementById('topbar-save-client-btn');
-  if(saveBtn) saveBtn.style.display = CLIENT_TAB_PAGES.includes(id) ? 'inline-flex' : 'none';
+  if(saveBtn) saveBtn.style.display = 'none';
   const printBtn = document.getElementById('topbar-print-btn');
-  if(printBtn) printBtn.style.display = PRINT_PAGES.includes(id) ? 'inline-flex' : 'none';
+  if(printBtn) printBtn.style.display = 'none';
   const info = (window.appLang==='gr' ? PAGE_INFO_GR[id] : PAGE_INFO[id]) || PAGE_INFO[id] || {title:id,sub:''};
   setEl('page-title',info.title); setEl('page-sub',info.sub);
   if(id==='dashboard') renderDashboard();
@@ -6703,6 +6726,26 @@ const MEAL_PLAN_TEMPLATES = {
       din:['DIN_CHICKEN_MEATBALLS_RICE','DIN_CHICKEN_RICE','DIN_CHICKEN_QUINOA']},
     snacks:{snk1:['yogurt'], snk2:['yogurt','nuts'], sleep:['yogurt']}
   },
+  SportsPerformance: {
+    nameEn:'Sports Performance', nameGr:'Αθλητική Απόδοση',
+    descEn:'Higher carbohydrate availability around training with consistent lean protein for recovery and performance.',
+    descGr:'Περισσότερη διαθεσιμότητα υδατανθράκων γύρω από την άσκηση με σταθερή άπαχη πρωτεΐνη για αποκατάσταση και απόδοση.',
+    macros:{c:50,p:25,f:25}, dietType:null, condition:'Sports',
+    meals:{brk:['BRK_CEREAL','BRK_EGGS_TOAST','BRK_YOGURT_HONEY_WALNUTS','BRK_OATS_VEGAN'],
+      lun:['LUN_GRILLED_FISH_RICE','LUN_SALMON_QUINOA','LUN_BIFTEKI_BULGUR','LUN_CHICKEN_QUINOA','LUN_LENTILS_RICE'],
+      din:['DIN_GRILLED_FISH_RICE','DIN_SALMON_POTATO','DIN_OMELETTE','DIN_BIFTEKI_BULGUR','DIN_CHICKEN_RICE']},
+    snacks:{snk1:['fruit','yogurt'], snk2:['fruit','nuts'], sleep:['yogurt']}
+  },
+  BoneHealth: {
+    nameEn:'Bone Health', nameGr:'Υγεία Οστών',
+    descEn:'Protein-forward Mediterranean pattern with regular dairy and fish options to support bone-health counselling.',
+    descGr:'Μεσογειακό μοτίβο με επαρκή πρωτεΐνη, τακτικά γαλακτοκομικά και επιλογές ψαριού για υποστήριξη της υγείας των οστών.',
+    macros:{c:45,p:25,f:30}, dietType:null, condition:'Osteoporosis',
+    meals:{brk:['BRK_YOGURT_HONEY_WALNUTS','BRK_CEREAL','BRK_RUSKS_ANTHOTYRO','BRK_EGGS_TOAST'],
+      lun:['LUN_SALMON_QUINOA','LUN_GRILLED_FISH_RICE','LUN_CHICKEN_QUINOA','LUN_LENTIL_SOUP'],
+      din:['DIN_SALMON_POTATO','DIN_GRILLED_FISH_RICE','DIN_CHICKEN_QUINOA','DIN_OMELETTE']},
+    snacks:{snk1:['fruit','yogurt'], snk2:['fruit','nuts'], sleep:['milk']}
+  },
   Vegetarian: {
     nameEn:'Vegetarian', nameGr:'Χορτοφαγική',
     descEn:'No meat or fish. Eggs and dairy remain. All meals in the pool below are vegetarian; sets Diet Type to Vegetarian for the client record.',
@@ -6744,7 +6787,7 @@ const MEAL_PLAN_TEMPLATES = {
     snacks:{snk1:['fruit'], snk2:['fruit','nuts'], sleep:['fruit']}
   },
 };
-const MEAL_PLAN_TEMPLATE_ORDER=['MediterraneanWeightLoss','PCOSBalanced','DiabetesFriendly','HighProtein','Vegetarian','DASHHeartHealthy','IBSLowFODMAP','GeneralHealthyEating'];
+const MEAL_PLAN_TEMPLATE_ORDER=['MediterraneanWeightLoss','PCOSBalanced','DiabetesFriendly','HighProtein','SportsPerformance','BoneHealth','Vegetarian','DASHHeartHealthy','IBSLowFODMAP','GeneralHealthyEating'];
 
 function openTemplatePicker(){
   closeTemplatePicker();
@@ -7382,6 +7425,7 @@ function collectAiMealPlanPayload(){
     kcal_target:Math.round(S.goalKcal||exchangeSystemTotalKcal(S.ex||{})||0),
     intake:{
       allergies:v('n-allergies'), dislikes:v('n-dislikes'), intolerances:v('i-intolerances'),
+      smoking:v('i-smoking'), alcohol:v('i-alcohol'),
       digestion:v('i-digestion'), diagnoses:v('n-diagnoses'), notes:v('n-clinician-notes')
     },
     exchange_values:{
@@ -8338,7 +8382,7 @@ function renderTrackingChart(){
   el.innerHTML=html;
 }
 
-function saveIntake(){S.intake={goal:v('i-goal'),goalWhy:v('i-goal-why'),tried:v('i-goal-tried'),lifestyle:v('i-lifestyle'),exercise:v('i-exercise'),steps:v('i-steps'),sleep:v('i-sleep'),stress:v('i-stress'),typicalDiet:v('i-typical-diet'),skipMeals:v('i-skip-meals'),cravings:v('i-cravings'),intolerances:v('i-intolerances'),digestion:v('i-digestion'),coachNotes:v('i-coach-notes')};}
+function saveIntake(){S.intake={goal:v('i-goal'),goalWhy:v('i-goal-why'),tried:v('i-goal-tried'),lifestyle:v('i-lifestyle'),exercise:v('i-exercise'),steps:v('i-steps'),sleep:v('i-sleep'),stress:v('i-stress'),smoking:v('i-smoking'),alcohol:v('i-alcohol'),typicalDiet:v('i-typical-diet'),skipMeals:v('i-skip-meals'),cravings:v('i-cravings'),intolerances:v('i-intolerances'),digestion:v('i-digestion'),coachNotes:v('i-coach-notes')};}
 function saveNotes(){S.notes={diagnoses:v('n-diagnoses'),medication:v('n-medication'),allergies:v('n-allergies'),dislikes:v('n-dislikes'),adherence:v('n-adherence'),clinician_notes:v('n-clinician-notes')};}
 async function saveClientIntake(){
   saveIntake();
@@ -9555,13 +9599,17 @@ function renderAppointments(){
   const el=document.getElementById('appointments-calendar'); if(!el) return;
   document.getElementById('calendar-view-month')?.classList.toggle('active', calendarView==='month');
   document.getElementById('calendar-view-week')?.classList.toggle('active', calendarView==='week');
+  document.getElementById('calendar-view-day')?.classList.toggle('active', calendarView==='day');
   const isGr = window.appLang==='gr';
   const weekdays = isGr ? ['Δευ','Τρι','Τετ','Πεμ','Παρ','Σαβ','Κυρ'] : ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
   const locale = isGr ? 'el-GR' : 'en-US';
   const title=document.getElementById('calendar-title');
   const today=todayISO();
   let dates=[];
-  if(calendarView==='week'){
+  if(calendarView==='day'){
+    dates=[new Date(calendarCursor)];
+    if(title) title.textContent = calendarCursor.toLocaleDateString(locale,{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+  } else if(calendarView==='week'){
     const start=startOfWeek(calendarCursor);
     for(let i=0;i<7;i++){ const d=new Date(start); d.setDate(start.getDate()+i); dates.push(d); }
     if(title) title.textContent = dates[0].toLocaleDateString(locale,{month:'short',day:'numeric'})+' - '+dates[6].toLocaleDateString(locale,{month:'short',day:'numeric',year:'numeric'});
@@ -9571,27 +9619,32 @@ function renderAppointments(){
     for(let i=0;i<42;i++){ const d=new Date(gridStart); d.setDate(gridStart.getDate()+i); dates.push(d); }
     if(title) title.textContent = calendarCursor.toLocaleDateString(locale,{month:'long',year:'numeric'});
   }
-  const head=weekdays.map(w=>`<div class="calendar-weekday">${w}</div>`).join('');
+  const head=calendarView==='day' ? '' : weekdays.map(w=>`<div class="calendar-weekday">${w}</div>`).join('');
   const cells=dates.map(d=>{
     const iso=dateToISO(d);
     const muted=calendarView==='month' && d.getMonth()!==calendarCursor.getMonth();
     const items=appointmentsForDate(iso);
     if(items.length || iso===today) console.log('[Nutrese appointments] render day', iso, items);
-    const blocks=items.map(a=>`<button class="appointment-block ${appointmentClass(a.type)}" onclick="event.stopPropagation();openAppointmentForm('${iso}','${safeHtml(a.id)}')" title="${safeHtml(a.type)} · ${safeHtml(a.notes)}"><strong>${safeHtml(a.time)} ${safeHtml(a.client_name||(isGr?'Χωρίς όνομα':'Unnamed'))}</strong><span>${safeHtml(a.type)} · ${a.duration} min</span></button>`).join('');
-    return `<div class="calendar-day ${muted?'muted':''} ${iso===today?'today':''} ${calendarView==='week'?'week':''}" onclick="openAppointmentForm('${iso}')">
+    const blockFor=a=>`<button class="appointment-block ${appointmentClass(a.type)}" onclick="event.stopPropagation();openAppointmentForm('${iso}','${safeHtml(a.id)}')" title="${safeHtml(a.type)} · ${safeHtml(a.notes)}"><strong>${safeHtml(calendarView==='month' ? `${a.time} ${a.client_name||(isGr?'Χωρίς όνομα':'Unnamed')}` : (a.client_name||(isGr?'Χωρίς όνομα':'Unnamed')))}</strong><span>${safeHtml(a.type)} · ${a.duration} min</span></button>`;
+    const blocks=calendarView==='day' || calendarView==='week'
+      ? `<div class="calendar-agenda">${items.map(a=>`<div class="calendar-time-row"><div class="calendar-time-label">${safeHtml(a.time||'—')}</div><div>${blockFor(a)}</div></div>`).join('')}</div>`
+      : items.map(blockFor).join('');
+    const dayViewClass = calendarView==='day' ? 'day' : (calendarView==='week' ? 'week' : '');
+    return `<div class="calendar-day ${muted?'muted':''} ${iso===today?'today':''} ${dayViewClass}" onclick="openAppointmentForm('${iso}')">
       <div class="calendar-day-number">${d.getDate()}</div>
       ${blocks}
     </div>`;
   }).join('');
-  el.innerHTML=`<div class="calendar-grid">${head}${cells}</div>`;
+  el.innerHTML=`<div class="calendar-grid ${calendarView==='day'?'day-view':''}">${head}${cells}</div>`;
   renderDashboardAppointments();
 }
 function setCalendarView(view){
-  calendarView=view==='week'?'week':'month';
+  calendarView=['day','week','month'].includes(view)?view:'month';
   renderAppointments();
 }
 function moveCalendar(delta){
-  if(calendarView==='week') calendarCursor.setDate(calendarCursor.getDate()+(delta*7));
+  if(calendarView==='day') calendarCursor.setDate(calendarCursor.getDate()+delta);
+  else if(calendarView==='week') calendarCursor.setDate(calendarCursor.getDate()+(delta*7));
   else calendarCursor.setMonth(calendarCursor.getMonth()+delta);
   calendarCursor=new Date(calendarCursor);
   renderAppointments();
@@ -9766,7 +9819,7 @@ const SAVE_FIELD_IDS = [
   'bc-bf','bc-water','bc-fatmass','bc-ffm','bc-muscle','bc-metage','bc-visceral','bc-physique','bc-bone',
   'm-carb','m-protein',
   's-breakfast','s-lunch','s-dinner',
-  'i-goal','i-goal-why','i-goal-tried','i-lifestyle','i-exercise','i-steps','i-sleep','i-stress','i-typical-diet','i-skip-meals','i-cravings','i-intolerances','i-digestion','i-coach-notes',
+  'i-goal','i-goal-why','i-goal-tried','i-lifestyle','i-exercise','i-steps','i-sleep','i-stress','i-smoking','i-alcohol','i-typical-diet','i-skip-meals','i-cravings','i-intolerances','i-digestion','i-coach-notes',
   'n-diagnoses','n-medication','n-allergies','n-dislikes','n-adherence','n-clinician-notes',
   ...LAB_TESTS.map(t=>'lab-'+t.key)
 ];
@@ -10561,10 +10614,17 @@ function applyDropdownLanguage(){
     });
   });
 }
+function applyOptionLanguage(){
+  const isGr = window.appLang!=='en';
+  document.querySelectorAll('option[data-en][data-gr]').forEach(opt=>{
+    opt.textContent = isGr ? opt.getAttribute('data-gr') : opt.getAttribute('data-en');
+  });
+}
 window.appLang = 'en';
 function applyLanguage(lang){
   window.appLang = lang;
   applyDropdownLanguage();
+  applyOptionLanguage();
   refreshExMetaLabels();
   setMealLanguage(lang==='gr'?'GR':'EN');
   document.querySelectorAll('.i18n').forEach(el=>{
@@ -10592,6 +10652,7 @@ function applyLanguage(lang){
   if(document.getElementById('page-tracking')?.classList.contains('active')) renderTracking();
   if(document.getElementById('page-account')?.classList.contains('active')) updateAccountPage();
   if(document.getElementById('page-profile')?.classList.contains('active')) calcAll();
+  if(document.getElementById('page-report')?.classList.contains('active')){ buildReport(); renderMicronutrientCoverage(); }
   if(document.getElementById('page-recipes')?.classList.contains('active')){ renderRecipeDraft(); renderRecipesList(); }
   const rebalEl=document.getElementById('rebalance-preview');
   if(rebalEl && rebalEl.innerHTML){ rebalEl.innerHTML=''; S._rebalancePending=null; }
@@ -10613,8 +10674,8 @@ function toggleLanguage(){
   try {
     const savedLang = localStorage.getItem('nutrese-lang');
     if(savedLang==='gr' || savedLang==='en') applyLanguage(savedLang);
-    else applyDropdownLanguage();
-  } catch(e) { applyDropdownLanguage(); }
+    else { applyDropdownLanguage(); applyOptionLanguage(); }
+  } catch(e) { applyDropdownLanguage(); applyOptionLanguage(); }
 })();
 
 // ─── MOBILE SIDEBAR ───
@@ -10816,22 +10877,6 @@ updateOnlineStatus();
 
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
