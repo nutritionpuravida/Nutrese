@@ -490,6 +490,9 @@ html[data-theme="dark"] .week-summary-table td:last-child {
 .calendar-day.week .calendar-time-label { font-size: 10px; }
 .appointment-block { display: block; width: 100%; border: none; border-radius: 6px; padding: 5px 6px; margin-bottom: 5px; color: #fff; cursor: pointer; text-align: left; font-size: 11px; line-height: 1.25; overflow: hidden; }
 .appointment-block strong { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.appointment-block .appointment-meta { display:block; margin-top:2px; font-size:10px; font-weight:800; opacity:.92; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.calendar-day.week .appointment-block, .calendar-day.day .appointment-block { min-height:42px; }
+.calendar-day.day .appointment-block .appointment-meta { font-size:11px; }
 .appt-first { background: var(--teal-600); }
 .appt-follow { background: #1971C2; }
 .appt-online { background: #7950F2; }
@@ -9791,7 +9794,12 @@ function renderAppointments(){
     const muted=calendarView==='month' && d.getMonth()!==calendarCursor.getMonth();
     const items=appointmentsForDate(iso);
     if(items.length || iso===today) console.log('[Nutrese appointments] render day', iso, items);
-    const blockFor=a=>`<button class="appointment-block ${appointmentClass(a.type)}" onclick="event.stopPropagation();openAppointmentForm('${iso}','${safeHtml(a.id)}')" title="${safeHtml(a.type)} · ${safeHtml(a.notes)}"><strong>${safeHtml(calendarView==='month' ? `${a.time} ${a.client_name||(isGr?'Χωρίς όνομα':'Unnamed')}` : (a.client_name||(isGr?'Χωρίς όνομα':'Unnamed')))}</strong><span>${safeHtml(a.type)} · ${a.duration} min</span></button>`;
+    const blockFor=a=>{
+      const clientName=a.client_name||(isGr?'Χωρίς όνομα':'Unnamed');
+      const timeText=a.time||'—';
+      const meta=calendarView==='month' ? `${a.type} · ${a.duration} min` : `${timeText} · ${a.type} · ${a.duration} min`;
+      return `<button class="appointment-block ${appointmentClass(a.type)}" onclick="event.stopPropagation();openAppointmentForm('${iso}','${safeHtml(a.id)}')" title="${safeHtml(timeText)} · ${safeHtml(a.type)} · ${safeHtml(a.notes)}"><strong>${safeHtml(calendarView==='month' ? `${timeText} ${clientName}` : clientName)}</strong><span class="appointment-meta">${safeHtml(meta)}</span></button>`;
+    };
     const blocks=calendarView==='day' || calendarView==='week'
       ? `<div class="calendar-agenda">${items.map(a=>`<div class="calendar-time-row"><div class="calendar-time-label">${safeHtml(a.time||'—')}</div><div>${blockFor(a)}</div></div>`).join('')}</div>`
       : items.map(blockFor).join('');
