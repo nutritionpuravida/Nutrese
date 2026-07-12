@@ -10793,6 +10793,13 @@ function applyOptionLanguage(){
   document.querySelectorAll('option[data-en][data-gr]').forEach(opt=>{
     opt.textContent = isGr ? opt.getAttribute('data-gr') : opt.getAttribute('data-en');
   });
+  // Some browsers keep the closed select label visually stale until the
+  // selected option is touched. Reassigning selectedIndex preserves value but
+  // forces Client Intake dropdowns such as Smoking/Alcohol to repaint.
+  document.querySelectorAll('select').forEach(sel=>{
+    const idx=sel.selectedIndex;
+    if(idx>=0) sel.selectedIndex=idx;
+  });
 }
 window.appLang = 'en';
 function applyLanguage(lang){
@@ -10827,12 +10834,14 @@ function applyLanguage(lang){
   if(document.getElementById('page-account')?.classList.contains('active')) updateAccountPage();
   if(document.getElementById('page-profile')?.classList.contains('active')) calcAll();
   if(document.getElementById('page-labs')?.classList.contains('active')) renderLabsTable();
+  if(document.getElementById('page-sevenday')?.classList.contains('active')) renderMicronutrientCoverage();
   if(document.getElementById('page-report')?.classList.contains('active')){ buildReport(); renderMicronutrientCoverage(); }
   if(document.getElementById('page-recipes')?.classList.contains('active')){ renderRecipeDraft(); renderRecipesList(); }
   const rebalEl=document.getElementById('rebalance-preview');
   if(rebalEl && rebalEl.innerHTML){ rebalEl.innerHTML=''; S._rebalancePending=null; }
   if(document.getElementById('page-fooddb')?.classList.contains('active') && S.foodResults) renderFoodResults(S.foodResults);
   if(document.getElementById('page-dashboard')?.classList.contains('active')) renderDashboard();
+  applyOptionLanguage();
   if(document.getElementById('page-appointments')?.classList.contains('active')){
     renderAppointments();
     const formTitle=document.getElementById('appointment-form-title');
