@@ -4011,10 +4011,42 @@ function starchSnackIncludesFat(value){
 }
 function snackReplacementNote(value, lang){
   const isEn=(lang||S.mealLanguage||'GR')==='EN';
-  if(value==='nuts') return isEn ? 'Replaces 1 fat exchange (olive oil)' : 'Αντικαθιστά 1 μερίδα λίπους (ελαιόλαδο)';
-  if(starchSnackIncludesFat(value)) return isEn ? 'Replaces 1 starch + 1 fat exchange' : 'Αντικαθιστά 1 μερίδα αμύλου + 1 μερίδα λίπους';
-  if(STARCH_SNACK_VALUES.includes(value)) return isEn ? 'Replaces 1 starch serving from a main meal' : 'Αντικαθιστά 1 μερίδα αμύλου από κύριο γεύμα';
+  if(value==='nuts') return isEn ? '+1 fat in snack; -1 tsp olive oil from main meals' : '+1 λίπος στο σνακ; -1 κ.γ. ελαιόλαδο από κύρια γεύματα';
+  if(starchSnackIncludesFat(value)) return isEn ? '+1 starch +1 fat in snack; -1 starch and -1 tsp oil from main meals' : '+1 άμυλο +1 λίπος στο σνακ; -1 άμυλο και -1 κ.γ. λάδι από κύρια γεύματα';
+  if(STARCH_SNACK_VALUES.includes(value)) return isEn ? '+1 starch in snack; -1 starch from main meals' : '+1 άμυλο στο σνακ; -1 άμυλο από κύρια γεύματα';
   return '';
+}
+function snackExchangeMoveDetails(plan, lang='GR'){
+  const isEn=lang==='EN';
+  const rows=[];
+  const slotDefs=[
+    {key:'snack1Extras', alt:'snk1Extras', en:'Snack 1', gr:'Σνακ 1'},
+    {key:'snack2Extras', alt:'snk2Extras', en:'Snack 2', gr:'Σνακ 2'},
+    {key:'sleepExtras', alt:'sleepExtras', en:'Before sleep', gr:'Πριν τον ύπνο'}
+  ];
+  slotDefs.forEach(slot=>{
+    const extras=(plan?.[slot.key]||plan?.[slot.alt]||[]);
+    const label=isEn?slot.en:slot.gr;
+    const starchValue=slot.key==='sleepExtras' ? '' : selectedStarchSnackValue(extras);
+    if(starchValue){
+      const item=SNACK_EXTRAS.find(e=>e.v===starchValue);
+      const food=snackExtraLabel(item||{}, lang).replace(/^\S+\s*/, '');
+      rows.push(isEn
+        ? `${label}: ${food} adds 1 starch exchange to the snack and removes 1 starch exchange from lunch first, then dinner if lunch has none.`
+        : `${label}: ${food} προσθέτει 1 ισοδύναμο αμύλου στο σνακ και αφαιρεί 1 ισοδύναμο αμύλου πρώτα από το μεσημεριανό, μετά από το βραδινό αν δεν υπάρχει στο μεσημεριανό.`);
+      if(starchSnackIncludesFat(starchValue)){
+        rows.push(isEn
+          ? `${label}: ${food} also adds 1 fat exchange to the snack and removes 1 tsp olive oil from lunch first, then dinner if needed.`
+          : `${label}: ${food} προσθέτει επίσης 1 ισοδύναμο λίπους στο σνακ και αφαιρεί 1 κ.γ. ελαιόλαδο πρώτα από το μεσημεριανό, μετά από το βραδινό αν χρειαστεί.`);
+      }
+    }
+    if(extras.includes('nuts')){
+      rows.push(isEn
+        ? `${label}: nuts add 1 fat exchange to the snack and remove 1 tsp olive oil from lunch first, then dinner if lunch has none.`
+        : `${label}: οι ξηροί καρποί προσθέτουν 1 ισοδύναμο λίπους στο σνακ και αφαιρούν 1 κ.γ. ελαιόλαδο πρώτα από το μεσημεριανό, μετά από το βραδινό αν δεν υπάρχει στο μεσημεριανό.`);
+    }
+  });
+  return rows;
 }
 function selectedStarchSnackCount(sourcePlan=null){
   const plan=sourcePlan || S.mealSel || {};
@@ -5799,7 +5831,13 @@ function buildOneDayPlan(){
   const gapColor=gapOk?'var(--teal-600)':gapAbs<=200?'var(--warn)':'var(--err)';
   const gapBadge=gapOk?'ok':gapAbs<=200?'warn':'err';
   let gapAdvice='';
-  // NOTE: the old "unused dairy/fruit servings" mismatch warning has been
+  const snackMoves=snackExchangeMoveDetails(S.mealSel, lang);
+  if(snackMoves.length){
+    gapAdvice+=`<div style="margin-top:8px;padding:8px 12px;background:rgba(26,122,110,.10);border:1px solid rgba(26,122,110,.28);border-radius:6px;font-size:12px;color:var(--text-primary);line-height:1.55">
+      <i class="ti ti-arrows-exchange" aria-hidden="true"></i> <strong>${lang==='EN'?'Snack exchange movement':'Μετακίνηση ισοδυνάμων από σνακ'}:</strong>
+      <ul style="margin:6px 0 0 18px;padding:0">${snackMoves.map(m=>`<li>${safeHtml(m)}</li>`).join('')}</ul>
+    </div>`;
+  }  // NOTE: the old "unused dairy/fruit servings" mismatch warning has been
   // removed — it's now structurally impossible for that to happen, since
   // fruit/dairy servings assigned to a slot are ALWAYS included automatically
   // (see buildSlotSnack()), independent of which extras checkboxes are ticked.
@@ -5945,7 +5983,7 @@ function buildSevenDay(){
   const sel=(key,di,opts,cur)=>`<select style="width:100%;font-size:11px;padding:3px 5px;border:1px solid var(--border);border-radius:4px;background:var(--bg-page);color:var(--text-secondary);margin-bottom:5px" onchange="handleWeekMealSelect(${di},'${key}',this)">${mealOptionsHtml(opts,cur)}</select>`;
   // Compact checkbox-extras group for a snack slot on a given day
   const extrasGroup=(slotKey,di,checked)=>`<div class="snack-extras-group" style="display:flex;flex-direction:column;gap:2px;margin-bottom:5px">${SNACK_EXTRAS.filter(e=>snackExtraAllowedForSlot(e, slotKey)).map(e=>{
-    const noteText=checked.includes(e.v) ? snackReplacementNote(e.v) : '';
+    const noteText=checked.includes(e.v) ? snackReplacementNote(e.v, lang) : '';
     const note=noteText ? `<div style="color:var(--teal-700);font-size:9px;font-weight:700;margin-left:18px">${noteText}</div>` : '';
     return `<div style="display:flex;flex-direction:column"><label title="${safeHtml(e.tip||'')}" style="display:flex;align-items:center;gap:4px;font-size:10px;cursor:pointer;white-space:nowrap"><input type="checkbox" data-group="${e.group||''}" style="width:auto;transform:scale(0.85)" ${checked.includes(e.v)?'checked':''} onchange="toggleWeekPlanExtra(${di},'${slotKey}','${e.v}',this.checked)"> ${snackExtraLabel(e, lang)}</label>${note}</div>`;
   }).join('')}</div>`;
