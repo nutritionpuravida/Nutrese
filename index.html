@@ -4009,10 +4009,11 @@ function selectedStarchSnackValue(extras){
 function starchSnackIncludesFat(value){
   return STARCH_PLUS_FAT_SNACK_VALUES.includes(value);
 }
-function snackReplacementNote(value){
-  if(value==='nuts') return 'Αντικαθιστά 1 μερίδα λίπους (ελαιόλαδο)';
-  if(starchSnackIncludesFat(value)) return 'Αντικαθιστά 1 μερίδα αμύλου + 1 μερίδα λίπους';
-  if(STARCH_SNACK_VALUES.includes(value)) return 'Αντικαθιστά 1 μερίδα αμύλου από κύριο γεύμα';
+function snackReplacementNote(value, lang){
+  const isEn=(lang||S.mealLanguage||'GR')==='EN';
+  if(value==='nuts') return isEn ? 'Replaces 1 fat exchange (olive oil)' : 'Αντικαθιστά 1 μερίδα λίπους (ελαιόλαδο)';
+  if(starchSnackIncludesFat(value)) return isEn ? 'Replaces 1 starch + 1 fat exchange' : 'Αντικαθιστά 1 μερίδα αμύλου + 1 μερίδα λίπους';
+  if(STARCH_SNACK_VALUES.includes(value)) return isEn ? 'Replaces 1 starch serving from a main meal' : 'Αντικαθιστά 1 μερίδα αμύλου από κύριο γεύμα';
   return '';
 }
 function selectedStarchSnackCount(sourcePlan=null){
@@ -4053,8 +4054,8 @@ function snackExtrasHtml(slot='snack', selected=[]){
       const disabled=noStarchAvailable ? 'disabled' : '';
       const opacity=noStarchAvailable ? '.45' : '1';
       const cursor=noStarchAvailable ? 'not-allowed' : 'pointer';
-      const warn=noStarchAvailable ? '<span style="color:var(--amber-700);font-size:10px;font-weight:700;margin-left:3px">Δεν υπάρχει διαθέσιμο άμυλο</span>' : '';
-      const noteText=checked ? snackReplacementNote(e.v) : '';
+      const warn=noStarchAvailable ? `<span style=\"color:var(--amber-700);font-size:10px;font-weight:700;margin-left:3px\">${lang==='EN'?'No starch available':'Δεν υπάρχει διαθέσιμο άμυλο'}</span>` : '';
+      const noteText=checked ? snackReplacementNote(e.v, lang) : '';
       const note=noteText ? `<div style="color:var(--teal-700);font-size:10px;font-weight:700;margin-left:20px;margin-top:1px">${noteText}</div>` : '';
       return `<div style="display:flex;flex-direction:column;opacity:${opacity}"><label title="${safeHtml(e.tip||'')}" style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:${cursor};white-space:nowrap"><input type="checkbox" value="${e.v}" data-group="${e.group||''}" style="width:auto" ${checked?'checked':''} ${disabled} onchange="handleSnackOptionChange(this)"> ${snackExtraLabel(e, lang)}${warn}</label>${note}</div>`;
     }).join('');
@@ -6733,7 +6734,7 @@ const MEAL_PLAN_TEMPLATES = {
     macros:{c:50,p:25,f:25}, dietType:null, condition:'Sports',
     meals:{brk:['BRK_CEREAL','BRK_EGGS_TOAST','BRK_YOGURT_HONEY_WALNUTS','BRK_OATS_VEGAN'],
       lun:['LUN_GRILLED_FISH_RICE','LUN_SALMON_QUINOA','LUN_BIFTEKI_BULGUR','LUN_CHICKEN_QUINOA','LUN_LENTILS_RICE'],
-      din:['DIN_GRILLED_FISH_RICE','DIN_SALMON_POTATO','DIN_OMELETTE','DIN_BIFTEKI_BULGUR','DIN_CHICKEN_RICE']},
+      din:['DIN_GRILLED_FISH_RICE','DIN_SALMON_POTATO','DIN_OMELETTE','DIN_BIFTEKI_BULGUR','DIN_LENTILS_RICE','DIN_SOUVLAKI_PITA']},
     snacks:{snk1:['fruit','yogurt'], snk2:['fruit','nuts'], sleep:['yogurt']}
   },
   BoneHealth: {
@@ -7329,7 +7330,7 @@ function renderSevenDayMealCard(dayPlan, dt, slot, lang, dayIndex){
     slot.key==='din' ? `<select style="width:100%;margin-top:8px" onchange="handleWeekMealSelect(${dayIndex},'din',this)">${mealOptionsHtml(filteredDin,dayPlan.din)}</select>` : '';
   const extrasHtml=extraKey && !dayPlan.aiMeals ? `<div class="snack-extras-group" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">${SNACK_EXTRAS.filter(e=>snackExtraAllowedForSlot(e, slot.key)).map(e=>{
     const checked=dayPlan[extraKey]?.includes(e.v);
-    const noteText=checked ? snackReplacementNote(e.v) : '';
+    const noteText=checked ? snackReplacementNote(e.v, lang) : '';
     const note=noteText ? `<div style="color:var(--teal-700);font-size:10px;font-weight:700;margin-left:20px;margin-top:1px">${noteText}</div>` : '';
     return `<div style="display:flex;flex-direction:column"><label title="${safeHtml(e.tip||'')}" style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer"><input type="checkbox" data-group="${e.group||''}" ${checked?'checked':''} onchange="toggleWeekPlanExtra(${dayIndex},'${extraKey}','${e.v}',this.checked)"> ${snackExtraLabel(e, lang)}</label>${note}</div>`;
   }).join('')}</div>` : '';
@@ -8603,14 +8604,16 @@ function renderLabsTable(){
 }
 
 function labStatusBadge(status){
+  const isGr=window.appLang!=='en';
   if(status===null) return '<span class="badge neutral">—</span>';
-  if(status==='normal') return '<span class="badge ok">Normal</span>';
-  if(status==='low') return '<span class="badge warn">↓ Low</span>';
-  return '<span class="badge err">↑ High</span>';
+  if(status==='normal') return `<span class="badge ok">${isGr?'Φυσιολογικό':'Normal'}</span>`;
+  if(status==='low') return `<span class="badge warn">↓ ${isGr?'Χαμηλό':'Low'}</span>`;
+  return `<span class="badge err">↑ ${isGr?'Υψηλό':'High'}</span>`;
 }
 function labStatusNote(test,status){
-  if(status==='low') return test.lowMsg||'Below reference range';
-  if(status==='high') return test.highMsg||'Above reference range';
+  const isGr=window.appLang!=='en';
+  if(status==='low') return (isGr ? test.lowMsg : (test.lowMsgEn||test.lowMsg)) || (isGr?'Κάτω από το εύρος αναφοράς':'Below reference range');
+  if(status==='high') return (isGr ? test.highMsg : (test.highMsgEn||test.highMsg)) || (isGr?'Πάνω από το εύρος αναφοράς':'Above reference range');
   return '';
 }
 function abnormalLabRows(){
@@ -8718,7 +8721,7 @@ function translateClinicalNote(text){
 }
 // Combines condition-based and lab-deficiency-based vitamin/mineral suggestions
 function renderVitaminSuggestions(){
-  const isEn=(S.mealLanguage||'GR')==='EN';
+  const isEn=window.appLang==='en';
   const conditions=(S.conditions&&S.conditions.length)?S.conditions:[];
   let items=[];
   conditions.forEach(c=>{
@@ -10652,6 +10655,7 @@ function applyLanguage(lang){
   if(document.getElementById('page-tracking')?.classList.contains('active')) renderTracking();
   if(document.getElementById('page-account')?.classList.contains('active')) updateAccountPage();
   if(document.getElementById('page-profile')?.classList.contains('active')) calcAll();
+  if(document.getElementById('page-labs')?.classList.contains('active')) renderLabsTable();
   if(document.getElementById('page-report')?.classList.contains('active')){ buildReport(); renderMicronutrientCoverage(); }
   if(document.getElementById('page-recipes')?.classList.contains('active')){ renderRecipeDraft(); renderRecipesList(); }
   const rebalEl=document.getElementById('rebalance-preview');
@@ -10877,39 +10881,4 @@ updateOnlineStatus();
 
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
