@@ -4494,6 +4494,34 @@ function applyMainMealReplacement(portions, plan, replacements, warnings){
     }
   });
 }
+function mainMealFallbackFloor(mealKey, slot){
+  if(isCustomMealKey(mealKey) || mealCatalogIsFixedComposition(mealKey)) return null;
+  const key=String(mealKey||'');
+  const isDinner=slot==='dinner';
+  const baseFat=isDinner ? 3 : 2;
+  if(/LOUVI|LENTILS|CHICKPEA|BEAN|TOFU|PEAS|SPINACH/.test(key)){
+    return {prot:2, starch:1, fat:1};
+  }
+  if(/HALLOUMI|TRACHANAS/.test(key)) return {prot:2, starch:1, fat:1};
+  return {prot:3, starch:1, fat:baseFat};
+}
+function preserveVisibleMainMealFloors(portions, plan, replacements, warnings){
+  const hasReplacement=Object.values(replacements||{}).some(v=>Number(v||0)>0);
+  if(!hasReplacement) return;
+  [['lunch','lunch'],['dinner','dinner']].forEach(([slot,planKey])=>{
+    const mealKey=plan?.[planKey];
+    const p=portions?.[slot];
+    if(!p) return;
+    const core=Number(p.prot||0)+Number(p.starch||0)+Number(p.fat||0);
+    if(core>0) return;
+    const floor=mainMealFallbackFloor(mealKey, slot);
+    if(!floor) return;
+    p.prot=Math.max(Number(p.prot||0), floor.prot);
+    p.starch=Math.max(Number(p.starch||0), floor.starch);
+    p.fat=Math.max(Number(p.fat||0), floor.fat);
+    warnings.push(`${slot} was protected from becoming vegetables-only after snack exchange replacement; review Exchange System if this exceeds target.`);
+  });
+}
 function addMainMealFixedUse(target, comp, mealScales){
   if(!mealScales){
     addExchangeUse(target, comp);
@@ -4703,6 +4731,7 @@ function getDayMealAllocation(plan=S.mealSel, lang=S.mealLanguage||'GR'){
   allocateFatRemaining(ex,fixedForAllocation,portions,p,warnings,caps);
   allocateRemainingExchange('veg','veg',ex,fixedForAllocation,scalableSlots,portions,99,warnings);
   applyMainMealReplacement(portions, p, snackReplacements, warnings);
+  preserveVisibleMainMealFloors(portions, p, snackReplacements, warnings);
   const allocated=zeroExchangeUse();
   addExchangeUse(allocated, fixed);
   scalableSlots.forEach(slot=>{
