@@ -3273,7 +3273,7 @@ function calcDayTotals(){
           allocatedExchangeKcal:allocation.allocatedExchangeKcal||0,
           exchangeGap, addOnKcal, extraFoodKcal,
           exchangeTarget:allocation.exchangeTarget, allocatedExchanges:allocation.allocated,
-          exchangeDiff:allocation.exchangeDiff, warnings:allocation.warnings};
+          exchangeDiff:allocation.exchangeDiff, warnings:allocation.warnings, snackReplacementLog:allocation.snackReplacementLog||[]};
 }
 
 // Builds the portion suffix for a main meal using clinically-capped
@@ -4478,6 +4478,7 @@ function addSnackUseForAllocation(target, built, replacement){
 function applyMainMealReplacement(portions, plan, replacements, warnings){
   const slotOrder=['lunch','dinner'];
   const keyMap={starch:'starch', protein:'prot', fat:'fat'};
+  const log=[];
   Object.entries(keyMap).forEach(([exchangeKey, portionKey])=>{
     let remaining=Number(replacements?.[exchangeKey]||0);
     while(remaining>0){
@@ -4490,9 +4491,24 @@ function applyMainMealReplacement(portions, plan, replacements, warnings){
         break;
       }
       portions[slot][portionKey]=Math.max(0, Number(portions[slot][portionKey]||0)-1);
+      log.push({slot, exchangeKey, amount:1});
       remaining--;
     }
   });
+  return log;
+}
+function mainMealSnackAdjustmentHtml(log, slotKey, lang='GR'){
+  const slot=slotKey==='lun'?'lunch':slotKey==='din'?'dinner':slotKey;
+  const rows=(log||[]).filter(item=>item.slot===slot);
+  if(!rows.length) return '';
+  const isEn=lang==='EN';
+  const labels={
+    starch:isEn?'-1 starch exchange moved to snack':'-1 μερίδα αμύλου μετακινήθηκε στο σνακ',
+    protein:isEn?'-1 protein exchange moved to snack':'-1 μερίδα πρωτεΐνης μετακινήθηκε στο σνακ',
+    fat:isEn?'-1 tsp olive oil moved to snack':'-1 κ.γ. ελαιόλαδο μετακινήθηκε στο σνακ'
+  };
+  const text=rows.map(item=>labels[item.exchangeKey]||`-1 ${item.exchangeKey}`).join(' · ');
+  return `<div style="margin-top:7px;padding:6px 8px;border-radius:6px;background:rgba(26,122,110,.10);border:1px solid rgba(26,122,110,.25);color:var(--teal-700);font-size:11px;font-weight:800;line-height:1.35"><i class="ti ti-arrows-exchange" aria-hidden="true"></i> ${safeHtml(text)}</div>`;
 }
 function mainMealFallbackFloor(mealKey, slot){
   if(isCustomMealKey(mealKey) || mealCatalogIsFixedComposition(mealKey)) return null;
@@ -4730,7 +4746,7 @@ function getDayMealAllocation(plan=S.mealSel, lang=S.mealLanguage||'GR'){
   allocateProteinRemaining(ex,fixedForAllocation,scalableSlots,portions,p,caps,warnings);
   allocateFatRemaining(ex,fixedForAllocation,portions,p,warnings,caps);
   allocateRemainingExchange('veg','veg',ex,fixedForAllocation,scalableSlots,portions,99,warnings);
-  applyMainMealReplacement(portions, p, snackReplacements, warnings);
+  const snackReplacementLog=applyMainMealReplacement(portions, p, snackReplacements, warnings);
   preserveVisibleMainMealFloors(portions, p, snackReplacements, warnings);
   const allocated=zeroExchangeUse();
   addExchangeUse(allocated, fixed);
@@ -4751,8 +4767,8 @@ function getDayMealAllocation(plan=S.mealSel, lang=S.mealLanguage||'GR'){
   });
   const exchangeTotalKcal=exchangeSystemTotalKcal(exchangeTarget);
   const allocatedExchangeKcal=exchangeUseTotalKcal(allocated);
-  const result={plan:p,portions,snacks:{snk1Built,snk2Built,sleepBuilt},fruitDist,dairyDist,fixed,fixedForAllocation,snackReplacements,allocated,exchangeTarget,exchangeDiff,exchangeTotalKcal,allocatedExchangeKcal,warnings};
-  traceDecision('getDayMealAllocation','return',{lang, plan:p, portions, fruitDist, dairyDist, fixed, fixedForAllocation, snackReplacements, allocated, exchangeTarget, exchangeDiff, exchangeTotalKcal, allocatedExchangeKcal, warnings});
+  const result={plan:p,portions,snacks:{snk1Built,snk2Built,sleepBuilt},fruitDist,dairyDist,fixed,fixedForAllocation,snackReplacements,snackReplacementLog,allocated,exchangeTarget,exchangeDiff,exchangeTotalKcal,allocatedExchangeKcal,warnings};
+  traceDecision('getDayMealAllocation','return',{lang, plan:p, portions, fruitDist, dairyDist, fixed, fixedForAllocation, snackReplacements, snackReplacementLog, allocated, exchangeTarget, exchangeDiff, exchangeTotalKcal, allocatedExchangeKcal, warnings});
   return result;
 }
 
@@ -5889,9 +5905,9 @@ function buildOneDayPlan(){
   const meals=[
     {slot:'brk', time:lang==='EN'?'Breakfast':'Πρωινό',      en:'Breakfast',     text:strictActive?strictSlotText(strictTextPlan,'brk',lang,0):mealText(brk,null,lang),              kcal:day.brkKcal},
     {slot:'snk1', time:lang==='EN'?'Snack 1':'Σνακ 1',        en:'Snack 1',       text:strictActive?strictSlotText(strictTextPlan,'snk1',lang,0):snk1Built.text,                       kcal:day.snk1Kcal},
-    {slot:'lun', time:lang==='EN'?'Lunch':'Μεσημεριανό',     en:'Lunch',         text:strictActive?strictSlotText(strictTextPlan,'lun',lang,0):mealText(lun,portions.lunch,lang),    kcal:day.lunKcal},
+    {slot:'lun', time:lang==='EN'?'Lunch':'Μεσημεριανό',     en:'Lunch',         text:(strictActive?strictSlotText(strictTextPlan,'lun',lang,0):mealText(lun,portions.lunch,lang))+mainMealSnackAdjustmentHtml(day.snackReplacementLog,'lun',lang),    kcal:day.lunKcal},
     {slot:'snk2', time:lang==='EN'?'Snack 2':'Σνακ 2',        en:'Snack 2',       text:strictActive?strictSlotText(strictTextPlan,'snk2',lang,0):snk2Built.text,                       kcal:day.snk2Kcal},
-    {slot:'din', time:lang==='EN'?'Dinner':'Βραδινό',        en:'Dinner',        text:strictActive?strictSlotText(strictTextPlan,'din',lang,0):mealText(din,portions.dinner,lang),   kcal:day.dinKcal},
+    {slot:'din', time:lang==='EN'?'Dinner':'Βραδινό',        en:'Dinner',        text:(strictActive?strictSlotText(strictTextPlan,'din',lang,0):mealText(din,portions.dinner,lang))+mainMealSnackAdjustmentHtml(day.snackReplacementLog,'din',lang),   kcal:day.dinKcal},
     {slot:'sleep', time:lang==='EN'?'Before sleep':'Πριν τον ύπνο',en:'Before sleep', text:strictActive?strictSlotText(strictTextPlan,'sleep',lang,0):sleepBuilt.text,                   kcal:day.slpKcal},
   ];
   const visibleMeals=meals.filter(m=>m.text&&m.text!=='—');
@@ -6040,7 +6056,7 @@ function calcDayTotalsForPlan(dayPlan, lang='GR', dayIndex=0){
           allocatedExchangeKcal:(allocation.allocatedExchangeKcal||0)+oilDeltaKcal,
           exchangeGap, addOnKcal, extraFoodKcal,
           exchangeTarget:allocation.exchangeTarget, allocatedExchanges:allocation.allocated,
-          exchangeDiff:allocation.exchangeDiff, warnings:allocation.warnings};
+          exchangeDiff:allocation.exchangeDiff, warnings:allocation.warnings, snackReplacementLog:allocation.snackReplacementLog||[]};
   traceDecision('calcDayTotalsForPlan','return',{dayIndex, lang, dayPlan, result});
   return result;
 }
@@ -6606,9 +6622,9 @@ function fallbackSlotData(dayPlan, dt, slotKey, lang, dayIndex){
   }
   if(slotKey==='brk') return {name:mealOptionLabel(dayPlan.brk, lang), text:mealText(dayPlan.brk,null,lang)+renderExtraFoodsForSlot('brk', dayIndex), kcal:dt.brkKcal};
   if(slotKey==='snk1') return {name:lang==='EN'?'Snack 1':'Σνακ 1', text:dt.snk1Text+renderExtraFoodsForSlot('snk1', dayIndex), kcal:dt.snk1Kcal};
-  if(slotKey==='lun') return {name:mealOptionLabel(dayPlan.lun, lang), text:mealTextWithOilBalance(dayPlan.lun,dt.portions.lunch,lang,dt.oilBalance?.lun||0)+renderExtraFoodsForSlot('lun', dayIndex), kcal:dt.lunKcal};
+  if(slotKey==='lun') return {name:mealOptionLabel(dayPlan.lun, lang), text:mealTextWithOilBalance(dayPlan.lun,dt.portions.lunch,lang,dt.oilBalance?.lun||0)+mainMealSnackAdjustmentHtml(dt.snackReplacementLog,'lun',lang)+renderExtraFoodsForSlot('lun', dayIndex), kcal:dt.lunKcal};
   if(slotKey==='snk2') return {name:lang==='EN'?'Snack 2':'Σνακ 2', text:dt.snk2Text+renderExtraFoodsForSlot('snk2', dayIndex), kcal:dt.snk2Kcal};
-  if(slotKey==='din') return {name:mealOptionLabel(dayPlan.din, lang), text:mealTextWithOilBalance(dayPlan.din,dt.portions.dinner,lang,dt.oilBalance?.din||0)+renderExtraFoodsForSlot('din', dayIndex), kcal:dt.dinKcal};
+  if(slotKey==='din') return {name:mealOptionLabel(dayPlan.din, lang), text:mealTextWithOilBalance(dayPlan.din,dt.portions.dinner,lang,dt.oilBalance?.din||0)+mainMealSnackAdjustmentHtml(dt.snackReplacementLog,'din',lang)+renderExtraFoodsForSlot('din', dayIndex), kcal:dt.dinKcal};
   return {name:lang==='EN'?'Before sleep':'Πριν τον ύπνο', text:dt.slpText+renderExtraFoodsForSlot('sleep', dayIndex), kcal:dt.slpKcal};
 }
 
@@ -7509,12 +7525,12 @@ function renderSevenDayWeekSummary(lang='GR'){
       const tdStyle=tdStyleFor(rowBg);
       return `<tr style="border-bottom:1px solid ${pal.border} !important;background:${important(rowBg)}">
         <td style="${tdStyle};font-weight:900;color:${important(pal.day)}">${safeHtml(weekDayLabel(p,i,lang))}</td>
-        <td style="${tdStyle}">${safeHtml(brk.text||'—')}</td>
-        <td style="${tdStyle}">${safeHtml(snk1.text||'—')}</td>
-        <td style="${tdStyle}">${safeHtml(lun.text||'—')}</td>
-        <td style="${tdStyle}">${safeHtml(snk2.text||'—')}</td>
-        <td style="${tdStyle}">${safeHtml(din.text||'—')}</td>
-        <td style="${tdStyle}">${safeHtml(sleep.text||'—')}</td>
+        <td style="${tdStyle}">${safeHtml(stripHtmlTags(brk.text||'—'))}</td>
+        <td style="${tdStyle}">${safeHtml(stripHtmlTags(snk1.text||'—'))}</td>
+        <td style="${tdStyle}">${safeHtml(stripHtmlTags(lun.text||'—'))}</td>
+        <td style="${tdStyle}">${safeHtml(stripHtmlTags(snk2.text||'—'))}</td>
+        <td style="${tdStyle}">${safeHtml(stripHtmlTags(din.text||'—'))}</td>
+        <td style="${tdStyle}">${safeHtml(stripHtmlTags(sleep.text||'—'))}</td>
         <td style="${tdStyle};text-align:right;font-weight:900;color:${important(pal.kcal)}">${dt.totalKcal}</td>
       </tr>`;
     }).join('')}
@@ -9626,6 +9642,9 @@ let expandedSevenDayIndex = null;
 
 function safeHtml(value){
   return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+function stripHtmlTags(value){
+  return String(value ?? '').replace(/<[^>]*>/g,'').replace(/\\s{2,}/g,' ').trim();
 }
 function pad2(n){ return String(n).padStart(2,'0'); }
 function dateToISO(d){ return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; }
