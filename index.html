@@ -214,6 +214,21 @@ i.ti-circle-x { color: var(--red-text); }
 #page-dashboard .metrics-grid .metric { background: var(--bg-surface); border: 1px solid rgba(212,221,209,.6); border-radius: 16px; padding: 16px 18px; box-shadow: 0 16px 44px rgba(32,45,35,.05), 0 1px 2px rgba(32,45,35,.03); transition: box-shadow .18s ease, transform .18s ease; }
 #page-dashboard .metrics-grid { margin-top: 4px; }
 #page-profile .metrics-grid .metric { background: var(--bg-surface); border: 1px solid rgba(212,221,209,.6); border-radius: 16px; padding: 16px 18px; box-shadow: 0 16px 44px rgba(32,45,35,.05), 0 1px 2px rgba(32,45,35,.03); }
+#page-profile .card-body { padding:18px 18px 20px; }
+#page-profile .section-label { margin:20px 0 10px; padding-top:14px; border-top:1px solid rgba(212,221,209,.55); }
+#page-profile .section-label:first-child { margin-top:0; padding-top:0; border-top:0; }
+#page-profile .profile-photo-row { display:flex; align-items:center; gap:14px; margin-bottom:16px; padding:14px; border:1px solid rgba(212,221,209,.6); border-radius:16px; background:linear-gradient(145deg, rgba(15,118,110,.055), rgba(255,255,255,.62)); }
+#page-profile .form-grid { background:rgba(255,255,255,.42); border:1px solid rgba(212,221,209,.55); border-radius:16px; padding:14px; margin-bottom:12px; }
+#page-profile .form-grid + .form-grid { margin-top:-2px; }
+#page-profile .form-field label { font-weight:700!important; color:var(--text-primary)!important; }
+#page-profile #p-condition-summary { border-radius:12px!important; min-height:44px; }
+#page-profile #p-conditions { border-radius:14px!important; }
+#page-profile #p-conditions label { background:var(--bg-surface); border:1px solid var(--border); border-radius:10px; padding:8px 10px; transition:border-color .14s ease, background .14s ease; }
+#page-profile #p-conditions label:hover { border-color:var(--teal-300); background:rgba(15,118,110,.05); }
+#page-profile .profile-plan-cta { margin-top:20px; padding:16px; border:1px solid rgba(15,118,110,.18); border-radius:16px; background:linear-gradient(145deg, rgba(15,118,110,.085), rgba(255,255,255,.65)); }
+[data-theme="dark"] #page-profile .profile-photo-row,
+[data-theme="dark"] #page-profile .form-grid,
+[data-theme="dark"] #page-profile .profile-plan-cta { background:rgba(255,255,255,.025); border-color:var(--border); }
 #p-condition-chevron { transition: transform .15s ease; display: inline-block; }
 #page-bodycomp .metrics-grid .metric,
 #page-bodycomp .form-grid .metric { background: var(--bg-surface); border: 1px solid rgba(212,221,209,.6); border-radius: 16px; padding: 16px 18px; box-shadow: 0 16px 44px rgba(32,45,35,.05), 0 1px 2px rgba(32,45,35,.03); }
@@ -230,6 +245,49 @@ i.ti-circle-x { color: var(--red-text); }
 #page-dashboard .dashboard-empty-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 4px; }
 [data-theme="dark"] #page-dashboard .dashboard-empty-state { background: rgba(255,255,255,.025); border-color: var(--border); }
 [data-theme="dark"] #page-dashboard .dashboard-empty-icon { background: rgba(78,205,196,.1); color: var(--teal-300); }
+/* Minimal dashboard refinement: dashboard-only visual layer. */
+#page-dashboard { --dash-line: rgba(212,221,209,.52); --dash-shadow: 0 18px 44px rgba(32,45,35,.045); }
+#page-dashboard .bento-grid { grid-template-columns: minmax(0,1.45fr) minmax(320px,.85fr); gap:14px; margin-bottom:16px; }
+#page-dashboard .bento-tile { border-radius:20px; padding:18px 20px; border:1px solid var(--dash-line); box-shadow:var(--dash-shadow); background:rgba(255,255,255,.78); }
+#page-dashboard .bento-tile:hover { transform:none; box-shadow:0 18px 44px rgba(32,45,35,.055); }
+#page-dashboard .bento-header { min-height:86px; padding:18px 22px!important; justify-content:center!important; gap:56px; background:linear-gradient(180deg,rgba(255,255,255,.86),rgba(255,255,255,.66)); }
+#page-dashboard .bento-stats { gap:0; min-width:170px; justify-content:center; }
+#page-dashboard .bento-stats > div { min-width:150px; padding:0; border-radius:0; background:transparent!important; }
+#page-dashboard .bento-stats .bs-value { font-size:28px; font-weight:850; letter-spacing:-.02em; }
+#page-dashboard .bento-stats .bs-label { display:flex; justify-content:center; align-items:center; gap:4px; margin-top:7px; font-size:12px; color:var(--text-muted); }
+#page-dashboard .bento-tile-head { font-size:13px; font-weight:850; color:var(--text-primary); margin-bottom:16px; }
+#page-dashboard .bento-tile-head .card-action { color:var(--teal-700); font-weight:850; }
+#page-dashboard #dash-appointments { min-height:160px; color:var(--text-secondary); }
+#page-dashboard #dash-appointments > div { padding:2px 0; }
+#page-dashboard #dash-quick-actions { background:linear-gradient(145deg,rgba(15,118,110,.055),rgba(255,255,255,.76)); }
+#page-dashboard #dash-quick-actions .btn { justify-content:flex-start!important; border-radius:14px; padding:10px 12px; font-weight:750; background:rgba(255,255,255,.72); }
+#page-dashboard #dash-no-client-prompt.bento-accent { background:transparent; border:0; box-shadow:none; padding:0; }
+#page-dashboard .dashboard-empty-state { min-height:250px; border-radius:22px; gap:12px; padding:28px; background:linear-gradient(145deg,rgba(236,246,242,.95),rgba(255,255,255,.82)); border:1px solid rgba(15,118,110,.14); box-shadow:var(--dash-shadow); }
+#page-dashboard .dashboard-empty-icon { width:auto; height:auto; border-radius:0; background:transparent; font-size:34px; line-height:1; }
+#page-dashboard .dashboard-empty-title { font-size:20px; font-weight:900; letter-spacing:-.01em; }
+#page-dashboard .dashboard-empty-copy { max-width:470px; color:var(--text-muted); font-size:13px; line-height:1.65; }
+#page-dashboard .dashboard-empty-actions .btn { min-width:132px; justify-content:center; }
+#page-dashboard .dash-section-label { margin:18px 0 10px; font-size:10px; font-weight:900; color:var(--text-muted); letter-spacing:.09em; }
+#page-dashboard .metrics-grid { gap:12px; margin-top:0; }
+#page-dashboard .metrics-grid .metric { border-radius:18px; padding:16px; box-shadow:none; border:1px solid var(--dash-line); background:rgba(255,255,255,.74); }
+#page-dashboard .metrics-grid .metric:hover { border-color:rgba(15,118,110,.22); }
+#page-dashboard .metrics-grid .m-label { font-size:10px!important; font-weight:900!important; letter-spacing:.08em!important; }
+#page-dashboard .metrics-grid .m-value { font-size:24px; font-weight:900; letter-spacing:-.02em; }
+#page-dashboard .two-col { gap:14px; }
+#page-dashboard .two-col .card { border-radius:20px; box-shadow:var(--dash-shadow); background:rgba(255,255,255,.78); }
+#page-dashboard .two-col .card-header { padding:16px 18px 4px; }
+#page-dashboard .two-col .card-title { font-size:13px; font-weight:900; }
+#page-dashboard .two-col .card-body { padding:12px 18px 18px; min-height:92px; }
+[data-theme="dark"] #page-dashboard { --dash-line: var(--border); --dash-shadow:none; }
+[data-theme="dark"] #page-dashboard .bento-tile,
+[data-theme="dark"] #page-dashboard .bento-header,
+[data-theme="dark"] #page-dashboard .metrics-grid .metric,
+[data-theme="dark"] #page-dashboard .two-col .card,
+[data-theme="dark"] #page-dashboard #dash-quick-actions { background:var(--bg-surface); }
+[data-theme="dark"] #page-dashboard .dashboard-empty-state { background:rgba(255,255,255,.025); border-color:var(--border); box-shadow:none; }
+[data-theme="dark"] #page-dashboard .dashboard-empty-icon { background:transparent; color:var(--teal-300); }
+@media (max-width: 980px){ #page-dashboard .bento-grid{grid-template-columns:1fr} #page-dashboard .bento-header{gap:24px} }
+@media (max-width: 640px){ #page-dashboard .bento-header{flex-direction:column;gap:18px} #page-dashboard .bento-stats{width:100%} #page-dashboard .bento-stats > div{min-width:0;width:100%} }
 .metric .m-label { font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
 .metric .m-value { font-size: 24px; font-weight: 700; color: var(--text-primary); line-height: 1; }
 .metric .m-sub { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
@@ -823,6 +881,29 @@ table th,
 #labs-table table {
   font-size: 12px !important;
 }
+#page-labs .card-body { padding:18px; }
+#page-labs .alert.info { border-radius:16px; }
+#page-labs #labs-table,
+#page-labs #vitamin-suggestions { border:1px solid rgba(212,221,209,.55); border-radius:16px; overflow:hidden; background:var(--bg-surface); box-shadow:0 14px 38px rgba(32,45,35,.045); }
+#page-labs #labs-table table,
+#page-labs #vitamin-suggestions table { margin:0; border-collapse:separate; border-spacing:0; width:100%; font-size:12px!important; }
+#page-labs #labs-table th,
+#page-labs #vitamin-suggestions th { background:color-mix(in srgb,var(--bg-page) 72%,var(--bg-surface)); color:var(--text-muted); font-size:11px!important; text-transform:uppercase; letter-spacing:.06em; }
+#page-labs #labs-table td,
+#page-labs #vitamin-suggestions td { border-bottom:1px solid rgba(212,221,209,.45); vertical-align:middle; }
+#page-labs #labs-table tbody tr:last-child td,
+#page-labs #vitamin-suggestions tbody tr:last-child td { border-bottom:0; }
+#page-labs #labs-table tbody tr:hover,
+#page-labs #vitamin-suggestions tbody tr:hover { background:rgba(15,118,110,.035); }
+#page-labs #labs-table input { min-height:34px; border-radius:10px; font-weight:700; }
+#page-labs #vitamin-suggestions { margin-top:10px; }
+#page-labs #vitamin-suggestions td:nth-child(2) { font-size:13px!important; line-height:1.45; }
+[data-theme="dark"] #page-labs #labs-table,
+[data-theme="dark"] #page-labs #vitamin-suggestions { background:var(--bg-surface); border-color:var(--border); box-shadow:none; }
+[data-theme="dark"] #page-labs #labs-table th,
+[data-theme="dark"] #page-labs #vitamin-suggestions th { background:rgba(255,255,255,.035); }
+[data-theme="dark"] #page-labs #labs-table tbody tr:hover,
+[data-theme="dark"] #page-labs #vitamin-suggestions tbody tr:hover { background:rgba(255,255,255,.025); }
 
 /* Modern 7-day day editor cards: visual-only layer, keeps existing handlers/calculation intact. */
 .seven-day-card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:18px;align-items:start}
@@ -1156,7 +1237,7 @@ table th,
       <div class="card-header"><span class="card-title"><i class="ti ti-user" aria-hidden="true"></i> <span class="i18n" data-en="Client Profile" data-gr="Προφίλ Πελάτη">Client Profile</span></span></div>
       <div class="card-body">
         <div class="section-label"><span class="i18n" data-en="Photo" data-gr="Φωτογραφία">Photo</span></div>
-        <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+        <div class="profile-photo-row">
           <div id="client-photo-preview"></div>
           <div>
             <label class="btn" style="cursor:pointer;display:inline-block;padding:6px 12px;font-size:13px">
@@ -1278,7 +1359,7 @@ table th,
         </div>
         <div id="expected-progress-box" class="alert info" style="display:none;margin-top:-4px;margin-bottom:12px"></div>
                 <div id="condition-guidance" style="padding:12px;background:var(--teal-50);border:1px solid var(--teal-100);border-radius:var(--radius);font-size:13px;color:var(--teal-800);margin-top:8px"></div>
-        <div style="margin-top:20px;padding:16px;border:1px solid var(--teal-100);border-radius:12px;background:var(--teal-50)">
+        <div class="profile-plan-cta">
           <div style="font-weight:700;font-size:14px;color:var(--text-primary);margin-bottom:4px"><i class="ti ti-sparkles" aria-hidden="true"></i> <span class="i18n" data-en="Ready to generate a plan?" data-gr="Έτοιμοι για δημιουργία πλάνου;">Ready to generate a plan?</span></div>
           <div style="font-size:13px;color:var(--text-secondary);margin-bottom:12px"><span class="i18n" data-en="Nutrese will suggest starting macros and exchange servings based on this profile — you can review and adjust everything before saving." data-gr="Το Nutrese θα προτείνει αρχικά μακροθρεπτικά και μερίδες ισοδυνάμων βάσει αυτού του προφίλ — μπορείτε να τα ελέγξετε και να τα προσαρμόσετε πριν την αποθήκευση.">Nutrese will suggest starting macros and exchange servings based on this profile — you can review and adjust everything before saving.</span></div>
           <button class="btn primary" onclick="generateRecommendedPlan()"><i class="ti ti-sparkles" aria-hidden="true"></i> <span class="i18n" data-en="Generate Recommended Plan" data-gr="Δημιουργία Προτεινόμενου Πλάνου">Generate Recommended Plan</span></button>
