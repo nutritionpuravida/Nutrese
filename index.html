@@ -284,6 +284,17 @@ i.ti-circle-x { color: var(--red-text); }
 [data-theme="dark"] #page-dashboard .metrics-grid .metric,
 [data-theme="dark"] #page-dashboard .two-col .card,
 [data-theme="dark"] #page-dashboard #dash-quick-actions { background:var(--bg-surface); }
+[data-theme="dark"] #page-dashboard #dash-quick-actions .btn {
+  background:rgba(255,255,255,.035)!important;
+  border-color:var(--border)!important;
+  color:var(--text-primary)!important;
+  box-shadow:none!important;
+}
+[data-theme="dark"] #page-dashboard #dash-quick-actions .btn:hover {
+  background:rgba(78,205,196,.10)!important;
+  border-color:rgba(78,205,196,.28)!important;
+  color:var(--teal-300)!important;
+}
 [data-theme="dark"] #page-dashboard .dashboard-empty-state { background:rgba(255,255,255,.025); border-color:var(--border); box-shadow:none; }
 [data-theme="dark"] #page-dashboard .dashboard-empty-icon { background:transparent; color:var(--teal-300); }
 @media (max-width: 980px){ #page-dashboard .bento-grid{grid-template-columns:1fr} #page-dashboard .bento-header{gap:24px} }
@@ -1212,7 +1223,7 @@ table th,
         <div style="display:flex;flex-direction:column;gap:8px">
           <button class="btn" style="justify-content:flex-start" onclick="nav('appointments');openAppointmentForm(todayISO())"><i class="ti ti-calendar-plus" aria-hidden="true"></i> <span class="i18n" data-en="New appointment" data-gr="Νέο ραντεβού">New appointment</span></button>
           <button class="btn" style="justify-content:flex-start" onclick="nav('clients');newClient()"><i class="ti ti-user-plus" aria-hidden="true"></i> <span class="i18n" data-en="New client" data-gr="Νέος πελάτης">New client</span></button>
-          <button class="btn" style="justify-content:flex-start" onclick="nav('sevenday')"><i class="ti ti-calendar-week" aria-hidden="true"></i> <span class="i18n" data-en="View weekly plan" data-gr="Προβολή εβδομαδιαίου πλάνου">View weekly plan</span></button>
+          <button class="btn" style="justify-content:flex-start" onclick="S.sevenDayView='week';nav('sevenday')"><i class="ti ti-calendar-week" aria-hidden="true"></i> <span class="i18n" data-en="View weekly plan" data-gr="Προβολή εβδομαδιαίου πλάνου">View weekly plan</span></button>
         </div>
       </div>
       <div id="dash-no-client-prompt" class="bento-tile bento-accent" style="display:none">
@@ -6583,6 +6594,7 @@ function toggleWeekPlanExtra(dayIndex, extrasKey, extraValue, checked){
 // such in the UI.
 const FISH_MEAL_KEYS=new Set(['LUN_FISH_POTATO','LUN_SALMON_POTATO','LUN_BAKED_FISH_VEG','LUN_TUNA_POTATO','LUN_TUNA_RICE','LUN_SALMON_QUINOA','LUN_GRILLED_FISH_RICE','LUN_LOUVI_TUNA','DIN_FISH_POTATO','DIN_SALMON_POTATO','DIN_BAKED_FISH_VEG','DIN_TUNA_POTATO','DIN_TUNA_RICE','DIN_GRILLED_FISH_RICE']);
 const FATTY_FISH_MEAL_KEYS=new Set(['LUN_SALMON_POTATO','LUN_SALMON_QUINOA','DIN_SALMON_POTATO']); // richer vitamin D source than white fish
+const EGG_MEAL_KEYS=new Set(['BRK_EGGS','BRK_EGGS_TOAST','BRK_BOILED_EGGS_2','DIN_OMELETTE','LUN_AVGOLEMONO_SOUP','DIN_AVGOLEMONO_SOUP','LUN_TRACHANAS_HALLOUMI','DIN_TRACHANAS_HALLOUMI']); // possible vitamin D source, not equivalent to fatty fish
 const LEGUME_MEAL_KEYS=new Set(['LUN_LOUVI_TUNA','LUN_LENTILS_RICE','LUN_CHICKPEA_STEW','LUN_BEAN_SALAD','LUN_CHICKPEAS_SALAD','LUN_LENTIL_SOUP','LUN_TOFU_RICE','DIN_LENTILS_RICE','DIN_CHICKPEA_STEW','DIN_BEAN_PASTA','DIN_TOFU_STIRFRY','DIN_CHICKPEAS_SALAD']); // fasolakia (green beans) and peas-ladero are vegetable/starch-classified in this app's own exchange tables, not legume/protein — confirmed by checking their actual composition
 const RED_MEAT_MEAL_KEYS=new Set(['LUN_FASOLAKIA_PORK','LUN_PASTA_MINCE','LUN_BIFTEKI_BULGUR','DIN_PASTA_MINCE','DIN_BIFTEKI_BULGUR']); // pork/beef — heme iron
 const HIGH_SODIUM_MEAL_KEYS=new Set(['LUN_HALLOUMI_POTATO','LUN_HALLOUMI_PASTA','LUN_TRACHANAS_HALLOUMI','LUN_AVGOLEMONO_SOUP','LUN_TUNA_POTATO','LUN_TUNA_RICE','LUN_LOUVI_TUNA','DIN_HALLOUMI_POTATO','DIN_HALLOUMI_SALAD','DIN_TRACHANAS_HALLOUMI','DIN_AVGOLEMONO_SOUP','DIN_TUNA_POTATO','DIN_TUNA_RICE','DIN_SOUVLAKI_PITA']); // halloumi/feta/canned fish/cured — naturally higher sodium
@@ -7525,19 +7537,21 @@ function weekMicronutrientSignals(){
 // precision, not real information — deliberately not shown per-day.
 function dayMicronutrientSignals(dayPlan){
   if(!dayPlan) return null;
-  const mealKeys=[dayPlan.lun, dayPlan.din];
-  const hasFish=mealKeys.some(k=>FISH_MEAL_KEYS.has(k));
-  const hasFattyFish=mealKeys.some(k=>FATTY_FISH_MEAL_KEYS.has(k));
-  const hasLegume=mealKeys.some(k=>LEGUME_MEAL_KEYS.has(k));
-  const hasRedMeat=mealKeys.some(k=>RED_MEAT_MEAL_KEYS.has(k));
-  const hasHighSodium=mealKeys.some(k=>HIGH_SODIUM_MEAL_KEYS.has(k));
+  const mainMealKeys=[dayPlan.lun, dayPlan.din];
+  const allMealKeys=[dayPlan.brk, dayPlan.lun, dayPlan.din];
+  const hasFish=mainMealKeys.some(k=>FISH_MEAL_KEYS.has(k));
+  const hasFattyFish=mainMealKeys.some(k=>FATTY_FISH_MEAL_KEYS.has(k));
+  const hasEgg=allMealKeys.some(k=>EGG_MEAL_KEYS.has(k));
+  const hasLegume=mainMealKeys.some(k=>LEGUME_MEAL_KEYS.has(k));
+  const hasRedMeat=mainMealKeys.some(k=>RED_MEAT_MEAL_KEYS.has(k));
+  const hasHighSodium=mainMealKeys.some(k=>HIGH_SODIUM_MEAL_KEYS.has(k));
   const snk1=dayPlan.snk1Extras||dayPlan.snack1Extras||[], snk2=dayPlan.snk2Extras||dayPlan.snack2Extras||[], sleep=dayPlan.sleepExtras||[];
   const hasNuts=[snk1,snk2,sleep].some(arr=>Array.isArray(arr)&&arr.includes('nuts'));
   return {
-    ironSource: hasFish||hasLegume||hasRedMeat,
-    vitaminDSource: hasFattyFish,
+    ironSource: hasRedMeat ? 'redMeat' : hasLegume ? 'legume' : hasFish ? 'fish' : 'none',
+    vitaminDSource: hasFattyFish ? 'fattyFish' : hasEgg ? 'egg' : 'none',
     sodiumRisk: hasHighSodium,
-    magnesiumSource: hasNuts||hasLegume,
+    magnesiumSource: hasLegume ? 'legume' : hasNuts ? 'nuts' : 'none',
   };
 }
 
@@ -7665,16 +7679,27 @@ function renderMicronutrientCoverage(){
   const plans=S.weekPlans||WEEK_PLANS;
   const dayNamesEn=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
   const dayNamesGr=['Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο','Κυριακή'];
-  const dayCol=(ok)=>ok?'<i class="ti ti-circle-check" aria-hidden="true" style="color:#22c55e"></i>':'<span style="color:var(--text-muted)">—</span>';
+  const signalText=(type,value)=>{
+    const muted='<span style="color:var(--text-muted)">'+(isGr?'Δεν εντοπίστηκε':'Not detected')+'</span>';
+    const map={
+      iron:{redMeat:isGr?'Κόκκινο κρέας':'Red meat',legume:isGr?'Όσπρια':'Legumes',fish:isGr?'Ψάρι':'Fish'},
+      vitaminD:{fattyFish:isGr?'Σολομός / λιπαρό ψάρι':'Salmon / fatty fish',egg:isGr?'Αυγό (πιθανή πηγή)':'Egg (possible source)'},
+      magnesium:{legume:isGr?'Όσπρια':'Legumes',nuts:isGr?'Ξηροί καρποί':'Nuts'}
+    };
+    return (map[type]&&map[type][value]) ? `<span style="font-weight:700;color:var(--text-primary)">${map[type][value]}</span>` : muted;
+  };
+  const sodiumText=(risk)=> risk
+    ? `<span style="font-weight:700;color:var(--warn)">${isGr?'Υψηλότερο νάτριο':'Higher sodium'}</span>`
+    : `<span style="color:var(--text-muted)">${isGr?'Χωρίς ένδειξη':'No flag'}</span>`;
   const dayRows=plans.map((p,i)=>{
     const sig=dayMicronutrientSignals(p);
     if(!sig) return '';
     return `<tr>
       <td style="padding:6px 8px;font-weight:600">${isGr?dayNamesGr[i]:dayNamesEn[i]}</td>
-      <td style="padding:6px 8px;text-align:center">${dayCol(sig.ironSource)}</td>
-      <td style="padding:6px 8px;text-align:center">${dayCol(sig.vitaminDSource)}</td>
-      <td style="padding:6px 8px;text-align:center">${sig.sodiumRisk?'<i class="ti ti-alert-triangle" aria-hidden="true" style="color:#facc15"></i>':dayCol(true)}</td>
-      <td style="padding:6px 8px;text-align:center">${dayCol(sig.magnesiumSource)}</td>
+      <td style="padding:6px 8px;text-align:center">${signalText('iron',sig.ironSource)}</td>
+      <td style="padding:6px 8px;text-align:center">${signalText('vitaminD',sig.vitaminDSource)}</td>
+      <td style="padding:6px 8px;text-align:center">${sodiumText(sig.sodiumRisk)}</td>
+      <td style="padding:6px 8px;text-align:center">${signalText('magnesium',sig.magnesiumSource)}</td>
     </tr>`;
   }).join('');
   const dayByDayTable=`<div style="margin-top:14px">
