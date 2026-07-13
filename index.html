@@ -488,6 +488,12 @@ html[data-theme="dark"] .week-summary-table td:last-child {
 .calendar-time-label { font-size: 11px; font-weight: 800; color: var(--text-muted); padding-top: 5px; font-variant-numeric: tabular-nums; }
 .calendar-day.week .calendar-time-row { grid-template-columns: 40px minmax(0, 1fr); gap: 4px; }
 .calendar-day.week .calendar-time-label { font-size: 10px; }
+.calendar-agenda.time-scale{gap:0;border-top:1px solid color-mix(in srgb,var(--border) 70%,transparent);margin-top:4px}
+.calendar-agenda.time-scale .calendar-time-row{min-height:34px;border-bottom:1px solid color-mix(in srgb,var(--border) 54%,transparent);padding:3px 0}
+.calendar-agenda.time-scale .calendar-time-row:last-child{border-bottom:none}
+.calendar-agenda.time-scale .calendar-time-label{padding-top:4px;color:var(--text-muted);opacity:.82}
+.calendar-hour-empty{height:18px}
+.calendar-day.day .calendar-agenda.time-scale .calendar-time-row{min-height:42px}
 .appointment-block { display: block; width: 100%; border: none; border-radius: 6px; padding: 5px 6px; margin-bottom: 5px; color: #fff; cursor: pointer; text-align: left; font-size: 11px; line-height: 1.25; overflow: hidden; }
 .appointment-block strong { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .appointment-block .appointment-meta { display:block; margin-top:2px; font-size:10px; font-weight:800; opacity:.92; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -9837,8 +9843,22 @@ function renderAppointments(){
       const meta=calendarView==='month' ? `${a.type} · ${a.duration} min` : `${timeText} · ${a.type} · ${a.duration} min`;
       return `<button class="appointment-block ${appointmentClass(a.type)}" onclick="event.stopPropagation();openAppointmentForm('${iso}','${safeHtml(a.id)}')" title="${safeHtml(timeText)} · ${safeHtml(a.type)} · ${safeHtml(a.notes)}"><strong>${safeHtml(calendarView==='month' ? `${timeText} ${clientName}` : clientName)}</strong><span class="appointment-meta">${safeHtml(meta)}</span></button>`;
     };
+    const agendaFor=()=>{
+      if(items.length>1){
+        const hours=items.map(a=>parseInt(String(a.time||'0:00').slice(0,2),10)).filter(Number.isFinite);
+        const startHour=Math.max(7, Math.min(...hours)-1);
+        const endHour=Math.min(21, Math.max(...hours)+1);
+        const rows=[];
+        for(let h=startHour; h<=endHour; h++){
+          const hourItems=items.filter(a=>parseInt(String(a.time||'0:00').slice(0,2),10)===h);
+          rows.push(`<div class="calendar-time-row"><div class="calendar-time-label">${pad2(h)}:00</div><div>${hourItems.length?hourItems.map(blockFor).join(''):'<div class="calendar-hour-empty"></div>'}</div></div>`);
+        }
+        return `<div class="calendar-agenda time-scale">${rows.join('')}</div>`;
+      }
+      return `<div class="calendar-agenda">${items.map(a=>`<div class="calendar-time-row"><div class="calendar-time-label">${safeHtml(a.time||'—')}</div><div>${blockFor(a)}</div></div>`).join('')}</div>`;
+    };
     const blocks=calendarView==='day' || calendarView==='week'
-      ? `<div class="calendar-agenda">${items.map(a=>`<div class="calendar-time-row"><div class="calendar-time-label">${safeHtml(a.time||'—')}</div><div>${blockFor(a)}</div></div>`).join('')}</div>`
+      ? agendaFor()
       : items.map(blockFor).join('');
     const dayViewClass = calendarView==='day' ? 'day' : (calendarView==='week' ? 'week' : '');
     return `<div class="calendar-day ${muted?'muted':''} ${iso===today?'today':''} ${dayViewClass}" onclick="openAppointmentForm('${iso}')">
