@@ -115,6 +115,8 @@ i.ti-circle-x { color: var(--red-text); }
 .topbar-title { font-size: 15px; font-weight: 700; color: var(--text-primary); }
 .topbar-sub { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
 .topbar-actions { margin-left: auto; display: flex; gap: 6px; align-items: center; }
+/* Legacy topbar actions were moved into their relevant pages; keep old injected/cached buttons hidden. */
+.topbar-actions #topbar-save-client-btn, .topbar-actions #topbar-print-btn { display: none !important; }
 .theme-toggle { background: none; border: 1px solid var(--border-strong); border-radius: 6px; padding: 5px 9px; cursor: pointer; font-size: 14px; color: var(--text-secondary); display: flex; align-items: center; gap: 5px; transition: all .12s; }
 .theme-toggle:hover { background: var(--bg-hover); }
 
@@ -1532,6 +1534,9 @@ table th,
       <div class="card-header"><span class="card-title"><i class="ti ti-tools-kitchen-2" aria-hidden="true"></i> <span class="i18n" data-en="Recipes" data-gr="Συνταγές">Recipes</span></span></div>
       <div class="card-body">
         <div class="alert info"><i class="ti ti-info-circle" aria-hidden="true"></i> <span class="i18n" data-en="Build custom recipes from manual ingredients or foods found in USDA FoodData Central. Nutrition is calculated from kcal/carbs/protein/fat per 100g." data-gr="Δημιουργήστε προσαρμοσμένες συνταγές από χειροκίνητα συστατικά ή τρόφιμα από το USDA FoodData Central. Η διατροφική αξία υπολογίζεται από kcal/υδατάνθρακες/πρωτεΐνη/λίπος ανά 100g.">Build custom recipes from manual ingredients or foods found in USDA FoodData Central. Nutrition is calculated from kcal/carbs/protein/fat per 100g.</span></div>
+        <div class="section-label"><span class="i18n" data-en="Nutrese starter recipes" data-gr="Αρχικές συνταγές Nutrese">Nutrese starter recipes</span></div>
+        <div class="field-note" style="margin-bottom:10px"><span class="i18n" data-en="Original editable templates inspired by Mediterranean, brain-health and high-fibre patterns. Load one into the builder, adjust portions, then save it to your own recipes." data-gr="Πρωτότυπα επεξεργάσιμα πρότυπα εμπνευσμένα από μεσογειακά, brain-health και υψηλής-περιεκτικότητας σε φυτικές ίνες μοτίβα. Φορτώστε ένα στη φόρμα, προσαρμόστε τις ποσότητες και αποθηκεύστε το στις δικές σας συνταγές.">Original editable templates inspired by Mediterranean, brain-health and high-fibre patterns. Load one into the builder, adjust portions, then save it to your own recipes.</span></div>
+        <div id="recipe-template-list" style="margin-bottom:18px"></div>
         <h3 style="margin:4px 0 14px;font-size:16px;color:var(--text-primary)"><span class="i18n" data-en="Create New Recipe" data-gr="Δημιουργία Νέας Συνταγής">Create New Recipe</span></h3>
         <div class="form-grid two">
           <div class="form-field"><label><span class="i18n" data-en="Recipe name" data-gr="Όνομα συνταγής">Recipe name</span></label><input type="text" id="recipe-name" class="i18n-ph" data-en-ph="e.g. Chicken rice bowl" data-gr-ph="π.χ. Μπολ με κοτόπουλο και ρύζι" placeholder="e.g. Chicken rice bowl" oninput="renderRecipeDraft()"></div>
@@ -5297,7 +5302,7 @@ function nav(id) {
   if(id==='equivalents') buildEquivalents();
   if(id==='labs') renderLabsTable();
   if(id==='fooddb') { loadRecipes({render:false, mergeLocal:true}); }
-  if(id==='recipes') { renderRecipeDraft(); loadRecipes(); }
+  if(id==='recipes') { renderRecipeTemplates(); renderRecipeDraft(); loadRecipes(); }
   if(id==='appointments') { loadAppointments(true).then(()=>{renderAppointments();}); checkCalendarConnectionStatus(); }
   if(id==='account') { setTimeout(()=>refreshAccountSubscriptionPage().catch(err=>console.error('[Nutrese account] deferred refresh failed', err)), 0); }
   if(id==='profile') { renderConditionRadios(); refreshConditionVisualState(); }
@@ -9211,6 +9216,96 @@ function removeExtraFood(id){
 //  RECIPES
 // ═══════════════════════════════════════════
 let ingredientSearchResults=[];
+const NUTRESE_RECIPE_TEMPLATES = [
+  {
+    id:'lentil_quinoa_bowl', servings:2,
+    name:{en:'Lentil, quinoa & herb bowl', gr:'Μπολ φακές, κινόα & μυρωδικά'},
+    summary:{en:'High-fibre Mediterranean bowl with legumes, whole grains and olive oil.', gr:'Μεσογειακό μπολ υψηλό σε φυτικές ίνες με όσπρια, δημητριακό ολικής και ελαιόλαδο.'},
+    instructions:{en:'Cook quinoa and lentils separately. Combine with cucumber, tomato, parsley, lemon and olive oil. Serve chilled or warm.', gr:'Μαγειρέψτε χωριστά την κινόα και τις φακές. Ανακατέψτε με αγγούρι, ντομάτα, μαϊντανό, λεμόνι και ελαιόλαδο. Σερβίρεται δροσερό ή ζεστό.'},
+    ingredients:[
+      {name:{en:'Cooked lentils',gr:'Μαγειρεμένες φακές'}, grams:220, kcal100:116, carbs100:20.1, protein100:9.0, fat100:0.4},
+      {name:{en:'Cooked quinoa',gr:'Μαγειρεμένη κινόα'}, grams:160, kcal100:120, carbs100:21.3, protein100:4.4, fat100:1.9},
+      {name:{en:'Cucumber',gr:'Αγγούρι'}, grams:120, kcal100:15, carbs100:3.6, protein100:0.7, fat100:0.1},
+      {name:{en:'Tomato',gr:'Ντομάτα'}, grams:160, kcal100:18, carbs100:3.9, protein100:0.9, fat100:0.2},
+      {name:{en:'Extra virgin olive oil',gr:'Εξαιρετικό παρθένο ελαιόλαδο'}, grams:18, kcal100:884, carbs100:0, protein100:0, fat100:100}
+    ]
+  },
+  {
+    id:'salmon_barley_salad', servings:2,
+    name:{en:'Salmon, barley & spinach salad', gr:'Σαλάτα σολομού με κριθάρι & σπανάκι'},
+    summary:{en:'Omega-3 rich meal with leafy greens and slow-release carbohydrate.', gr:'Γεύμα πλούσιο σε ωμέγα-3 με πράσινα φυλλώδη λαχανικά και υδατάνθρακα αργής αποδέσμευσης.'},
+    instructions:{en:'Flake cooked salmon over barley and spinach. Add roasted pepper, lemon, dill and olive oil.', gr:'Προσθέστε τον μαγειρεμένο σολομό πάνω από κριθάρι και σπανάκι. Συμπληρώστε με πιπεριά, λεμόνι, άνηθο και ελαιόλαδο.'},
+    ingredients:[
+      {name:{en:'Cooked salmon',gr:'Μαγειρεμένος σολομός'}, grams:220, kcal100:206, carbs100:0, protein100:22.1, fat100:12.4},
+      {name:{en:'Cooked barley',gr:'Μαγειρεμένο κριθάρι'}, grams:180, kcal100:123, carbs100:28.2, protein100:2.3, fat100:0.4},
+      {name:{en:'Baby spinach',gr:'Baby σπανάκι'}, grams:90, kcal100:23, carbs100:3.6, protein100:2.9, fat100:0.4},
+      {name:{en:'Roasted red pepper',gr:'Ψητή κόκκινη πιπεριά'}, grams:120, kcal100:31, carbs100:6.0, protein100:1.0, fat100:0.3},
+      {name:{en:'Extra virgin olive oil',gr:'Εξαιρετικό παρθένο ελαιόλαδο'}, grams:14, kcal100:884, carbs100:0, protein100:0, fat100:100}
+    ]
+  },
+  {
+    id:'yogurt_berry_walnut_bowl', servings:1,
+    name:{en:'Greek yogurt, berries & walnut bowl', gr:'Μπολ γιαούρτι με μούρα & καρύδια'},
+    summary:{en:'Fast breakfast or snack with protein, polyphenol-rich fruit and nuts.', gr:'Γρήγορο πρωινό ή σνακ με πρωτεΐνη, φρούτο πλούσιο σε πολυφαινόλες και ξηρούς καρπούς.'},
+    instructions:{en:'Layer yogurt with berries and oats. Top with walnuts and cinnamon. Add honey only if clinically appropriate.', gr:'Βάλτε σε μπολ γιαούρτι, μούρα και βρώμη. Προσθέστε καρύδια και κανέλα. Προσθέστε μέλι μόνο αν είναι κλινικά κατάλληλο.'},
+    ingredients:[
+      {name:{en:'Greek yogurt 2%',gr:'Γιαούρτι στραγγιστό 2%'}, grams:170, kcal100:73, carbs100:3.9, protein100:10.0, fat100:2.0},
+      {name:{en:'Mixed berries',gr:'Ανάμεικτα μούρα'}, grams:100, kcal100:50, carbs100:12.0, protein100:1.0, fat100:0.3},
+      {name:{en:'Oats',gr:'Βρώμη'}, grams:25, kcal100:389, carbs100:66.3, protein100:16.9, fat100:6.9},
+      {name:{en:'Walnuts',gr:'Καρύδια'}, grams:15, kcal100:654, carbs100:13.7, protein100:15.2, fat100:65.2}
+    ]
+  },
+  {
+    id:'turkey_chickpea_peppers', servings:3,
+    name:{en:'Turkey & chickpea stuffed peppers', gr:'Πιπεριές γεμιστές με γαλοπούλα & ρεβίθια'},
+    summary:{en:'High-protein, high-fibre dinner template with legumes and lean poultry.', gr:'Πρότυπο βραδινού υψηλό σε πρωτεΐνη και φυτικές ίνες με όσπρια και άπαχη γαλοπούλα.'},
+    instructions:{en:'Mix cooked turkey mince, chickpeas, tomato and herbs. Fill peppers and bake until tender. Serve with salad.', gr:'Ανακατέψτε μαγειρεμένο κιμά γαλοπούλας, ρεβίθια, ντομάτα και μυρωδικά. Γεμίστε τις πιπεριές και ψήστε μέχρι να μαλακώσουν. Σερβίρετε με σαλάτα.'},
+    ingredients:[
+      {name:{en:'Cooked turkey mince',gr:'Μαγειρεμένος κιμάς γαλοπούλας'}, grams:300, kcal100:170, carbs100:0, protein100:27.0, fat100:7.0},
+      {name:{en:'Cooked chickpeas',gr:'Μαγειρεμένα ρεβίθια'}, grams:240, kcal100:164, carbs100:27.4, protein100:8.9, fat100:2.6},
+      {name:{en:'Bell peppers',gr:'Πιπεριές'}, grams:360, kcal100:31, carbs100:6.0, protein100:1.0, fat100:0.3},
+      {name:{en:'Tomato passata',gr:'Σάλτσα ντομάτας'}, grams:180, kcal100:29, carbs100:6.0, protein100:1.4, fat100:0.2},
+      {name:{en:'Extra virgin olive oil',gr:'Εξαιρετικό παρθένο ελαιόλαδο'}, grams:15, kcal100:884, carbs100:0, protein100:0, fat100:100}
+    ]
+  }
+];
+function localizeRecipeTemplateIngredient(ing){
+  const isGr=window.appLang==='gr';
+  return {...ing, name: typeof ing.name==='object' ? (isGr ? ing.name.gr : ing.name.en) : ing.name};
+}
+function renderRecipeTemplates(){
+  const el=document.getElementById('recipe-template-list'); if(!el) return;
+  const isGr=window.appLang==='gr';
+  el.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px">${NUTRESE_RECIPE_TEMPLATES.map(t=>{
+    const ingredients=t.ingredients.map(localizeRecipeTemplateIngredient);
+    const total=recipeTotals(ingredients);
+    const per=Math.round(total.kcal/Math.max(1,t.servings||1));
+    const name=isGr?t.name.gr:t.name.en;
+    const summary=isGr?t.summary.gr:t.summary.en;
+    return `<div style="border:1px solid var(--border);border-radius:12px;background:var(--bg-surface);padding:12px;display:flex;flex-direction:column;gap:8px">
+      <div style="font-weight:800;color:var(--text-primary)">${safeHtml(name)}</div>
+      <div style="font-size:12px;color:var(--text-secondary);line-height:1.45">${safeHtml(summary)}</div>
+      <div class="badge neutral" style="align-self:flex-start">${per} kcal / ${isGr?'μερίδα':'serving'}</div>
+      <button class="btn" style="justify-content:center" onclick="loadRecipeTemplate('${t.id}')"><i class="ti ti-copy" aria-hidden="true"></i> ${isGr?'Φόρτωση στη φόρμα':'Load template'}</button>
+    </div>`;
+  }).join('')}</div>`;
+}
+function loadRecipeTemplate(id){
+  const t=NUTRESE_RECIPE_TEMPLATES.find(x=>x.id===id); if(!t) return;
+  const isGr=window.appLang==='gr';
+  const n=document.getElementById('recipe-name'), s=document.getElementById('recipe-servings'), ins=document.getElementById('recipe-instructions');
+  if(n) n.value=isGr?t.name.gr:t.name.en;
+  if(s) s.value=t.servings||1;
+  if(ins) ins.value=isGr?t.instructions.gr:t.instructions.en;
+  S.recipeDraft=t.ingredients.map(localizeRecipeTemplateIngredient);
+  S.editingRecipeId=null;
+  S.recipeDraftPhoto=null;
+  const preview=document.getElementById('recipe-photo-preview');
+  if(preview) preview.innerHTML='<i class="ti ti-photo" aria-hidden="true" style="font-size:22px;color:var(--text-muted)"></i>';
+  renderRecipeDraft();
+  updateRecipeSaveButton();
+  setEl('recipe-save-status', isGr ? 'Το πρότυπο φορτώθηκε. Προσαρμόστε ποσότητες/οδηγίες και αποθηκεύστε το ως δική σας συνταγή.' : 'Template loaded. Adjust portions/instructions and save it as your own recipe.');
+}
 async function searchIngredientFoods(){
   const query=(v('ing-search')||v('ing-name')||'').trim();
   if(!query){ setEl('ingredient-search-status','Enter an ingredient name to search.'); return; }
@@ -10894,7 +10989,7 @@ function applyLanguage(lang){
   if(document.getElementById('page-labs')?.classList.contains('active')) renderLabsTable();
   if(document.getElementById('page-sevenday')?.classList.contains('active')) renderMicronutrientCoverage();
   if(document.getElementById('page-report')?.classList.contains('active')){ buildReport(); renderMicronutrientCoverage(); }
-  if(document.getElementById('page-recipes')?.classList.contains('active')){ renderRecipeDraft(); renderRecipesList(); }
+  if(document.getElementById('page-recipes')?.classList.contains('active')){ renderRecipeTemplates(); renderRecipeDraft(); renderRecipesList(); }
   const rebalEl=document.getElementById('rebalance-preview');
   if(rebalEl && rebalEl.innerHTML){ rebalEl.innerHTML=''; S._rebalancePending=null; }
   if(document.getElementById('page-fooddb')?.classList.contains('active') && S.foodResults) renderFoodResults(S.foodResults);
