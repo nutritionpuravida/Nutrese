@@ -8523,7 +8523,7 @@ function renderTracking(){
   const th = isGr
     ? ['Ημερομηνία','Βάρος (κιλά)','Ποσοστό Λίπους %','Μυϊκή Μάζα (κιλά)','Σπλαχνικό','Σημειώσεις','']
     : ['Date','Weight (kg)','Body Fat %','Muscle (kg)','Visceral','Notes',''];
-  el.innerHTML=`<table><thead><tr><th>${th[0]}</th><th>${th[1]}</th><th>${th[2]}</th><th>${th[3]}</th><th>${th[4]}</th><th>${th[5]}</th><th>${th[6]}</th></tr></thead><tbody>`+
+  el.innerHTML=`<table><thead><tr><th>${th[0]}</th><th>${th[1]}</th><th>${th[2]}</th><th>${th[3]}</th><th>${th[4]}</th><th>${th[5]}</th><th>${th[6]}</th><th>${th[7]}</th></tr></thead><tbody>`+
     S.tracking.map((e,i)=>`<tr><td>${e.date}</td><td>${e.weight||'—'}</td><td>${e.bf||'—'}</td><td>${e.muscle||'—'}</td><td>${e.visceral||'—'}</td><td style="font-size:12px">${e.notes||'—'}</td><td><button class="btn" style="padding:3px 8px;font-size:11px" onclick="S.tracking.splice(${i},1);renderTracking()"><i class="ti ti-x" aria-hidden="true"></i></button></td></tr>`).join('')+
     '</tbody></table>';
   renderTrackingChart();
@@ -9009,6 +9009,33 @@ function usdaNutrient(food, names){
   const hit=list.find(n=>wanted.some(w=>String(n.nutrientName||n.nutrient?.name||'').toLowerCase().includes(w)));
   return foodNumber(hit?.value ?? hit?.amount);
 }
+function usdaNutrientWithUnit(food, names){
+  const list=food.foodNutrients||[];
+  const wanted=names.map(n=>n.toLowerCase());
+  const hit=list.find(n=>wanted.some(w=>String(n.nutrientName||n.nutrient?.name||'').toLowerCase().includes(w)));
+  const value=foodNumber(hit?.value ?? hit?.amount);
+  if(value===null) return null;
+  const unit=String(hit?.unitName||hit?.nutrient?.unitName||'').trim();
+  return {value, unit};
+}
+function usdaMicronutrientHighlights(food){
+  const specs=[
+    {key:'fiber', en:'Fibre', gr:'Φυτικές ίνες', names:['fiber, total dietary','fiber']},
+    {key:'sugars', en:'Sugars', gr:'Σάκχαρα', names:['sugars, total including nlea','sugars, total']},
+    {key:'calcium', en:'Calcium', gr:'Ασβέστιο', names:['calcium']},
+    {key:'iron', en:'Iron', gr:'Σίδηρος', names:['iron']},
+    {key:'potassium', en:'Potassium', gr:'Κάλιο', names:['potassium']},
+    {key:'sodium', en:'Sodium', gr:'Νάτριο', names:['sodium']},
+    {key:'magnesium', en:'Magnesium', gr:'Μαγνήσιο', names:['magnesium']},
+    {key:'vitc', en:'Vit C', gr:'Βιτ. C', names:['vitamin c']},
+    {key:'vitd', en:'Vit D', gr:'Βιτ. D', names:['vitamin d']},
+    {key:'b12', en:'B12', gr:'B12', names:['vitamin b-12','vitamin b12']}
+  ];
+  return specs.map(spec=>{
+    const hit=usdaNutrientWithUnit(food, spec.names);
+    return hit ? {...spec, ...hit} : null;
+  }).filter(Boolean);
+}
 function normalizeUSDAFoodProduct(food){
   return {
     source:'usda',
@@ -9022,7 +9049,8 @@ function normalizeUSDAFoodProduct(food){
     kcal100:usdaNutrient(food,['energy']),
     carbs100:usdaNutrient(food,['carbohydrate, by difference','carbohydrate']),
     protein100:usdaNutrient(food,['protein']),
-    fat100:usdaNutrient(food,['total lipid','fat'])
+    fat100:usdaNutrient(food,['total lipid','fat']),
+    micronutrients:usdaMicronutrientHighlights(food)
   };
 }
 function normalizeFoodSearchText(text){
@@ -9141,12 +9169,25 @@ async function searchFoodDatabase(){
       ? (isGrFd ? `Εμφανίζονται ${recipeResults.length} αποθηκευμένη${recipeResults.length===1?'':'ες'} συνταγή${recipeResults.length===1?'':'ές'}. Η αναζήτηση USDA απέτυχε. Λεπτομέρειες: ${err.message}` : `${recipeResults.length} saved recipe${recipeResults.length===1?'':'s'} shown. USDA search could not be reached. Details: ${err.message}`)
       : (isGrFd ? `Η αναζήτηση τροφίμων απέτυχε επειδή το USDA FoodData Central δεν ήταν προσβάσιμο. Λεπτομέρειες: ${err.message}` : `Food search failed because USDA FoodData Central could not be reached or returned an error. Details: ${err.message}`));
   }
-}function renderFoodResults(products){
+}
+function formatMicronutrientValue(item){
+  const unit=String(item.unit||'').toLowerCase();
+  const value=foodNumber(item.value);
+  if(value===null) return '';
+  const rounded=value>=10 ? Math.round(value) : Math.round(value*10)/10;
+  return `${rounded}${item.unit ? ' '+item.unit : ''}`;
+}
+function micronutrientHighlightsHtml(product, isGr){
+  const list=(product.micronutrients||[]).filter(item=>foodNumber(item.value)!==null).slice(0,6);
+  if(!list.length) return `<span style="color:var(--text-muted)">${isGr?'Δεν υπάρχουν επιπλέον δεδομένα':'No extra data'}</span>`;
+  return `<div style="display:flex;flex-wrap:wrap;gap:4px;max-width:260px">${list.map(item=>`<span class="badge" style="font-size:10px;padding:3px 6px;background:var(--bg-hover);border-color:var(--border);color:var(--text-secondary)">${safeHtml(isGr?item.gr:item.en)}: ${safeHtml(formatMicronutrientValue(item))}</span>`).join('')}</div>`;
+}
+function renderFoodResults(products){
   const el=document.getElementById('fooddb-results'); if(!el) return;
   if(!products || !products.length){ el.innerHTML=''; return; }
   const isGrFr = window.appLang==='gr';
-  const th = isGrFr ? ['Τρόφιμο','Μερίδα','kcal/100g','Υδατ.','Πρωτ.','Λίπος','Ενέργειες'] : ['Food','Serving','kcal/100g','Carb','Protein','Fat','Actions'];
-  el.innerHTML=`<table><thead><tr><th>${th[0]}</th><th>${th[1]}</th><th>${th[2]}</th><th>${th[3]}</th><th>${th[4]}</th><th>${th[5]}</th><th>${th[6]}</th></tr></thead><tbody>${products.map((p,i)=>`
+  const th = isGrFr ? ['Τρόφιμο','Μερίδα','kcal/100g','Υδατ.','Πρωτ.','Λίπος','Μικροθρεπτικά','Ενέργειες'] : ['Food','Serving','kcal/100g','Carb','Protein','Fat','Micronutrients','Actions'];
+  el.innerHTML=`<table><thead><tr><th>${th[0]}</th><th>${th[1]}</th><th>${th[2]}</th><th>${th[3]}</th><th>${th[4]}</th><th>${th[5]}</th><th>${th[6]}</th><th>${th[7]}</th></tr></thead><tbody>${products.map((p,i)=>`
     <tr>
       <td><strong>${safeHtml(p.name)}</strong> ${p.source==='recipe'?`<span class="badge ok" style="margin-left:6px">${isGrFr?'Η Συνταγή μου':'My Recipe'}</span>`:''}<div style="font-size:11px;color:var(--text-muted)">${safeHtml(p.brand||'USDA FoodData Central')}</div></td>
       <td>${safeHtml(p.serving||'—')}</td>
@@ -9154,6 +9195,7 @@ async function searchFoodDatabase(){
       <td>${formatFoodNumber(p.carbs100,'g')}</td>
       <td>${formatFoodNumber(p.protein100,'g')}</td>
       <td>${formatFoodNumber(p.fat100,'g')}</td>
+      <td>${micronutrientHighlightsHtml(p,isGrFr)}</td>
       <td>
         <div style="display:flex;gap:5px;flex-wrap:wrap">
           <button class="btn" style="padding:4px 8px;font-size:11px" onclick="addFoodResultToRecipe(${i})">+ ${isGrFr?'Συνταγή':'Recipe'}</button>
@@ -9365,7 +9407,8 @@ function renderIngredientSearchResults(){
   el.innerHTML=`<table><thead><tr><th>Ingredient</th><th>kcal/100g</th><th>Carb</th><th>Protein</th><th>Fat</th><th></th></tr></thead><tbody>${ingredientSearchResults.slice(0,8).map((p,i)=>`<tr>
     <td><strong>${safeHtml(p.name)}</strong><div style="font-size:11px;color:var(--text-muted)">${safeHtml(p.brand||'USDA')}</div></td>
     <td>${formatFoodNumber(p.kcal100,'')}</td><td>${formatFoodNumber(p.carbs100,'g')}</td><td>${formatFoodNumber(p.protein100,'g')}</td><td>${formatFoodNumber(p.fat100,'g')}</td>
-    <td><button class="btn" style="padding:4px 8px;font-size:11px" onclick="selectIngredientSearchResult(${i})">Use</button></td>
+    <td>${micronutrientHighlightsHtml(p,isGrFr)}</td>
+      <td><button class="btn" style="padding:4px 8px;font-size:11px" onclick="selectIngredientSearchResult(${i})">Use</button></td>
   </tr>`).join('')}</tbody></table>`;
 }
 function selectIngredientSearchResult(index){
@@ -9744,7 +9787,8 @@ function renderCustomMealSearchResults(){
   el.innerHTML=`<table><thead><tr><th>Ingredient</th><th>kcal/100g</th><th>Carb</th><th>Protein</th><th>Fat</th><th>Grams</th><th></th></tr></thead><tbody>${customMealSearchResults.slice(0,8).map((p,i)=>`<tr>
     <td><strong>${safeHtml(p.name)}</strong><div style="font-size:11px;color:var(--text-muted)">${safeHtml(p.brand||'USDA')}</div></td>
     <td>${formatFoodNumber(p.kcal100,'')}</td><td>${formatFoodNumber(p.carbs100,'g')}</td><td>${formatFoodNumber(p.protein100,'g')}</td><td>${formatFoodNumber(p.fat100,'g')}</td>
-    <td><input type="number" id="custom-meal-result-grams-${i}" min="1" step="1" value="100" style="width:72px;padding:5px"></td>
+    <td>${micronutrientHighlightsHtml(p,isGrFr)}</td>
+      <td><input type="number" id="custom-meal-result-grams-${i}" min="1" step="1" value="100" style="width:72px;padding:5px"></td>
     <td><button class="btn" style="padding:4px 8px;font-size:11px" onclick="addCustomMealIngredient(${i})">Add</button></td>
   </tr>`).join('')}</tbody></table>`;
 }
