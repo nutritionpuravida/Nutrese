@@ -1279,7 +1279,18 @@ table th,
           <div class="form-field"><label><i class="ti ti-run" aria-hidden="true"></i> <span class="i18n" data-en="Physique Rating (1–9)" data-gr="Βαθμολογία Σωματότυπου (1–9)">Physique Rating (1–9)</span></label><input type="number" id="bc-physique" class="i18n-ph" data-en-ph="Tanita 1–9" data-gr-ph="Tanita 1–9" placeholder="Tanita 1–9" min="1" max="9"></div>
           <div class="form-field"><label><i class="ti ti-bone" aria-hidden="true"></i> <span class="i18n" data-en="Bone Mass (kg)" data-gr="Οστική Μάζα (κιλά)">Bone Mass (kg)</span></label><input type="number" id="bc-bone" class="i18n-ph" data-en-ph="Tanita/device value" data-gr-ph="Τιμή Tanita/συσκευής" placeholder="Tanita/device value" step="0.1" oninput="calcBodyComp()"></div>
         </div>
-        <div class="section-label"><span class="i18n" data-en="Auto Interpretation" data-gr="Αυτόματη Ερμηνεία">Auto Interpretation</span></div>
+        <div class="section-label"><span class="i18n" data-en="Subcutaneous Fold Measurements" data-gr="Μετρήσεις Υποδόριων Πτυχών">Subcutaneous Fold Measurements</span></div>
+        <div class="field-note" style="margin-bottom:10px"><span class="i18n" data-en="Optional caliper/body-site measurements in mm. Recorded for clinical follow-up only; no formula is applied automatically." data-gr="Προαιρετικές μετρήσεις με δερματοπτυχόμετρο/σημεία σώματος σε mm. Καταγράφονται μόνο για κλινική παρακολούθηση· δεν εφαρμόζεται αυτόματα φόρμουλα.">Optional caliper/body-site measurements in mm. Recorded for clinical follow-up only; no formula is applied automatically.</span></div>
+        <div class="form-grid four">
+          <div class="form-field"><label><span class="i18n" data-en="Triceps fold (mm)" data-gr="Πτυχή τρικεφάλου (mm)">Triceps fold (mm)</span></label><input type="number" id="bc-fold-triceps" step="0.1" min="0" placeholder="—" oninput="calcBodyComp()"></div>
+          <div class="form-field"><label><span class="i18n" data-en="Biceps fold (mm)" data-gr="Πτυχή δικεφάλου (mm)">Biceps fold (mm)</span></label><input type="number" id="bc-fold-biceps" step="0.1" min="0" placeholder="—" oninput="calcBodyComp()"></div>
+          <div class="form-field"><label><span class="i18n" data-en="Subscapular fold (mm)" data-gr="Υποπλάτια πτυχή (mm)">Subscapular fold (mm)</span></label><input type="number" id="bc-fold-subscapular" step="0.1" min="0" placeholder="—" oninput="calcBodyComp()"></div>
+          <div class="form-field"><label><span class="i18n" data-en="Suprailiac fold (mm)" data-gr="Υπερλαγόνια πτυχή (mm)">Suprailiac fold (mm)</span></label><input type="number" id="bc-fold-suprailiac" step="0.1" min="0" placeholder="—" oninput="calcBodyComp()"></div>
+          <div class="form-field"><label><span class="i18n" data-en="Abdominal fold (mm)" data-gr="Κοιλιακή πτυχή (mm)">Abdominal fold (mm)</span></label><input type="number" id="bc-fold-abdominal" step="0.1" min="0" placeholder="—" oninput="calcBodyComp()"></div>
+          <div class="form-field"><label><span class="i18n" data-en="Thigh fold (mm)" data-gr="Πτυχή μηρού (mm)">Thigh fold (mm)</span></label><input type="number" id="bc-fold-thigh" step="0.1" min="0" placeholder="—" oninput="calcBodyComp()"></div>
+          <div class="form-field"><label><span class="i18n" data-en="Calf fold (mm)" data-gr="Πτυχή γάμπας (mm)">Calf fold (mm)</span></label><input type="number" id="bc-fold-calf" step="0.1" min="0" placeholder="—" oninput="calcBodyComp()"></div>
+          <div class="form-field"><label><span class="i18n" data-en="Fold notes" data-gr="Σημειώσεις πτυχών">Fold notes</span></label><input type="text" id="bc-fold-notes" class="i18n-ph" data-en-ph="Protocol / side / notes" data-gr-ph="Πρωτόκολλο / πλευρά / σημειώσεις" placeholder="Protocol / side / notes"></div>
+        </div>        <div class="section-label"><span class="i18n" data-en="Auto Interpretation" data-gr="Αυτόματη Ερμηνεία">Auto Interpretation</span></div>
         <div id="bc-interpretation"></div>
         <div class="section-label"><span class="i18n" data-en="Recommended Targets" data-gr="Προτεινόμενοι Στόχοι">Recommended Targets</span></div>
         <div id="bc-targets"></div>
@@ -5849,7 +5860,8 @@ function calcBodyComp(){
   if(fatmass!==null && fatmassEl && (!S.bcManual?.fatmass || !String(fatmassEl.value||'').trim())) fatmassEl.value=fatmass.toFixed(1);
   if(ffm!==null && ffmEl && (!S.bcManual?.ffm || !String(ffmEl.value||'').trim())) ffmEl.value=ffm.toFixed(1);
   const muscle=parseFloat(v('bc-muscle'))||null;
-  S.bc={bf,water,fatmass,ffm,muscle,metage,visceral,bone};
+  const folds={triceps:v('bc-fold-triceps'),biceps:v('bc-fold-biceps'),subscapular:v('bc-fold-subscapular'),suprailiac:v('bc-fold-suprailiac'),abdominal:v('bc-fold-abdominal'),thigh:v('bc-fold-thigh'),calf:v('bc-fold-calf'),notes:v('bc-fold-notes')};
+  S.bc={bf,water,fatmass,ffm,muscle,metage,visceral,bone,folds};
   const isGrBc = window.appLang==='gr';
   if(bf!==null){const lo=isMale?10:18,hi=isMale?20:28; setEl('bc-bf-note',bf<lo?('<i class="ti ti-alert-triangle" aria-hidden="true"></i> '+(isGrBc?'Χαμηλό — επανεξετάστε τη διαθεσιμότητα ενέργειας':'Low — review energy availability')):bf>hi?('<i class="ti ti-alert-triangle" aria-hidden="true"></i> '+(isGrBc?'Υψηλό — μεταβολικός κίνδυνος':'High — metabolic risk')):('<i class="ti ti-circle-check" aria-hidden="true"></i> '+(isGrBc?'Εντός φυσιολογικού εύρους':'Within normal range')));}
   if(water!==null){const lo=isMale?50:45,hi=isMale?65:60; setEl('bc-water-note',water<lo?('<i class="ti ti-alert-triangle" aria-hidden="true"></i> '+(isGrBc?'Πιθανή αφυδάτωση':'May indicate dehydration')):water>hi?('<i class="ti ti-alert-triangle" aria-hidden="true"></i> '+(isGrBc?'Χρειάζεται κλινική επανεξέταση':'Review clinically')):('<i class="ti ti-circle-check" aria-hidden="true"></i> '+(isGrBc?'Επαρκές':'Adequate')));}
@@ -10171,6 +10183,7 @@ function renderDashboardAppointments(){
 const SAVE_FIELD_IDS = [
   'p-id','p-name','p-date','p-age','p-sex','p-activity','p-height','p-weight','p-cal-adj','p-goal','p-meat','p-dairy','p-diet','p-trimester',
   'bc-bf','bc-water','bc-fatmass','bc-ffm','bc-muscle','bc-metage','bc-visceral','bc-physique','bc-bone',
+  'bc-fold-triceps','bc-fold-biceps','bc-fold-subscapular','bc-fold-suprailiac','bc-fold-abdominal','bc-fold-thigh','bc-fold-calf','bc-fold-notes',
   'm-carb','m-protein',
   's-breakfast','s-lunch','s-dinner',
   'i-goal','i-goal-why','i-goal-tried','i-lifestyle','i-exercise','i-steps','i-sleep','i-stress','i-smoking','i-alcohol','i-typical-diet','i-skip-meals','i-cravings','i-intolerances','i-digestion','i-coach-notes',
