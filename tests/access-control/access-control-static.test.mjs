@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 
 const root = path.resolve(import.meta.dirname, '..', '..');
 const migration = fs.readFileSync(path.join(root, 'supabase', 'migrations', '202607160001_access_control_milestone1.sql'), 'utf8');
+const inviteMigration = fs.readFileSync(path.join(root, 'supabase', 'migrations', '202607160002_trial_invite_audit_action.sql'), 'utf8');
 const edge = fs.readFileSync(path.join(root, 'supabase', 'functions', 'admin-access-management', 'index.ts'), 'utf8');
 const checkout = fs.readFileSync(path.join(root, 'supabase', 'functions', 'create-checkout-session', 'index.ts'), 'utf8');
 const app = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
@@ -37,10 +38,16 @@ assert.ok(app.includes("subscription_status:'none',trial_start:null,trial_end:nu
 assert.ok(migration.includes('alter table public.profiles alter column trial_start drop default'), 'profile trial_start default must be removed');
 assert.ok(app.includes('freeTrialUsed'), 'frontend should consume server free-trial-used state');
 assert.ok(app.includes('<div id="account-admin-access-panel"'), 'minimal admin access panel must exist');
+assert.ok(app.includes("adminAccessAction('invite_professional_trial')"), 'admin panel must expose email trial invitations');
+assert.ok(app.includes('Email is required for invitations.'), 'invite action must not require a user id');
 assert.ok(app.includes('\u0394\u03b9\u03b1\u03c7\u03b5\u03af\u03c1\u03b9\u03c3\u03b7 \u03c0\u03c1\u03cc\u03c3\u03b2\u03b1\u03c3\u03b7\u03c2'), 'admin access Greek label must not be corrupted');
 assert.ok(app.includes('\u03ba\u03b1\u03c4\u03b1\u03b3\u03c1\u03ac\u03c6\u03bf\u03bd\u03c4\u03b1\u03b9 server-side'), 'admin access audit copy must not be corrupted');
 assert.ok(edge.includes('adminClient.rpc("is_access_admin"'), 'edge function must verify admin server-side');
 assert.ok(edge.includes('access_audit_log'), 'edge function must write audit log');
+assert.ok(edge.includes('inviteUserByEmail'), 'edge function must send Supabase invite emails');
+assert.ok(edge.includes('findAuthUserByEmail'), 'edge function should handle existing invited users');
+assert.ok(edge.includes('trial_invitations'), 'edge function must record invitation rows');
+assert.ok(edge.includes('invite_professional_trial'), 'edge function must support email trial invitations');
 assert.ok(edge.includes('grant_professional_trial'), 'edge function must support trial grant');
 assert.ok(edge.includes('extend_trial'), 'edge function must support trial extension');
 assert.ok(edge.includes('revoke_trial'), 'edge function must support revocation');

@@ -1984,7 +1984,8 @@ table th,
             <div class="form-field"><label>Reason / notes</label><input id="admin-access-reason" placeholder="Optional audit note"></div>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
-            <button class="btn primary" onclick="adminAccessAction('grant_professional_trial')">Grant trial</button>
+            <button class="btn primary" onclick="adminAccessAction('invite_professional_trial')">Send invite + grant trial</button>
+            <button class="btn" onclick="adminAccessAction('grant_professional_trial')">Grant trial</button>
             <button class="btn" onclick="adminAccessAction('extend_trial')">Extend trial</button>
             <button class="btn" onclick="adminAccessAction('convert_to_professional')">Convert to professional</button>
             <button class="btn" onclick="adminAccessAction('set_read_only')">Set read-only</button>
@@ -2722,11 +2723,14 @@ function setAdminAccessStatus(message, isError=false){
 }
 async function adminAccessAction(action){
   const form=readAdminAccessForm();
-  if(!form.user_id){ setAdminAccessStatus('User ID is required.', true); return; }
+  if(action==='invite_professional_trial' && !form.email){ setAdminAccessStatus('Email is required for invitations.', true); return; }
+  if(action!=='invite_professional_trial' && !form.user_id){ setAdminAccessStatus('User ID is required.', true); return; }
   try{
-    setAdminAccessStatus('Saving access change...');
-    await callAdminAccessFunction({action, ...form});
-    setAdminAccessStatus('Access change saved and audited.');
+    setAdminAccessStatus(action==='invite_professional_trial' ? 'Sending invitation...' : 'Saving access change...');
+    const result=await callAdminAccessFunction({action, ...form});
+    setAdminAccessStatus(action==='invite_professional_trial'
+      ? (result?.invited ? 'Invitation email sent and trial access created.' : 'User already exists. Trial access saved and audited.')
+      : 'Access change saved and audited.');
     await loadAdminAccessRecords();
   }catch(err){
     console.error('[Nutrese admin access] action failed', err);
@@ -2741,9 +2745,12 @@ async function loadAdminAccessRecords(){
     list.textContent='Loading access records...';
     const data=await callAdminAccessFunction({action:'list'});
     const records=data.records || [];
-    list.textContent=records.length
-      ? records.map(r=>`${r.email || r.user_id} ? ${r.access_type} / ${r.access_status}${r.trial_expires_at ? ` ? expires ${new Date(r.trial_expires_at).toLocaleDateString('el-GR')}` : ''}`).join('\n')
-      : 'No manual access records yet.';
+    const invitations=data.invitations || [];
+    const accessLines=records.map(r=>`${r.email || r.user_id} / ${r.access_type} / ${r.access_status}${r.trial_expires_at ? ` / expires ${new Date(r.trial_expires_at).toLocaleDateString('el-GR')}` : ''}`);
+    const inviteLines=invitations.map(i=>`invite: ${i.email} / ${i.status} / ${i.duration_days} days${i.expires_at ? ` / access until ${new Date(i.expires_at).toLocaleDateString('el-GR')}` : ''}`);
+    list.textContent=[...accessLines, ...inviteLines].length
+      ? [...accessLines, ...inviteLines].join('\n')
+      : 'No manual access records or invitations yet.';
   }catch(err){
     console.error('[Nutrese admin access] list failed', err);
     list.textContent=err.message || 'Could not load access records.';
