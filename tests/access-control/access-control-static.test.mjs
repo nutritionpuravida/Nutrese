@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 const root = path.resolve(import.meta.dirname, '..', '..');
 const migration = fs.readFileSync(path.join(root, 'supabase', 'migrations', '202607160001_access_control_milestone1.sql'), 'utf8');
 const edge = fs.readFileSync(path.join(root, 'supabase', 'functions', 'admin-access-management', 'index.ts'), 'utf8');
+const checkout = fs.readFileSync(path.join(root, 'supabase', 'functions', 'create-checkout-session', 'index.ts'), 'utf8');
 const app = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 
 for (const needle of [
@@ -44,4 +45,8 @@ assert.ok(edge.includes('grant_professional_trial'), 'edge function must support
 assert.ok(edge.includes('extend_trial'), 'edge function must support trial extension');
 assert.ok(edge.includes('revoke_trial'), 'edge function must support revocation');
 assert.ok(edge.includes('convert_to_professional'), 'edge function must support conversion');
+assert.ok(checkout.includes('rpc("has_used_free_trial"'), 'checkout function must verify free-trial usage server-side');
+assert.ok(checkout.includes('allow_trial !== false && !freeTrialUsed'), 'checkout function must honor frontend no-trial flag and server trial history');
+assert.ok(checkout.includes('subscriptionData.trial_period_days = 7'), 'checkout function should only assign Stripe trial days conditionally');
+assert.ok(!checkout.includes('subscription_data: {\n        trial_period_days: 7'), 'checkout function must not create unconditional Stripe trials');
 console.log('Access-control static regression checks passed.');
