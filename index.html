@@ -2432,6 +2432,10 @@ async function fetchSubscriptionStatus(){
     ? daysUntilDate(trialEnd)
     : null;
   const isTrialActive=statusLower==='trialing' && days>0;
+  const accessTrialEnd=effectiveAccess&&effectiveAccess.trial_expires_at;
+  const accessTrialDays=accessTrialEnd ? daysUntilDate(accessTrialEnd) : null;
+  const hasAccessTrial=effectiveAccess?.access_type==='professional_trial' && effectiveAccess?.access_status==='active';
+  const displayTrialDays=isTrialActive ? days : (hasAccessTrial ? accessTrialDays : days);
   const trialUsedExpired=!!(effectiveAccess?.free_trial_used) || hasPastTrialEnd(data&&data.trial_end);
   const stripeActive=subscriptionIsActive(data) || isTrialActive;
   const complimentaryActive=!!(effectiveAccess?.can_write);
@@ -2446,15 +2450,17 @@ async function fetchSubscriptionStatus(){
     canWrite: !!(effectiveAccess?.can_write || stripeActive),
     isAdmin: !!effectiveAccess?.is_admin,
     complimentaryActive,
-    trialActive:isTrialActive || (effectiveAccess?.access_type==='professional_trial' && effectiveAccess?.access_status==='active'),
+    trialActive:isTrialActive || hasAccessTrial,
     trialExpired:(statusLower==='trialing' && days<=0) || effectiveAccess?.access_type==='expired_trial' || (!active && trialUsedExpired),
     trialUsedExpired,
     freeTrialUsed: trialUsedExpired,
-    trialDaysRemaining:days,
+    trialDaysRemaining:displayTrialDays,
+    accessTrialDaysRemaining:accessTrialDays,
+    isComplimentaryTrial:hasAccessTrial && !isTrialActive,
     trialStart:data&&data.trial_start,
     trialEnd:data&&data.trial_end,
-    complimentaryTrialEnd:effectiveAccess&&effectiveAccess.trial_expires_at,
-    currentPeriodEnd:data&&(data.current_period_end||data.current_period_end_at||data.trial_end),
+    complimentaryTrialEnd:accessTrialEnd,
+    currentPeriodEnd:accessTrialEnd || (data&&(data.current_period_end||data.current_period_end_at||data.trial_end)),
     stripeCustomerId:data&&data.stripe_customer_id,
   };
 }
@@ -2814,10 +2820,12 @@ function updateAccountPage(){
   });
   const emailValue=currentUser?currentUser.email:'';
   const isGrAcct = window.appLang==='gr';
-  const statusValue = subscriptionState.isAdmin ? (isGrAcct?'Πρόσβαση διαχειριστή':'Administrator access')
-    : subscriptionState.trialActive ? (isGrAcct?`Δοκιμή (${subscriptionState.trialDaysRemaining} ημέρες απομένουν)`:`Trial (${subscriptionState.trialDaysRemaining} days remaining)`)
-    : subscriptionState.active ? (isGrAcct?'Ενεργή':'Active')
-    : (subscriptionState.status||(isGrAcct?'Καμία ενεργή συνδρομή':'No active subscription'));
+  const trialLabel = subscriptionState.isComplimentaryTrial ? (isGrAcct?'\u0395\u03c0\u03b1\u03b3\u03b3\u03b5\u03bb\u03bc\u03b1\u03c4\u03b9\u03ba\u03ae \u03b4\u03bf\u03ba\u03b9\u03bc\u03ae':'Professional trial') : (isGrAcct?'\u0394\u03bf\u03ba\u03b9\u03bc\u03ae':'Trial');
+  const trialDetailLabel = subscriptionState.isComplimentaryTrial ? (isGrAcct?'\u0395\u03bd\u03b5\u03c1\u03b3\u03ae \u03b5\u03c0\u03b1\u03b3\u03b3\u03b5\u03bb\u03bc\u03b1\u03c4\u03b9\u03ba\u03ae \u03b4\u03bf\u03ba\u03b9\u03bc\u03ae.':'Professional trial active.') : (isGrAcct?'\u0395\u03bd\u03b5\u03c1\u03b3\u03ae \u03b4\u03c9\u03c1\u03b5\u03ac\u03bd \u03b4\u03bf\u03ba\u03b9\u03bc\u03ae.':'Free trial active.');
+  const statusValue = subscriptionState.isAdmin ? (isGrAcct?'\u03a0\u03c1\u03cc\u03c3\u03b2\u03b1\u03c3\u03b7 \u03b4\u03b9\u03b1\u03c7\u03b5\u03b9\u03c1\u03b9\u03c3\u03c4\u03ae':'Administrator access')
+    : subscriptionState.trialActive ? `${trialLabel} (${subscriptionState.trialDaysRemaining} ${isGrAcct?'\u03b7\u03bc\u03ad\u03c1\u03b5\u03c2 \u03b1\u03c0\u03bf\u03bc\u03ad\u03bd\u03bf\u03c5\u03bd':'days remaining'})`
+    : subscriptionState.active ? (isGrAcct?'\u0395\u03bd\u03b5\u03c1\u03b3\u03ae':'Active')
+    : (subscriptionState.status||(isGrAcct?'\u039a\u03b1\u03bc\u03af\u03b1 \u03b5\u03bd\u03b5\u03c1\u03b3\u03ae \u03c3\u03c5\u03bd\u03b4\u03c1\u03bf\u03bc\u03ae':'No active subscription'));
   const emailEl=document.getElementById('acct-email');
   if(emailEl){
     emailEl.value=emailValue;
@@ -2836,7 +2844,7 @@ function updateAccountPage(){
     detail.innerHTML = subscriptionState.isAdmin
       ? (isGrAcct?'<strong>Πρόσβαση διαχειριστή.</strong> Η πρόσβαση επιβεβαιώνεται server-side.':'<strong>Administrator access.</strong> Access is confirmed server-side.')
       : subscriptionState.trialActive
-        ? (isGrAcct?`<strong>Ενεργή δωρεάν δοκιμή.</strong> Απομένουν ${subscriptionState.trialDaysRemaining} ημέρ${subscriptionState.trialDaysRemaining===1?'α':'ες'}.`:`<strong>Free trial active.</strong> ${subscriptionState.trialDaysRemaining} day${subscriptionState.trialDaysRemaining===1?'':'s'} remaining.`)
+        ? (isGrAcct?`<strong>${trialDetailLabel}</strong> \u0391\u03c0\u03bf\u03bc\u03ad\u03bd\u03bf\u03c5\u03bd ${subscriptionState.trialDaysRemaining} \u03b7\u03bc\u03ad\u03c1${subscriptionState.trialDaysRemaining===1?'\u03b1':'\u03b5\u03c2'}.`:`<strong>${trialDetailLabel}</strong> ${subscriptionState.trialDaysRemaining} day${subscriptionState.trialDaysRemaining===1?'':'s'} remaining.`)
         : subscriptionState.active
           ? (isGrAcct?`<strong>Ενεργή συνδρομή.</strong>${until}`:`<strong>Active subscription.</strong>${until}`)
           : subscriptionState.trialExpired
