@@ -68,6 +68,8 @@ select option { background-color: var(--bg-surface); color: var(--text-primary);
 .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
 .topbar { min-height: 56px; padding: 12px 16px; background: rgba(251,253,252,.84); backdrop-filter: saturate(180%) blur(14px); -webkit-backdrop-filter: saturate(180%) blur(14px); border-bottom: 1px solid rgba(212,221,209,.72); box-shadow: 0 1px 18px rgba(31,45,36,.05); display: flex; align-items: center; gap: 10px; flex-shrink: 0; position: sticky; top: 0; z-index: 50; }
 [data-theme="dark"] .topbar { background: rgba(26,29,39,.72); box-shadow: none; border-bottom: 1px solid var(--border); }
+[data-theme="dark"] .sidebar { border-right-color: var(--border); }
+[data-theme="dark"] .logo-area { border-bottom-color: var(--border); }
 .topbar-logo { width: 26px; height: 26px; flex-shrink: 0; display:flex; align-items:center; justify-content:center; font-size:22px; line-height:1; }
 .content { flex: 1; overflow-y: auto; padding: 28px 16px 16px; }
 
@@ -249,7 +251,7 @@ i.ti-circle-x { color: var(--red-text); }
 #page-dashboard { --dash-line: rgba(212,221,209,.52); --dash-shadow: 0 18px 44px rgba(32,45,35,.045); }
 #page-dashboard .bento-grid { grid-template-columns: minmax(0,1.45fr) minmax(320px,.85fr); gap:14px; margin-bottom:16px; }
 #page-dashboard .bento-tile { border-radius:20px; padding:18px 20px; border:1px solid var(--dash-line); box-shadow:var(--dash-shadow); background:rgba(255,255,255,.78); }
-#page-dashboard .bento-tile:hover { transform:none; box-shadow:0 18px 44px rgba(32,45,35,.055); }
+#page-dashboard .bento-tile:hover { transform:translateY(-2px); box-shadow:0 22px 52px rgba(32,45,35,.07); }
 #page-dashboard .bento-header { min-height:86px; padding:18px 22px!important; justify-content:center!important; gap:56px; background:linear-gradient(180deg,rgba(255,255,255,.86),rgba(255,255,255,.66)); }
 #page-dashboard .bento-stats { gap:0; min-width:170px; justify-content:center; }
 #page-dashboard .bento-stats > div { min-width:150px; padding:0; border-radius:0; background:transparent!important; }
@@ -279,6 +281,7 @@ i.ti-circle-x { color: var(--red-text); }
 #page-dashboard .two-col .card-title { font-size:13px; font-weight:900; }
 #page-dashboard .two-col .card-body { padding:12px 18px 18px; min-height:92px; }
 [data-theme="dark"] #page-dashboard { --dash-line: var(--border); --dash-shadow:none; }
+[data-theme="dark"] #page-dashboard .bento-tile:hover { transform:translateY(-2px); box-shadow:0 14px 34px rgba(0,0,0,.22); }
 [data-theme="dark"] #page-dashboard .bento-tile,
 [data-theme="dark"] #page-dashboard .bento-header,
 [data-theme="dark"] #page-dashboard .metrics-grid .metric,
@@ -1154,7 +1157,7 @@ table th,
     <div class="subscription-status" id="subscription-message">Checking subscription…</div>
     <div class="subscription-plan">
       <strong>Nutrese Professional</strong>
-      <div id="subscription-plan-copy" style="font-size:13px;color:var(--text-muted);line-height:1.5">Client profiles, exchange system, 1-day and 7-day plans, blood analysis, tracking, recipes, and reports for your dietetic practice. Start with a 7-day free trial; card required upfront.</div>
+      <div id="subscription-plan-copy" style="font-size:13px;color:var(--text-muted);line-height:1.5">Register and verify your email first. Then choose Start Free Trial through Stripe, or use Complimentary Access if your administrator has granted it.</div>
       <div style="margin-top:12px;display:grid;gap:8px">
         <div style="display:flex;justify-content:space-between;gap:12px;padding:9px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg-surface)">
           <span style="font-weight:700;color:var(--text-primary)">Monthly</span>
@@ -1166,8 +1169,8 @@ table th,
         </div>
       </div>
     </div>
-    <button class="auth-submit" id="subscription-monthly-checkout-btn" onclick="startStripeCheckout('price_1ToMPVDwBpsAKvLemjXMV2Rg')">Start 7-day trial — Monthly</button>
-    <button class="auth-submit secondary" id="subscription-yearly-checkout-btn" onclick="startStripeCheckout('price_1ToMPWDwBpsAKvLe4Ial8JRS')">Start 7-day trial — Yearly</button>
+    <button class="auth-submit" id="subscription-monthly-checkout-btn" onclick="startStripeCheckout('price_1ToMPVDwBpsAKvLemjXMV2Rg')">Start Free Trial — Monthly</button>
+    <button class="auth-submit secondary" id="subscription-yearly-checkout-btn" onclick="startStripeCheckout('price_1ToMPWDwBpsAKvLe4Ial8JRS')">Start Free Trial — Yearly</button>
     <button class="auth-submit secondary" onclick="handleSignOut()">Sign out</button>
   </div>
 </div>
@@ -1963,9 +1966,33 @@ table th,
         <div id="account-subscription-detail" class="subscription-status"><span class="i18n" data-en="Subscription status will appear here after sign in." data-gr="Η κατάσταση συνδρομής θα εμφανιστεί εδώ μετά τη σύνδεση.">Subscription status will appear here after sign in.</span></div>
         <div class="section-label"><span class="i18n" data-en="Subscription" data-gr="Συνδρομή">Subscription</span></div>
         <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <button class="btn primary" onclick="startStripeCheckout('price_1ToMPVDwBpsAKvLemjXMV2Rg')" id="account-monthly-trial-btn"><span class="i18n" data-en="Start monthly trial" data-gr="Έναρξη μηνιαίας δοκιμής">Start monthly trial</span></button>
-          <button class="btn primary" onclick="startStripeCheckout('price_1ToMPWDwBpsAKvLe4Ial8JRS')" id="account-yearly-trial-btn"><span class="i18n" data-en="Start yearly trial" data-gr="Έναρξη ετήσιας δοκιμής">Start yearly trial</span></button>
+          <button class="btn primary" onclick="startStripeCheckout('price_1ToMPVDwBpsAKvLemjXMV2Rg')" id="account-monthly-trial-btn"><span class="i18n" data-en="Start Free Trial — Monthly" data-gr="Έναρξη δωρεάν δοκιμής — Μηνιαίο">Start Free Trial — Monthly</span></button>
+          <button class="btn primary" onclick="startStripeCheckout('price_1ToMPWDwBpsAKvLe4Ial8JRS')" id="account-yearly-trial-btn"><span class="i18n" data-en="Start Free Trial — Yearly" data-gr="Έναρξη δωρεάν δοκιμής — Ετήσιο">Start Free Trial — Yearly</span></button>
           <button class="btn" onclick="openBillingPortal()" id="account-manage-billing-btn" style="display:none"><span class="i18n" data-en="Manage billing" data-gr="Διαχείριση χρέωσης">Manage billing</span></button>
+        </div>
+
+        <div id="account-admin-access-panel" style="display:none;margin-top:18px">
+          <div class="section-label"><span class="i18n" data-en="Access Administration" data-gr="Διαχείριση πρόσβασης">Access Administration</span></div>
+          <div class="subscription-status" style="line-height:1.5">
+            <strong><span class="i18n" data-en="Professional access management" data-gr="Διαχείριση επαγγελματικής πρόσβασης">Professional access management</span></strong>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:4px"><span class="i18n" data-en="Manual grants are audited server-side and do not create Stripe subscriptions." data-gr="Οι χειροκίνητες παραχωρήσεις καταγράφονται server-side και δεν δημιουργούν συνδρομές Stripe.">Manual grants are audited server-side and do not create Stripe subscriptions.</span></div>
+          </div>
+          <div class="form-grid two" style="margin-top:10px">
+            <div class="form-field"><label>User ID</label><input id="admin-access-user-id" placeholder="Supabase auth user id"></div>
+            <div class="form-field"><label>Email</label><input id="admin-access-email" placeholder="dietitian@example.com"></div>
+            <div class="form-field"><label>Duration days</label><input id="admin-access-duration" type="number" min="1" max="365" value="30"></div>
+            <div class="form-field"><label>Reason / notes</label><input id="admin-access-reason" placeholder="Optional audit note"></div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+            <button class="btn primary" onclick="adminAccessAction('grant_professional_trial')">Grant trial</button>
+            <button class="btn" onclick="adminAccessAction('extend_trial')">Extend trial</button>
+            <button class="btn" onclick="adminAccessAction('convert_to_professional')">Convert to professional</button>
+            <button class="btn" onclick="adminAccessAction('set_read_only')">Set read-only</button>
+            <button class="btn" onclick="adminAccessAction('revoke_trial')">Revoke</button>
+            <button class="btn" onclick="loadAdminAccessRecords()">Refresh list</button>
+          </div>
+          <div id="admin-access-status" class="field-note" style="margin-top:10px"></div>
+          <div id="admin-access-list" style="margin-top:10px;font-size:12px;white-space:pre-wrap;color:var(--text-secondary)"></div>
         </div>
         <div class="section-label"><span class="i18n" data-en="Report Branding" data-gr="Επωνυμία Αναφοράς">Report Branding</span></div>
         <div class="field-note" style="margin-bottom:8px"><span class="i18n" data-en="This logo appears on every printed client report. Set it once here — no need to re-upload per client." data-gr="Αυτό το λογότυπο εμφανίζεται σε κάθε εκτυπωμένη αναφορά πελάτη. Ορίστε το μία φορά εδώ — δεν χρειάζεται επανάληψη ανά πελάτη.">This logo appears on every printed client report. Set it once here — no need to re-upload per client.</span></div>
@@ -2363,10 +2390,6 @@ function subscriptionIsActive(row){
   const dateOk=!periodEnd || new Date(periodEnd).getTime() > Date.now();
   return (status==='active' || status==='trialing') && dateOk;
 }
-const OWNER_ADMIN_EMAIL = 'nutrition.puravida@gmail.com';
-function isOwnerAdminUser(){
-  return (currentUser?.email || '').trim().toLowerCase() === OWNER_ADMIN_EMAIL;
-}
 async function ensureUserProfile(){
   if(!currentUser) return {data:null,error:null};
   let {data,error}=await supabaseClient.from('profiles')
@@ -2376,7 +2399,7 @@ async function ensureUserProfile(){
   if(error) return {data:null,error};
   if(!data){
     const insert=await supabaseClient.from('profiles')
-      .insert({id:currentUser.id,email:currentUser.email,subscription_status:'none'})
+      .insert({id:currentUser.id,email:currentUser.email,subscription_status:'none',trial_start:null,trial_end:null})
       .select('id,email,trial_start,trial_end,subscription_status,current_period_end,stripe_customer_id,stripe_subscription_id')
       .maybeSingle();
     data=insert.data;
@@ -2384,20 +2407,24 @@ async function ensureUserProfile(){
   }
   return {data,error};
 }
+
+async function fetchEffectiveAccessStatus(){
+  if(!currentUser) return null;
+  try{
+    const {data,error}=await supabaseClient.rpc('get_effective_access', {p_user_id: currentUser.id});
+    if(error) throw error;
+    const row=Array.isArray(data) ? data[0] : data;
+    return row || null;
+  }catch(err){
+    console.warn('[Nutrese access] effective access helper unavailable; using Stripe profile status only', err);
+    return null;
+  }
+}
 async function fetchSubscriptionStatus(){
   if(!currentUser) return {status:'signed_out', active:false};
-  if(isOwnerAdminUser()){
-    return {status:'Owner admin access', active:true, ownerBypass:true};
-  }
   let {data, error} = await ensureUserProfile();
-  if(error){
-    const alt = await supabaseClient.from('subscriptions')
-      .select('status,subscription_status,current_period_end,current_period_end_at,trial_end,stripe_customer_id,stripe_subscription_id')
-      .eq('user_id', currentUser.id)
-      .maybeSingle();
-    if(!alt.error) { data=alt.data; error=null; }
-  }
-  if(error) return {status:'No active subscription', active:false, missingTable:true};
+  if(error) return {status:'No active subscription', active:false, missingProfile:true};
+  const effectiveAccess=await fetchEffectiveAccessStatus();
   const status=(data&&(data.subscription_status||data.status))||'none';
   const statusLower=status.toLowerCase();
   const trialEnd=data&&(data.trial_end||data.current_period_end||data.current_period_end_at);
@@ -2405,17 +2432,28 @@ async function fetchSubscriptionStatus(){
     ? daysUntilDate(trialEnd)
     : null;
   const isTrialActive=statusLower==='trialing' && days>0;
-  const trialUsedExpired=hasPastTrialEnd(data&&data.trial_end);
-  const active=subscriptionIsActive(data) || isTrialActive;
+  const trialUsedExpired=!!(effectiveAccess?.free_trial_used) || hasPastTrialEnd(data&&data.trial_end);
+  const stripeActive=subscriptionIsActive(data) || isTrialActive;
+  const complimentaryActive=!!(effectiveAccess?.can_write);
+  const readOnlyAccess=!!(effectiveAccess?.can_read && !effectiveAccess?.can_write);
+  const active=stripeActive || complimentaryActive;
   return {
-    status,
+    status: effectiveAccess?.access_type && effectiveAccess.access_type !== 'none' ? effectiveAccess.access_type : status,
+    stripeStatus: status,
     active,
-    trialActive:isTrialActive,
-    trialExpired:(statusLower==='trialing' && days<=0) || (!active && trialUsedExpired),
+    readOnly: readOnlyAccess,
+    canRead: !!(effectiveAccess?.can_read || active),
+    canWrite: !!(effectiveAccess?.can_write || stripeActive),
+    isAdmin: !!effectiveAccess?.is_admin,
+    complimentaryActive,
+    trialActive:isTrialActive || (effectiveAccess?.access_type==='professional_trial' && effectiveAccess?.access_status==='active'),
+    trialExpired:(statusLower==='trialing' && days<=0) || effectiveAccess?.access_type==='expired_trial' || (!active && trialUsedExpired),
     trialUsedExpired,
+    freeTrialUsed: trialUsedExpired,
     trialDaysRemaining:days,
     trialStart:data&&data.trial_start,
     trialEnd:data&&data.trial_end,
+    complimentaryTrialEnd:effectiveAccess&&effectiveAccess.trial_expires_at,
     currentPeriodEnd:data&&(data.current_period_end||data.current_period_end_at||data.trial_end),
     stripeCustomerId:data&&data.stripe_customer_id,
   };
@@ -2425,25 +2463,25 @@ function updateTrialBanner(){
   const text=document.getElementById('trial-banner-text');
   if(!banner) return;
   const days=subscriptionState.trialDaysRemaining;
-  const show=subscriptionState.trialActive && days<=10 && !subscriptionState.ownerBypass;
+  const show=subscriptionState.trialActive && days<=10;
   banner.style.display=show ? 'flex' : 'none';
   if(show && text) text.innerHTML=`<i class="ti ti-gift" aria-hidden="true"></i> Free trial — ${days} day${days===1?'':'s'} remaining. Subscribe to continue after your trial.`;
 }
 function updateSubscriptionCheckoutButtons(){
-  const trialAlreadyUsed=!!(subscriptionState?.trialUsedExpired || subscriptionState?.trialExpired);
+  const trialAlreadyUsed=!!(subscriptionState?.freeTrialUsed || subscriptionState?.trialUsedExpired || subscriptionState?.trialExpired);
   const screenMonthly=document.getElementById('subscription-monthly-checkout-btn');
   const screenYearly=document.getElementById('subscription-yearly-checkout-btn');
   const accountMonthly=document.getElementById('account-monthly-trial-btn');
   const accountYearly=document.getElementById('account-yearly-trial-btn');
   const copy=document.getElementById('subscription-plan-copy');
-  if(screenMonthly) screenMonthly.textContent = trialAlreadyUsed ? 'Subscribe Monthly — €29/month' : 'Start 7-day trial — Monthly';
-  if(screenYearly) screenYearly.textContent = trialAlreadyUsed ? 'Subscribe Yearly — €249/year' : 'Start 7-day trial — Yearly';
-  if(accountMonthly) accountMonthly.textContent = trialAlreadyUsed ? 'Subscribe Monthly — €29/month' : 'Start monthly trial';
-  if(accountYearly) accountYearly.textContent = trialAlreadyUsed ? 'Subscribe Yearly — €249/year' : 'Start yearly trial';
+  if(screenMonthly) screenMonthly.textContent = trialAlreadyUsed ? 'Subscribe Monthly — €29/month' : 'Start Free Trial — Monthly';
+  if(screenYearly) screenYearly.textContent = trialAlreadyUsed ? 'Subscribe Yearly — €249/year' : 'Start Free Trial — Yearly';
+  if(accountMonthly) accountMonthly.textContent = trialAlreadyUsed ? 'Subscribe Monthly — €29/month' : 'Start Free Trial — Monthly';
+  if(accountYearly) accountYearly.textContent = trialAlreadyUsed ? 'Subscribe Yearly — €249/year' : 'Start Free Trial — Yearly';
   if(copy){
     copy.textContent = trialAlreadyUsed
-      ? 'Client profiles, exchange system, 1-day and 7-day plans, blood analysis, tracking, recipes, and reports for your dietetic practice. Your free trial has already been used; choose a subscription to continue.'
-      : 'Client profiles, exchange system, 1-day and 7-day plans, blood analysis, tracking, recipes, and reports for your dietetic practice. Start with a 7-day free trial; card required upfront.';
+      ? 'Your free trial has already been used. Choose a paid Stripe subscription, or use Complimentary Access if an administrator has granted it.'
+      : 'Choose Start Free Trial through Stripe, or use Complimentary Access if an administrator has granted it. New accounts can register and verify email before checkout.';
   }
 }
 function subscriptionCacheKey(){
@@ -2574,8 +2612,8 @@ async function refreshSubscriptionGate(){
     hideSubscriptionScreen();
   } else {
     const msg = subscriptionState.trialExpired
-      ? 'Your free trial has ended. Subscribe to continue.'
-      : 'No active subscription. Subscribe to unlock Nutrese for your practice.';
+      ? 'Your free trial has ended. Subscribe to continue, or contact your administrator for complimentary access.'
+      : 'No active subscription. Start a free trial through Stripe, or use complimentary access if your administrator has granted it.';
     showSubscriptionScreen(msg);
   }
   updateTrialBanner();
@@ -2654,6 +2692,58 @@ async function refreshAccountSubscriptionPage(){
     updateAccountPage();
   }
 }
+
+async function callAdminAccessFunction(payload){
+  if(!currentUser) throw new Error('Please sign in first.');
+  const {data,error}=await supabaseClient.functions.invoke('admin-access-management', {body: payload});
+  if(error) throw error;
+  if(data?.error) throw new Error(data.error);
+  return data;
+}
+function readAdminAccessForm(){
+  return {
+    user_id:(document.getElementById('admin-access-user-id')?.value || '').trim(),
+    email:(document.getElementById('admin-access-email')?.value || '').trim(),
+    duration_days:Number(document.getElementById('admin-access-duration')?.value || 30),
+    reason:(document.getElementById('admin-access-reason')?.value || '').trim()
+  };
+}
+function setAdminAccessStatus(message, isError=false){
+  const el=document.getElementById('admin-access-status');
+  if(!el) return;
+  el.textContent=message || '';
+  el.style.color=isError ? 'var(--red-text)' : 'var(--text-active)';
+}
+async function adminAccessAction(action){
+  const form=readAdminAccessForm();
+  if(!form.user_id){ setAdminAccessStatus('User ID is required.', true); return; }
+  try{
+    setAdminAccessStatus('Saving access change...');
+    await callAdminAccessFunction({action, ...form});
+    setAdminAccessStatus('Access change saved and audited.');
+    await loadAdminAccessRecords();
+  }catch(err){
+    console.error('[Nutrese admin access] action failed', err);
+    setAdminAccessStatus(err.message || 'Access action failed.', true);
+  }
+}
+async function loadAdminAccessRecords(){
+  const list=document.getElementById('admin-access-list');
+  if(!list) return;
+  if(!subscriptionState?.isAdmin){ list.textContent=''; return; }
+  try{
+    list.textContent='Loading access records...';
+    const data=await callAdminAccessFunction({action:'list'});
+    const records=data.records || [];
+    list.textContent=records.length
+      ? records.map(r=>`${r.email || r.user_id} ? ${r.access_type} / ${r.access_status}${r.trial_expires_at ? ` ? expires ${new Date(r.trial_expires_at).toLocaleDateString('el-GR')}` : ''}`).join('\n')
+      : 'No manual access records yet.';
+  }catch(err){
+    console.error('[Nutrese admin access] list failed', err);
+    list.textContent=err.message || 'Could not load access records.';
+  }
+}
+
 async function startStripeCheckout(priceId){
   console.log('[Nutrese checkout] startStripeCheckout clicked', {priceId, currentUser: currentUser ? {id:currentUser.id,email:currentUser.email} : null});
   if(!currentUser){
@@ -2664,7 +2754,7 @@ async function startStripeCheckout(priceId){
   const selectedPriceId = priceId || STRIPE_MONTHLY_PRICE_ID;
   setEl('subscription-message','Creating secure checkout…');
   try{
-    const payload={price_id:selectedPriceId,user_id:currentUser.id,email:currentUser.email};
+    const payload={price_id:selectedPriceId,user_id:currentUser.id,email:currentUser.email,allow_trial:!subscriptionState?.freeTrialUsed};
     console.log('[Nutrese checkout] invoking Edge Function', STRIPE_CHECKOUT_FUNCTION, payload);
     const {data, error} = await supabaseClient.functions.invoke(STRIPE_CHECKOUT_FUNCTION, {body:payload});
     console.log('[Nutrese checkout] Edge Function response', {data,error});
@@ -2724,7 +2814,7 @@ function updateAccountPage(){
   });
   const emailValue=currentUser?currentUser.email:'';
   const isGrAcct = window.appLang==='gr';
-  const statusValue = subscriptionState.ownerBypass ? (isGrAcct?'Πρόσβαση διαχειριστή':'Owner admin access')
+  const statusValue = subscriptionState.isAdmin ? (isGrAcct?'Πρόσβαση διαχειριστή':'Administrator access')
     : subscriptionState.trialActive ? (isGrAcct?`Δοκιμή (${subscriptionState.trialDaysRemaining} ημέρες απομένουν)`:`Trial (${subscriptionState.trialDaysRemaining} days remaining)`)
     : subscriptionState.active ? (isGrAcct?'Ενεργή':'Active')
     : (subscriptionState.status||(isGrAcct?'Καμία ενεργή συνδρομή':'No active subscription'));
@@ -2743,8 +2833,8 @@ function updateAccountPage(){
   const detail=document.getElementById('account-subscription-detail');
   if(detail){
     const until=subscriptionState.currentPeriodEnd ? (isGrAcct?` Η τρέχουσα περίοδος λήγει ${new Date(subscriptionState.currentPeriodEnd).toLocaleDateString('el-GR')}.`:` Current period ends ${new Date(subscriptionState.currentPeriodEnd).toLocaleDateString('el-GR')}.`) : '';
-    detail.innerHTML = subscriptionState.ownerBypass
-      ? (isGrAcct?'<strong>Πρόσβαση διαχειριστή.</strong> Οι έλεγχοι συνδρομής και δοκιμαστικής περιόδου παρακάμπτονται για αυτόν τον λογαριασμό.':'<strong>Owner admin access.</strong> Subscription and trial checks are bypassed for this account.')
+    detail.innerHTML = subscriptionState.isAdmin
+      ? (isGrAcct?'<strong>Πρόσβαση διαχειριστή.</strong> Η πρόσβαση επιβεβαιώνεται server-side.':'<strong>Administrator access.</strong> Access is confirmed server-side.')
       : subscriptionState.trialActive
         ? (isGrAcct?`<strong>Ενεργή δωρεάν δοκιμή.</strong> Απομένουν ${subscriptionState.trialDaysRemaining} ημέρ${subscriptionState.trialDaysRemaining===1?'α':'ες'}.`:`<strong>Free trial active.</strong> ${subscriptionState.trialDaysRemaining} day${subscriptionState.trialDaysRemaining===1?'':'s'} remaining.`)
         : subscriptionState.active
@@ -2753,13 +2843,16 @@ function updateAccountPage(){
             ? (isGrAcct?'<strong>Η δωρεάν δοκιμή σας έληξε.</strong> Χρησιμοποιήστε το Checkout για ενεργοποίηση.':'<strong>Your free trial has ended.</strong> Use Checkout to activate this account.')
             : (isGrAcct?'<strong>Καμία ενεργή συνδρομή.</strong> Χρησιμοποιήστε το Checkout για ενεργοποίηση.':'<strong>No active subscription.</strong> Use Checkout to activate this account.');
   }
-  const hasActiveAccess=!!(subscriptionState.active || subscriptionState.ownerBypass);
+  const hasActiveAccess=!!(subscriptionState.active || subscriptionState.isAdmin);
   const monthlyBtn=document.getElementById('account-monthly-trial-btn');
   const yearlyBtn=document.getElementById('account-yearly-trial-btn');
   if(monthlyBtn) monthlyBtn.style.display = hasActiveAccess ? 'none' : '';
   if(yearlyBtn) yearlyBtn.style.display = hasActiveAccess ? 'none' : '';
   const billingBtn=document.getElementById('account-manage-billing-btn');
   if(billingBtn) billingBtn.style.display = hasActiveAccess ? '' : 'none';
+  const adminPanel=document.getElementById('account-admin-access-panel');
+  if(adminPanel) adminPanel.style.display = subscriptionState.isAdmin ? '' : 'none';
+  if(subscriptionState.isAdmin) setTimeout(loadAdminAccessRecords, 0);
   updateSubscriptionCheckoutButtons();
 }
 
@@ -11714,4 +11807,3 @@ updateOnlineStatus();
 
 </body>
 </html>
-
