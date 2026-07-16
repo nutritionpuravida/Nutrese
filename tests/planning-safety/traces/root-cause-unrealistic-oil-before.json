@@ -1,0 +1,71 @@
+{
+  "schema": "nutrese.planningSafety.rootCause.v1",
+  "case": "unrealistic-visible-oil-before-fix",
+  "captured_from": "pre-fix source inspection plus user-reported rendered plan evidence",
+  "note": "Local browser execution was unavailable in this Codex runtime because the bundled Playwright package is missing playwright-core. This trace records the failing decision path found before behavior changes were applied.",
+  "client_inputs": {
+    "diet_type": "Pescatarian",
+    "goal_kcal": 2037,
+    "fat_target": "high-calorie target with remaining fat exchanges after meal selection",
+    "exchange_values": {
+      "starch": 81,
+      "protein": 46,
+      "fat": 45,
+      "veg": 28,
+      "fruit": 60,
+      "dairy": 80
+    }
+  },
+  "targets": {
+    "kcal": 2037,
+    "visible_oil_cap_source": "getEffectiveCaps()/CAPS fatPerMealMax",
+    "approved_cap_observed_in_source": "fatPerMealMax: 6 by default, lower in selected condition overrides"
+  },
+  "exchanges": {
+    "pre_fix": "Remaining fat exchanges could be pushed into lunch/dinner visible-oil portions even when a meal had already reached the cap.",
+    "expected": "Visible oil never exceeds the active fatPerMealMax cap."
+  },
+  "candidate_meals": {
+    "examples": [
+      "Grilled fish + rice",
+      "Salmon + quinoa",
+      "Fish + potato",
+      "Lentil soup"
+    ]
+  },
+  "selected_meals": {
+    "observed_examples": [
+      "Grilled fish + 19 tsp olive oil",
+      "Salmon + quinoa + 17 tsp olive oil",
+      "Bean salad + 18 tsp olive oil"
+    ]
+  },
+  "slot_allocations": {
+    "pre_fix": [
+      "allocateFatRemaining assigned all remaining fat to the first available main slot even after cap overflow.",
+      "calcDayTotalsForPlan used a calorie-gap while loop that added 1 tsp oil repeatedly without checking fatPerMealMax.",
+      "calcDayTotalsForPlanDisplay strict fallback also increased lunch/dinner fat to close target gaps."
+    ],
+    "expected": [
+      "Add visible oil only while the selected meal is below fatPerMealMax.",
+      "Prefer compatible redistribution/whole-food fat guidance when oil cap is reached.",
+      "Report unresolved calorie gaps rather than hiding them with excessive oil."
+    ]
+  },
+  "rendered_portions": {
+    "pre_fix": "High-oil quantities reached weekly rendered tables and printed reports.",
+    "expected": "Rendered visible oil amount is capped and warnings explain any remaining gap."
+  },
+  "calculated_totals": {
+    "pre_fix": "Calories could match the target only because unrealistic oil quantities were injected.",
+    "expected": "Plan Quality totals equal rendered meal-instance totals, but cannot be made acceptable by exceeding the cap."
+  },
+  "warnings": {
+    "pre_fix": [],
+    "expected": [
+      "Fat target exceeds the per-meal cap.",
+      "Calorie target remains below target after realistic visible-oil allocation.",
+      "Use whole-food fats/snack choices or revise exchanges."
+    ]
+  }
+}

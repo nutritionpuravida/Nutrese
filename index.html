@@ -4014,9 +4014,18 @@ window.addEventListener('afterprint', ()=>removePrintTwins(document));
 // Pescatarian: no meat (chicken/pork/beef) but fish/eggs/dairy OK
 // Vegetarian: no meat/fish but eggs/dairy OK
 // Vegan: no animal products — plant-based only
-const NEW_MEAT_MEAL_KEYS=['LUN_CHICKEN_POTATO','DIN_CHICKEN_POTATO','LUN_FASOLAKIA_CHICKEN','DIN_FASOLAKIA_CHICKEN','LUN_AVGOLEMONO_SOUP','DIN_AVGOLEMONO_SOUP','LUN_VEG_SOUP_CHICKEN','DIN_VEG_SOUP_CHICKEN'];
+const NEW_MEAT_MEAL_KEYS=[
+  'LUN_CHICKEN_POTATO','DIN_CHICKEN_POTATO','LUN_FASOLAKIA_CHICKEN','DIN_FASOLAKIA_CHICKEN',
+  'LUN_AVGOLEMONO_SOUP','DIN_AVGOLEMONO_SOUP','LUN_VEG_SOUP_CHICKEN','DIN_VEG_SOUP_CHICKEN',
+  'LUN_CHICKEN_QUINOA','DIN_CHICKEN_QUINOA','DIN_GEMISTA_LIGHT','DIN_CHICKEN_MEATBALLS_RICE',
+  'DIN_CHICKEN_MINCE_PASTA'
+];
 const NEW_FISH_MEAL_KEYS=['LUN_SALMON_POTATO','DIN_SALMON_POTATO','LUN_BAKED_FISH_VEG','DIN_BAKED_FISH_VEG','LUN_TUNA_RICE','DIN_TUNA_RICE'];
-const NEW_DAIRY_EGG_MEAL_KEYS=['LUN_HALLOUMI_POTATO','DIN_HALLOUMI_POTATO','LUN_TRACHANAS_HALLOUMI','DIN_TRACHANAS_HALLOUMI'];
+const NEW_DAIRY_EGG_MEAL_KEYS=[
+  'BRK_EGGS','BRK_EGGS_TOAST','BRK_BOILED_EGGS_2','BRK_RUSKS_ANTHOTYRO','BRK_YOGURT_HONEY_WALNUTS',
+  'LUN_HALLOUMI_POTATO','DIN_HALLOUMI_POTATO','LUN_TRACHANAS_HALLOUMI','DIN_TRACHANAS_HALLOUMI',
+  'LUN_HALLOUMI_PASTA','DIN_HALLOUMI_SALAD','LUN_SPINACH_RICE','DIN_OMELETTE'
+];
 const DIET_RESTRICTIONS = {
   Omnivore:    null, // no restrictions
   Pescatarian: {excludeKeys:['LUN_CHICKEN_RICE','LUN_FASOLAKIA_PORK','LUN_PASTA_MINCE','LUN_BIFTEKI_BULGUR','DIN_CHICKEN_RICE','DIN_PASTA_MINCE','DIN_SOUVLAKI_PITA','DIN_BIFTEKI_BULGUR','BRK_TOAST_TURKEY', ...NEW_MEAT_MEAL_KEYS]},
@@ -4032,7 +4041,125 @@ const DIET_RESTRICTIONS = {
 function filteredMealOptions(options, dietType){
   const restr = DIET_RESTRICTIONS[dietType||'Omnivore'];
   if(!restr) return options;
-  return options.filter(o=>!restr.excludeKeys.includes(o.v));
+  return options.filter(o=>mealAllowedForDiet(o.v, dietType));
+}
+
+function dietRestrictionReasonsForMealKey(key, dietType=v('p-diet')||S.dietType||'Omnivore'){
+  if(isNoMealKey(key) || isCustomMealKey(key)) return [];
+  const restr = DIET_RESTRICTIONS[dietType||'Omnivore'];
+  const mealKey=String(key||'');
+  if(!restr) return [];
+  const reasons=[];
+  if(restr.excludeKeys.includes(mealKey)) reasons.push('restricted meal key');
+  return reasons;
+}
+function mealAllowedForDiet(key, dietType=v('p-diet')||S.dietType||'Omnivore'){
+  return dietRestrictionReasonsForMealKey(key, dietType).length===0;
+}
+function firstCompatibleMealKey(options, current, dietType, fallback='__NONE__'){
+  if(current && mealAllowedForDiet(current, dietType)) return current;
+  const compatible=filteredMealOptions(options, dietType);
+  return compatible[0]?.v || fallback;
+}
+function dietRestrictionReasonsForText(text, dietType=v('p-diet')||S.dietType||'Omnivore'){
+  const t=String(text||'').toLowerCase();
+  if(!t || dietType==='Omnivore') return [];
+  const checks={
+    Pescatarian:[
+      ['meat/poultry', /\b(chicken|pork|beef|turkey|mince|burger|meatball|souvlaki)\b|κοτόπουλ|χοιριν|μοσχ|γαλοπούλ|κιμά|μπιφτέκ|κεφτεδ|σουβλάκ/i]
+    ],
+    Vegetarian:[
+      ['meat/poultry', /\b(chicken|pork|beef|turkey|mince|burger|meatball|souvlaki)\b|κοτόπουλ|χοιριν|μοσχ|γαλοπούλ|κιμά|μπιφτέκ|κεφτεδ|σουβλάκ/i],
+      ['fish/seafood', /\b(fish|salmon|tuna|sea bream|sea bass|sardine)\b|ψάρι|σολομ|τόν|τσιπούρ|λαβράκ|σαρδέλ/i]
+    ],
+    Vegan:[
+      ['meat/poultry', /\b(chicken|pork|beef|turkey|mince|burger|meatball|souvlaki)\b|κοτόπουλ|χοιριν|μοσχ|γαλοπούλ|κιμά|μπιφτέκ|κεφτεδ|σουβλάκ/i],
+      ['fish/seafood', /\b(fish|salmon|tuna|sea bream|sea bass|sardine)\b|ψάρι|σολομ|τόν|τσιπούρ|λαβράκ|σαρδέλ/i],
+      ['animal-derived', /\b(egg|eggs|yogurt|cheese|halloumi|ricotta|honey)\b|αυγ|γιαούρ|τυρί|χαλούμ|ανθότυρ|μέλι/i],
+      ['dairy milk', /\bmilk\b|γάλα/i]
+    ]
+  };
+  const reasons=[];
+  (checks[dietType]||[]).forEach(([label,re])=>{
+    if(label==='dairy milk' && (/\b(plant|almond|soy)\s+milk\b|φυτικ.*γάλα|αμυγδάλου|σόγια/i.test(t))) return;
+    if(re.test(t)) reasons.push(label);
+  });
+  return reasons;
+}
+function aiMealDietRestrictionReasons(meal, dietType){
+  const text=[meal?.name, meal?.description, meal?.description_gr, meal?.description_en, meal?.text].filter(Boolean).join(' ');
+  return dietRestrictionReasonsForText(text, dietType);
+}
+function validateAiMealPlanForDiet(plan, dietType=v('p-diet')||S.dietType||'Omnivore'){
+  if(!plan || typeof plan!=='object' || dietType==='Omnivore') return;
+  const days=['monday','tuesday','wednesday','thursday','friday','saturday','sunday',...WEEK_DAYS_EN,...WEEK_DAYS_GR,0,1,2,3,4,5,6];
+  const errors=[];
+  days.forEach(dayKey=>{
+    const day=plan[dayKey];
+    if(!day || typeof day!=='object') return;
+    Object.entries(day).forEach(([slot, meal])=>{
+      const reasons=aiMealDietRestrictionReasons(meal, dietType);
+      if(reasons.length) errors.push(`${dayKey} ${slot}: ${reasons.join(', ')}`);
+    });
+  });
+  if(errors.length) throw new Error(`AI plan violates ${dietType} diet restrictions: ${errors.slice(0,5).join('; ')}`);
+}
+function validateAiMealPlanVisibleOil(plan, caps=S.effCaps||getEffectiveCaps(S.conditions)){
+  if(!plan || typeof plan!=='object') return;
+  const visibleOilCap=Number(caps?.fatPerMealMax||6);
+  const dayKeys=['monday','tuesday','wednesday','thursday','friday','saturday','sunday',...WEEK_DAYS_EN,...WEEK_DAYS_GR,0,1,2,3,4,5,6];
+  const errors=[];
+  const oilRe=/(\d+(?:[.,]\d+)?)\s*(?:tsp|κ\.γ\.)\s*(?:olive oil|ελαιόλαδο)?/gi;
+  dayKeys.forEach(dayKey=>{
+    const day=plan[dayKey];
+    if(!day || typeof day!=='object') return;
+    Object.entries(day).forEach(([slot, meal])=>{
+      const text=[meal?.description_gr, meal?.description_en, meal?.description, meal?.text].filter(Boolean).join(' ');
+      let match;
+      oilRe.lastIndex=0;
+      while((match=oilRe.exec(text))){
+        const amount=Number(String(match[1]).replace(',','.'));
+        if(Number.isFinite(amount) && amount>visibleOilCap) errors.push(`${dayKey} ${slot}: ${amount} tsp visible oil`);
+      }
+    });
+  });
+  if(errors.length) throw new Error(`AI plan exceeds visible-oil realism cap (${visibleOilCap} tsp per meal): ${errors.slice(0,5).join('; ')}`);
+}
+function enforceMealSelectionDietCompatibility(dietType=v('p-diet')||S.dietType||'Omnivore'){
+  S.mealSel=S.mealSel||{};
+  S.mealSel.breakfast=firstCompatibleMealKey(BREAKFAST_OPTIONS, S.mealSel.breakfast, dietType, 'BRK_OATS_VEGAN');
+  S.mealSel.lunch=firstCompatibleMealKey(LUNCH_OPTIONS, S.mealSel.lunch, dietType, '__NONE__');
+  S.mealSel.dinner=firstCompatibleMealKey(DINNER_OPTIONS, S.mealSel.dinner, dietType, '__NONE__');
+  const ids={breakfast:'s-breakfast', lunch:'s-lunch', dinner:'s-dinner'};
+  Object.entries(ids).forEach(([slot,id])=>{ const el=document.getElementById(id); if(el) el.value=S.mealSel[slot]; });
+}
+function enforceWeekPlanDietCompatibility(dietType=v('p-diet')||S.dietType||'Omnivore'){
+  if(!S.weekPlans) return [];
+  const warnings=[];
+  S.weekPlans.forEach((p,di)=>{
+    const before={brk:p.brk,lun:p.lun,din:p.din};
+    p.brk=firstCompatibleMealKey(BREAKFAST_OPTIONS, p.brk, dietType, 'BRK_OATS_VEGAN');
+    p.lun=firstCompatibleMealKey(LUNCH_OPTIONS, p.lun, dietType, '__NONE__');
+    p.din=firstCompatibleMealKey(DINNER_OPTIONS, p.din, dietType, '__NONE__');
+    if(before.brk!==p.brk || before.lun!==p.lun || before.din!==p.din){
+      warnings.push(`Day ${di+1}: incompatible meal replaced for ${dietType}.`);
+      p.source=p.source||'engine';
+    }
+    if(p.aiMeals && dietType!=='Omnivore'){
+      const bad=[];
+      SEVEN_DAY_SLOTS.forEach(slot=>{
+        const meal=p.aiMeals?.[slot.ai];
+        const reasons=aiMealDietRestrictionReasons(meal, dietType);
+        if(reasons.length) bad.push(`${slot.ai}: ${reasons.join(', ')}`);
+      });
+      if(bad.length){
+        delete p.aiMeals;
+        warnings.push(`Day ${di+1}: AI meal text removed because it violated ${dietType}: ${bad.join('; ')}`);
+      }
+    }
+  });
+  if(warnings.length) S.dietCompatibilityWarnings=warnings;
+  return warnings;
 }
 
 function onDietTypeChange(){
@@ -4042,9 +4169,15 @@ function onDietTypeChange(){
   const brkEl=document.getElementById('s-breakfast');
   const lunEl=document.getElementById('s-lunch');
   const dinEl=document.getElementById('s-dinner');
-  if(brkEl){ const cur=brkEl.value; brkEl.innerHTML=mealOptionsHtml(filteredMealOptions(BREAKFAST_OPTIONS,diet),cur)||mealOptionsHtml(BREAKFAST_OPTIONS,'BRK_CEREAL'); }
-  if(lunEl){ const cur=lunEl.value; lunEl.innerHTML=mealOptionsHtml(filteredMealOptions(LUNCH_OPTIONS,diet),cur)||mealOptionsHtml(LUNCH_OPTIONS,LUNCH_OPTIONS[0].v); }
-  if(dinEl){ const cur=dinEl.value; dinEl.innerHTML=mealOptionsHtml(filteredMealOptions(DINNER_OPTIONS,diet),cur)||mealOptionsHtml(DINNER_OPTIONS,DINNER_OPTIONS[0].v); }
+  const brkCur=firstCompatibleMealKey(BREAKFAST_OPTIONS, brkEl?.value||S.mealSel?.breakfast, diet, 'BRK_OATS_VEGAN');
+  const lunCur=firstCompatibleMealKey(LUNCH_OPTIONS, lunEl?.value||S.mealSel?.lunch, diet, '__NONE__');
+  const dinCur=firstCompatibleMealKey(DINNER_OPTIONS, dinEl?.value||S.mealSel?.dinner, diet, '__NONE__');
+  if(brkEl){ brkEl.innerHTML=mealOptionsHtml(filteredMealOptions(BREAKFAST_OPTIONS,diet),brkCur)||mealOptionsHtml(BREAKFAST_OPTIONS,brkCur); brkEl.value=brkCur; }
+  if(lunEl){ lunEl.innerHTML=mealOptionsHtml(filteredMealOptions(LUNCH_OPTIONS,diet),lunCur)||mealOptionsHtml(LUNCH_OPTIONS,lunCur); lunEl.value=lunCur; }
+  if(dinEl){ dinEl.innerHTML=mealOptionsHtml(filteredMealOptions(DINNER_OPTIONS,diet),dinCur)||mealOptionsHtml(DINNER_OPTIONS,dinCur); dinEl.value=dinCur; }
+  enforceMealSelectionDietCompatibility(diet);
+  ensureWeekPlans();
+  enforceWeekPlanDietCompatibility(diet);
   // Show diet note in client profile
   const noteEl=document.getElementById('diet-type-note');
   const notes={
@@ -4384,9 +4517,9 @@ function refreshMealDropdownLabels(){
   const brk=document.getElementById('s-breakfast');
   const lun=document.getElementById('s-lunch');
   const din=document.getElementById('s-dinner');
-  if(brk) brk.innerHTML=mealOptionsHtml(filteredMealOptions(BREAKFAST_OPTIONS,diet), brk.value||S.mealSel?.breakfast||'BRK_TOAST');
-  if(lun) lun.innerHTML=mealOptionsHtml(filteredMealOptions(LUNCH_OPTIONS,diet), lun.value||S.mealSel?.lunch||'LUN_CHICKEN_RICE');
-  if(din) din.innerHTML=mealOptionsHtml(filteredMealOptions(DINNER_OPTIONS,diet), din.value||S.mealSel?.dinner||'DIN_FISH_POTATO');
+  if(brk) brk.innerHTML=mealOptionsHtml(filteredMealOptions(BREAKFAST_OPTIONS,diet), firstCompatibleMealKey(BREAKFAST_OPTIONS, brk.value||S.mealSel?.breakfast||'BRK_TOAST', diet, 'BRK_OATS_VEGAN'));
+  if(lun) lun.innerHTML=mealOptionsHtml(filteredMealOptions(LUNCH_OPTIONS,diet), firstCompatibleMealKey(LUNCH_OPTIONS, lun.value||S.mealSel?.lunch||'LUN_CHICKEN_RICE', diet, '__NONE__'));
+  if(din) din.innerHTML=mealOptionsHtml(filteredMealOptions(DINNER_OPTIONS,diet), firstCompatibleMealKey(DINNER_OPTIONS, din.value||S.mealSel?.dinner||'DIN_FISH_POTATO', diet, '__NONE__'));
 }
 
 // ── SNACK EXTRAS (multi-select per slot) ──
@@ -5096,13 +5229,7 @@ function allocateFatRemaining(ex, fixed, portions, p, warnings, caps){
       return base + Number(portions[slot]?.fat||0) < maxPerMeal;
     });
     if(!available.length){
-      // Never silently drop exchanges — assign the remainder anyway so the
-      // displayed kcal always matches the Exchange System total, and flag it
-      // clearly so the clinician knows to review (same principle already
-      // applied to protein above).
-      const slot=slots.includes('dinner')?'dinner':slots[slots.length-1];
-      portions[slot].fat += remaining;
-      warnings.push(`Fat target exceeds the ${maxPerMeal} tsp olive-oil per-meal cap; ${remaining} exchange(s) assigned to ${slot} to preserve the Exchange System total — review clinically.`);
+      warnings.push(`Fat target exceeds the ${maxPerMeal} tsp olive-oil per-meal cap; ${remaining} fat exchange(s) remain unallocated. Use whole-food fats/snack choices or revise exchanges rather than adding unrealistic visible oil.`);
       remaining=0;
       break;
     }
@@ -6345,7 +6472,8 @@ function saveBodyComp(){
 function buildOneDayPlan(){
   updateMealLanguageButtons();
   const lang=S.mealLanguage||'GR';
-  const brk=v('s-breakfast')||'BRK_TOAST', lun=v('s-lunch')||'LUN_CHICKEN_RICE', din=v('s-dinner')||'DIN_FISH_POTATO';
+  enforceMealSelectionDietCompatibility(v('p-diet')||S.dietType||'Omnivore');
+  const brk=v('s-breakfast')||S.mealSel?.breakfast||'BRK_TOAST', lun=v('s-lunch')||S.mealSel?.lunch||'LUN_CHICKEN_RICE', din=v('s-dinner')||S.mealSel?.dinner||'DIN_FISH_POTATO';
   const snk1Extras=getOneDaySnackExtras('s-snack1','snack1Extras'), snk2Extras=getOneDaySnackExtras('s-snack2','snack2Extras'), sleepExtras=getOneDaySnackExtras('s-sleep','sleepExtras');
   S.mealSel={breakfast:brk,lunch:lun,dinner:din,snack1Extras:snk1Extras,snack2Extras:snk2Extras,sleepExtras:sleepExtras};
   const ex=S.ex;
@@ -6458,6 +6586,7 @@ function buildOneDayPlan(){
 function calcDayTotalsForPlan(dayPlan, lang='GR', dayIndex=0){
   traceDecision('calcDayTotalsForPlan','entry',{dayIndex, lang, dayPlan});
   const allocation=getDayMealAllocation(dayPlan, lang);
+  const caps=S.effCaps || getEffectiveCaps(S.conditions);
   const portions=allocation.portions;
   const brkComp  = mealCatalogExchangeComposition(dayPlan.brk);
   const lunComp  = mealCatalogExchangeComposition(dayPlan.lun);
@@ -6474,6 +6603,7 @@ function calcDayTotalsForPlan(dayPlan, lang='GR', dayIndex=0){
   const slpKcal  = exchangesToKcal(sleepBuilt.exch, null) + (sleepBuilt.addOnKcal||0) + extraKcal('sleep', dayIndex);
   const target   = Math.round(S.goalKcal||0);
   const oilBalance={lun:0,din:0};
+  const visibleOilCap=Number(caps?.fatPerMealMax||6);
   let totalKcal= brkKcal+lunKcal+dinKcal+snk1Kcal+snk2Kcal+slpKcal;
   const oilAmount=(slot)=>{
     const key=slot==='lun'?dayPlan.lun:dayPlan.din;
@@ -6486,9 +6616,14 @@ function calcDayTotalsForPlan(dayPlan, lang='GR', dayIndex=0){
     totalKcal += delta*45;
     if(allocation.allocated) allocation.allocated.fat = Math.max(0, Number(allocation.allocated.fat||0) + delta);
   };
+  const slotCanAddOil=(slot)=>{
+    const key=slot==='lun'?dayPlan.lun:dayPlan.din;
+    if(isCustomMealKey(key) || mealCatalogIsFixedComposition(key)) return false;
+    return oilAmount(slot) < visibleOilCap;
+  };
   let guard=0;
   while(target && totalKcal < target-50 && guard++<20){
-    const slot = isCustomMealKey(dayPlan.lun) ? (isCustomMealKey(dayPlan.din)?null:'din') : 'lun';
+    const slot = slotCanAddOil('lun') ? 'lun' : slotCanAddOil('din') ? 'din' : null;
     if(!slot) break;
     applyOilDelta(slot, 1);
   }
@@ -6505,13 +6640,17 @@ function calcDayTotalsForPlan(dayPlan, lang='GR', dayIndex=0){
   const oilDeltaKcal = (oilBalance.lun + oilBalance.din) * 45;
   const balancedExchangeTotalKcal = (allocation.exchangeTotalKcal||0) + oilDeltaKcal;
   const exchangeGap = totalKcal - balancedExchangeTotalKcal;
+  const warnings=[...(allocation.warnings||[])];
+  if(target && totalKcal < target-50 && !slotCanAddOil('lun') && !slotCanAddOil('din')){
+    warnings.push(`Calorie target remains ${Math.abs(totalKcal-target)} kcal below target after realistic visible-oil allocation. Review exchanges or add appropriate whole-food fat options; Nutrese did not add oil above ${visibleOilCap} tsp per main meal.`);
+  }
   const result={brkKcal,lunKcal,dinKcal,snk1Kcal,snk2Kcal,slpKcal,totalKcal,target,gap,
           snk1Text:snk1Built.text, snk2Text:snk2Built.text, slpText:sleepBuilt.text,
           portions, oilBalance, exchangeTotalKcal:balancedExchangeTotalKcal,
           allocatedExchangeKcal:(allocation.allocatedExchangeKcal||0)+oilDeltaKcal,
           exchangeGap, addOnKcal, extraFoodKcal,
           exchangeTarget:allocation.exchangeTarget, allocatedExchanges:allocation.allocated,
-          exchangeDiff:allocation.exchangeDiff, warnings:allocation.warnings, snackReplacementLog:allocation.snackReplacementLog||[]};
+          exchangeDiff:allocation.exchangeDiff, warnings, snackReplacementLog:allocation.snackReplacementLog||[]};
   traceDecision('calcDayTotalsForPlan','return',{dayIndex, lang, dayPlan, result});
   return result;
 }
@@ -6525,6 +6664,7 @@ function buildSevenDay(){
   const filteredBrk = filteredMealOptions(BREAKFAST_OPTIONS,diet);
   const filteredLun = filteredMealOptions(LUNCH_OPTIONS,diet);
   const filteredDin = filteredMealOptions(DINNER_OPTIONS,diet);
+  enforceWeekPlanDietCompatibility(diet);
   // If a day's currently-assigned meal is incompatible with the selected
   // diet (e.g. chicken while Vegetarian is selected), swap it to the first
   // available diet-appropriate option — never silently leave an
@@ -6696,7 +6836,14 @@ window.closeSevenDayModal=closeSevenDayModal;
 // Updates one meal slot (breakfast/lunch/dinner — single dropdown value) for one day in the 7-Day Plan
 function updateWeekPlan(dayIndex, mealKey, value){
   if(!S.weekPlans) S.weekPlans = WEEK_PLANS.map(p=>({...p}));
-  S.weekPlans[dayIndex][mealKey]=value;
+  const diet=v('p-diet')||S.dietType||'Omnivore';
+  const optionMap={brk:BREAKFAST_OPTIONS,lun:LUNCH_OPTIONS,din:DINNER_OPTIONS};
+  const fallback=mealKey==='brk'?'BRK_OATS_VEGAN':'__NONE__';
+  const safeValue=optionMap[mealKey] ? firstCompatibleMealKey(optionMap[mealKey], value, diet, fallback) : value;
+  if(safeValue!==value){
+    S.dietCompatibilityWarnings=[...(S.dietCompatibilityWarnings||[]), `Manual ${mealKey} selection rejected for ${diet}.`];
+  }
+  S.weekPlans[dayIndex][mealKey]=safeValue;
   S.weekPlans[dayIndex].manualMeals={...(S.weekPlans[dayIndex].manualMeals||{}), [mealKey]:true};
   delete S.weekPlans[dayIndex].aiMeals;
   S.weekPlans[dayIndex].source='engine';
@@ -7030,6 +7177,7 @@ function ensureWeekPlans(){
     normalizeDairyExtrasForPlan(p);
   });
   enforceWeeklyTunaCap(S.weekPlans);
+  enforceWeekPlanDietCompatibility(v('p-diet')||S.dietType||'Omnivore');
 }
 
 function aiMealForSlot(dayPlan, slotKey){
@@ -7225,8 +7373,17 @@ function calcDayTotalsForPlanDisplay(dayPlan, lang='GR', dayIndex=0){
     let dinKcal=strictSlotKcal(slots.din);
     let slpKcal=strictSlotKcal(slots.sleep);
     let totalKcal=brkKcal+snk1Kcal+lunKcal+snk2Kcal+dinKcal+slpKcal;
+    const caps=S.effCaps || getEffectiveCaps(S.conditions);
+    const visibleOilCap=Number(caps?.fatPerMealMax||6);
     let guard=0;
     while(target && totalKcal < target-50 && guard++<20){
+      if(Number(slots.lun.fat||0)>=visibleOilCap && Number(slots.din.fat||0)>=visibleOilCap) break;
+      if(Number(slots.lun.fat||0)>=visibleOilCap && Number(slots.din.fat||0)<visibleOilCap){
+        slots.din.fat=Number(slots.din.fat||0)+1;
+        dinKcal+=45;
+        totalKcal+=45;
+        continue;
+      }
       slots.lun.fat=Number(slots.lun.fat||0)+1;
       lunKcal+=45;
       totalKcal+=45;
@@ -7272,6 +7429,9 @@ function calcDayTotalsForPlanDisplay(dayPlan, lang='GR', dayIndex=0){
       exchangeDiff:{},
       warnings:[]
     };
+    if(target && totalKcal < target-50 && Number(slots.lun.fat||0)>=visibleOilCap && Number(slots.din.fat||0)>=visibleOilCap){
+      result.warnings.push(`Calorie target remains ${Math.abs(totalKcal-target)} kcal below target after realistic visible-oil allocation. Review exchanges or add appropriate whole-food fat options; Nutrese did not add oil above ${visibleOilCap} tsp per main meal.`);
+    }
     traceDecision('calcDayTotalsForPlanDisplay','return-strict',{dayIndex, lang, result});
     return result;
   }
@@ -7505,12 +7665,13 @@ function applyMealPlanTemplate(templateKey){
   // 4. Fill all 7 days from the template's meal pool (varied, avoiding same-day
   //    and consecutive-day repeats) + default snacks
   ensureWeekPlans();
+  const templateDiet=tpl.dietType || v('p-diet') || S.dietType || 'Omnivore';
   let prevDay=null;
   S.weekPlans.forEach((day,i)=>{
     const picked=pickTemplateDayMeals(tpl, i, prevDay);
-    day.brk=picked.brk;
-    day.lun=picked.lun;
-    day.din=picked.din;
+    day.brk=firstCompatibleMealKey(BREAKFAST_OPTIONS, picked.brk, templateDiet, 'BRK_OATS_VEGAN');
+    day.lun=firstCompatibleMealKey(LUNCH_OPTIONS, picked.lun, templateDiet, '__NONE__');
+    day.din=firstCompatibleMealKey(DINNER_OPTIONS, picked.din, templateDiet, '__NONE__');
     day.manualMeals={brk:true, lun:true, din:true};
     delete day.aiMeals;
     day.source='template';
@@ -7519,11 +7680,12 @@ function applyMealPlanTemplate(templateKey){
     day.sleepExtras=[...tpl.snacks.sleep];
     prevDay=picked;
   });
+  const dietWarnings=enforceWeekPlanDietCompatibility(templateDiet);
   S.aiPlanStatus='';
   S_isDirty=true;
   closeTemplatePicker();
   buildSevenDay();
-  setWeeklyPlanSaveStatus(isGr?`✓ Πρότυπο εφαρμόστηκε: ${tpl.nameGr} — ελέγξτε κάθε ημέρα πριν την κοινοποίηση.`:`✓ Template applied: ${tpl.nameEn} — please review each day before sharing.`, true);
+  setWeeklyPlanSaveStatus((isGr?`✓ Πρότυπο εφαρμόστηκε: ${tpl.nameGr} — ελέγξτε κάθε ημέρα πριν την κοινοποίηση.`:`✓ Template applied: ${tpl.nameEn} — please review each day before sharing.`) + (dietWarnings.length ? (isGr?' Κάποιες επιλογές αντικαταστάθηκαν λόγω τύπου διατροφής.':' Some selections were replaced because of the selected diet type.') : ''), true);
 }
 window.applyMealPlanTemplate=applyMealPlanTemplate;
 
@@ -8138,8 +8300,11 @@ function applyAiSevenDayPlan(plan){
   if(typeof plan==='string') plan=JSON.parse(plan);
   if(!plan || typeof plan!=='object') throw new Error('AI response did not contain a meal plan.');
   const keys=['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+  const dietType=v('p-diet')||S.dietType||'Omnivore';
+  const caps=S.effCaps || getEffectiveCaps(S.conditions);
+  validateAiMealPlanForDiet(plan, dietType);
+  validateAiMealPlanVisibleOil(plan, caps);
   ensureWeekPlans();
-  const oilWarnings=[];
   S.weekPlans=S.weekPlans.map((existing,i)=>{
     const src=plan[keys[i]] || plan[WEEK_DAYS_EN[i]] || plan[WEEK_DAYS_GR[i]] || plan[i];
     if(!src) return existing;
@@ -8155,23 +8320,13 @@ function applyAiSevenDayPlan(plan){
           description_en,
           kcal:Math.round(Number(meal.kcal||0))
         };
-        // Safety net: prompt instructs the model to cap visible oil at 6 tsp per
-        // dish, but that's not guaranteed with an LLM. Flag anything higher so
-        // it gets caught in review rather than silently reaching the client.
-        [description_gr, description_en].forEach(text=>{
-          const m=text.match(/(\d+)\s*(?:tsp|κ\.γ\.)/i);
-          if(m && Number(m[1])>7) oilWarnings.push(`${WEEK_DAYS_EN[i]} ${slot.labelEN}: ${m[1]} tsp oil`);
-        });
       }
     });
     return {...existing, aiMeals, source:'ai'};
   });
-  if(oilWarnings.length){
-    S.aiOilWarnings=oilWarnings;
-  } else {
-    S.aiOilWarnings=null;
-  }
-  traceDecision('applyAiSevenDayPlan','return',{oilWarnings, weekPlans:S.weekPlans});
+  S.aiOilWarnings=null;
+  enforceWeekPlanDietCompatibility(dietType);
+  traceDecision('applyAiSevenDayPlan','return',{weekPlans:S.weekPlans});
 }
 
 let flexibleMealEditContext=null;

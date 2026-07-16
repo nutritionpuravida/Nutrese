@@ -1,0 +1,64 @@
+{
+  "schema": "nutrese.planningSafety.rootCause.v1",
+  "case": "pescatarian-prohibited-food-before-fix",
+  "captured_from": "pre-fix source inspection plus user-reported rendered plan evidence",
+  "note": "Local browser execution was unavailable in this Codex runtime because the bundled Playwright package is missing playwright-core. This trace records the failing decision path found before behavior changes were applied.",
+  "client_inputs": {
+    "diet_type": "Pescatarian",
+    "goal_kcal": 2037,
+    "macros": "template/default generation path",
+    "exchange_values": {
+      "starch": 81,
+      "protein": 46,
+      "fat": 45,
+      "veg": 28,
+      "fruit": 60,
+      "dairy": 80
+    }
+  },
+  "targets": {
+    "kcal": 2037,
+    "diet_restriction": "no meat or poultry; fish, eggs and dairy allowed"
+  },
+  "exchanges": {
+    "source": "current application exchange prescription",
+    "notes": "No exchange kcal values changed by this batch."
+  },
+  "candidate_meals": {
+    "pre_fix_gap": [
+      "LUN_CHICKEN_QUINOA",
+      "DIN_CHICKEN_QUINOA",
+      "DIN_GEMISTA_LIGHT",
+      "DIN_CHICKEN_MEATBALLS_RICE",
+      "DIN_CHICKEN_MINCE_PASTA"
+    ],
+    "root_cause": "These meat/poultry keys were not all represented in the Pescatarian exclusion source and could remain candidates through templates or generated plans."
+  },
+  "selected_meals": {
+    "observed_examples": [
+      "Chicken + quinoa",
+      "Chicken souvlaki",
+      "Burger + bulgur"
+    ],
+    "expected": "No meat or poultry meal may be selected for a pescatarian client."
+  },
+  "slot_allocations": {
+    "pre_fix": "Diet filtering was applied mainly at dropdown display time and not enforced as a final invariant across template/default/manual/AI paths.",
+    "expected": "Every selected breakfast/lunch/dinner key must pass mealAllowedForDiet before rendering or printing."
+  },
+  "rendered_portions": {
+    "pre_fix": "Rendered table could include chicken/burger/souvlaki text for a pescatarian template.",
+    "expected": "Rendered and printed plans must contain no prohibited food text."
+  },
+  "calculated_totals": {
+    "pre_fix": "Calories were still calculated for prohibited meals, so Plan Quality could appear numerically acceptable while clinically invalid.",
+    "expected": "Diet compatibility is validated before totals are accepted."
+  },
+  "warnings": {
+    "pre_fix": [],
+    "expected": [
+      "Incompatible meals are replaced with compatible catalog meals when possible.",
+      "If catalog coverage is insufficient, unresolved allocation is reported instead of silently violating diet type."
+    ]
+  }
+}
