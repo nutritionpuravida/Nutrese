@@ -1299,8 +1299,7 @@ table th,
     <button class="client-tab" data-tab-for="profile" onclick="nav('profile')"><i class="ti ti-user" aria-hidden="true"></i> <span class="i18n" data-en="Profile" data-gr="Προφίλ">Profile</span></button>
     <button class="client-tab" data-tab-for="bodycomp" onclick="nav('bodycomp')"><i class="ti ti-scale" aria-hidden="true"></i> <span class="i18n" data-en="Body Comp" data-gr="Σύσταση Σώματος">Body Comp</span></button>
     <button class="client-tab" data-tab-for="labs" onclick="nav('labs')"><i class="ti ti-droplet" aria-hidden="true"></i> <span class="i18n" data-en="Labs" data-gr="Εξετάσεις">Labs</span></button>
-    <button class="client-tab" data-tab-for="macros" onclick="nav('macros')"><i class="ti ti-target" aria-hidden="true"></i> <span class="i18n" data-en="Targets" data-gr="Στόχοι">Targets</span></button>
-    <button class="client-tab" data-tab-for="exchanges" onclick="nav('exchanges')"><i class="ti ti-refresh" aria-hidden="true"></i> <span class="i18n" data-en="Exchanges" data-gr="Ισοδύναμα">Exchanges</span></button>
+    <button class="client-tab" data-tab-for="macros" onclick="nav('macros')"><i class="ti ti-target" aria-hidden="true"></i> <span class="i18n" data-en="Targets & Exchanges" data-gr="Στόχοι & Ισοδύναμα">Targets & Exchanges</span></button>
     <button class="client-tab" data-tab-for="sevenday" onclick="nav('sevenday')"><i class="ti ti-calendar" aria-hidden="true"></i> <span class="i18n" data-en="7-Day Plan" data-gr="Πλάνο 7 Ημερών">7-Day Plan</span></button>
     <button class="client-tab" data-tab-for="report" onclick="nav('report')"><i class="ti ti-printer" aria-hidden="true"></i> <span class="i18n" data-en="Client Report" data-gr="Αναφορά Πελάτη">Client Report</span></button>
     <button class="client-tab" data-tab-for="tracking" onclick="nav('tracking')"><i class="ti ti-trending-up" aria-hidden="true"></i> <span class="i18n" data-en="Follow-up" data-gr="Παρακολούθηση">Follow-up</span></button>
@@ -1673,10 +1672,7 @@ table th,
         </div>
       </div>
     </div>
-  </div>
-
-  <!-- EXCHANGES -->
-  <div class="page" id="page-exchanges">
+    <div style="margin-top:16px">
     <div class="card">
       <div class="card-header"><span class="card-title"><i class="ti ti-refresh" aria-hidden="true"></i> <span class="i18n" data-en="Exchange System" data-gr="Σύστημα Ισοδυνάμων">Exchange System</span></span></div>
       <div class="card-body">
@@ -1690,6 +1686,19 @@ table th,
         <div id="exchange-rows"></div>
         <div class="section-label"><span class="i18n" data-en="Macro Match Check" data-gr="Έλεγχος Ταιριάσματος Μακροθρεπτικών">Macro Match Check</span></div>
         <div id="exchange-check"></div>
+      </div>
+    </div>
+
+    </div>
+  </div>
+
+  <!-- EXCHANGES: compatibility shell; active workflow lives in Targets & Exchanges -->
+  <div class="page" id="page-exchanges">
+    <div class="card">
+      <div class="card-header"><span class="card-title"><i class="ti ti-refresh" aria-hidden="true"></i> <span class="i18n" data-en="Exchange System" data-gr="Σύστημα Ισοδυνάμων">Exchange System</span></span></div>
+      <div class="card-body">
+        <div class="alert info"><i class="ti ti-info-circle" aria-hidden="true"></i> <span class="i18n" data-en="The Exchange System now lives together with Macro Targets for a single review workflow." data-gr="Το Σύστημα Ισοδυνάμων βρίσκεται πλέον μαζί με τους Στόχους Μακροθρεπτικών για ενιαία ροή ελέγχου.">The Exchange System now lives together with Macro Targets for a single review workflow.</span></div>
+        <button class="btn primary" onclick="nav('macros')"><i class="ti ti-target" aria-hidden="true"></i> <span class="i18n" data-en="Open Targets & Exchanges" data-gr="Άνοιγμα Στόχων & Ισοδυνάμων">Open Targets & Exchanges</span></button>
       </div>
     </div>
   </div>
@@ -5851,8 +5860,8 @@ const PAGE_INFO = {
   intake:{title:'Client Intake',sub:'ΠΡΩΤΗ ΑΞΙΟΛΟΓΗΣΗ — First consultation questionnaire + Clinical Notes'},
   profile:{title:'Client Profile',sub:'Personal Details · Measurements · Auto BMR/TDEE/BMI/IBW'},
   bodycomp:{title:'Body Composition',sub:'Body fat, water, muscle mass, visceral fat and metabolic age'},
-  macros:{title:'Macro Targets',sub:'Calorie split · Carbs / Protein / Fat breakdown'},
-  exchanges:{title:'Exchange System',sub:'Σύστημα Ισοδυνάμων · Auto-calculated from macro targets'},
+  macros:{title:'Targets & Exchanges',sub:'Macro split · Exchange servings · Meal-plan application'},
+  exchanges:{title:'Exchange System',sub:'Moved into Targets & Exchanges'},
   oneday:{title:'1-Day Auto Plan',sub:'Exchange-based daily meal plan with meal dropdowns'},
   sevenday:{title:'7-Day Meal Plan',sub:'Full weekly schedule — all 7 plan variants'},
   fooddb:{title:'Food Database',sub:'USDA FoodData Central · Macros per 100g'},
@@ -5870,8 +5879,8 @@ const PAGE_INFO_GR = {
   intake:{title:'Ιστορικό Πελάτη',sub:'ΠΡΩΤΗ ΑΞΙΟΛΟΓΗΣΗ — Ερωτηματολόγιο πρώτης συνεδρίας + Κλινικές Σημειώσεις'},
   profile:{title:'Προφίλ Πελάτη',sub:'Προσωπικά Στοιχεία · Μετρήσεις · Αυτόματο BMR/TDEE/BMI/IBW'},
   bodycomp:{title:'Σύσταση Σώματος',sub:'Λίπος, νερό, μυϊκή μάζα, σπλαχνικό λίπος και μεταβολική ηλικία'},
-  macros:{title:'Στόχοι Μακροθρεπτικών',sub:'Κατανομή θερμίδων · Υδατάνθρακες / Πρωτεΐνη / Λίπος'},
-  exchanges:{title:'Σύστημα Ισοδυνάμων',sub:'Σύστημα Ισοδυνάμων · Αυτόματος υπολογισμός από στόχους'},
+  macros:{title:'Στόχοι & Ισοδύναμα',sub:'Κατανομή μακροθρεπτικών · Μερίδες ισοδυνάμων · Εφαρμογή στο πλάνο'},
+  exchanges:{title:'Σύστημα Ισοδυνάμων',sub:'Μεταφέρθηκε στη σελίδα Στόχοι & Ισοδύναμα'},
   oneday:{title:'Αυτόματο Πλάνο 1 Ημέρας',sub:'Ημερήσιο πλάνο βάσει ισοδυνάμων'},
   sevenday:{title:'Πλάνο 7 Ημερών',sub:'Πλήρες εβδομαδιαίο πρόγραμμα — όλες οι 7 παραλλαγές'},
   fooddb:{title:'Αναζήτηση Τροφίμων',sub:'USDA FoodData Central · Μακροθρεπτικά ανά 100γρ'},
@@ -5884,7 +5893,7 @@ const PAGE_INFO_GR = {
   equivalents:{title:'Οδηγός Ισοδυνάμων',sub:'Εκτυπώσιμη λίστα ισοδυνάμων για πελάτες'},
 };
 
-const CLIENT_TAB_PAGES = ['profile','bodycomp','intake','labs','macros','exchanges','sevenday','tracking','report'];
+const CLIENT_TAB_PAGES = ['profile','bodycomp','intake','labs','macros','sevenday','tracking','report'];
 const PRINT_PAGES = ['equivalents'];
 
 function nav(id) {
@@ -5918,8 +5927,8 @@ function nav(id) {
   if(id==='account') { setTimeout(()=>refreshAccountSubscriptionPage().catch(err=>console.error('[Nutrese account] deferred refresh failed', err)), 0); }
   if(id==='profile') { renderConditionRadios(); refreshConditionVisualState(); }
   if(id==='bodycomp') calcBodyComp();
-  if(id==='macros') renderClinicalMacroSuggestions();
-  if(id==='exchanges') renderExchanges();
+  if(id==='macros') { calcMacros(); renderClinicalMacroSuggestions(); refreshExMetaLabels(); renderExchanges(); }
+  if(id==='exchanges') { nav('macros'); return; }
   // Always sync exchange inputs → S.ex before building meal plans
   // This ensures any value typed in the Exchange System is captured
   // even if the input's oninput event didn't fire (e.g. paste, spinner click)
@@ -11982,8 +11991,8 @@ function applyLanguage(lang){
   if(document.getElementById('page-clients')?.classList.contains('active')) renderClientList();
   if(document.getElementById('page-equivalents')?.classList.contains('active')) buildEquivalents();
   if(document.getElementById('page-bodycomp')?.classList.contains('active')) calcBodyComp();
-  if(document.getElementById('page-macros')?.classList.contains('active')) calcMacros();
-  if(document.getElementById('page-exchanges')?.classList.contains('active')){ refreshExMetaLabels(); renderExchanges(); }
+  if(document.getElementById('page-macros')?.classList.contains('active')) { calcMacros(); renderClinicalMacroSuggestions(); refreshExMetaLabels(); renderExchanges(); }
+  if(document.getElementById('page-exchanges')?.classList.contains('active')){ nav('macros'); return; }
   if(document.getElementById('page-tracking')?.classList.contains('active')) renderTracking();
   if(document.getElementById('page-account')?.classList.contains('active')) updateAccountPage();
   if(document.getElementById('page-profile')?.classList.contains('active')) calcAll();
