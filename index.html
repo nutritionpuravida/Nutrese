@@ -1629,6 +1629,7 @@ table th,
           <div class="metric"><div class="m-label">TDEE</div><div class="m-value" id="r-tdee">—</div><div class="m-sub"><span class="i18n" data-en="kcal/day" data-gr="kcal/ημέρα">kcal/day</span></div></div>
           <div class="metric"><div class="m-label"><span class="i18n" data-en="Goal Calories" data-gr="Στόχος Θερμίδων">Goal Calories</span></div><div class="m-value" id="r-goal-kcal">—</div><div class="m-sub" id="r-goal-sub"><span class="i18n" data-en="kcal/day" data-gr="kcal/ημέρα">kcal/day</span></div></div>
         </div>
+        <div id="profile-bmi-scale"></div>
         <div id="expected-progress-box" class="alert info" style="display:none;margin-top:-4px;margin-bottom:12px"></div>
                 <div id="condition-guidance" style="padding:12px;background:var(--teal-50);border:1px solid var(--teal-100);border-radius:var(--radius);font-size:13px;color:var(--teal-800);margin-top:8px"></div>
         <div class="profile-plan-cta">
@@ -6246,6 +6247,7 @@ function calcAll() {
     if(noteEl) noteEl.textContent = window.appLang==='gr' ? 'Η αυτόματη πρόταση εμφανίζεται μόλις συμπληρωθούν ηλικία, ύψος και βάρος. Οι χειροκίνητες τιμές διατηρούνται.' : 'Auto suggestion appears after age, height and weight are filled. Manual entries are preserved.';
   }
   setEl('r-bmi',bmi?bmi.toFixed(1):'—'); setEl('r-bmi-cat',bmiCat||'—');
+  setEl('profile-bmi-scale', bmi ? bmiVisualScaleHtml(bmi,isGrBmi) : '');
   setEl('r-bmr',bmr?Math.round(bmr):'—'); setEl('r-tdee',tdee?Math.round(tdee):'—');
   setEl('r-goal-kcal',goalKcal?Math.round(goalKcal):'—');
   renderExpectedProgress(goal, tdee, goalKcal);
