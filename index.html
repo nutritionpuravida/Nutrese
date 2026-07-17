@@ -695,6 +695,22 @@ html[data-theme="dark"] .week-summary-table td:last-child {
 
   /* ── CLIENT REPORT: larger, readable, client-friendly ── */
   #page-report { font-size: 13px !important; color:#111 !important; }
+  #page-report,
+  #page-report *,
+  #nutriflow-print-only,
+  #nutriflow-print-only * {
+    --bg-page:#fff !important;
+    --bg-surface:#fff !important;
+    --bg-muted:#f0faf6 !important;
+    --text-primary:#111827 !important;
+    --text-secondary:#374151 !important;
+    --text-muted:#64748b !important;
+    --border:#cfded7 !important;
+    --teal-50:#e1f5ee !important;
+    --teal-600:#0f6e56 !important;
+    --teal-700:#0f6e56 !important;
+    --teal-800:#0f3f34 !important;
+  }
   #page-report .report-page-one { padding: 8mm 10mm !important; background:#fff !important; color:#111 !important; }
   #page-report .report-print-title { color:#0f3f34 !important; font-size:21px !important; line-height:1.2 !important; white-space:normal !important; overflow:visible !important; }
   #page-report .report-print-muted, #page-report .report-print-label { color:#374151 !important; }
@@ -712,12 +728,12 @@ html[data-theme="dark"] .week-summary-table td:last-child {
      content (no horizontal scroll exists on paper). table-layout:fixed +
      colgroup widths are set inline above; reinforced here for print since
      some print engines apply table sizing slightly differently than screen. */
-  .report-week-table { table-layout: fixed !important; width: 100% !important; font-size: 10.4px !important; line-height: 1.28 !important; }
-  .report-week-full .report-week-table { height: 181mm !important; }
+  .report-week-table { table-layout: fixed !important; width: 100% !important; font-size: 11.4px !important; line-height: 1.32 !important; }
+  .report-week-full .report-week-table { height: 190mm !important; }
   .report-week-partial .report-week-table { height: auto !important; }
   .report-week-table td, .report-week-table th { overflow-wrap: break-word !important; word-break: normal !important; white-space: normal !important; vertical-align: top !important; }
   .report-week-table thead th { height: 8mm !important; }
-  .report-week-full .report-week-table tbody tr:not(:last-child) { height: 23.2mm !important; }
+  .report-week-full .report-week-table tbody tr:not(:last-child) { height: 24.6mm !important; }
   .report-week-partial .report-week-table tbody tr:not(:last-child) { height: auto !important; }
   .report-week-table tbody tr:last-child { height: 9mm !important; }
   .report-week-table td:last-child, .report-week-table th:last-child { white-space: nowrap !important; word-break: normal !important; }
@@ -725,7 +741,7 @@ html[data-theme="dark"] .week-summary-table td:last-child {
     width: 7.5% !important;
     min-width: 54px !important;
     max-width: 74px !important;
-    font-size: 8.5px !important;
+    font-size: 9.6px !important;
     line-height: 1.2 !important;
     white-space: normal !important;
     overflow-wrap: normal !important;
@@ -3957,12 +3973,12 @@ function printHtmlDocument({html,title,orientation='portrait'}){
       #nutriflow-print-only table { width:100% !important; border-collapse:collapse !important; table-layout:fixed !important; }
       #nutriflow-print-only th { background:#0f6e56 !important; color:#fff !important; font-weight:700 !important; }
       #nutriflow-print-only td, #nutriflow-print-only th { border:1px solid #cfded7 !important; padding:6px !important; vertical-align:top !important; white-space:normal !important; overflow-wrap:break-word !important; word-break:normal !important; }
-      #nutriflow-print-only .report-week-table { width:100% !important; max-width:none !important; font-size:10.4px !important; line-height:1.28 !important; }
-      #nutriflow-print-only .report-week-full .report-week-table { height:181mm !important; }
+      #nutriflow-print-only .report-week-table { width:100% !important; max-width:none !important; font-size:11.4px !important; line-height:1.32 !important; }
+      #nutriflow-print-only .report-week-full .report-week-table { height:190mm !important; }
       #nutriflow-print-only .report-week-partial .report-week-table { height:auto !important; }
       #nutriflow-print-only .report-week-table td, #nutriflow-print-only .report-week-table th { padding:4px !important; }
       #nutriflow-print-only .report-week-table thead th { height:8mm !important; }
-      #nutriflow-print-only .report-week-full .report-week-table tbody tr:not(:last-child) { height:23.2mm !important; }
+      #nutriflow-print-only .report-week-full .report-week-table tbody tr:not(:last-child) { height:24.6mm !important; }
       #nutriflow-print-only .report-week-partial .report-week-table tbody tr:not(:last-child) { height:auto !important; }
       #nutriflow-print-only .report-week-table tbody tr:last-child { height:9mm !important; }
       #nutriflow-print-only .no-print, #nutriflow-print-only button, #nutriflow-print-only input, #nutriflow-print-only select { display:none !important; }
@@ -8983,7 +8999,7 @@ function buildReport(){
 
     <div class="report-week-section ${fullWeekReport?'report-week-full':'report-week-partial'}">
     ${reportPlanTableTitle ? `<div style="font-size:16px;font-weight:800;color:#0f3f34;margin:0 0 6px;border-bottom:2px solid var(--teal-600);padding-bottom:4px"><i class="ti ti-calendar" aria-hidden="true"></i> ${reportPlanTableTitle}</div>` : ''}
-    <table class="report-week-table" style="width:100%;table-layout:fixed;border-collapse:collapse;font-size:10.4px;background:#fff;border:1px solid #cfded7">
+    <table class="report-week-table" style="width:100%;table-layout:fixed;border-collapse:collapse;font-size:11.4px;line-height:1.32;background:#fff;border:1px solid #cfded7;color:#111827">
       ${reportWeekColgroup}
       <thead><tr style="background:var(--teal-600);color:#fff">
         <th style="padding:4px">${isEn?'Day':'Ημέρα'}</th>
