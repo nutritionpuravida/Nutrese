@@ -1711,7 +1711,7 @@ table th,
         <div class="card-header"><span class="card-title"><i class="ti ti-chart-bar" aria-hidden="true"></i> <span class="i18n" data-en="Clinical Macro Suggestions" data-gr="Κλινικές Προτάσεις Μακροθρεπτικών">Clinical Macro Suggestions</span></span></div>
         <div class="card-body">
                     <div class="macro-suggestions-tools">
-            <div class="field-note"><span class="i18n" data-en="Clinical starting points for common conditions. Search to show less common or higher-risk conditions. Always individualise to labs, medications and clinical judgement." data-gr="Κλινικά σημεία εκκίνησης για συχνές/ήπιες καταστάσεις. Αναζητήστε για λιγότερο συχνές ή υψηλότερου κινδύνου παθήσεις. Πάντα εξατομίκευση με βάση εξετάσεις, φάρμακα και κλινική κρίση.">Clinical starting points for common conditions. Search to show less common or higher-risk conditions. Always individualise to labs, medications and clinical judgement.</span></div>
+            <div class="field-note"><span class="i18n" data-en="Use these as starting points. Search for another condition when needed." data-gr="Χρησιμοποιήστε τα ως σημεία εκκίνησης. Αναζητήστε άλλη πάθηση όταν χρειάζεται.">Use these as starting points. Search for another condition when needed.</span></div>
             <div class="macro-suggestion-search-wrap"><i class="ti ti-search" aria-hidden="true"></i><input id="macro-suggestion-search" type="search" oninput="renderClinicalMacroSuggestions()" placeholder="Search condition" aria-label="Search macro suggestions"></div>
           </div><table><thead><tr><th><span class="i18n" data-en="Condition" data-gr="Πάθηση">Condition</span></th><th><span class="i18n" data-en="Carb" data-gr="Υδατ.">Carb</span></th><th><span class="i18n" data-en="Prot" data-gr="Πρωτ.">Prot</span></th><th><span class="i18n" data-en="Fat" data-gr="Λίπος">Fat</span></th></tr></thead><tbody id="clinical-macro-suggestions-body"></tbody></table>
           <div id="clinical-macro-suggestions-note" class="field-note" style="margin-top:8px"></div>
@@ -1880,7 +1880,7 @@ table th,
         <div class="alert info"><i class="ti ti-info-circle" aria-hidden="true"></i> <span class="i18n" data-en="Enter available lab values. Reference ranges are general adult ranges — always confirm against the lab's own reference range. Status updates live as you type." data-gr="Εισάγετε τις διαθέσιμες εργαστηριακές τιμές. Τα εύρη αναφοράς είναι γενικά για ενήλικες — πάντα επιβεβαιώνετε με το εύρος αναφοράς του εργαστηρίου. Η κατάσταση ενημερώνεται ζωντανά καθώς πληκτρολογείτε.">Enter available lab values. Reference ranges are general adult ranges — always confirm against the lab's own reference range. Status updates live as you type.</span></div>
         <div class="form-grid two" style="margin:12px 0 14px">
           <div class="form-field"><label><span class="i18n" data-en="Laboratory date" data-gr="Ημερομηνία εργαστηριακών">Laboratory date</span></label><input type="date" id="lab-date" onchange="saveLabDate()"></div>
-          <div class="form-field"><label><span class="i18n" data-en="Doctor report / lab PDF" data-gr="Ιατρική αναφορά / PDF εξετάσεων">Doctor report / lab PDF</span></label><input type="file" id="client-document-input" accept="application/pdf,image/png,image/jpeg" onchange="handleClientDocumentUpload(this)"><div class="field-note"><span class="i18n" data-en="PDF, PNG or JPG, max 3 MB. Saved with this client record." data-gr="PDF, PNG ή JPG, έως 3 MB. Αποθηκεύεται με τον φάκελο του πελάτη.">PDF, PNG or JPG, max 3 MB. Saved with this client record.</span></div></div>
+          <div class="form-field"><label><span class="i18n" data-en="Doctor report / lab PDF" data-gr="Ιατρική αναφορά / PDF εξετάσεων">Doctor report / lab PDF</span></label><input type="file" id="client-document-input" accept="application/pdf,image/png,image/jpeg" onchange="handleClientDocumentUpload(this)"><div class="field-note"><span class="i18n" data-en="PDF, PNG or JPG, max 3 MB. Saved with this client record." data-gr="PDF, PNG ή JPG, έως 3 MB. Αποθηκεύεται με τον φάκελο του πελάτη.">PDF, PNG or JPG, max 3 MB. Saved with this client record.</span></div><button class="btn" type="button" onclick="saveClientDocumentsNow(event)" style="margin-top:8px"><i class="ti ti-device-floppy" aria-hidden="true"></i> <span class="i18n" data-en="Save documents" data-gr="Αποθήκευση εγγράφων">Save documents</span></button></div>
         </div>
         <details class="client-documents-panel" open><summary class="client-documents-header"><strong><i class="ti ti-files" aria-hidden="true"></i> <span class="i18n" data-en="Uploaded clinical documents" data-gr="Ανεβασμένα κλινικά έγγραφα">Uploaded clinical documents</span></strong><span id="client-document-status" class="field-note"></span></summary><div id="client-documents-list" class="client-documents-list"></div></details>
         <div id="labs-table"></div>
@@ -5646,10 +5646,9 @@ function renderClinicalMacroSuggestions(){
   }).join('') || `<tr><td colspan="4" style="color:var(--text-muted);font-weight:700">${lang==='EN'?'No matching condition. Try another search term.':'Δεν βρέθηκε πάθηση. Δοκιμάστε άλλη αναζήτηση.'}</td></tr>`;
   const note=document.getElementById('clinical-macro-suggestions-note');
   if(note){
-    const hiddenCount=CONDITION_ORDER.length-visibleKeys.length;
     note.textContent = rawSearch
       ? (lang==='EN' ? `${visibleKeys.length} matching suggestion(s).` : `${visibleKeys.length} αντίστοιχες προτάσεις.`)
-      : (lang==='EN' ? `Showing common/milder clinical starting points. ${hiddenCount} additional condition(s) available by search.` : `Εμφανίζονται συχνές/ηπιότερες κλινικές αφετηρίες. ${hiddenCount} επιπλέον παθήσεις διαθέσιμες με αναζήτηση.`);
+      : '';
   }
 }
 const REPORT_CONDITION_EN = {
@@ -9764,6 +9763,55 @@ function saveLabDate(){
   S.labDate=v('lab-date')||'';
   scheduleAutosave();
 }
+function clientDocumentStorageKey(clientId=S.activeClientId, clientRef=S.activeClientRef){
+  const scope=currentUser?.id || 'local';
+  const keyId=clientId || clientRef || (v('p-id')||'').trim() || 'draft';
+  return `nutrese_client_documents_${scope}_${keyId}`;
+}
+function mergeClientDocuments(primary=[], backup=[]){
+  const seen=new Set();
+  const merged=[];
+  [...(Array.isArray(primary)?primary:[]), ...(Array.isArray(backup)?backup:[])].forEach(doc=>{
+    if(!doc) return;
+    const key=String(doc.id || `${doc.name||''}_${doc.size||''}_${doc.addedAt||''}`);
+    if(seen.has(key)) return;
+    seen.add(key);
+    merged.push(doc);
+  });
+  return merged;
+}
+function persistClientDocumentsLocal(){
+  try{
+    const docs=Array.isArray(S.clientDocuments)?S.clientDocuments:[];
+    const key=clientDocumentStorageKey();
+    if(docs.length) localStorage.setItem(key, JSON.stringify(docs));
+    else localStorage.removeItem(key);
+  }catch(e){ console.warn('[Nutrese labs] local document backup failed', e); }
+}
+function loadClientDocumentsLocal(clientId=S.activeClientId, clientRef=S.activeClientRef){
+  try{
+    const raw=localStorage.getItem(clientDocumentStorageKey(clientId, clientRef));
+    const docs=raw ? JSON.parse(raw) : [];
+    return Array.isArray(docs) ? docs : [];
+  }catch(e){ return []; }
+}
+function clientDocumentsSavedInState(state){
+  const savedDocs=Array.isArray(state?.clientDocuments)?state.clientDocuments:[];
+  const currentDocs=Array.isArray(S.clientDocuments)?S.clientDocuments:[];
+  if(!currentDocs.length) return true;
+  const savedKeys=new Set(savedDocs.map(d=>String(d.id||'')));
+  return currentDocs.every(d=>savedKeys.has(String(d.id||'')));
+}
+async function verifyClientDocumentsRemote(){
+  if(!currentUser || !isUuid(S.activeClientId)) return false;
+  const {data,error}=await supabaseClient.from('clients').select('data').eq('id',S.activeClientId).eq('user_id',currentUser.id).maybeSingle();
+  if(error || !data) return false;
+  return clientDocumentsSavedInState(data.data||{});
+}
+async function saveClientDocumentsNow(event){
+  if(event) event.preventDefault();
+  return persistClientDocumentsNow('manual');
+}
 function renderClientDocuments(){
   const el=document.getElementById('client-documents-list');
   const status=document.getElementById('client-document-status');
@@ -9790,22 +9838,25 @@ function renderClientDocuments(){
 async function persistClientDocumentsNow(action='save'){
   const status=document.getElementById('client-document-status');
   const isGr=window.appLang==='gr';
+  persistClientDocumentsLocal();
   const hasClient=(v('p-name')||'').trim();
   if(!hasClient){
-    if(status) status.textContent=isGr?'Το έγγραφο θα αποθηκευτεί όταν συμπληρωθεί και αποθηκευτεί ο πελάτης.':'Document will save once the client profile is completed and saved.';
+    if(status) status.textContent=isGr?'Τα έγγραφα κρατήθηκαν προσωρινά. Συμπληρώστε όνομα πελάτη και πατήστε Αποθήκευση εγγράφων.':'Documents are kept locally for now. Add a client name, then press Save documents.';
     scheduleAutosave();
     return false;
   }
-  if(status) status.textContent=isGr?'Αποθήκευση εγγράφου...':'Saving document...';
+  if(status) status.textContent=isGr?'Αποθήκευση εγγράφων...':'Saving documents...';
   try{
     const ok=await saveCurrentClient({source:'lab-document', silent:true});
-    if(status) status.textContent=ok
-      ? (isGr?'Το έγγραφο αποθηκεύτηκε στον φάκελο πελάτη.':'Document saved to this client record.')
-      : (isGr?'Το έγγραφο αποθηκεύτηκε τοπικά προσωρινά. Πατήστε Save Client.':'Document saved locally for now. Please press Save Client.');
-    return !!ok;
+    const verified=ok && currentUser ? await verifyClientDocumentsRemote() : ok;
+    if(status) status.textContent=verified
+      ? (currentUser ? (isGr?'Τα έγγραφα αποθηκεύτηκαν στο cloud.':'Documents saved to cloud.') : (isGr?'Τα έγγραφα αποθηκεύτηκαν τοπικά.':'Documents saved locally.'))
+      : (isGr?'Τα έγγραφα κρατήθηκαν τοπικά. Πατήστε Αποθήκευση εγγράφων ξανά ή Save Client.':'Documents are backed up locally. Press Save documents again or Save Client.');
+    if(!verified) scheduleAutosave();
+    return !!verified;
   }catch(err){
     console.error('[Nutrese labs] document save failed',err);
-    if(status) status.textContent=isGr?'Δεν ολοκληρώθηκε η αποθήκευση. Πατήστε Save Client.':'Save did not complete. Please press Save Client.';
+    if(status) status.textContent=isGr?'Δεν ολοκληρώθηκε η αποθήκευση στο cloud. Τα έγγραφα κρατήθηκαν τοπικά.':'Cloud save did not complete. Documents are backed up locally.';
     scheduleAutosave();
     return false;
   }
@@ -9829,6 +9880,7 @@ function handleClientDocumentUpload(input){
   reader.onload=()=>{
     S.clientDocuments=[...(Array.isArray(S.clientDocuments)?S.clientDocuments:[]),{id:`doc_${Date.now()}`,name:file.name,type:file.type,size:file.size,dataUrl:String(reader.result||''),addedAt:new Date().toISOString()}];
     input.value='';
+    persistClientDocumentsLocal();
     renderClientDocuments();
     persistClientDocumentsNow('upload');
   };
@@ -9882,6 +9934,7 @@ function deleteClientDocument(id){
   const isGr=window.appLang==='gr';
   if(!confirm(isGr?'Διαγραφή αυτού του εγγράφου;':'Delete this document?')) return;
   S.clientDocuments=(Array.isArray(S.clientDocuments)?S.clientDocuments:[]).filter(d=>String(d.id)!==String(id));
+  persistClientDocumentsLocal();
   renderClientDocuments(); persistClientDocumentsNow('delete');
 }
 
@@ -11386,7 +11439,7 @@ function applyState(state){
   if(state.notes){ S.notes=state.notes; }
   S.labValues=state.labValues||{};
   S.labDate=state.labDate||'';
-  S.clientDocuments=Array.isArray(state.clientDocuments)?state.clientDocuments:[];
+  S.clientDocuments=mergeClientDocuments(Array.isArray(state.clientDocuments)?state.clientDocuments:[], loadClientDocumentsLocal(state.clientId || state.activeClientId || S.activeClientId, state.clientRef || state.activeClientRef || S.activeClientRef));
   const labDateEl=document.getElementById('lab-date'); if(labDateEl) labDateEl.value=S.labDate;
   renderClientDocuments();
   resetMacroExplanation();
