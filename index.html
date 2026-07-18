@@ -34,9 +34,9 @@
   color-scheme: light;
   --teal-50: #E9F6F0; --teal-100: #DDF1E7; --teal-400: #1D9E75;
   --teal-600: #11875D; --teal-800: #0D7651;
-  --bg-page: #F6F8F7; --bg-surface: #ffffff; --bg-sidebar: #F9FBFA;
-  --bg-input: #ffffff; --bg-hover: #EEF6F2; --bg-active: #E4F3EC;
-  --border: #E3E9E6; --border-strong: #D6DFDA;
+  --bg-page: #F3F7F5; --bg-surface: #ffffff; --bg-sidebar: #FBFDFB;
+  --bg-input: #ffffff; --bg-hover: #EAF5F0; --bg-active: #DDF1E7;
+  --border: #DDE7E2; --border-strong: #CAD9D2;
   --text-primary: #18201D; --text-secondary: #66716C; --text-muted: #8B9691;
   --text-active: #0D7651; --text-link: #11875D;
   --amber-bg: #FFF7E6; --amber-border: #EBCB86; --amber-text: #A15C00;
@@ -394,7 +394,7 @@ i.ti-circle-x { color: var(--red-text); }
 /* ─── PAGES / CARDS ─── */
 .page { display: none; }
 .page.active { display: block; }
-.card { background: var(--bg-surface); border: 1px solid rgba(214,223,218,.68); box-shadow: 0 1px 2px rgba(16,24,20,.04), 0 8px 24px rgba(16,24,20,.045); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 14px; }
+.card { background: var(--bg-surface); border: 1px solid rgba(201,217,210,.76); box-shadow: 0 1px 2px rgba(16,24,20,.04), 0 14px 36px rgba(16,24,20,.06); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 14px; }
 [data-theme="dark"] .card { box-shadow: none; border: 1px solid var(--border); }
 .card-header { padding: 11px 16px 9px; border-bottom: none; display: flex; align-items: center; gap: 10px; background: var(--bg-surface); }
 .card-title { font-size: 13px; font-weight: 700; color: var(--text-primary); }
@@ -458,17 +458,17 @@ i.ti-circle-x { color: var(--red-text); }
 [data-theme="dark"] #page-dashboard .dashboard-empty-state { background: rgba(255,255,255,.025); border-color: var(--border); }
 [data-theme="dark"] #page-dashboard .dashboard-empty-icon { background: rgba(78,205,196,.1); color: var(--teal-300); }
 /* Minimal dashboard refinement: dashboard-only visual layer. */
-#page-dashboard { --dash-line: rgba(214,223,218,.56); --dash-shadow: 0 1px 2px rgba(16,24,20,.04), 0 12px 30px rgba(16,24,20,.045); }
+#page-dashboard { --dash-line: rgba(196,216,207,.72); --dash-shadow: 0 1px 2px rgba(16,24,20,.035), 0 18px 44px rgba(16,24,20,.07); }
 #page-dashboard .bento-grid { grid-template-columns: minmax(0,1.45fr) minmax(320px,.85fr); gap:14px; margin-bottom:16px; }
-#page-dashboard .bento-tile { border-radius:20px; padding:18px 20px; border:1px solid var(--dash-line); box-shadow:var(--dash-shadow); background:rgba(255,255,255,.82); }
-#page-dashboard .bento-tile:hover { transform:translateY(-2px); box-shadow:0 2px 4px rgba(16,24,20,.045), 0 16px 36px rgba(16,24,20,.065); }
+#page-dashboard .bento-tile { border-radius:20px; padding:18px 20px; border:1px solid var(--dash-line); box-shadow:var(--dash-shadow); background:rgba(255,255,255,.9); }
+#page-dashboard .bento-tile:hover { transform:translateY(-2px); box-shadow:0 3px 8px rgba(16,24,20,.055), 0 20px 48px rgba(16,24,20,.085); border-color:rgba(17,135,93,.2); }
 #page-dashboard .bento-header { min-height:86px; padding:18px 22px!important; justify-content:center!important; gap:56px; background:linear-gradient(180deg,rgba(255,255,255,.86),rgba(255,255,255,.66)); }
 #page-dashboard .bento-stats { gap:0; min-width:170px; justify-content:center; }
 #page-dashboard .bento-stats > div { min-width:150px; padding:0; border-radius:0; background:transparent!important; }
 #page-dashboard .bento-stats .bs-value { font-size:28px; font-weight:850; letter-spacing:-.02em; }
 #page-dashboard .bento-stats .bs-label { display:flex; justify-content:center; align-items:center; gap:4px; margin-top:7px; font-size:12px; color:var(--text-muted); }
 #page-dashboard .bento-tile-head { font-size:13px; font-weight:850; color:var(--text-primary); margin-bottom:16px; }
-#page-dashboard .bento-tile-head .card-action { color:var(--teal-700); font-weight:850; }
+#page-dashboard .bento-tile-head .card-action { color:var(--teal-800); font-weight:850; }
 #page-dashboard #dash-appointments { min-height:160px; color:var(--text-secondary); }
 #page-dashboard #dash-appointments > div { padding:2px 0; }
 #page-dashboard #dash-quick-actions { background:linear-gradient(145deg,rgba(15,118,110,.055),rgba(255,255,255,.76)); }
@@ -481,12 +481,12 @@ i.ti-circle-x { color: var(--red-text); }
 #page-dashboard .dashboard-empty-actions .btn { min-width:132px; justify-content:center; }
 #page-dashboard .dash-section-label { margin:18px 0 10px; font-size:10px; font-weight:900; color:var(--text-muted); letter-spacing:.09em; }
 #page-dashboard .metrics-grid { gap:12px; margin-top:0; }
-#page-dashboard .metrics-grid .metric { border-radius:18px; padding:16px; box-shadow:none; border:1px solid var(--dash-line); background:rgba(255,255,255,.82); }
+#page-dashboard .metrics-grid .metric { border-radius:18px; padding:16px; box-shadow:0 14px 34px rgba(16,24,20,.045); border:1px solid var(--dash-line); background:rgba(255,255,255,.9); }
 #page-dashboard .metrics-grid .metric:hover { border-color:rgba(15,118,110,.22); }
 #page-dashboard .metrics-grid .m-label { font-size:10px!important; font-weight:900!important; letter-spacing:.08em!important; }
 #page-dashboard .metrics-grid .m-value { font-size:24px; font-weight:900; letter-spacing:-.02em; }
 #page-dashboard .two-col { gap:14px; }
-#page-dashboard .two-col .card { border-radius:20px; box-shadow:var(--dash-shadow); background:rgba(255,255,255,.82); }
+#page-dashboard .two-col .card { border-radius:20px; box-shadow:var(--dash-shadow); background:rgba(255,255,255,.9); }
 #page-dashboard .two-col .card-header { padding:16px 18px 4px; }
 #page-dashboard .two-col .card-title { font-size:13px; font-weight:900; }
 #page-dashboard .two-col .card-body { padding:12px 18px 18px; min-height:92px; }
@@ -1592,7 +1592,6 @@ table th,
   <div class="nav-group-card">
     <div class="nav-group-label"><span class="i18n" data-en="Settings" data-gr="Ρυθμίσεις">Settings</span></div>
     <button class="nav-item" onclick="nav('account')"><i class="ti ti-credit-card" aria-hidden="true"></i> <span class="i18n" data-en="Account / Subscription" data-gr="Λογαριασμός / Συνδρομή">Account / Subscription</span></button>
-    <button class="nav-item" onclick="openFeedbackModal()"><i class="ti ti-message-circle" aria-hidden="true"></i> <span class="i18n" data-en="Support" data-gr="Υποστήριξη">Support</span></button>
     <button class="nav-item" onclick="handleSignOut()"><i class="ti ti-logout" aria-hidden="true"></i> <span class="i18n" data-en="Log out" data-gr="Αποσύνδεση">Log out</span></button>
   </div>
   <button class="sidebar-help-card" onclick="openFeedbackModal()" type="button">
@@ -2436,7 +2435,7 @@ table th,
       <button class="feedback-close" onclick="closeFeedbackModal()" aria-label="Close feedback">×</button>
     </div>
     <div class="feedback-card-body">
-      <textarea id="feedback-message" class="i18n-ph" data-en-ph="Describe your question, issue, bug, or feature request..." data-gr-ph="Περιγράψτε την ερώτηση, το πρόβλημα, το σφάλμα ή το αίτημα λειτουργίας σας..." placeholder="Describe your question, issue, bug, or feature request..." maxlength="3000"></textarea>
+      <textarea id="feedback-message" class="i18n-ph" data-en-ph="How can we help you?" data-gr-ph="Πώς μπορούμε να βοηθήσουμε;" placeholder="How can we help you?" maxlength="3000"></textarea>
       <div class="feedback-contact-note"><span class="i18n" data-en="Prefer email? Contact us at" data-gr="Προτιμάτε email; Επικοινωνήστε μαζί μας στο">Prefer email? Contact us at</span> <a href="mailto:support@nutrese.eu">support@nutrese.eu</a></div>
       <div class="feedback-actions">
         <button class="btn" onclick="closeFeedbackModal()"><span class="i18n" data-en="Cancel" data-gr="Ακύρωση">Cancel</span></button>
@@ -2456,7 +2455,6 @@ table th,
   <button class="bnav-item" onclick="nav('recipes');setBnav(this)"><span><i class="ti ti-chef-hat" aria-hidden="true"></i></span><span class="i18n" data-en="Recipes" data-gr="Συνταγές">Recipes</span></button>
   <button class="bnav-item" onclick="nav('appointments');setBnav(this)"><span><i class="ti ti-calendar" aria-hidden="true"></i></span><span class="i18n" data-en="Calendar" data-gr="Ημερολόγιο">Calendar</span></button>
   <button class="bnav-item" onclick="nav('account');setBnav(this)"><span><i class="ti ti-credit-card" aria-hidden="true"></i></span><span class="i18n" data-en="Account" data-gr="Λογαριασμός">Account</span></button>
-  <button class="bnav-item" onclick="openFeedbackModal();setBnav(this)"><span><i class="ti ti-message-circle" aria-hidden="true"></i></span><span class="i18n" data-en="Support" data-gr="Υποστήριξη">Support</span></button>
 </nav>
 <script>
 const S = {
