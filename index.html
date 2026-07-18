@@ -1411,8 +1411,8 @@ table th,
       <div class="mk-hero-grid">
         <div>
           <div class="mk-eyebrow">Clinical nutrition workspace</div>
-          <h1 class="mk-h1">Spend more time helping clients. Less time on administration.</h1>
-          <p class="mk-lead">Nutrese brings client profiles, exchange-based planning, appointments, reports and clinical notes into one calm workspace for independent dietitians and growing practices.</p>
+          <h1 class="mk-h1">The all-in-one platform for nutrition professionals.</h1>
+          <p class="mk-lead">Spend more time with clients. Less time on admin.</p>
           <div class="mk-hero-actions">
             <button class="mk-btn mk-btn-primary" type="button" onclick="marketingOpenAuth('signup')">Start Free Trial</button>
             <a class="mk-btn" href="#product" data-mk-link="product">Explore product</a>
@@ -2783,9 +2783,18 @@ function hideMarketingSite(){
 }
 function marketingOpenAuth(tab='signin'){
   hideMarketingSite();
+  applyMarketingAuthThemeDefault();
   setAuthTab(tab);
   showAuthScreen();
   if(history.pushState) history.pushState({}, document.title, window.location.pathname + (tab==='signup' ? '#signup' : '#signin'));
+}
+function applyMarketingAuthThemeDefault(){
+  try {
+    const saved = localStorage.getItem('nutrese-theme');
+    if (saved === 'dark' || saved === 'light') return;
+  } catch(e) {}
+  document.documentElement.setAttribute('data-theme', 'dark');
+  if (typeof updateThemeButton === 'function') updateThemeButton();
 }
 function bindMarketingSite(){
   const menu=document.getElementById('mk-menu-btn');
@@ -12497,12 +12506,15 @@ window.onload=function(){
 function currentAppTheme(){
   return document.documentElement.getAttribute('data-theme')==='dark' ? 'dark' : 'light';
 }
+function updateThemeButton(){
+  const btn = document.getElementById('theme-btn');
+  if (btn) btn.innerHTML = document.documentElement.getAttribute('data-theme') === 'dark' ? '<i class="ti ti-sun" aria-hidden="true"></i> Light' : '<i class="ti ti-moon" aria-hidden="true"></i> Dark';
+}
 function toggleTheme() {
   const html = document.documentElement;
   const isDark = html.getAttribute('data-theme') === 'dark';
   html.setAttribute('data-theme', isDark ? 'light' : 'dark');
-  const btn = document.getElementById('theme-btn');
-  if (btn) btn.innerHTML = isDark ? '<i class="ti ti-moon" aria-hidden="true"></i> Dark' : '<i class="ti ti-sun" aria-hidden="true"></i> Light';
+  updateThemeButton();
   try { localStorage.setItem('nutrese-theme', isDark ? 'light' : 'dark'); } catch(e) {}
 }
 (function() {
@@ -12513,8 +12525,7 @@ function toggleTheme() {
     } else {
       document.documentElement.setAttribute('data-theme', 'light');
     }
-    const btn = document.getElementById('theme-btn');
-    if (btn) btn.innerHTML = document.documentElement.getAttribute('data-theme') === 'dark' ? '<i class="ti ti-sun" aria-hidden="true"></i> Light' : '<i class="ti ti-moon" aria-hidden="true"></i> Dark';
+    updateThemeButton();
   } catch(e) {}
 })();
 
