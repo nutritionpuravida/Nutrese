@@ -872,10 +872,6 @@ html[data-theme="dark"] .week-summary-table td:last-child {
   @page { size: A4 portrait; margin: 1cm; }
   /* Clinical pages override: landscape A4 */
   @page landscape-page { size: A4 landscape; margin: 8mm 10mm; }
-  /* Weekly plan inside the client report gets its own landscape sheet.
-     Chrome's PDF preview can clip borders placed directly on the physical page
-     edge, so the section provides its own inset while still filling the sheet. */
-  @page report-week-landscape { size: A4 landscape; margin: 4mm; }
 
   /* ── Hide all UI chrome ── */
   .sidebar, .topbar, .topbar-actions, .bottom-nav, .hamburger,
@@ -973,7 +969,6 @@ html[data-theme="dark"] .week-summary-table td:last-child {
   .report-week-table tbody tr:nth-child(even) td { background: #f0faf6 !important; }
   .report-week-table tbody tr:last-child td { background: #e1f5ee !important; font-weight: 700 !important; border-top: 2px solid #0f6e56 !important; }
   .report-week-section {
-    page: report-week-landscape;
     width: 100% !important;
     max-width: none !important;
     margin: 0 !important;
@@ -1433,6 +1428,7 @@ table th,
         <a href="#nutrition-planning" data-mk-link="nutrition-planning">Nutrition Planning</a>
         <a href="#pricing" data-mk-link="pricing">Pricing</a>
         <a href="#security" data-mk-link="security">Security & Privacy</a>
+        <a href="#" onclick="marketingOpenAuth('signin');return false;">Sign in</a>
       </nav>
       <div class="mk-actions">
         <button class="mk-btn mk-signin" type="button" onclick="marketingOpenAuth('signin')">Sign in</button>
@@ -1620,7 +1616,7 @@ table th,
     <div class="topbar-actions">
       <span class="no-print" style="font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:6px;padding:4px 10px" title="Opened-on date — this is today's date, whenever you happen to open this file. Build fingerprint is computed fresh from this file's exact content, so identical content always produces an identical fingerprint."><i class="ti ti-info-circle" aria-hidden="true"></i> <span id="opened-date-topbar">—</span><span style="opacity:.5">·</span><span id="build-date-topbar" style="font-family:monospace">—</span></span>
       <span class="no-print" id="user-email" style="display:none"></span>
-      <span class="no-print autosave-status saved" id="autosave-status">Saved ✓</span>
+      <span class="no-print autosave-status" id="autosave-status"></span>
       <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn" title="Toggle dark mode"><i class="ti ti-moon" aria-hidden="true"></i> Dark</button>
       <button class="btn" onclick="toggleLanguage()" id="lang-btn" title="Switch language">GR</button>
     </div>
@@ -1754,7 +1750,7 @@ table th,
         <div class="form-grid">
           <div class="form-field full"><label><span class="i18n" data-en="Typical eating day" data-gr="Τυπική ημέρα διατροφής">Typical eating day</span></label><textarea id="i-typical-diet" rows="3" class="i18n-ph" data-en-ph="Breakfast, lunch, dinner, snacks…" data-gr-ph="Πρωινό, μεσημεριανό, βραδινό, σνακ…" placeholder="Breakfast, lunch, dinner, snacks…" oninput="saveIntake()" style="resize:vertical"></textarea></div>
           <div class="form-field"><label><span class="i18n" data-en="Skip meals?" data-gr="Παραλείπεις γεύματα;">Skip meals?</span></label>
-            <select id="i-skip-meals" onchange="saveIntake()"><option value="">—</option><option>No, eat regularly</option><option>Sometimes skip breakfast</option><option>Often skip meals</option></select>
+            <select id="i-skip-meals" onchange="saveIntake()"><option value="">—</option><option value="No, eat regularly" data-en="No, eat regularly" data-gr="Όχι, τρώω κανονικά">No, eat regularly</option><option value="Sometimes skip breakfast" data-en="Sometimes skip breakfast" data-gr="Μερικές φορές παραλείπω πρωινό">Sometimes skip breakfast</option><option value="Often skip meals" data-en="Often skip meals" data-gr="Συχνά παραλείπω γεύματα">Often skip meals</option></select>
           </div>
           <div class="form-field"><label><span class="i18n" data-en="Cravings" data-gr="Λιγούρες">Cravings</span></label><input type="text" id="i-cravings" class="i18n-ph" data-en-ph="Sweet, salty, chocolate…" data-gr-ph="Γλυκό, αλμυρό, σοκολάτα…" placeholder="Sweet, salty, chocolate…" oninput="saveIntake()"></div>
         </div>
@@ -4380,14 +4376,18 @@ function mealSuffixEn(ex, p, veg, proteinSource, carbName, proteinLabel, isFishP
   return portionTxt + ' - ' + veg + ' ' + vegCups;
 }
 
+// NOTE: brk/lun/din here are kept in sync with STRICT_WEEK_MEALS below for
+// readability, but STRICT_WEEK_MEALS is the actual source of truth for any
+// day the dietitian hasn't manually edited (see ensureWeekPlans()) — editing
+// only this array will have no visible effect on new/unedited plans.
 const WEEK_PLANS = [
-  {day:'Δευτέρα', brk:'BRK_TOAST',  lun:'LUN_CHICKEN_RICE',   din:'DIN_FISH_POTATO',   snk1Extras:['fruit'], snk2Extras:['fruit'], sleepExtras:[]},
-  {day:'Τρίτη',   brk:'BRK_CEREAL', lun:'LUN_FISH_POTATO',    din:'DIN_CHICKEN_RICE',  snk1Extras:['fruit','yogurt'], snk2Extras:['fruit','nuts'], sleepExtras:[]},
-  {day:'Τετάρτη', brk:'BRK_TOAST',  lun:'LUN_LOUVI_TUNA',     din:'DIN_OMELETTE',      snk1Extras:['fruit'], snk2Extras:['fruit'], sleepExtras:[]},
-  {day:'Πέμπτη',  brk:'BRK_CEREAL', lun:'LUN_FASOLAKIA_PORK', din:'DIN_TUNA_POTATO',   snk1Extras:['fruit','driedfruit'], snk2Extras:['fruit','nuts'], sleepExtras:[]},
-  {day:'Παρασκευή',brk:'BRK_TOAST', lun:'LUN_TUNA_POTATO',    din:'DIN_PASTA_MINCE',   snk1Extras:['fruit'], snk2Extras:['fruit'], sleepExtras:[]},
-  {day:'Σάββατο', brk:'BRK_CEREAL', lun:'LUN_PASTA_MINCE',    din:'DIN_SOUVLAKI_PITA', snk1Extras:['fruit','yogurt'], snk2Extras:['fruit','nuts'], sleepExtras:[]},
-  {day:'Κυριακή', brk:'BRK_TOAST',  lun:'LUN_BIFTEKI_BULGUR', din:'DIN_BIFTEKI_BULGUR',snk1Extras:['fruit'], snk2Extras:['fruit'], sleepExtras:[]},
+  {day:'Δευτέρα', brk:'BRK_TOAST',               lun:'LUN_CHICKEN_RICE',    din:'DIN_AVGOLEMONO_SOUP',       snk1Extras:['fruit'], snk2Extras:['fruit','yogurt'], sleepExtras:[]},
+  {day:'Τρίτη',   brk:'BRK_CEREAL',              lun:'LUN_BAKED_FISH_VEG',  din:'DIN_TRACHANAS_HALLOUMI',    snk1Extras:['fruit','yogurt'], snk2Extras:['fruit','nuts'], sleepExtras:[]},
+  {day:'Τετάρτη', brk:'BRK_EGGS_TOAST',          lun:'LUN_FASOLAKIA_PORK',  din:'DIN_OMELETTE',              snk1Extras:['fruit','driedfruit'], snk2Extras:['fruit'], sleepExtras:[]},
+  {day:'Πέμπτη',  brk:'BRK_YOGURT_HONEY_WALNUTS',lun:'LUN_LENTILS_RICE',    din:'DIN_GRILLED_FISH_RICE',     snk1Extras:['fruit'], snk2Extras:['fruit','nuts'], sleepExtras:[]},
+  {day:'Παρασκευή',brk:'BRK_TOAST_TURKEY',       lun:'LUN_SALMON_QUINOA',   din:'DIN_CHICKEN_MEATBALLS_RICE',snk1Extras:['fruit','yogurt'], snk2Extras:['fruit'], sleepExtras:[]},
+  {day:'Σάββατο', brk:'BRK_RUSKS_ANTHOTYRO',     lun:'LUN_HALLOUMI_POTATO', din:'DIN_SOUVLAKI_PITA',         snk1Extras:['fruit'], snk2Extras:['fruit','nuts'], sleepExtras:[]},
+  {day:'Κυριακή', brk:'BRK_BOILED_EGGS_2',       lun:'LUN_TUNA_RICE',       din:'DIN_BIFTEKI_BULGUR',        snk1Extras:['fruit','driedfruit'], snk2Extras:['fruit','yogurt'], sleepExtras:[]},
 ];
 const WEEK_DAYS_GR=['Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο','Κυριακή'];
 const WEEK_DAYS_EN=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
@@ -4728,11 +4728,20 @@ function enforceMealSelectionDietCompatibility(dietType=v('p-diet')||S.dietType|
 function enforceWeekPlanDietCompatibility(dietType=v('p-diet')||S.dietType||'Omnivore'){
   if(!S.weekPlans) return [];
   const warnings=[];
+  // Cycle diet-incompatible replacements through the compatible options by
+  // day index, so every day that needs a swap doesn't collapse onto the
+  // same first match (e.g. every Vegetarian day defaulting to the same
+  // lentil dish). firstCompatibleMealKey() is left untouched for its other
+  // call sites (single-selector fallbacks), where "first compatible" is
+  // still the correct behavior.
+  const filteredBrk=filteredMealOptions(BREAKFAST_OPTIONS,dietType);
+  const filteredLun=filteredMealOptions(LUNCH_OPTIONS,dietType);
+  const filteredDin=filteredMealOptions(DINNER_OPTIONS,dietType);
   S.weekPlans.forEach((p,di)=>{
     const before={brk:p.brk,lun:p.lun,din:p.din};
-    p.brk=firstCompatibleMealKey(BREAKFAST_OPTIONS, p.brk, dietType, 'BRK_OATS_VEGAN');
-    p.lun=firstCompatibleMealKey(LUNCH_OPTIONS, p.lun, dietType, '__NONE__');
-    p.din=firstCompatibleMealKey(DINNER_OPTIONS, p.din, dietType, '__NONE__');
+    p.brk=mealAllowedForDiet(p.brk,dietType) ? p.brk : (filteredBrk.length ? filteredBrk[di % filteredBrk.length].v : firstCompatibleMealKey(BREAKFAST_OPTIONS, p.brk, dietType, 'BRK_OATS_VEGAN'));
+    p.lun=mealAllowedForDiet(p.lun,dietType) ? p.lun : (filteredLun.length ? filteredLun[di % filteredLun.length].v : firstCompatibleMealKey(LUNCH_OPTIONS, p.lun, dietType, '__NONE__'));
+    p.din=mealAllowedForDiet(p.din,dietType) ? p.din : (filteredDin.length ? filteredDin[di % filteredDin.length].v : firstCompatibleMealKey(DINNER_OPTIONS, p.din, dietType, '__NONE__'));
     if(before.brk!==p.brk || before.lun!==p.lun || before.din!==p.din){
       warnings.push(`Day ${di+1}: incompatible meal replaced for ${dietType}.`);
       p.source=p.source||'engine';
@@ -4945,7 +4954,7 @@ function equivalentsCompactTableHtml(lang='gr', searchQuery=''){
     </tr>`;
   }).join('');
   if(q && !rows) return `<div class="alert warn">${isEn?'No matching foods found in the Equivalents Guide.':'Δεν βρέθηκαν τρόφιμα στον Οδηγό Ισοδυνάμων.'}</div>`;
-  return `<div style="border-radius:12px;overflow:hidden;border:1px solid var(--border)"><table class="equivalents-compact-table" style="width:100%;border-collapse:collapse;font-size:13px;background:var(--bg-surface)">
+  return `<div style="border-radius:12px;overflow:hidden;border:1px solid var(--border)"><table class="equivalents-compact-table" style="width:100%;border-collapse:collapse;font-size:14px;background:var(--bg-surface)">
     <thead>
       <tr style="background:var(--bg-page);color:var(--text-muted);text-transform:uppercase;font-size:10px;letter-spacing:.05em">
         <th style="padding:10px 14px;text-align:left;width:18%;font-weight:700">${isEn?'Exchange':'Ισοδύναμο'}</th>
@@ -7518,13 +7527,13 @@ const SEVEN_DAY_SLOTS=[
 const STRICT_CASE1_EXCHANGES={starch:5,protein:8,fat:8,veg:6,fruit:2,dairy:2};
 const STRICT_EXCHANGE_KCAL={starch:81,protein:46,fat:45,veg:28,fruit:60,dairy:80};
 const STRICT_WEEK_MEALS=[
-  {brk:'BRK_TOAST',  lun:'LUN_CHICKEN_RICE', din:'DIN_FISH_POTATO'},
-  {brk:'BRK_CEREAL', lun:'LUN_FISH_POTATO',  din:'DIN_CHICKEN_RICE'},
-  {brk:'BRK_TOAST',  lun:'LUN_TUNA_POTATO',  din:'DIN_OMELETTE'},
-  {brk:'BRK_CEREAL', lun:'LUN_FASOLAKIA_PORK',din:'DIN_CHICKEN_RICE'},
-  {brk:'BRK_TOAST',  lun:'LUN_PASTA_MINCE',  din:'DIN_FISH_POTATO'},
-  {brk:'BRK_CEREAL', lun:'LUN_PASTA_MINCE',  din:'DIN_SOUVLAKI_PITA'},
-  {brk:'BRK_TOAST',  lun:'LUN_CHICKEN_RICE', din:'DIN_BIFTEKI_BULGUR'},
+  {brk:'BRK_TOAST',               lun:'LUN_CHICKEN_RICE',    din:'DIN_AVGOLEMONO_SOUP'},
+  {brk:'BRK_CEREAL',              lun:'LUN_BAKED_FISH_VEG',  din:'DIN_TRACHANAS_HALLOUMI'},
+  {brk:'BRK_EGGS_TOAST',          lun:'LUN_FASOLAKIA_PORK',  din:'DIN_OMELETTE'},
+  {brk:'BRK_YOGURT_HONEY_WALNUTS',lun:'LUN_LENTILS_RICE',    din:'DIN_GRILLED_FISH_RICE'},
+  {brk:'BRK_TOAST_TURKEY',        lun:'LUN_SALMON_QUINOA',   din:'DIN_CHICKEN_MEATBALLS_RICE'},
+  {brk:'BRK_RUSKS_ANTHOTYRO',     lun:'LUN_HALLOUMI_POTATO', din:'DIN_SOUVLAKI_PITA'},
+  {brk:'BRK_BOILED_EGGS_2',       lun:'LUN_TUNA_RICE',       din:'DIN_BIFTEKI_BULGUR'},
 ];
 
 function strictCase1BudgetActive(){
@@ -9510,7 +9519,7 @@ function buildReport(){
     ['BMI', S.bmi ? `${S.bmi.toFixed(1)}${S.bmiCat ? ' · '+S.bmiCat : ''}` : '—'],
     [isEn?'Primary condition':'Κύρια κατάσταση', condNames || '—'],
   ];
-  setEl('report-body',`<div class="client-report-print" style="width:100%;font-family:Arial,sans-serif;font-size:14px;color:#111">
+  setEl('report-body',`<div class="client-report-print" style="width:100%;font-family:Arial,sans-serif;font-size:14px;color:#111;background:#fff">
 
     <div class="report-page-one with-week">
     <!-- HEADER -->
@@ -10890,6 +10899,33 @@ const NUTRESE_RECIPE_TEMPLATES = [
       {name:{en:'Unsweetened cocoa powder',gr:'Κακάο χωρίς ζάχαρη'}, grams:10, kcal100:228, carbs100:57.9, protein100:19.6, fat100:13.7},
       {name:{en:'Mixed berries',gr:'Ανάμεικτα μούρα'}, grams:120, kcal100:50, carbs100:12.0, protein100:1.0, fat100:0.3}
     ]
+  },
+  {
+    id:'berry_oat_yogurt_smoothie', servings:2, imageKey:'smoothie',
+    name:{en:'Berry, oats & yogurt smoothie', gr:'Smoothie με μούρα, βρώμη & γιαούρτι'},
+    summary:{en:'Protein and fibre rich breakfast or snack smoothie with calcium-rich dairy and slow-release carbohydrate.', gr:'Πρωινό/σνακ smoothie πλούσιο σε πρωτεΐνη και φυτικές ίνες, με ασβέστιο από γαλακτοκομικά και υδατάνθρακα αργής αποδέσμευσης.'},
+    instructions:{en:'Blend yogurt, milk, frozen berries, banana and oats until smooth. Serve immediately over ice.', gr:'Χτυπήστε στο μπλέντερ γιαούρτι, γάλα, κατεψυγμένα μούρα, μπανάνα και βρώμη μέχρι να ομογενοποιηθούν. Σερβίρετε αμέσως με πάγο.'},
+    ingredients:[
+      {name:{en:'Low-fat Greek yogurt',gr:'Ελληνικό γιαούρτι χαμηλών λιπαρών'}, grams:300, kcal100:59, carbs100:3.6, protein100:10.2, fat100:0.4},
+      {name:{en:'Low-fat milk or fortified plant milk',gr:'Γάλα χαμηλών λιπαρών ή εμπλουτισμένο φυτικό ρόφημα'}, grams:150, kcal100:47, carbs100:4.8, protein100:3.4, fat100:1.5},
+      {name:{en:'Frozen mixed berries',gr:'Κατεψυγμένα ανάμεικτα μούρα'}, grams:200, kcal100:52, carbs100:12.0, protein100:0.7, fat100:0.3},
+      {name:{en:'Banana',gr:'Μπανάνα'}, grams:120, kcal100:89, carbs100:22.8, protein100:1.1, fat100:0.3},
+      {name:{en:'Oats',gr:'Βρώμη'}, grams:30, kcal100:389, carbs100:66.3, protein100:16.9, fat100:6.9}
+    ]
+  },
+  {
+    id:'three_bean_feta_salad', servings:2, imageKey:'beansalad',
+    name:{en:'Three-bean & feta salad', gr:'Σαλάτα με τρία όσπρια & φέτα'},
+    summary:{en:'High-fibre, high-protein Mediterranean legume salad with calcium-rich feta and healthy fats.', gr:'Μεσογειακή σαλάτα οσπρίων υψηλή σε φυτικές ίνες και πρωτεΐνη, με φέτα πλούσια σε ασβέστιο και υγιεινά λιπαρά.'},
+    instructions:{en:'Combine chickpeas, kidney beans and white beans with cherry tomatoes and crumbled feta. Dress with olive oil and lemon.', gr:'Ανακατέψτε ρεβίθια, κόκκινα φασόλια και λευκά φασόλια με ντοματίνια και θρυμματισμένη φέτα. Περιχύστε με ελαιόλαδο και λεμόνι.'},
+    ingredients:[
+      {name:{en:'Cooked chickpeas',gr:'Μαγειρεμένα ρεβίθια'}, grams:150, kcal100:164, carbs100:27.4, protein100:8.9, fat100:2.6},
+      {name:{en:'Cooked kidney beans',gr:'Μαγειρεμένα κόκκινα φασόλια'}, grams:150, kcal100:127, carbs100:22.8, protein100:8.7, fat100:0.5},
+      {name:{en:'Cooked white beans',gr:'Μαγειρεμένα λευκά φασόλια'}, grams:150, kcal100:140, carbs100:25.1, protein100:8.2, fat100:0.6},
+      {name:{en:'Cherry tomatoes',gr:'Ντοματίνια'}, grams:150, kcal100:18, carbs100:3.9, protein100:0.9, fat100:0.2},
+      {name:{en:'Feta cheese',gr:'Φέτα'}, grams:60, kcal100:264, carbs100:4.1, protein100:14.2, fat100:21.3},
+      {name:{en:'Extra virgin olive oil',gr:'Εξαιρετικό παρθένο ελαιόλαδο'}, grams:15, kcal100:884, carbs100:0, protein100:0, fat100:100}
+    ]
   }
 ];
 function localizeRecipeTemplateIngredient(ing){
@@ -10902,10 +10938,12 @@ function recipeTemplatePhotoUrl(key){
     salmon:'https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&w=960&q=80',
     yogurt:'https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=960&q=80',
     peppers:'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&w=960&q=80',
-    sardines:'https://images.unsplash.com/photo-1559847844-5315695dadae?auto=format&fit=crop&w=960&q=80',
+    sardines:'https://images.unsplash.com/photo-1560174122-cac0c0bdacc6?auto=format&fit=crop&w=960&q=80',
     tofu:'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=960&q=80',
     soup:'https://images.unsplash.com/photo-1547592166-23ac45744acd?auto=format&fit=crop&w=960&q=80',
-    chia:'https://images.unsplash.com/photo-1494597564530-871f2b93ac55?auto=format&fit=crop&w=960&q=80'
+    chia:'https://images.unsplash.com/photo-1494597564530-871f2b93ac55?auto=format&fit=crop&w=960&q=80',
+    smoothie:'https://images.unsplash.com/photo-1645783916385-1c99860a2a42?auto=format&fit=crop&w=960&q=80',
+    beansalad:'https://images.unsplash.com/photo-1662743086910-38419bbf7f34?auto=format&fit=crop&w=960&q=80'
   };
   return photos[key] || recipeTemplateFallbackImage(key);
 }
@@ -10918,7 +10956,9 @@ function recipeTemplateFallbackImage(key){
     sardines:{bg:'#F0FAFF',accent:'#177A8A',soft:'#CFEFF4',food:'#6A7D89',food2:'#F5A623'},
     tofu:{bg:'#F5FBF4',accent:'#2F7D45',soft:'#D8F0D4',food:'#F7F3E8',food2:'#74B77A'},
     soup:{bg:'#FFF7EF',accent:'#B76E22',soft:'#F5D9B8',food:'#E38D45',food2:'#5E8C4A'},
-    chia:{bg:'#F7F3FF',accent:'#5E4AA8',soft:'#E5DAFF',food:'#3B2F4A',food2:'#9B3F72'}
+    chia:{bg:'#F7F3FF',accent:'#5E4AA8',soft:'#E5DAFF',food:'#3B2F4A',food2:'#9B3F72'},
+    smoothie:{bg:'#FFF0F5',accent:'#C2447A',soft:'#FBD6E4',food:'#8C3E75',food2:'#F5A623'},
+    beansalad:{bg:'#F5FBF2',accent:'#5E8C4A',soft:'#DFF0D4',food:'#B5702F',food2:'#D94A2F'}
   }[key]||{bg:'#F3FAF5',accent:'#0F6E56',soft:'#CDEDE2',food:'#ffffff',food2:'#9FE1CB'};
   const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-label="Recipe image">
     <defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop stop-color="${palette.bg}"/><stop offset="1" stop-color="${palette.soft}"/></linearGradient></defs>
