@@ -32,19 +32,33 @@
 /* ─── LIGHT MODE TOKENS ─── */
 :root {
   color-scheme: light;
-  --teal-50: #E9F6F0; --teal-100: #DDF1E7; --teal-400: #1D9E75;
-  --teal-600: #11875D; --teal-800: #0D7651;
-  --bg-page: #F3F7F5; --bg-surface: #ffffff; --bg-sidebar: #FBFDFB;
-  --bg-input: #ffffff; --bg-hover: #EAF5F0; --bg-active: #DDF1E7;
-  --border: #DDE7E2; --border-strong: #CAD9D2;
-  --text-primary: #18201D; --text-secondary: #66716C; --text-muted: #8B9691;
-  --text-active: #0D7651; --text-link: #11875D;
-  --amber-bg: #FFF7E6; --amber-border: #EBCB86; --amber-text: #A15C00;
-  --red-bg: #FDEEEE; --red-border: #F2B8B8; --red-text: #A33A3A; --red-badge: #D94848;
-  --green-bg: #EAF7F0; --green-border: #B9E6CD; --green-text: #16734F; --green-badge: #1D9E75;
-  --blue-bg: #EDF7FF; --blue-border: #B8DDFC; --blue-text: #1769AA;
-  --metric-bg: #ffffff;
-  --nav-w: 230px; --radius: 8px; --radius-lg: 12px;
+  /* Brand accent — teal, slightly refined for warmth on off-white */
+  --teal-50: #E6F4EE; --teal-100: #D5EDE1; --teal-400: #199C71;
+  --teal-600: #0F8459; --teal-700: #0C7550; --teal-800: #0B6B48;
+  --bg-muted: #EFEEE9;
+  /* Surfaces — warm off-white page, clean white cards that lift off it.
+     The page is intentionally NOT pure white (reduces glare/fatigue); cards
+     are near-white and separated by elevation rather than hard borders. */
+  --bg-page: #F6F5F2; --bg-surface: #FFFFFF; --bg-sidebar: #F4F3EF;
+  --bg-input: #FFFFFF; --bg-hover: #F0EFEB; --bg-active: #E4F1EA;
+  /* Borders — soft, low-contrast; elevation does most of the separation */
+  --border: #E8E6E0; --border-strong: #D8D5CD;
+  /* Text — warm near-black primary, graded secondary/muted for hierarchy */
+  --text-primary: #1F2320; --text-secondary: #5F665F; --text-muted: #8A908A;
+  --text-active: #0B6B48; --text-link: #0F8459;
+  --amber-bg: #FDF6E7; --amber-border: #EBD196; --amber-text: #97600A;
+  --red-bg: #FCEEEC; --red-border: #EEBDB6; --red-text: #A63D33; --red-badge: #D14B3C;
+  --green-bg: #E9F5EE; --green-border: #BEE4CD; --green-text: #147150; --green-badge: #199C71;
+  --blue-bg: #EBF4FC; --blue-border: #BCDCF6; --blue-text: #1A6BA8;
+  --metric-bg: #FFFFFF;
+  /* Elevation scale — soft, warm-tinted shadows (not harsh grey) for the
+     "premium SaaS" lift. Used by cards, dropdowns, modals, buttons. */
+  --shadow-xs: 0 1px 2px rgba(45, 42, 34, .04);
+  --shadow-sm: 0 1px 3px rgba(45, 42, 34, .06), 0 1px 2px rgba(45, 42, 34, .04);
+  --shadow-md: 0 2px 6px rgba(45, 42, 34, .06), 0 4px 12px rgba(45, 42, 34, .05);
+  --shadow-lg: 0 4px 12px rgba(45, 42, 34, .08), 0 12px 28px rgba(45, 42, 34, .07);
+  --shadow-focus: 0 0 0 3px rgba(15, 132, 89, .16);
+  --nav-w: 230px; --radius: 10px; --radius-lg: 14px;
   --font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
 }
@@ -62,7 +76,13 @@
   --green-bg: #102D20; --green-border: #14795E; --green-text: #B5F0DD; --green-badge: #33C394;
   --blue-bg: #0B1C2C; --blue-border: #203A56; --blue-text: #5FB3FF;
   --metric-bg: #171B24;
-  --teal-50: #0E3A2B; --teal-100: #124B38;
+  --teal-50: #0E3A2B; --teal-100: #124B38; --teal-700: #199C71; --bg-muted: #1D2230;
+  /* Dark elevation — deeper, cooler shadows */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, .3);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, .35), 0 1px 2px rgba(0, 0, 0, .3);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, .4);
+  --shadow-lg: 0 8px 28px rgba(0, 0, 0, .5);
+  --shadow-focus: 0 0 0 3px rgba(51, 195, 148, .22);
 }
 
 body { font-family: var(--font); background: var(--bg-page); color: var(--text-primary); font-size: 14px; line-height: 1.5; transition: background .2s, color .2s; }
@@ -83,7 +103,7 @@ select option { background-color: var(--bg-surface); color: var(--text-primary);
 .app.hidden { display: none; }
 .sidebar { width: var(--nav-w); background: var(--bg-sidebar); border-right: 1px solid rgba(214,223,218,.82); display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto; transition: transform .25s; z-index: 100; }
 .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-.topbar { min-height: 56px; padding: 12px 16px; background: rgba(255,255,255,.86); backdrop-filter: saturate(180%) blur(14px); -webkit-backdrop-filter: saturate(180%) blur(14px); border-bottom: 1px solid rgba(214,223,218,.72); box-shadow: 0 1px 18px rgba(16,24,20,.04); display: flex; align-items: center; gap: 10px; flex-shrink: 0; position: sticky; top: 0; z-index: 50; }
+.topbar { min-height: 56px; padding: 12px 16px; background: rgba(246,245,242,.82); backdrop-filter: saturate(180%) blur(14px); -webkit-backdrop-filter: saturate(180%) blur(14px); border-bottom: 1px solid var(--border); box-shadow: var(--shadow-xs); display: flex; align-items: center; gap: 10px; flex-shrink: 0; position: sticky; top: 0; z-index: 50; }
 [data-theme="dark"] .topbar { background: rgba(26,29,39,.72); box-shadow: none; border-bottom: 1px solid var(--border); }
 [data-theme="dark"] .sidebar { border-right-color: var(--border); }
 [data-theme="dark"] .logo-area { border-bottom-color: var(--border); }
@@ -92,6 +112,26 @@ select option { background-color: var(--bg-surface); color: var(--text-primary);
 
 /* ─── SIDEBAR ELEMENTS ─── */
 .logo-area { padding: 20px 16px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; gap: 10px; }
+.sidebar-collapse-btn { margin-left: auto; background: none; border: 1px solid transparent; color: var(--text-muted); cursor: pointer; width: 26px; height: 26px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; transition: background .14s ease, color .14s ease, border-color .14s ease; }
+.sidebar-collapse-btn:hover { background: var(--bg-hover); color: var(--text-primary); border-color: var(--border); }
+/* ─── COLLAPSED SIDEBAR (desktop icon rail) ─── */
+.sidebar { transition: width .22s ease, transform .25s ease; }
+.sidebar.collapsed { width: 62px; }
+.sidebar.collapsed .logo-text,
+.sidebar.collapsed .client-chip > div:last-child,
+.sidebar.collapsed .nav-group-label,
+.sidebar.collapsed .nav-item > span,
+.sidebar.collapsed .nav-badge,
+.sidebar.collapsed .sidebar-help-copy,
+.sidebar.collapsed .sidebar-help-card > i { display: none; }
+.sidebar.collapsed .logo-area { padding: 18px 0 14px; justify-content: center; }
+.sidebar.collapsed .sidebar-collapse-btn { position: absolute; top: 14px; right: 8px; margin: 0; }
+.sidebar.collapsed .logo-icon { margin: 0 auto; }
+.sidebar.collapsed .client-chip { margin: 10px 8px; padding: 8px; display: flex; justify-content: center; }
+.sidebar.collapsed .nav-group-card { padding: 4px 0; margin: 0 8px 8px; }
+.sidebar.collapsed .nav-item { justify-content: center; padding: 9px 0; margin: 2px 4px; width: calc(100% - 8px); gap: 0; }
+.sidebar.collapsed .sidebar-help-card { justify-content: center; padding: 10px 0; }
+.sidebar.collapsed .nav-item > i { font-size: 18px; }
 .logo-icon { width: 36px; height: 36px; border-radius: 0; background: transparent; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 25px; border: 0; filter: saturate(1.25) contrast(1.08); }
 [data-theme="dark"] .logo-icon { background: transparent; border-color: transparent; }
 .topbar-logo { filter: saturate(1.25) contrast(1.08); }
@@ -111,10 +151,10 @@ select option { background-color: var(--bg-surface); color: var(--text-primary);
 .nav-group-label { padding: 10px 13px 3px; font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .07em; }
 .nav-item { display: flex; align-items: center; gap: 9px; padding: 8px 13px; margin: 1px 5px; border-radius: 6px; cursor: pointer; font-size: 13px; color: var(--text-secondary); border: none; background: none; width: calc(100% - 10px); text-align: left; transition: all .12s; }
 .nav-item:hover { background: var(--bg-hover); color: var(--text-primary); }
-.nav-item.active { background: var(--bg-active); color: var(--text-active); font-weight: 700; }
+.nav-item.active { background: var(--bg-active); color: var(--text-active); font-weight: 700; box-shadow: inset 2px 0 0 var(--teal-600); }
 .nav-badge { margin-left: auto; font-size: 10px; padding: 2px 6px; border-radius: 10px; background: var(--red-bg); color: var(--red-badge); font-weight: 700; }
 .nav-badge.ok { background: var(--green-bg); color: var(--green-badge); }
-.nav-group-card { background: #F0F7F4; border: 1px solid rgba(214,223,218,.86); border-radius: var(--radius); padding: 4px; margin: 0 5px 10px; }
+.nav-group-card { background: var(--bg-hover); border: 1px solid var(--border); border-radius: var(--radius); padding: 4px; margin: 0 5px 10px; }
 [data-theme="dark"] .nav-group-card { background: var(--bg-page); border-color: transparent; }
 .sidebar-help-card { margin: 0 10px 14px; padding: 10px 11px; border: 1px solid rgba(214,223,218,.86); border-radius: 12px; background: rgba(255,255,255,.72); color: var(--text-primary); display: flex; align-items: center; gap: 10px; cursor: pointer; text-align: left; transition: border-color .16s ease, background .16s ease, transform .16s ease, box-shadow .16s ease; box-shadow: 0 1px 2px rgba(16,24,20,.035); }
 .sidebar-help-card:hover { background: #ffffff; border-color: rgba(17,135,93,.24); transform: translateY(-1px); box-shadow: 0 8px 22px rgba(16,24,20,.055); }
@@ -374,7 +414,8 @@ i.ti-circle-x { color: var(--red-text); }
   background: rgba(15,17,23,.58); padding: 18px;
 }
 .feedback-modal.open { display: flex; }
-.feedback-card { width: min(480px, 100%); background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: 0 18px 55px rgba(0,0,0,.22); overflow: hidden; }
+.feedback-card { width: min(480px, 100%); background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); overflow: hidden; animation: nutrese-modal-in .18s ease; }
+@keyframes nutrese-modal-in { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
 .feedback-card-header { padding: 16px 18px; border-bottom: 1px solid var(--border); display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
 .feedback-card-title { font-size: 16px; font-weight: 800; color: var(--text-primary); line-height:1.3; }
 .feedback-card-sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
@@ -392,30 +433,32 @@ i.ti-circle-x { color: var(--red-text); }
 .user-chip button:hover { background: var(--bg-hover); }
 
 /* ─── BUTTONS ─── */
-.btn { padding: 8px 16px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg-surface); color: var(--text-secondary); cursor: pointer; font-size: 13px; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; transition: all .12s; }
-.btn:hover { background: var(--bg-hover); color: var(--text-primary); }
-.btn:active { background: var(--bg-active); transform: scale(.96); transition: all .05s; }
-.btn.primary { background: var(--teal-600); color: #fff; border-color: var(--teal-600); }
-.btn.primary:hover { background: var(--teal-800); }
-.btn.primary:active { background: var(--teal-800); transform: scale(.96); transition: all .05s; filter: brightness(.9); }
+.btn { padding: 8px 16px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg-surface); color: var(--text-secondary); cursor: pointer; font-size: 13px; font-weight: 550; display: inline-flex; align-items: center; gap: 6px; transition: background .14s ease, color .14s ease, border-color .14s ease, box-shadow .14s ease, transform .1s ease; box-shadow: var(--shadow-xs); }
+.btn:hover { background: var(--bg-hover); color: var(--text-primary); border-color: var(--border-strong); box-shadow: var(--shadow-sm); }
+.btn:active { background: var(--bg-active); transform: translateY(.5px) scale(.985); transition: all .05s; box-shadow: var(--shadow-xs); }
+.btn:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+.btn.primary { background: var(--teal-600); color: #fff; border-color: var(--teal-600); box-shadow: 0 1px 2px rgba(11,107,72,.24), 0 2px 8px rgba(11,107,72,.16); }
+.btn.primary:hover { background: var(--teal-800); border-color: var(--teal-800); box-shadow: 0 2px 5px rgba(11,107,72,.28), 0 6px 16px rgba(11,107,72,.2); transform: translateY(-.5px); }
+.btn.primary:active { background: var(--teal-800); transform: translateY(.5px) scale(.985); transition: all .05s; filter: brightness(.96); box-shadow: 0 1px 2px rgba(11,107,72,.24); }
+.btn.primary:focus-visible { outline: none; box-shadow: var(--shadow-focus), 0 2px 8px rgba(11,107,72,.16); }
 
 /* ─── PAGES / CARDS ─── */
 .page { display: none; }
 .page.active { display: block; }
-.card { background: var(--bg-surface); border: 1px solid rgba(201,217,210,.76); box-shadow: 0 1px 2px rgba(16,24,20,.04), 0 14px 36px rgba(16,24,20,.06); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 14px; }
+.card { background: var(--bg-surface); border: 1px solid var(--border); box-shadow: var(--shadow-sm); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 14px; transition: box-shadow .18s ease; }
 [data-theme="dark"] .card { box-shadow: none; border: 1px solid var(--border); }
-.card-header { padding: 11px 16px 9px; border-bottom: none; display: flex; align-items: center; gap: 10px; background: var(--bg-surface); }
-.card-title { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+.card-header { padding: 13px 18px 10px; border-bottom: none; display: flex; align-items: center; gap: 10px; background: var(--bg-surface); }
+.card-title { font-size: 13px; font-weight: 700; color: var(--text-primary); letter-spacing: -.01em; }
 .card-action { margin-left: auto; font-size: 12px; color: var(--text-link); cursor: pointer; font-weight: 600; white-space: nowrap; }
-.card-body { padding: 14px 16px; }
+.card-body { padding: 15px 18px; }
 
 /* ─── METRICS ─── */
 .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
 
 /* ─── DASHBOARD BENTO GRID ─── */
 .bento-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 12px; margin-bottom: 14px; }
-.bento-tile { background: var(--bg-surface); border-radius: 16px; padding: 20px; border: 1px solid rgba(214,223,218,.68); box-shadow: 0 1px 2px rgba(16,24,20,.04), 0 8px 24px rgba(16,24,20,.045); transition: box-shadow .18s ease, transform .18s ease; }
-#page-dashboard .bento-tile:hover { box-shadow: 0 4px 12px rgba(0,0,0,.08), 0 2px 4px rgba(0,0,0,.05); transform: translateY(-1px); }
+.bento-tile { background: var(--bg-surface); border-radius: 16px; padding: 20px; border: 1px solid var(--border); box-shadow: var(--shadow-sm); transition: box-shadow .18s ease, transform .18s ease; }
+#page-dashboard .bento-tile:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
 [data-theme="dark"] .bento-tile { box-shadow: none; border: 1px solid var(--border); }
 .bento-span-2 { grid-column: 1 / -1; }
 .bento-row-2 { grid-row: span 2; }
@@ -431,9 +474,10 @@ i.ti-circle-x { color: var(--red-text); }
 .bento-tile-head { font-size: 13px; font-weight: 600; color: var(--text-secondary); display: flex; align-items: center; gap: 6px; margin-bottom: 12px; }
 .bento-tile-head .card-action { margin-left: auto; font-weight: 500; }
 .metric { background: var(--bg-page); border: none; border-radius: var(--radius-lg); padding: 12px 14px; }
-#page-dashboard .metrics-grid .metric { background: var(--bg-surface); border: 1px solid rgba(212,221,209,.6); border-radius: 16px; padding: 16px 18px; box-shadow: 0 16px 44px rgba(32,45,35,.05), 0 1px 2px rgba(32,45,35,.03); transition: box-shadow .18s ease, transform .18s ease; }
+#page-dashboard .metrics-grid .metric { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 16px; padding: 16px 18px; box-shadow: var(--shadow-sm); transition: box-shadow .18s ease, transform .18s ease; }
+#page-dashboard .metrics-grid .metric:hover { box-shadow: var(--shadow-md); }
 #page-dashboard .metrics-grid { margin-top: 4px; }
-#page-profile .metrics-grid .metric { background: var(--bg-surface); border: 1px solid rgba(212,221,209,.6); border-radius: 16px; padding: 16px 18px; box-shadow: 0 16px 44px rgba(32,45,35,.05), 0 1px 2px rgba(32,45,35,.03); }
+#page-profile .metrics-grid .metric { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 16px; padding: 16px 18px; box-shadow: var(--shadow-sm); }
 #page-profile .card-body { padding:18px 18px 20px; }
 #page-profile .section-label { margin:20px 0 10px; padding-top:14px; border-top:1px solid rgba(212,221,209,.55); }
 #page-profile .section-label:first-child { margin-top:0; padding-top:0; border-top:0; }
@@ -542,12 +586,14 @@ i.ti-circle-x { color: var(--red-text); }
 .form-field.full { grid-column: span 2; }
 .form-field label { font-size: 13px; color: var(--text-primary); font-weight: 700; }
 .form-field input, .form-field select, .form-field textarea {
-  padding: 9px 11px; border: 1px solid var(--border-strong); border-radius: 6px;
+  padding: 10px 12px; border: 1px solid var(--border-strong); border-radius: 8px;
   background: var(--bg-input); color: var(--text-primary);
   -webkit-appearance: none; appearance: none;
+  transition: border-color .14s ease, box-shadow .14s ease, background .14s ease;
 }
+.form-field input:hover, .form-field select:hover, .form-field textarea:hover { border-color: var(--text-muted); }
 .form-field select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%236C757D' d='M6 8L0 0h12z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px; }
-.form-field input:focus, .form-field select:focus, .form-field textarea:focus { outline: none; border-color: var(--teal-400); box-shadow: 0 0 0 3px rgba(29,158,117,.15); }
+.form-field input:focus, .form-field select:focus, .form-field textarea:focus { outline: none; border-color: var(--teal-400); box-shadow: var(--shadow-focus); }
 .form-field input.weight-suggested::placeholder { color: var(--text-muted); opacity: .75; font-style: italic; }
 .form-field input[type="checkbox"] {
   -webkit-appearance: checkbox; appearance: checkbox;
@@ -583,8 +629,8 @@ html[data-theme="dark"] #condition-guidance a {
 .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 .lab-category-row td { padding: 14px 8px 6px; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; border-bottom: 1px solid var(--border); background: transparent; }
 table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 400px; }
-th { text-align: left; padding: 8px 10px; background: var(--bg-page); border-bottom: 2px solid var(--border-strong); font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; }
-td { padding: 9px 10px; border-bottom: 1px solid var(--border); color: var(--text-primary); }
+th { text-align: left; padding: 10px 12px; background: var(--bg-page); border-bottom: 1px solid var(--border-strong); font-size: 11px; font-weight: 650; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; }
+td { padding: 10px 12px; border-bottom: 1px solid var(--border); color: var(--text-primary); transition: background .12s ease; }
 tr:last-child td { border-bottom: none; }
 tr:hover td { background: var(--bg-hover); }
 .week-summary-table tr:hover td { background: inherit !important; }
@@ -749,12 +795,20 @@ html[data-theme="dark"] .week-summary-table td:last-child {
 #page-clients .clients-table-modern tbody td { border-top:1px solid rgba(212,221,209,.65); border-bottom:1px solid rgba(212,221,209,.65); padding:12px; vertical-align:middle; }
 #page-clients .clients-table-modern tbody td:first-child { border-left:1px solid rgba(212,221,209,.65); border-radius:14px 0 0 14px; }
 #page-clients .clients-table-modern tbody td:last-child { border-right:1px solid rgba(212,221,209,.65); border-radius:0 14px 14px 0; }
-#page-clients .client-empty-state { padding:42px 18px; border:1px dashed rgba(15,118,110,.22); border-radius:16px; background:linear-gradient(145deg, rgba(15,118,110,.055), rgba(255,255,255,.65)); text-align:center; }
+/* ─── LOADING SPINNER & STATES ─── */
+.nutrese-spinner { display:inline-block; width:18px; height:18px; border:2px solid var(--border-strong); border-top-color: var(--teal-600); border-radius:50%; animation: nutrese-spin .7s linear infinite; vertical-align:middle; }
+@keyframes nutrese-spin { to { transform: rotate(360deg); } }
+.nutrese-loading { display:flex; align-items:center; justify-content:center; gap:10px; padding:32px 24px; color:var(--text-muted); font-size:13px; }
+.nutrese-skeleton { background: linear-gradient(90deg, var(--bg-hover) 25%, var(--bg-active) 37%, var(--bg-hover) 63%); background-size: 400% 100%; animation: nutrese-shimmer 1.4s ease infinite; border-radius: 8px; }
+@keyframes nutrese-shimmer { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
+#page-clients .client-empty-state { padding:42px 18px; border:1px dashed var(--teal-100); border-radius:16px; background:linear-gradient(145deg, var(--teal-50), var(--bg-surface)); text-align:center; }
 #page-clients .client-empty-state i { font-size:28px; color:var(--teal-700); }
 #page-clients .client-empty-state strong { display:block; margin-top:8px; font-size:17px; color:var(--text-primary); }
 #page-clients .client-empty-state span { display:block; margin:6px auto 0; max-width:480px; color:var(--text-secondary); font-size:13px; line-height:1.5; }
 [data-theme="dark"] #page-clients .clients-table-modern tbody tr { box-shadow:none; }
 [data-theme="dark"] #page-clients .clients-table-modern tbody td { border-color:var(--border); }
+#page-clients .client-delete-btn { background:transparent; border:1px solid var(--border); color:var(--text-muted); }
+#page-clients .client-delete-btn:hover { border-color:var(--red-text); color:var(--red-text); background:var(--red-bg); }
 [data-theme="dark"] #page-clients .client-empty-state { background:rgba(255,255,255,.025); border-color:var(--border); }
 @media (max-width: 720px) { #page-clients .clients-toolbar { grid-template-columns:1fr; } #page-clients .clients-actions { justify-content:flex-start; } }
 .client-cards-mobile { display:none; }
@@ -998,11 +1052,11 @@ html[data-theme="dark"] .week-summary-table td:last-child {
      colgroup widths are set inline above; reinforced here for print since
      some print engines apply table sizing slightly differently than screen. */
   .report-week-table { table-layout: fixed !important; width: 100% !important; font-size: 14px !important; line-height: 1.34 !important; }
-  .report-week-full .report-week-table { height: 190mm !important; min-height: 190mm !important; }
+  .report-week-full .report-week-table { height: auto !important; min-height: 0 !important; }
   .report-week-partial .report-week-table { height: auto !important; }
   .report-week-table td, .report-week-table th { overflow-wrap: break-word !important; word-break: normal !important; white-space: normal !important; vertical-align: top !important; }
   .report-week-table thead th { height: 8mm !important; }
-  .report-week-full .report-week-table tbody tr:not(:last-child) { height: 25.5mm !important; }
+  .report-week-full .report-week-table tbody tr:not(:last-child) { height: 23mm !important; }
   .report-week-partial .report-week-table tbody tr:not(:last-child) { height: auto !important; }
   .report-week-table tbody tr:last-child { height: 10mm !important; }
   .report-week-table td:last-child, .report-week-table th:last-child { white-space: nowrap !important; word-break: normal !important; }
@@ -1038,11 +1092,15 @@ html[data-theme="dark"] .week-summary-table td:last-child {
     background:#fff !important;
     color:#111 !important;
   }
-  .report-week-full { min-height: 200mm !important; }
+  .report-week-full { min-height: auto !important; }
   .report-week-partial { min-height: auto !important; }
   .report-page-one.with-week { break-after: page; page-break-after: always; }
   .report-page-one .report-section-compact { break-inside: avoid; page-break-inside: avoid; }
   .report-page-one { page: auto; }
+  /* The 7-day week plan needs landscape width to fit its columns on one
+     page; apply the landscape named page to that variant specifically.
+     (Non-week reports remain on the default portrait page.) */
+  .report-page-one.with-week { page: landscape-page; }
   .report-header-summary { display: grid !important; grid-template-columns: repeat(4, 1fr) !important; gap: 6px !important; margin: 0 0 10px !important; }
   .report-clinical-box { background: #fff8e1 !important; color: #1f2937 !important; border: 1px solid #f3d27a !important; border-left: 4px solid #d97706 !important; }
   .report-clinical-box * { color: #1f2937 !important; }
@@ -1303,8 +1361,8 @@ table th,
 
 /* Modern 7-day day editor cards: visual-only layer, keeps existing handlers/calculation intact. */
 .seven-day-card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:18px;align-items:start}
-.seven-day-card{position:relative;overflow:hidden;border:1px solid color-mix(in srgb,var(--border) 70%,transparent);border-radius:18px;background:linear-gradient(180deg,color-mix(in srgb,var(--bg-surface) 98%,white 2%),var(--bg-surface));padding:16px;display:flex;flex-direction:column;gap:12px;box-shadow:0 10px 26px rgba(0,0,0,.10);min-height:0;transition:border-color .18s ease,box-shadow .18s ease,transform .18s ease}
-.seven-day-card:hover{border-color:color-mix(in srgb,var(--teal-600) 34%,var(--border));box-shadow:0 14px 32px rgba(0,0,0,.14);transform:translateY(-1px)}
+.seven-day-card{position:relative;overflow:hidden;border:1px solid var(--border);border-radius:18px;background:var(--bg-surface);padding:16px;display:flex;flex-direction:column;gap:12px;box-shadow:var(--shadow-sm);min-height:0;transition:border-color .18s ease,box-shadow .18s ease,transform .18s ease}
+.seven-day-card:hover{border-color:color-mix(in srgb,var(--teal-600) 34%,var(--border));box-shadow:var(--shadow-md);transform:translateY(-1px)}
 .seven-day-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
 .seven-day-slot-label{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:900;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em}
 .seven-day-meal-title{font-size:18px;font-weight:900;color:var(--text-primary);margin-top:5px;line-height:1.18}
@@ -1630,6 +1688,7 @@ table th,
   <div class="logo-area">
     <div class="logo-icon"><img src="data:image/png;base64,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" alt="Nutrese" style="width:28px;height:auto;display:block"></div>
     <div class="logo-text">Nutrese <span>Professional Nutrition Platform</span></div>
+    <button class="sidebar-collapse-btn" onclick="toggleSidebarCollapse()" title="Collapse sidebar" aria-label="Collapse sidebar"><i class="ti ti-layout-sidebar-left-collapse" aria-hidden="true"></i></button>
   </div>
   <div class="client-chip" style="display:flex;align-items:center;gap:10px">
     <div id="sidebar-client-avatar" style="flex-shrink:0"></div>
@@ -1675,6 +1734,7 @@ table th,
       <span class="no-print" style="font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:6px;padding:4px 10px" title="Opened-on date — this is today's date, whenever you happen to open this file. Build fingerprint is computed fresh from this file's exact content, so identical content always produces an identical fingerprint."><i class="ti ti-info-circle" aria-hidden="true"></i> <span id="opened-date-topbar">—</span><span style="opacity:.5">·</span><span id="build-date-topbar" style="font-family:monospace">—</span></span>
       <span class="no-print" id="user-email" style="display:none"></span>
       <span class="no-print autosave-status" id="autosave-status"></span>
+      <button class="btn primary no-print" onclick="saveCurrentClient()" id="global-save-client-btn" title="Save this client to My Clients" style="display:none"><i class="ti ti-device-floppy" aria-hidden="true"></i> <span class="i18n" data-en="Save Client" data-gr="Αποθήκευση">Save Client</span></button>
       <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn" title="Toggle dark mode"><i class="ti ti-moon" aria-hidden="true"></i> Dark</button>
       <button class="btn" onclick="toggleLanguage()" id="lang-btn" title="Switch language">GR</button>
     </div>
@@ -2160,17 +2220,8 @@ table th,
   <!-- REPORT -->
   <div class="page" id="page-report">
     <div class="card no-print" style="border:2px solid var(--teal-600)">
-      <div class="card-header" style="background:var(--teal-50);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+      <div class="card-header" style="background:var(--teal-50)">
         <span class="card-title" id="report-options-title"><i class="ti ti-settings" aria-hidden="true"></i> Report Options — Choose what to print</span>
-        <div style="display:flex;align-items:center;gap:6px" title="Preview only — does not affect what gets printed or exported, which is always a fixed white document.">
-          <span style="font-size:11px;color:var(--text-muted);font-weight:700">
-            <span class="i18n" data-en="Preview:" data-gr="Προεπισκόπηση:">Preview:</span>
-          </span>
-          <div class="view-toggle" aria-label="Report preview theme">
-            <button id="report-preview-light-btn" class="active" onclick="setReportPreviewTheme('light')"><i class="ti ti-sun" aria-hidden="true"></i> <span class="i18n" data-en="Light" data-gr="Φωτεινό">Light</span></button>
-            <button id="report-preview-dark-btn" onclick="setReportPreviewTheme('dark')"><i class="ti ti-moon" aria-hidden="true"></i> <span class="i18n" data-en="Dark" data-gr="Σκούρο">Dark</span></button>
-          </div>
-        </div>
       </div>
       <div class="card-body">
         <div style="display:grid;grid-template-columns:1fr 260px;gap:16px;align-items:start">
@@ -2203,7 +2254,16 @@ table th,
     </div>
     <div id="micro-quality-summary" style="margin-bottom:14px"></div>
     <div class="card">
-      <div class="card-header"><span class="card-title" id="report-print-title"><i class="ti ti-file-text" aria-hidden="true"></i> Κλινική Αναφορά Διατροφής</span></div>
+      <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+        <span class="card-title" id="report-print-title"><i class="ti ti-file-text" aria-hidden="true"></i> Κλινική Αναφορά Διατροφής</span>
+        <div class="no-print" style="display:flex;align-items:center;gap:6px" title="Changes only how this on-screen preview looks — the printed/PDF report is always a clean white document.">
+          <span style="font-size:11px;color:var(--text-muted);font-weight:700"><span class="i18n" data-en="Preview theme:" data-gr="Θέμα προεπισκόπησης:">Preview theme:</span></span>
+          <div class="view-toggle" aria-label="Report preview theme">
+            <button id="report-preview-light-btn" class="active" onclick="setReportPreviewTheme('light')"><i class="ti ti-sun" aria-hidden="true"></i> <span class="i18n" data-en="Light" data-gr="Φωτεινό">Light</span></button>
+            <button id="report-preview-dark-btn" onclick="setReportPreviewTheme('dark')"><i class="ti ti-moon" aria-hidden="true"></i> <span class="i18n" data-en="Dark" data-gr="Σκούρο">Dark</span></button>
+          </div>
+        </div>
+      </div>
       <div class="card-body" id="report-body"><div style="color:var(--gray-400)">Navigate here after filling client profile to generate report.</div></div>
     </div>
   </div>
@@ -2740,6 +2800,257 @@ const FOOD_DATABASE = {
     exchange: { category: 'protein', grams_per_exchange: 30, note: 'Higher-fat fish; still classified as protein exchange, omega-3-rich intrinsic fat' },
     version: FOOD_DB_VERSION
   },
+  // ---- Batch 5 additions ----
+  chickpeas_cooked: {
+    food_id: 'chickpeas_cooked', name: { en: 'Chickpeas, cooked', gr: 'Ρεβίθια, βρασμένα' },
+    state: 'cooked', fdc_id: 173757, source: 'USDA FoodData Central (SR Legacy)',
+    kcal100: 164, protein100: 8.9, carbs100: 27.4, fat100: 2.6, fiber100: 7.6, fat_role: 'intrinsic',
+    exchange: { category: 'starch', grams_per_exchange: 85, note: 'ADA classifies legumes under starch; 1 exchange ≈ 1/2 cup (~85g) cooked chickpeas' },
+    version: FOOD_DB_VERSION
+  },
+  tofu_firm: {
+    food_id: 'tofu_firm', name: { en: 'Tofu, firm', gr: 'Τόφου, σκληρό' },
+    state: 'cooked', fdc_id: 172475, source: 'USDA FoodData Central (SR Legacy)',
+    kcal100: 144, protein100: 17.3, carbs100: 2.8, fat100: 8.7, fiber100: 2.3, fat_role: 'intrinsic',
+    exchange: { category: 'protein', grams_per_exchange: 60, note: 'Plant protein; 1 medium-fat protein exchange ≈ 1/2 cup (~60g) firm tofu' },
+    version: FOOD_DB_VERSION
+  },
+  quinoa_cooked: {
+    food_id: 'quinoa_cooked', name: { en: 'Quinoa, cooked', gr: 'Κινόα, βρασμένη' },
+    state: 'cooked', fdc_id: 168917, source: 'USDA FoodData Central (SR Legacy)',
+    kcal100: 120, protein100: 4.4, carbs100: 21.3, fat100: 1.9, fiber100: 2.8, fat_role: 'intrinsic',
+    exchange: { category: 'starch', grams_per_exchange: 75, note: '1 starch exchange ≈ 1/2 cup (~75g) cooked quinoa' },
+    version: FOOD_DB_VERSION
+  },
+  cannellini_beans_cooked: {
+    food_id: 'cannellini_beans_cooked', name: { en: 'White (cannellini) beans, cooked', gr: 'Φασόλια (κανελίνι), βρασμένα' },
+    state: 'cooked', fdc_id: 173745, source: 'USDA FoodData Central (SR Legacy)',
+    kcal100: 139, protein100: 9.7, carbs100: 25.1, fat100: 0.5, fiber100: 6.3, fat_role: 'intrinsic',
+    exchange: { category: 'starch', grams_per_exchange: 90, note: 'ADA classifies legumes under starch; 1 exchange ≈ 1/2 cup (~90g) cooked beans' },
+    version: FOOD_DB_VERSION
+  },
+  spinach_cooked: {
+    food_id: 'spinach_cooked', name: { en: 'Spinach, cooked', gr: 'Σπανάκι, βρασμένο' },
+    state: 'cooked', fdc_id: 168463, source: 'USDA FoodData Central (SR Legacy)',
+    kcal100: 23, protein100: 3.0, carbs100: 3.8, fat100: 0.3, fiber100: 2.4, fat_role: 'intrinsic',
+    exchange: { category: 'veg', grams_per_exchange: 90, note: '1 veg exchange ≈ 1/2 cup (~90g) cooked spinach (denser than raw)' },
+    version: FOOD_DB_VERSION
+  },
+  feta_cheese: {
+    food_id: 'feta_cheese', name: { en: 'Feta cheese', gr: 'Φέτα' },
+    state: 'n/a', fdc_id: 173420, source: 'USDA FoodData Central (SR Legacy)',
+    kcal100: 264, protein100: 14.2, carbs100: 4.1, fat100: 21.3, fat_role: 'intrinsic',
+    exchange: { category: 'protein', grams_per_exchange: 30, note: 'High-fat protein exchange, consistent with cheese classification' },
+    version: FOOD_DB_VERSION
+  },
+  onion_cooked: {
+    food_id: 'onion_cooked', name: { en: 'Onion, sautéed', gr: 'Κρεμμύδι, σοταρισμένο' },
+    state: 'cooked', fdc_id: 170000, source: 'USDA FoodData Central (SR Legacy)',
+    kcal100: 44, protein100: 1.4, carbs100: 10.2, fat100: 0.2, fiber100: 1.4, fat_role: 'intrinsic',
+    exchange: { category: 'free', grams_per_exchange: null, note: 'Aromatic base; treated as free food at typical recipe quantities' },
+    version: FOOD_DB_VERSION
+  },
+  bell_pepper_raw: {
+    food_id: 'bell_pepper_raw', name: { en: 'Bell pepper (for stuffing)', gr: 'Πιπεριά (για γεμιστά)' },
+    state: 'raw', fdc_id: 170108, source: 'USDA FoodData Central (SR Legacy)',
+    kcal100: 26, protein100: 1.0, carbs100: 6.0, fat100: 0.3, fiber100: 2.1, fat_role: 'intrinsic',
+    exchange: { category: 'veg', grams_per_exchange: 90, note: '1 veg exchange ≈ 1 medium pepper shell' },
+    version: FOOD_DB_VERSION
+  },
+  tomato_raw: {
+    food_id: 'tomato_raw', name: { en: 'Tomato (for stuffing)', gr: 'Ντομάτα (για γεμιστά)' },
+    state: 'raw', fdc_id: 170457, source: 'USDA FoodData Central (SR Legacy)',
+    kcal100: 18, protein100: 0.9, carbs100: 3.9, fat100: 0.2, fiber100: 1.2, fat_role: 'intrinsic',
+    exchange: { category: 'veg', grams_per_exchange: 90, note: '1 veg exchange ≈ 1 medium tomato shell' },
+    version: FOOD_DB_VERSION
+  },
+  // ---- Batch 6 additions ----
+  pork_souvlaki_cooked: {
+    food_id: 'pork_souvlaki_cooked', name: { en: 'Pork souvlaki, grilled', gr: 'Χοιρινό σουβλάκι, ψητό' },
+    state: 'cooked', fdc_id: 168333, source: 'USDA FoodData Central (SR Legacy) — lean pork, grilled',
+    kcal100: 168, protein100: 27.0, carbs100: 0, fat100: 6.5, fat_role: 'intrinsic',
+    exchange: { category: 'protein', grams_per_exchange: 30, note: 'Lean-protein exchange; souvlaki cut carries a little more fat than loin' },
+    version: FOOD_DB_VERSION
+  },
+  black_eyed_beans_cooked: {
+    food_id: 'black_eyed_beans_cooked', name: { en: 'Black-eyed beans (louvi), cooked', gr: 'Λουβί (μαυρομάτικα), βρασμένα' },
+    state: 'cooked', fdc_id: 173735, source: 'USDA FoodData Central (SR Legacy)',
+    kcal100: 116, protein100: 7.7, carbs100: 20.8, fat100: 0.5, fiber100: 6.5, fat_role: 'intrinsic',
+    exchange: { category: 'starch', grams_per_exchange: 90, note: 'ADA classifies legumes under starch; 1 exchange ≈ 1/2 cup (~90g) cooked' },
+    version: FOOD_DB_VERSION
+  },
+  peas_cooked: {
+    food_id: 'peas_cooked', name: { en: 'Green peas (arakas), braised', gr: 'Αρακάς, λαδερός' },
+    state: 'cooked', fdc_id: 170420, source: 'USDA FoodData Central (SR Legacy) — green peas, boiled',
+    kcal100: 84, protein100: 5.4, carbs100: 15.6, fat100: 0.2, fiber100: 5.5, fat_role: 'intrinsic',
+    exchange: { category: 'starch', grams_per_exchange: 80, note: 'Starchy vegetable; ADA lists peas under starch. 1 exchange ≈ 1/2 cup (~80g)' },
+    version: FOOD_DB_VERSION
+  },
+  trachanas_soup: {
+    food_id: 'trachanas_soup', name: { en: 'Trahanas soup (prepared)', gr: 'Τραχανάς σούπα (έτοιμη)' },
+    state: 'cooked', fdc_id: null, source: 'Composite estimate — Cypriot fermented cracked-wheat/yogurt soup, prepared (SPOT-VERIFY before production; recipe-dependent)',
+    kcal100: 65, protein100: 3.0, carbs100: 11.0, fat100: 0.9, fiber100: 1.0, fat_role: 'intrinsic',
+    exchange: { category: 'starch', grams_per_exchange: 120, note: 'Wheat-based soup; 1 starch exchange ≈ ~120g prepared soup' },
+    version: FOOD_DB_VERSION
+  },
+  // ---- Batch 7 additions ----
+  chicken_mince_cooked: {
+    food_id: 'chicken_mince_cooked', name: { en: 'Chicken mince, cooked', gr: 'Κιμάς κοτόπουλου, μαγειρεμένος' },
+    state: 'cooked', fdc_id: 171478, source: 'USDA FoodData Central (SR Legacy) — ground chicken, cooked',
+    kcal100: 189, protein100: 27.0, carbs100: 0, fat100: 8.7, fat_role: 'intrinsic',
+    exchange: { category: 'protein', grams_per_exchange: 30, note: 'Lean/medium-fat protein exchange; leaner than beef mince but carries some intrinsic fat' },
+    version: FOOD_DB_VERSION
+  },
+  // ---- Batch 8 additions (breakfast catalogue) ----
+  milk_lowfat: {
+    food_id: 'milk_lowfat', name: { en: 'Milk, 1.5% fat', gr: 'Γάλα 1,5%' },
+    state: 'n/a', fdc_id: 746782, source: 'USDA FoodData Central (SR Legacy) — reduced-fat milk',
+    kcal100: 50, protein100: 3.4, carbs100: 4.8, fat100: 1.5, fiber100: 0, fat_role: 'intrinsic',
+    exchange: { category: 'dairy', grams_per_exchange: 240, note: '1 dairy exchange ≈ 1 cup (~240g) milk' },
+    version: FOOD_DB_VERSION
+  },
+  plant_milk_fortified: {
+    food_id: 'plant_milk_fortified', name: { en: 'Fortified plant milk (almond/soy)', gr: 'Εμπλουτισμένο φυτικό γάλα (αμύγδαλο/σόγια)' },
+    state: 'n/a', fdc_id: 174832, source: 'USDA FoodData Central (SR Legacy) — fortified soy/almond milk, unsweetened',
+    kcal100: 43, protein100: 3.3, carbs100: 1.6, fat100: 1.8, fiber100: 0.4, fat_role: 'intrinsic',
+    exchange: { category: 'dairy', grams_per_exchange: 240, note: 'Plant-based dairy alternative; 1 exchange ≈ 1 cup (~240g)' },
+    version: FOOD_DB_VERSION
+  },
+  greek_yogurt_2pct: {
+    food_id: 'greek_yogurt_2pct', name: { en: 'Greek yogurt, 2%', gr: 'Γιαούρτι στραγγιστό 2%' },
+    state: 'n/a', fdc_id: 170903, source: 'USDA FoodData Central (SR Legacy) — Greek yogurt, lowfat',
+    kcal100: 73, protein100: 9.9, carbs100: 3.9, fat100: 1.9, fiber100: 0, fat_role: 'intrinsic',
+    exchange: { category: 'protein', grams_per_exchange: 60, note: 'Protein-rich dairy; counted as protein exchange (~60g per exchange for strained yogurt)' },
+    version: FOOD_DB_VERSION
+  },
+  soy_yogurt: {
+    food_id: 'soy_yogurt', name: { en: 'Soy yogurt', gr: 'Γιαούρτι σόγιας' },
+    state: 'n/a', fdc_id: 330512, source: 'Composite estimate — plain unsweetened soy yogurt (SPOT-VERIFY brand before production)',
+    kcal100: 66, protein100: 3.5, carbs100: 5.0, fat100: 3.0, fiber100: 0.5, fat_role: 'intrinsic',
+    exchange: { category: 'dairy', grams_per_exchange: 150, note: 'Plant-based yogurt; 1 exchange ≈ small pot (~150g)' },
+    version: FOOD_DB_VERSION
+  },
+  oats_dry: {
+    food_id: 'oats_dry', name: { en: 'Oats, rolled (dry)', gr: 'Βρώμη, νιφάδες (ξηρή)' },
+    state: 'raw', fdc_id: 173904, source: 'USDA FoodData Central (SR Legacy) — oats, dry',
+    kcal100: 379, protein100: 13.2, carbs100: 67.7, fat100: 6.5, fiber100: 10.1, fat_role: 'intrinsic',
+    exchange: { category: 'starch', grams_per_exchange: 20, note: '1 starch exchange ≈ 20g dry oats (~2.5 tbsp)' },
+    version: FOOD_DB_VERSION
+  },
+  walnuts: {
+    food_id: 'walnuts', name: { en: 'Walnuts', gr: 'Καρύδια' },
+    state: 'n/a', fdc_id: 170187, source: 'USDA FoodData Central (SR Legacy)',
+    kcal100: 654, protein100: 15.2, carbs100: 13.7, fat100: 65.2, fiber100: 6.7, fat_role: 'intrinsic',
+    exchange: { category: 'fat', grams_per_exchange: 8, note: 'Nut fat is intrinsic; ~8g (about 4 halves) per fat exchange' },
+    version: FOOD_DB_VERSION
+  },
+  honey: {
+    food_id: 'honey', name: { en: 'Honey', gr: 'Μέλι' },
+    state: 'n/a', fdc_id: 169640, source: 'USDA FoodData Central (SR Legacy)',
+    kcal100: 304, protein100: 0.3, carbs100: 82.4, fat100: 0, fiber100: 0.2, fat_role: 'intrinsic',
+    exchange: { category: 'starch', grams_per_exchange: 15, note: 'Concentrated sugar; ~15g (~1 tsp) counted as 1 starch/carb exchange' },
+    version: FOOD_DB_VERSION
+  },
+  tahini: {
+    food_id: 'tahini', name: { en: 'Tahini (sesame paste)', gr: 'Ταχίνι' },
+    state: 'n/a', fdc_id: 170188, source: 'USDA FoodData Central (SR Legacy)',
+    kcal100: 595, protein100: 17.0, carbs100: 21.2, fat100: 53.8, fiber100: 9.3, fat_role: 'intrinsic',
+    exchange: { category: 'fat', grams_per_exchange: 10, note: 'Seed paste; fat is intrinsic; ~10g per fat exchange' },
+    version: FOOD_DB_VERSION
+  },
+  banana: {
+    food_id: 'banana', name: { en: 'Banana', gr: 'Μπανάνα' },
+    state: 'raw', fdc_id: 173944, source: 'USDA FoodData Central (SR Legacy)',
+    kcal100: 89, protein100: 1.1, carbs100: 22.8, fat100: 0.3, fiber100: 2.6, fat_role: 'intrinsic',
+    exchange: { category: 'fruit', grams_per_exchange: 100, note: '1 fruit exchange ≈ 1 small banana (~100g)' },
+    version: FOOD_DB_VERSION
+  },
+  turkey_slice: {
+    food_id: 'turkey_slice', name: { en: 'Turkey breast, sliced (deli)', gr: 'Γαλοπούλα, φέτες' },
+    state: 'n/a', fdc_id: 171506, source: 'USDA FoodData Central (SR Legacy) — turkey breast, low-fat deli',
+    kcal100: 104, protein100: 17.0, carbs100: 2.0, fat100: 3.0, fiber100: 0, fat_role: 'intrinsic',
+    exchange: { category: 'protein', grams_per_exchange: 30, note: 'Lean protein exchange; 1 slice ≈ 30g' },
+    version: FOOD_DB_VERSION
+  },
+  cucumber_raw: {
+    food_id: 'cucumber_raw', name: { en: 'Cucumber', gr: 'Αγγούρι' },
+    state: 'raw', fdc_id: 168409, source: 'USDA FoodData Central (SR Legacy)',
+    kcal100: 15, protein100: 0.7, carbs100: 3.6, fat100: 0.1, fiber100: 0.5, fat_role: 'intrinsic',
+    exchange: { category: 'free', grams_per_exchange: null, note: 'Non-starchy; small side quantities treated as free' },
+    version: FOOD_DB_VERSION
+  },
+  cherry_tomatoes: {
+    food_id: 'cherry_tomatoes', name: { en: 'Cherry tomatoes', gr: 'Ντοματίνια' },
+    state: 'raw', fdc_id: null, source: 'Same USDA reference as raw tomato (fdc 170457); modeled as a distinct free-food side item',
+    kcal100: 18, protein100: 0.9, carbs100: 3.9, fat100: 0.2, fiber100: 1.2, fat_role: 'intrinsic',
+    exchange: { category: 'free', grams_per_exchange: null, note: 'Non-starchy side; small quantities treated as free' },
+    version: FOOD_DB_VERSION
+  },
+  // ---- Batch 9 additions ----
+  white_fish_grilled: {
+    food_id: 'white_fish_grilled', name: { en: 'White fish (sea bream/bass), grilled', gr: 'Λευκό ψάρι (τσιπούρα/λαβράκι), ψητό' },
+    state: 'cooked', fdc_id: 175176, source: 'USDA FoodData Central (SR Legacy) — sea bass, cooked',
+    kcal100: 124, protein100: 23.6, carbs100: 0, fat100: 2.6, fat_role: 'intrinsic',
+    exchange: { category: 'protein', grams_per_exchange: 35, note: 'Lean fish; slightly higher gram equivalent than meat per protein exchange' },
+    version: FOOD_DB_VERSION
+  },
+  // ---- Batch 10 additions (snack catalogue) ----
+  cottage_cheese: {
+    food_id: 'cottage_cheese', name: { en: 'Cottage cheese, low-fat', gr: 'Τυρί cottage, χαμηλών λιπαρών' },
+    state: 'n/a', fdc_id: 173417, source: 'USDA FoodData Central (SR Legacy) — cottage cheese, lowfat 2%',
+    kcal100: 84, protein100: 11.0, carbs100: 4.3, fat100: 2.3, fiber100: 0, fat_role: 'intrinsic',
+    exchange: { category: 'protein', grams_per_exchange: 60, note: 'Protein-rich fresh cheese; ~60g per protein exchange' },
+    version: FOOD_DB_VERSION
+  },
+  crackers_wholegrain: {
+    food_id: 'crackers_wholegrain', name: { en: 'Wholegrain crackers', gr: 'Κράκερ ολικής' },
+    state: 'n/a', fdc_id: 174954, source: 'USDA FoodData Central (SR Legacy) — whole-wheat crackers',
+    kcal100: 424, protein100: 10.0, carbs100: 68.0, fat100: 12.0, fiber100: 9.0, fat_role: 'intrinsic',
+    exchange: { category: 'starch', grams_per_exchange: 18, note: '1 starch exchange ≈ 4 crackers (~18g)' },
+    version: FOOD_DB_VERSION
+  },
+  rice_cakes: {
+    food_id: 'rice_cakes', name: { en: 'Rice cakes', gr: 'Ρυζογκοφρέτες' },
+    state: 'n/a', fdc_id: 174928, source: 'USDA FoodData Central (SR Legacy) — rice cakes, plain',
+    kcal100: 387, protein100: 8.2, carbs100: 81.5, fat100: 2.8, fiber100: 4.2, fat_role: 'intrinsic',
+    exchange: { category: 'starch', grams_per_exchange: 10, note: '1 starch exchange ≈ 1-2 rice cakes (~10g)' },
+    version: FOOD_DB_VERSION
+  },
+  almonds: {
+    food_id: 'almonds', name: { en: 'Almonds', gr: 'Αμύγδαλα' },
+    state: 'n/a', fdc_id: 170567, source: 'USDA FoodData Central (SR Legacy)',
+    kcal100: 579, protein100: 21.2, carbs100: 21.6, fat100: 49.9, fiber100: 12.5, fat_role: 'intrinsic',
+    exchange: { category: 'fat', grams_per_exchange: 8, note: 'Nut fat is intrinsic; ~8g (about 6 almonds) per fat exchange' },
+    version: FOOD_DB_VERSION
+  },
+  dried_fruit: {
+    food_id: 'dried_fruit', name: { en: 'Dried fruit (raisins/apricots)', gr: 'Αποξηραμένα φρούτα (σταφίδες/βερίκοκα)' },
+    state: 'n/a', fdc_id: 168165, source: 'USDA FoodData Central (SR Legacy) — raisins, seedless',
+    kcal100: 299, protein100: 3.1, carbs100: 79.2, fat100: 0.5, fiber100: 3.7, fat_role: 'intrinsic',
+    exchange: { category: 'fruit', grams_per_exchange: 20, note: 'Concentrated fruit; 1 fruit exchange ≈ ~20g (2 tbsp)' },
+    version: FOOD_DB_VERSION
+  },
+  cocoa_powder: {
+    food_id: 'cocoa_powder', name: { en: 'Cocoa powder, unsweetened', gr: 'Κακάο σκόνη, χωρίς ζάχαρη' },
+    state: 'n/a', fdc_id: 169593, source: 'USDA FoodData Central (SR Legacy)',
+    kcal100: 228, protein100: 19.6, carbs100: 57.9, fat100: 13.7, fiber100: 37.0, fat_role: 'intrinsic',
+    exchange: { category: 'free', grams_per_exchange: null, note: 'Used in small quantities (~5g) as flavoring; treated as free at typical amounts' },
+    version: FOOD_DB_VERSION
+  },
+  oat_biscuits: {
+    food_id: 'oat_biscuits', name: { en: 'Oat biscuits', gr: 'Μπισκότα βρώμης' },
+    state: 'n/a', fdc_id: null, source: 'Composite estimate — typical oat biscuit/digestive (SPOT-VERIFY brand before production)',
+    kcal100: 450, protein100: 6.5, carbs100: 66.0, fat100: 17.0, fiber100: 4.5, fat_role: 'intrinsic',
+    exchange: { category: 'starch', grams_per_exchange: 20, note: '2-3 biscuits ≈ 1 starch + 1 fat; ~20g per starch exchange' },
+    version: FOOD_DB_VERSION
+  },
+  cereal_bar: {
+    food_id: 'cereal_bar', name: { en: 'Cereal bar', gr: 'Μπάρα δημητριακών' },
+    state: 'n/a', fdc_id: null, source: 'Composite estimate — typical cereal/granola bar ~25g (SPOT-VERIFY brand before production)',
+    kcal100: 400, protein100: 6.0, carbs100: 68.0, fat100: 12.0, fiber100: 5.0, fat_role: 'intrinsic',
+    exchange: { category: 'starch', grams_per_exchange: 25, note: '1 bar (~25g) ≈ 1 starch + 1 fat exchange' },
+    version: FOOD_DB_VERSION
+  },
 };
 
 // ---- from fat_role.js ----
@@ -3150,6 +3461,638 @@ RECIPES.LUN_AVGOLEMONO_SOUP = buildRecipe({
   ],
 });
 
+// ============================================================
+// BATCH 5 — wider catalogue: vegetarian/vegan legume dishes +
+// traditional recipes. Protein-anchored (plant proteins anchored by
+// their protein-contributing legume/tofu component).
+// ============================================================
+
+// 25. Chickpea stew + bread (vegan) — chickpeas are the protein anchor
+RECIPES.LUN_CHICKPEA_STEW = buildRecipe({
+  recipe_id: 'LUN_CHICKPEA_STEW', name: { en: 'Chickpea stew with bread', gr: 'Ρεβίθια γιαχνί με ψωμί' },
+  yield_servings: 1,
+  ingredients: [
+    { food_id: 'chickpeas_cooked', grams: 200, state: 'cooked' }, // ~17.8g protein — the anchor
+    { food_id: 'onion_cooked', grams: 40, state: 'cooked' },
+    { food_id: 'tomato_sauce', grams: 60, state: 'n/a' },
+    { food_id: 'olive_oil', grams: 10, state: 'n/a' },
+    { food_id: 'wholegrain_bread', grams: 30, state: 'n/a' }, // 1 slice
+    { food_id: 'salad_mixed_raw', grams: 170, state: 'raw' },
+  ],
+});
+
+// 26. Tofu stir-fry + rice (vegan) — legacy had protein:0; tofu now an explicit anchor
+RECIPES.LUN_TOFU_RICE = buildRecipe({
+  recipe_id: 'LUN_TOFU_RICE', name: { en: 'Tofu stir-fry with rice', gr: 'Τόφου σαλτέ με ρύζι' },
+  yield_servings: 1,
+  ingredients: [
+    { food_id: 'tofu_firm', grams: 150, state: 'cooked' }, // ~26g protein — the anchor
+    { food_id: 'rice_white_cooked', grams: 150, state: 'cooked' },
+    { food_id: 'mixed_vegetables_cooked', grams: 150, state: 'cooked' },
+    { food_id: 'olive_oil', grams: 8, state: 'n/a' },
+  ],
+});
+
+// 27. Chicken + quinoa — poultry anchor with quinoa (new grain)
+RECIPES.LUN_CHICKEN_QUINOA = buildRecipe({
+  recipe_id: 'LUN_CHICKEN_QUINOA', name: { en: 'Chicken with quinoa', gr: 'Κοτόπουλο με κινόα' },
+  yield_servings: 1,
+  ingredients: [
+    { food_id: 'chicken_breast_cooked', grams: 100, state: 'cooked' },
+    { food_id: 'quinoa_cooked', grams: 150, state: 'cooked' },
+    { food_id: 'olive_oil', grams: 8, state: 'n/a' },
+    { food_id: 'salad_mixed_raw', grams: 170, state: 'raw' },
+  ],
+});
+
+// 28. Gemista (light) — traditional stuffed vegetables; chicken mince anchor
+RECIPES.DIN_GEMISTA_LIGHT = buildRecipe({
+  recipe_id: 'DIN_GEMISTA_LIGHT', name: { en: 'Stuffed vegetables (light)', gr: 'Γεμιστά light' },
+  yield_servings: 1,
+  ingredients: [
+    { food_id: 'beef_mince_lean_cooked', grams: 90, state: 'cooked' }, // lean mince filling — anchor
+    { food_id: 'rice_white_cooked', grams: 120, state: 'cooked' },
+    { food_id: 'bell_pepper_raw', grams: 100, state: 'raw' }, // pepper shell
+    { food_id: 'tomato_raw', grams: 120, state: 'raw' }, // tomato shell
+    { food_id: 'onion_cooked', grams: 30, state: 'cooked' },
+    { food_id: 'olive_oil', grams: 8, state: 'n/a' },
+  ],
+});
+
+// 29. Spanakorizo + light cheese — traditional spinach-rice
+RECIPES.LUN_SPINACH_RICE = buildRecipe({
+  recipe_id: 'LUN_SPINACH_RICE', name: { en: 'Spinach rice with light cheese', gr: 'Σπανακόρυζο με τυρί light' },
+  yield_servings: 1,
+  ingredients: [
+    { food_id: 'spinach_cooked', grams: 200, state: 'cooked' },
+    { food_id: 'rice_white_cooked', grams: 120, state: 'cooked' },
+    { food_id: 'cheese_light_slice', grams: 30, state: 'n/a' }, // protein component
+    { food_id: 'onion_cooked', grams: 30, state: 'cooked' },
+    { food_id: 'olive_oil', grams: 8, state: 'n/a' },
+  ],
+});
+
+// 30. Bean salad + bread (vegan) — cannellini beans are the protein anchor
+RECIPES.LUN_BEAN_SALAD = buildRecipe({
+  recipe_id: 'LUN_BEAN_SALAD', name: { en: 'Bean salad with bread', gr: 'Φασόλια σαλάτα με ψωμί' },
+  yield_servings: 1,
+  ingredients: [
+    { food_id: 'cannellini_beans_cooked', grams: 200, state: 'cooked' }, // ~19.4g protein — the anchor
+    { food_id: 'onion_cooked', grams: 30, state: 'cooked' },
+    { food_id: 'olive_oil', grams: 10, state: 'n/a' },
+    { food_id: 'wholegrain_bread', grams: 30, state: 'n/a' }, // 1 slice
+    { food_id: 'salad_mixed_raw', grams: 170, state: 'raw' },
+  ],
+});
+
+// ============================================================
+// BATCH 6 — traditional Cypriot/Greek dishes: souvlaki, louvi,
+// arakas (peas), omelette, trahanas. Protein-anchored throughout.
+// ============================================================
+
+// 31. Souvlaki + pita — pork souvlaki anchor (legacy text said "chicken"
+// but key/dish is pork souvlaki; using pork, flagged in review)
+RECIPES.DIN_SOUVLAKI_PITA = buildRecipe({
+  recipe_id: 'DIN_SOUVLAKI_PITA', name: { en: 'Pork souvlaki with pita', gr: 'Χοιρινό σουβλάκι με πίτα' },
+  yield_servings: 1,
+  ingredients: [
+    { food_id: 'pork_souvlaki_cooked', grams: 120, state: 'cooked' },
+    { food_id: 'pita_bread', grams: 60, state: 'n/a' }, // 1 small pita
+    { food_id: 'salad_mixed_raw', grams: 200, state: 'raw' },
+    { food_id: 'olive_oil', grams: 8, state: 'n/a' },
+  ],
+});
+
+// 32. Louvi + tuna — legacy had protein:0; now anchored on both beans + tuna
+RECIPES.LUN_LOUVI_TUNA = buildRecipe({
+  recipe_id: 'LUN_LOUVI_TUNA', name: { en: 'Black-eyed beans with tuna', gr: 'Λουβί με τόνο' },
+  yield_servings: 1,
+  ingredients: [
+    { food_id: 'black_eyed_beans_cooked', grams: 180, state: 'cooked' }, // ~13.9g plant protein
+    { food_id: 'tuna_canned_drained', grams: 80, state: 'drained' }, // ~20.4g protein — combined anchor
+    { food_id: 'olive_oil', grams: 10, state: 'n/a' },
+    { food_id: 'salad_mixed_raw', grams: 200, state: 'raw' }, // louvi traditionally served with greens/salad
+  ],
+});
+
+// 33. Arakas (braised peas) with feta — vegetarian
+RECIPES.LUN_ARAKAS_FETA = buildRecipe({
+  recipe_id: 'LUN_ARAKAS_FETA', name: { en: 'Braised peas with feta', gr: 'Αρακάς λαδερός με φέτα' },
+  yield_servings: 1,
+  ingredients: [
+    { food_id: 'peas_cooked', grams: 200, state: 'cooked' },
+    { food_id: 'potato_boiled', grams: 90, state: 'cooked' },
+    { food_id: 'tomato_sauce', grams: 60, state: 'n/a' },
+    { food_id: 'feta_cheese', grams: 30, state: 'n/a' }, // protein component
+    { food_id: 'olive_oil', grams: 10, state: 'n/a' },
+    { food_id: 'salad_mixed_raw', grams: 130, state: 'raw' },
+  ],
+});
+
+// 34. Omelette + bread — eggs anchor; legacy added extra turkey, kept lighter
+RECIPES.DIN_OMELETTE = buildRecipe({
+  recipe_id: 'DIN_OMELETTE', name: { en: 'Omelette with bread', gr: 'Ομελέτα με ψωμί' },
+  yield_servings: 1,
+  ingredients: [
+    { food_id: 'egg_whole_cooked', grams: 150, state: 'cooked' }, // 3 eggs — the anchor
+    { food_id: 'wholegrain_bread', grams: 30, state: 'n/a' }, // 1 slice
+    { food_id: 'olive_oil', grams: 5, state: 'n/a' }, // reduced from legacy 3 tsp — eggs already carry intrinsic fat
+    { food_id: 'mixed_vegetables_cooked', grams: 180, state: 'cooked' },
+  ],
+});
+
+// 35. Trahanas soup + halloumi — legacy had protein:0/starch:0; now explicit
+RECIPES.LUN_TRACHANAS_HALLOUMI = buildRecipe({
+  recipe_id: 'LUN_TRACHANAS_HALLOUMI', name: { en: 'Trahanas soup with halloumi', gr: 'Τραχανάς σούπα με χαλούμι' },
+  yield_servings: 1,
+  ingredients: [
+    { food_id: 'trachanas_soup', grams: 300, state: 'cooked' }, // ~300ml prepared soup
+    { food_id: 'halloumi_cheese', grams: 60, state: 'cooked' }, // protein anchor
+    { food_id: 'wholegrain_bread', grams: 30, state: 'n/a' }, // 1 slice on the side
+  ],
+});
+
+// 36. Braised peas (vegan) — legacy protein:0; peas anchor the (modest) protein
+RECIPES.LUN_PEAS_LADERO = buildRecipe({
+  recipe_id: 'LUN_PEAS_LADERO', name: { en: 'Braised peas (vegan)', gr: 'Αρακάς λαδερός' },
+  yield_servings: 1,
+  ingredients: [
+    { food_id: 'peas_cooked', grams: 250, state: 'cooked' }, // ~13.5g plant protein
+    { food_id: 'potato_boiled', grams: 90, state: 'cooked' },
+    { food_id: 'tomato_sauce', grams: 60, state: 'n/a' },
+    { food_id: 'olive_oil', grams: 10, state: 'n/a' },
+    { food_id: 'wholegrain_bread', grams: 30, state: 'n/a' }, // bread for protein/completeness in a vegan dish
+    { food_id: 'salad_mixed_raw', grams: 170, state: 'raw' },
+  ],
+});
+
+// ============================================================
+// BATCH 7 — soups, poultry mince, fish+grain, and more legume dishes.
+// ============================================================
+
+// 37. Lentil soup (vegan) — lentils are the protein anchor
+RECIPES.LUN_LENTIL_SOUP = buildRecipe({
+  recipe_id: 'LUN_LENTIL_SOUP', name: { en: 'Lentil soup', gr: 'Φακές σούπα' },
+  yield_servings: 1,
+  ingredients: [
+    { food_id: 'lentils_cooked', grams: 250, state: 'cooked' }, // ~22.5g plant protein — the anchor
+    { food_id: 'onion_cooked', grams: 40, state: 'cooked' },
+    { food_id: 'tomato_sauce', grams: 60, state: 'n/a' },
+    { food_id: 'olive_oil', grams: 10, state: 'n/a' },
+    { food_id: 'wholegrain_bread', grams: 30, state: 'n/a' }, // 1 slice
+    { food_id: 'salad_mixed_raw', grams: 170, state: 'raw' },
+  ],
+});
+
+// 38. Chicken meatballs + rice — chicken mince anchor
+RECIPES.DIN_CHICKEN_MEATBALLS_RICE = buildRecipe({
+  recipe_id: 'DIN_CHICKEN_MEATBALLS_RICE', name: { en: 'Chicken meatballs with rice', gr: 'Κεφτεδάκια κοτόπουλου με ρύζι' },
+  yield_servings: 1,
+  ingredients: [
+    { food_id: 'chicken_mince_cooked', grams: 110, state: 'cooked' }, // ~29.7g protein — the anchor
+    { food_id: 'rice_white_cooked', grams: 150, state: 'cooked' },
+    { food_id: 'tomato_sauce', grams: 60, state: 'n/a' },
+    { food_id: 'olive_oil', grams: 5, state: 'n/a' }, // reduced — chicken mince carries intrinsic fat
+    { food_id: 'salad_mixed_raw', grams: 170, state: 'raw' },
+  ],
+});
+
+// 39. Salmon + quinoa — salmon anchor, oil trimmed for intrinsic fat
+RECIPES.LUN_SALMON_QUINOA = buildRecipe({
+  recipe_id: 'LUN_SALMON_QUINOA', name: { en: 'Salmon with quinoa', gr: 'Σολομός με κινόα' },
+  yield_servings: 1,
+  ingredients: [
+    { food_id: 'salmon_baked', grams: 130, state: 'cooked' },
+    { food_id: 'quinoa_cooked', grams: 150, state: 'cooked' },
+    { food_id: 'olive_oil', grams: 3, state: 'n/a' }, // salmon's ~16g intrinsic fat covers most of the dish
+    { food_id: 'salad_mixed_raw', grams: 170, state: 'raw' },
+  ],
+});
+
+// 40. Chickpea salad (vegan) — chickpeas are the protein anchor
+RECIPES.LUN_CHICKPEAS_SALAD = buildRecipe({
+  recipe_id: 'LUN_CHICKPEAS_SALAD', name: { en: 'Chickpea salad', gr: 'Ρεβίθια σαλάτα' },
+  yield_servings: 1,
+  ingredients: [
+    { food_id: 'chickpeas_cooked', grams: 200, state: 'cooked' }, // ~17.8g plant protein
+    { food_id: 'tomato_raw', grams: 100, state: 'raw' },
+    { food_id: 'onion_cooked', grams: 30, state: 'cooked' },
+    { food_id: 'olive_oil', grams: 10, state: 'n/a' },
+    { food_id: 'wholegrain_bread', grams: 30, state: 'n/a' }, // 1 slice
+    { food_id: 'salad_mixed_raw', grams: 130, state: 'raw' },
+  ],
+});
+
+// 41. Beans + pasta (vegan) — legacy had starch:0 (omission); beans + pasta both counted
+RECIPES.DIN_BEAN_PASTA = buildRecipe({
+  recipe_id: 'DIN_BEAN_PASTA', name: { en: 'Beans with pasta', gr: 'Φασόλια με ζυμαρικά' },
+  yield_servings: 1,
+  ingredients: [
+    { food_id: 'cannellini_beans_cooked', grams: 180, state: 'cooked' }, // ~17.5g plant protein — the anchor
+    { food_id: 'pasta_cooked', grams: 120, state: 'cooked' },
+    { food_id: 'tomato_sauce', grams: 60, state: 'n/a' },
+    { food_id: 'olive_oil', grams: 8, state: 'n/a' },
+    { food_id: 'salad_mixed_raw', grams: 150, state: 'raw' },
+  ],
+});
+
+// 42. Braised peas with pork — legacy had protein:0 despite "with pork"; pork now explicit anchor
+RECIPES.LUN_ARAKAS_PORK = buildRecipe({
+  recipe_id: 'LUN_ARAKAS_PORK', name: { en: 'Braised peas with pork', gr: 'Αρακάς με χοιρινό' },
+  yield_servings: 1,
+  ingredients: [
+    { food_id: 'pork_loin_cooked', grams: 90, state: 'cooked' }, // ~23.4g protein — the anchor
+    { food_id: 'peas_cooked', grams: 180, state: 'cooked' },
+    { food_id: 'potato_boiled', grams: 80, state: 'cooked' },
+    { food_id: 'tomato_sauce', grams: 60, state: 'n/a' },
+    { food_id: 'olive_oil', grams: 8, state: 'n/a' },
+    { food_id: 'salad_mixed_raw', grams: 130, state: 'raw' },
+  ],
+});
+
+// ============================================================
+// BATCH 8 — breakfast catalogue (9 meals). Breakfasts anchor protein
+// via egg/cheese/yogurt/turkey; lower protein floor than main meals.
+// ============================================================
+
+// 43. Toast + turkey + cheese
+RECIPES.BRK_TOAST_TURKEY = buildRecipe({
+  recipe_id: 'BRK_TOAST_TURKEY', name: { en: 'Toast with turkey and light cheese', gr: 'Τοστ με γαλοπούλα και τυρί light' },
+  yield_servings: 1,
+  ingredients: [
+    { food_id: 'wholegrain_bread', grams: 60, state: 'n/a' }, // 2 slices
+    { food_id: 'cheese_light_slice', grams: 30, state: 'n/a' }, // 1 slice
+    { food_id: 'turkey_slice', grams: 30, state: 'n/a' }, // 1 slice
+    { food_id: 'cucumber_raw', grams: 50, state: 'raw' },
+  ],
+});
+
+// 44. Eggs + toast + cheese
+RECIPES.BRK_EGGS_TOAST = buildRecipe({
+  recipe_id: 'BRK_EGGS_TOAST', name: { en: 'Toast with egg and light cheese', gr: 'Τοστ με αυγό και τυρί light' },
+  yield_servings: 1,
+  ingredients: [
+    { food_id: 'wholegrain_bread', grams: 60, state: 'n/a' }, // 2 slices
+    { food_id: 'egg_whole_cooked', grams: 50, state: 'cooked' }, // 1 egg
+    { food_id: 'cheese_light_slice', grams: 30, state: 'n/a' }, // 1 slice
+  ],
+});
+
+// 45. Oats + milk (cereal)
+RECIPES.BRK_CEREAL = buildRecipe({
+  recipe_id: 'BRK_CEREAL', name: { en: 'Oats with milk', gr: 'Βρώμη με γάλα' },
+  yield_servings: 1,
+  ingredients: [
+    { food_id: 'oats_dry', grams: 40, state: 'raw' }, // ~5 tbsp dry
+    { food_id: 'milk_lowfat', grams: 240, state: 'n/a' }, // 1 cup
+  ],
+});
+
+// 46. Oats + plant milk (vegan)
+RECIPES.BRK_OATS_VEGAN = buildRecipe({
+  recipe_id: 'BRK_OATS_VEGAN', name: { en: 'Oats with fortified plant milk', gr: 'Βρώμη με εμπλουτισμένο φυτικό γάλα' },
+  yield_servings: 1,
+  ingredients: [
+    { food_id: 'oats_dry', grams: 40, state: 'raw' },
+    { food_id: 'plant_milk_fortified', grams: 240, state: 'n/a' }, // 1 cup
+  ],
+});
+
+// 47. Toast + tahini + banana (vegan)
+RECIPES.BRK_TAHINI_BANANA = buildRecipe({
+  recipe_id: 'BRK_TAHINI_BANANA', name: { en: 'Toast with tahini and banana', gr: 'Ψωμί με ταχίνι και μπανάνα' },
+  yield_servings: 1,
+  ingredients: [
+    { food_id: 'wholegrain_bread', grams: 60, state: 'n/a' }, // 2 slices
+    { food_id: 'tahini', grams: 20, state: 'n/a' }, // 1.5 tbsp
+    { food_id: 'banana', grams: 100, state: 'raw' }, // 1 small
+  ],
+});
+
+// 48. Soy yogurt + walnuts + fruit (vegan)
+RECIPES.BRK_SOY_YOGURT_WALNUTS = buildRecipe({
+  recipe_id: 'BRK_SOY_YOGURT_WALNUTS', name: { en: 'Soy yogurt with walnuts and fruit', gr: 'Γιαούρτι σόγιας με καρύδια και φρούτο' },
+  yield_servings: 1,
+  ingredients: [
+    { food_id: 'soy_yogurt', grams: 170, state: 'n/a' },
+    { food_id: 'walnuts', grams: 15, state: 'n/a' }, // ~4 halves
+    { food_id: 'apple', grams: 120, state: 'raw' }, // fruit
+  ],
+});
+
+// 49. Boiled eggs + bread
+RECIPES.BRK_BOILED_EGGS_2 = buildRecipe({
+  recipe_id: 'BRK_BOILED_EGGS_2', name: { en: 'Boiled eggs with bread', gr: 'Αυγά βραστά με ψωμί' },
+  yield_servings: 1,
+  ingredients: [
+    { food_id: 'egg_whole_cooked', grams: 100, state: 'cooked' }, // 2 eggs
+    { food_id: 'wholegrain_bread', grams: 30, state: 'n/a' }, // 1 slice
+    { food_id: 'cherry_tomatoes', grams: 60, state: 'raw' },
+  ],
+});
+
+// 50. Rusks + anthotyro
+RECIPES.BRK_RUSKS_ANTHOTYRO = buildRecipe({
+  recipe_id: 'BRK_RUSKS_ANTHOTYRO', name: { en: 'Rusks with anthotyro', gr: 'Παξιμάδια με ανθότυρο' },
+  yield_servings: 1,
+  ingredients: [
+    { food_id: 'rusk_wholegrain', grams: 40, state: 'n/a' }, // 2 rusks
+    { food_id: 'ricotta_anthotyro', grams: 40, state: 'n/a' },
+    { food_id: 'cherry_tomatoes', grams: 60, state: 'raw' },
+  ],
+});
+
+// 51. Greek yogurt + honey + walnuts + fruit
+RECIPES.BRK_YOGURT_HONEY_WALNUTS = buildRecipe({
+  recipe_id: 'BRK_YOGURT_HONEY_WALNUTS', name: { en: 'Greek yogurt with honey, walnuts and fruit', gr: 'Γιαούρτι με μέλι, καρύδια και φρούτο' },
+  yield_servings: 1,
+  ingredients: [
+    { food_id: 'greek_yogurt_2pct', grams: 170, state: 'n/a' },
+    { food_id: 'honey', grams: 15, state: 'n/a' }, // 1 tsp
+    { food_id: 'walnuts', grams: 15, state: 'n/a' }, // ~4 halves
+    { food_id: 'apple', grams: 120, state: 'raw' }, // fruit
+  ],
+});
+
+// ============================================================
+// BATCH 9 — remaining main-meal catalogue (17 meals). Completes mains.
+// Dinner counterparts mirror their migrated lunch versions; new lunch
+// definitions fix legacy protein:0/starch:0 omissions.
+// ============================================================
+
+// --- New lunch definitions ---
+
+// 52. Fish + potato (legacy protein:0/starch:0) — cod anchor
+RECIPES.LUN_FISH_POTATO = buildRecipe({
+  recipe_id: 'LUN_FISH_POTATO', name: { en: 'Fish with potato', gr: 'Ψάρι με πατάτα' },
+  yield_servings: 1,
+  ingredients: [
+    { food_id: 'cod_baked', grams: 140, state: 'cooked' },
+    { food_id: 'potato_boiled', grams: 150, state: 'cooked' },
+    { food_id: 'olive_oil', grams: 8, state: 'n/a' },
+    { food_id: 'salad_mixed_raw', grams: 170, state: 'raw' },
+  ],
+});
+
+// 53. Tuna + potato — legacy showed 4 tsp (20g) oil; trimmed to 10g (see flag)
+RECIPES.LUN_TUNA_POTATO = buildRecipe({
+  recipe_id: 'LUN_TUNA_POTATO', name: { en: 'Tuna with potato', gr: 'Τόνος με πατάτα' },
+  yield_servings: 1,
+  ingredients: [
+    { food_id: 'tuna_canned_drained', grams: 120, state: 'drained' },
+    { food_id: 'potato_boiled', grams: 180, state: 'cooked' },
+    { food_id: 'olive_oil', grams: 10, state: 'n/a' }, // legacy 20g was excessive for a lean-tuna dish
+    { food_id: 'salad_mixed_raw', grams: 170, state: 'raw' },
+  ],
+});
+
+// 54. Pasta + mince (LUNCH, legacy protein:0/starch:0) — mirrors DIN_PASTA_MINCE
+RECIPES.LUN_PASTA_MINCE = buildRecipe({
+  recipe_id: 'LUN_PASTA_MINCE', name: { en: 'Pasta with mince', gr: 'Μακαρόνια με κιμά' },
+  yield_servings: 1,
+  ingredients: [
+    { food_id: 'beef_mince_lean_cooked', grams: 100, state: 'cooked' },
+    { food_id: 'pasta_cooked', grams: 180, state: 'cooked' },
+    { food_id: 'tomato_sauce', grams: 60, state: 'n/a' },
+    { food_id: 'olive_oil', grams: 5, state: 'n/a' },
+    { food_id: 'salad_mixed_raw', grams: 150, state: 'raw' },
+  ],
+});
+
+// 55. Bifteki + bulgur (LUNCH, legacy protein:0/starch:0) — mirrors DIN_BIFTEKI_BULGUR
+RECIPES.LUN_BIFTEKI_BULGUR = buildRecipe({
+  recipe_id: 'LUN_BIFTEKI_BULGUR', name: { en: 'Bifteki (burger) with bulgur', gr: 'Μπιφτέκι με πλιγούρι' },
+  yield_servings: 1,
+  ingredients: [
+    { food_id: 'beef_pork_patty_cooked', grams: 110, state: 'cooked' },
+    { food_id: 'bulgur_cooked', grams: 150, state: 'cooked' },
+    { food_id: 'olive_oil', grams: 5, state: 'n/a' },
+    { food_id: 'salad_mixed_raw', grams: 170, state: 'raw' },
+  ],
+});
+
+// 56. Grilled halloumi + pasta (legacy starch:0) — halloumi anchor, pasta now counted
+RECIPES.LUN_HALLOUMI_PASTA = buildRecipe({
+  recipe_id: 'LUN_HALLOUMI_PASTA', name: { en: 'Grilled halloumi with pasta', gr: 'Χαλούμι ψητό με ζυμαρικά' },
+  yield_servings: 1,
+  ingredients: [
+    { food_id: 'halloumi_cheese', grams: 80, state: 'cooked' },
+    { food_id: 'pasta_cooked', grams: 150, state: 'cooked' },
+    { food_id: 'tomato_sauce', grams: 60, state: 'n/a' },
+    { food_id: 'salad_mixed_raw', grams: 150, state: 'raw' },
+  ],
+});
+
+// 57. Grilled fish + rice (LUNCH) — white fish anchor
+RECIPES.LUN_GRILLED_FISH_RICE = buildRecipe({
+  recipe_id: 'LUN_GRILLED_FISH_RICE', name: { en: 'Grilled fish with rice', gr: 'Ψητό ψάρι με ρύζι' },
+  yield_servings: 1,
+  ingredients: [
+    { food_id: 'white_fish_grilled', grams: 140, state: 'cooked' },
+    { food_id: 'rice_white_cooked', grams: 150, state: 'cooked' },
+    { food_id: 'olive_oil', grams: 8, state: 'n/a' },
+    { food_id: 'salad_mixed_raw', grams: 170, state: 'raw' },
+  ],
+});
+
+// --- Dinner counterparts (mirror migrated lunch versions, dinner-appropriate starch) ---
+
+// 58. Chicken + rice (DINNER) — mirrors LUN_CHICKEN_RICE, lighter starch
+RECIPES.DIN_CHICKEN_RICE = buildRecipe({
+  recipe_id: 'DIN_CHICKEN_RICE', name: { en: 'Chicken breast with rice (dinner)', gr: 'Στήθος κοτόπουλου με ρύζι (βραδινό)' },
+  yield_servings: 1,
+  ingredients: [
+    { food_id: 'chicken_breast_cooked', grams: 100, state: 'cooked' },
+    { food_id: 'rice_white_cooked', grams: 120, state: 'cooked' },
+    { food_id: 'olive_oil', grams: 5, state: 'n/a' },
+    { food_id: 'salad_mixed_raw', grams: 170, state: 'raw' },
+  ],
+});
+
+// 59. Fish + potato (DINNER) — mirrors LUN_FISH_POTATO
+RECIPES.DIN_FISH_POTATO = buildRecipe({
+  recipe_id: 'DIN_FISH_POTATO', name: { en: 'Fish with potato (dinner)', gr: 'Ψάρι με πατάτα (βραδινό)' },
+  yield_servings: 1,
+  ingredients: [
+    { food_id: 'cod_baked', grams: 140, state: 'cooked' },
+    { food_id: 'potato_boiled', grams: 120, state: 'cooked' },
+    { food_id: 'olive_oil', grams: 8, state: 'n/a' },
+    { food_id: 'salad_mixed_raw', grams: 170, state: 'raw' },
+  ],
+});
+
+// 60. Tuna + potato (DINNER) — mirrors LUN_TUNA_POTATO
+RECIPES.DIN_TUNA_POTATO = buildRecipe({
+  recipe_id: 'DIN_TUNA_POTATO', name: { en: 'Tuna with potato (dinner)', gr: 'Τόνος με πατάτα (βραδινό)' },
+  yield_servings: 1,
+  ingredients: [
+    { food_id: 'tuna_canned_drained', grams: 120, state: 'drained' },
+    { food_id: 'potato_boiled', grams: 150, state: 'cooked' },
+    { food_id: 'olive_oil', grams: 10, state: 'n/a' },
+    { food_id: 'salad_mixed_raw', grams: 170, state: 'raw' },
+  ],
+});
+
+// 61. Trahanas + halloumi (DINNER) — mirrors LUN_TRACHANAS_HALLOUMI
+RECIPES.DIN_TRACHANAS_HALLOUMI = buildRecipe({
+  recipe_id: 'DIN_TRACHANAS_HALLOUMI', name: { en: 'Trahanas soup with halloumi (dinner)', gr: 'Τραχανάς σούπα με χαλούμι (βραδινό)' },
+  yield_servings: 1,
+  ingredients: [
+    { food_id: 'trachanas_soup', grams: 300, state: 'cooked' },
+    { food_id: 'halloumi_cheese', grams: 60, state: 'cooked' },
+    { food_id: 'wholegrain_bread', grams: 30, state: 'n/a' },
+  ],
+});
+
+// 62. Lentils + rice (DINNER) — mirrors LUN_LENTILS_RICE
+RECIPES.DIN_LENTILS_RICE = buildRecipe({
+  recipe_id: 'DIN_LENTILS_RICE', name: { en: 'Lentils with rice (dinner)', gr: 'Φακές με ρύζι (βραδινό)' },
+  yield_servings: 1,
+  ingredients: [
+    { food_id: 'lentils_cooked', grams: 200, state: 'cooked' },
+    { food_id: 'rice_white_cooked', grams: 90, state: 'cooked' },
+    { food_id: 'olive_oil', grams: 10, state: 'n/a' },
+    { food_id: 'salad_mixed_raw', grams: 85, state: 'raw' },
+  ],
+});
+
+// 63. Tofu stir-fry (DINNER) — mirrors LUN_TOFU_RICE
+RECIPES.DIN_TOFU_STIRFRY = buildRecipe({
+  recipe_id: 'DIN_TOFU_STIRFRY', name: { en: 'Tofu stir-fry with rice (dinner)', gr: 'Τόφου σαλτέ με ρύζι (βραδινό)' },
+  yield_servings: 1,
+  ingredients: [
+    { food_id: 'tofu_firm', grams: 150, state: 'cooked' },
+    { food_id: 'rice_white_cooked', grams: 120, state: 'cooked' },
+    { food_id: 'mixed_vegetables_cooked', grams: 150, state: 'cooked' },
+    { food_id: 'olive_oil', grams: 8, state: 'n/a' },
+  ],
+});
+
+// 64. Chickpea stew (DINNER) — mirrors LUN_CHICKPEA_STEW
+RECIPES.DIN_CHICKPEA_STEW = buildRecipe({
+  recipe_id: 'DIN_CHICKPEA_STEW', name: { en: 'Chickpea stew with bread (dinner)', gr: 'Ρεβίθια γιαχνί με ψωμί (βραδινό)' },
+  yield_servings: 1,
+  ingredients: [
+    { food_id: 'chickpeas_cooked', grams: 200, state: 'cooked' },
+    { food_id: 'onion_cooked', grams: 40, state: 'cooked' },
+    { food_id: 'tomato_sauce', grams: 60, state: 'n/a' },
+    { food_id: 'olive_oil', grams: 10, state: 'n/a' },
+    { food_id: 'wholegrain_bread', grams: 30, state: 'n/a' },
+    { food_id: 'salad_mixed_raw', grams: 170, state: 'raw' },
+  ],
+});
+
+// 65. Chicken + quinoa (DINNER) — mirrors LUN_CHICKEN_QUINOA
+RECIPES.DIN_CHICKEN_QUINOA = buildRecipe({
+  recipe_id: 'DIN_CHICKEN_QUINOA', name: { en: 'Chicken with quinoa (dinner)', gr: 'Κοτόπουλο με κινόα (βραδινό)' },
+  yield_servings: 1,
+  ingredients: [
+    { food_id: 'chicken_breast_cooked', grams: 100, state: 'cooked' },
+    { food_id: 'quinoa_cooked', grams: 120, state: 'cooked' },
+    { food_id: 'olive_oil', grams: 8, state: 'n/a' },
+    { food_id: 'salad_mixed_raw', grams: 170, state: 'raw' },
+  ],
+});
+
+// 66. Chicken mince pasta (DINNER, light) — chicken mince anchor
+RECIPES.DIN_CHICKEN_MINCE_PASTA = buildRecipe({
+  recipe_id: 'DIN_CHICKEN_MINCE_PASTA', name: { en: 'Pasta with light chicken mince', gr: 'Μακαρόνια με κιμά κοτόπουλο light' },
+  yield_servings: 1,
+  ingredients: [
+    { food_id: 'chicken_mince_cooked', grams: 90, state: 'cooked' },
+    { food_id: 'pasta_cooked', grams: 150, state: 'cooked' },
+    { food_id: 'tomato_sauce', grams: 60, state: 'n/a' },
+    { food_id: 'olive_oil', grams: 5, state: 'n/a' },
+    { food_id: 'salad_mixed_raw', grams: 150, state: 'raw' },
+  ],
+});
+
+// 67. Grilled fish + rice (DINNER) — mirrors LUN_GRILLED_FISH_RICE
+RECIPES.DIN_GRILLED_FISH_RICE = buildRecipe({
+  recipe_id: 'DIN_GRILLED_FISH_RICE', name: { en: 'Grilled fish with rice (dinner)', gr: 'Ψητό ψάρι με ρύζι (βραδινό)' },
+  yield_servings: 1,
+  ingredients: [
+    { food_id: 'white_fish_grilled', grams: 140, state: 'cooked' },
+    { food_id: 'rice_white_cooked', grams: 120, state: 'cooked' },
+    { food_id: 'olive_oil', grams: 8, state: 'n/a' },
+    { food_id: 'salad_mixed_raw', grams: 170, state: 'raw' },
+  ],
+});
+
+// 68. Chickpea salad (DINNER) — mirrors LUN_CHICKPEAS_SALAD
+RECIPES.DIN_CHICKPEAS_SALAD = buildRecipe({
+  recipe_id: 'DIN_CHICKPEAS_SALAD', name: { en: 'Chickpea salad (dinner)', gr: 'Ρεβίθια σαλάτα (βραδινό)' },
+  yield_servings: 1,
+  ingredients: [
+    { food_id: 'chickpeas_cooked', grams: 200, state: 'cooked' },
+    { food_id: 'tomato_raw', grams: 100, state: 'raw' },
+    { food_id: 'onion_cooked', grams: 30, state: 'cooked' },
+    { food_id: 'olive_oil', grams: 10, state: 'n/a' },
+    { food_id: 'wholegrain_bread', grams: 30, state: 'n/a' },
+    { food_id: 'salad_mixed_raw', grams: 130, state: 'raw' },
+  ],
+});
+
+// ============================================================
+// BATCH 10 — snack catalogue (combos + sleep snacks). Completes the
+// canonical engine. Single-item snacks (plain fruit, milk, yogurt, nuts,
+// crackers) are single foods used directly and need no recipe wrapper;
+// only the multi-ingredient combos are modeled as recipes here.
+// snk_anthotyro_rusk_fruit was already migrated in Batch 1.
+// ============================================================
+
+// 69. Fruit + crackers + cottage cheese
+RECIPES.snk_fruit_crackers_cottage = buildRecipe({
+  recipe_id: 'snk_fruit_crackers_cottage', name: { en: 'Fruit, crackers and cottage cheese', gr: 'Φρούτο, κράκερ και τυρί cottage' },
+  yield_servings: 1,
+  ingredients: [
+    { food_id: 'apple', grams: 120, state: 'raw' }, // 1 fruit
+    { food_id: 'crackers_wholegrain', grams: 18, state: 'n/a' }, // 4 crackers
+    { food_id: 'cottage_cheese', grams: 100, state: 'n/a' }, // protein
+  ],
+});
+
+// 70. Fruit + rice cakes + tahini + nuts
+RECIPES.snk_fruit_ricecakes_tahini_nuts = buildRecipe({
+  recipe_id: 'snk_fruit_ricecakes_tahini_nuts', name: { en: 'Fruit, rice cakes, tahini and nuts', gr: 'Φρούτο, ρυζογκοφρέτες, ταχίνι και ξηροί καρποί' },
+  yield_servings: 1,
+  ingredients: [
+    { food_id: 'apple', grams: 120, state: 'raw' }, // 1 fruit
+    { food_id: 'rice_cakes', grams: 20, state: 'n/a' }, // 2 rice cakes
+    { food_id: 'tahini', grams: 8, state: 'n/a' }, // 1 tsp
+    { food_id: 'almonds', grams: 8, state: 'n/a' }, // ~6 almonds
+  ],
+});
+
+// 71. Crackers + light cheese
+RECIPES.snk_crackers_cheese = buildRecipe({
+  recipe_id: 'snk_crackers_cheese', name: { en: 'Crackers with light cheese', gr: 'Κράκερ με τυρί light' },
+  yield_servings: 1,
+  ingredients: [
+    { food_id: 'crackers_wholegrain', grams: 18, state: 'n/a' }, // 4 crackers
+    { food_id: 'cheese_light_slice', grams: 30, state: 'n/a' }, // 1 slice
+  ],
+});
+
+// 72. Glass of milk (before sleep)
+RECIPES.sleep_milk_glass = buildRecipe({
+  recipe_id: 'sleep_milk_glass', name: { en: 'Glass of semi-skimmed milk', gr: 'Ποτήρι γάλα 1,5%' },
+  yield_servings: 1,
+  ingredients: [
+    { food_id: 'milk_lowfat', grams: 240, state: 'n/a' }, // 1 glass/cup
+  ],
+});
+
+// 73. Cocoa with milk (before sleep, no sugar)
+RECIPES.sleep_cocoa_milk = buildRecipe({
+  recipe_id: 'sleep_cocoa_milk', name: { en: 'Cocoa with semi-skimmed milk (no sugar)', gr: 'Κακάο με γάλα 1,5% (χωρίς ζάχαρη)' },
+  yield_servings: 1,
+  ingredients: [
+    { food_id: 'milk_lowfat', grams: 240, state: 'n/a' }, // 1 cup
+    { food_id: 'cocoa_powder', grams: 5, state: 'n/a' }, // 1 tsp, free-food flavoring
+  ],
+});
+
 // ---- from meal_instance.js ----
 // ============================================================
 // ROUNDING POLICY (documented, applied consistently everywhere)
@@ -3178,17 +4121,24 @@ const ROUNDING_POLICY = {
   // This is a PLAUSIBILITY check, not an exact-reconciliation check. Even
   // the modified-Atwater formula is a generic approximation — USDA's own
   // reported kcal values use more granular, food-specific energy
-  // conversion factors that no single formula can perfectly replicate
-  // (verified: max observed deviation across 12 real recipes was 6.0%,
-  // for a lentil-forward dish, using correct USDA fiber data). The
-  // AUTHORITATIVE kcal value is always the sum of ingredient-level USDA
-  // kcal100 values (checked exactly, zero tolerance, by the sum-of-parts
-  // tests) — this check exists only to catch gross data errors (e.g. a
-  // fat value entered 10x too high), not to validate the display value
-  // against a formula. Set from real observed data, not picked arbitrarily.
-  reconciliation_tolerance_macro_kcal_pct: 0.07,
+  // conversion factors that no single formula can perfectly replicate.
+  // Verified deviations run in BOTH directions:
+  //   - high-fiber fruits/legumes: formula OVERSHOOTS USDA (e.g. apple,
+  //     lentils) — up to ~6%.
+  //   - high-fat whole grains: formula UNDERSHOOTS USDA (e.g. oats, where
+  //     USDA reports 379 kcal/100g vs a modified-Atwater estimate of
+  //     ~362) — pushing a whole-grain-heavy dish like oats+plant-milk to
+  //     ~10.4% at the dish level.
+  // The AUTHORITATIVE kcal value is always the sum of ingredient-level USDA
+  // kcal100 values (checked EXACTLY, zero tolerance, by the sum-of-parts
+  // tests) — this check exists ONLY to catch gross data errors (e.g. a fat
+  // value entered 10x too high, which would blow past 12% by a wide
+  // margin), NOT to validate the display value against a formula and NOT to
+  // catch legitimate USDA food-specific energy factor variation. The 12%
+  // ceiling is set from real observed data (max ~10.4%, oats), with headroom.
+  reconciliation_tolerance_macro_kcal_pct: 0.12,
   reconciliation_tolerance_macro_kcal_abs: 5,
-  note: 'Internal calculation always uses full, unrounded floating-point values. Rounding is applied ONLY at display/export time, never between calculation steps. Sum-of-parts totals (ingredient->meal->day) are EXACT, zero-tolerance arithmetic and must always reconcile precisely. The macro-to-kcal plausibility check is the one exception with a wider, explicitly-justified tolerance, because it validates against an inherently approximate model, not a second measurement of the same fact.'
+  note: 'Internal calculation always uses full, unrounded floating-point values. Rounding is applied ONLY at display/export time, never between calculation steps. Sum-of-parts totals (ingredient->meal->day) are EXACT, zero-tolerance arithmetic and must always reconcile precisely. The macro-to-kcal plausibility check is the one exception with a wider, explicitly-justified tolerance (12%), because it validates against an inherently approximate model, not a second measurement of the same fact. A genuine data-entry error still fails; legitimate USDA factor variation does not.'
 };
 function macroReconstructedKcal(totals) {
   const fiber = totals.fiber_g || 0;
@@ -3247,6 +4197,7 @@ function freezeMealInstance(recipeKey, { servingsUsed = 1, scaledIngredients = n
       protein_g: Math.round(totals.protein_g * 10) / 10,
       carbohydrate_g: Math.round(totals.carbohydrate_g * 10) / 10,
       fat_g: Math.round(totals.fat_g * 10) / 10,
+      fiber_g: Math.round((totals.fiber_g || 0) * 10) / 10,
     },
     exchanges,
   };
@@ -3270,6 +4221,49 @@ function renderMealText(instance, lang = 'en') {
     return `${name}${stateTxt} — ${i.grams}g`;
   });
   return parts.join(' + ');
+}
+
+// Concise, patient-facing food names — strips the clinical qualifiers that
+// are useful internally (", cooked, skinless", ", boiled, without skin",
+// composite parentheticals) but read as clutter on a patient handout.
+const PATIENT_FOOD_NAME = {
+  chicken_breast_cooked: { en: 'Chicken breast', gr: 'Στήθος κοτόπουλου' },
+  cod_baked: { en: 'Cod', gr: 'Μπακαλιάρος' },
+  salmon_baked: { en: 'Salmon', gr: 'Σολομός' },
+  rice_white_cooked: { en: 'White rice', gr: 'Λευκό ρύζι' },
+  potato_boiled: { en: 'Potato', gr: 'Πατάτα' },
+  lentils_cooked: { en: 'Lentils', gr: 'Φακές' },
+  olive_oil: { en: 'Olive oil', gr: 'Ελαιόλαδο' },
+  salad_mixed_raw: { en: 'Mixed salad', gr: 'Ανάμεικτη σαλάτα' },
+  mixed_vegetables_cooked: { en: 'Mixed vegetables', gr: 'Ανάμεικτα λαχανικά' },
+  egg_whole_cooked: { en: 'Egg', gr: 'Αυγό' },
+  lemon_juice: { en: 'Lemon juice', gr: 'Χυμός λεμονιού' },
+  chicken_broth: { en: 'Chicken broth', gr: 'Ζωμός κότας' },
+  halloumi_cheese: { en: 'Halloumi', gr: 'Χαλούμι' },
+  wholegrain_bread: { en: 'Wholegrain bread', gr: 'Ψωμί ολικής' },
+  cheese_light_slice: { en: 'Light cheese', gr: 'Τυρί light' },
+  ricotta_anthotyro: { en: 'Anthotyro', gr: 'Ανθότυρο' },
+  rusk_wholegrain: { en: 'Wholegrain rusk', gr: 'Παξιμάδι ολικής' },
+  apple: { en: 'Apple', gr: 'Μήλο' },
+  pork_loin_cooked: { en: 'Pork loin', gr: 'Χοιρινό φιλέτο' },
+  beef_mince_lean_cooked: { en: 'Lean beef mince', gr: 'Άπαχος κιμάς' },
+  tuna_canned_drained: { en: 'Tuna', gr: 'Τόνος' },
+  beef_pork_patty_cooked: { en: 'Bifteki (patty)', gr: 'Μπιφτέκι' },
+  bulgur_cooked: { en: 'Bulgur', gr: 'Πλιγούρι' },
+  green_beans_cooked: { en: 'Green beans', gr: 'Φασολάκια' },
+  pasta_cooked: { en: 'Pasta', gr: 'Ζυμαρικά' },
+  pita_bread: { en: 'Pita', gr: 'Πίτα' },
+  tomato_sauce: { en: 'Tomato sauce', gr: 'Σάλτσα ντομάτας' },
+};
+function renderMealTextPatient(instance, lang = 'en') {
+  return instance.ingredients.map(i => {
+    const shortName = (PATIENT_FOOD_NAME[i.food_id] && (PATIENT_FOOD_NAME[i.food_id][lang] || PATIENT_FOOD_NAME[i.food_id].en))
+      || (i.food_name[lang] || i.food_name.en);
+    // Keep 'drained' only — it materially changes the weight's meaning for
+    // canned goods. 'cooked'/'raw' are dropped as redundant on a handout.
+    const drainedTxt = i.state === 'drained' ? (lang === 'gr' ? ' (στραγγισμένο)' : ' (drained)') : '';
+    return `${shortName}${drainedTxt} – ${i.grams} g`;
+  });
 }
 
 // ---- from edit_meal.js ----
@@ -3532,7 +4526,7 @@ function suggestAdjustmentLevers(instance, goal) {
 window.NutreseEngine = {
   FOOD_DATABASE, FOOD_DB_VERSION, RECIPES, RECIPE_SCHEMA_VERSION,
   recipeTotals, deriveExchanges, ingredientTotal,
-  freezeMealInstance, renderMealText, ROUNDING_POLICY, macroReconstructedKcal,
+  freezeMealInstance, renderMealText, renderMealTextPatient, ROUNDING_POLICY, macroReconstructedKcal,
   setIngredientQuantity, addIngredient, removeIngredient, replaceIngredient, setServings, recalculate,
   resolveAiFoodSuggestion, validateAiMealSuggestion,
   exportPlanJSON, suggestAdjustmentLevers, effectiveFatRole,
@@ -4928,7 +5922,8 @@ function getStructuredInstanceForSlot(key, portions, _slotCtx){
   return window.NutreseEngine.freezeMealInstance(key);
 }
 
-function mealText(key, portions, lang){
+function mealText(key, portions, lang, opts){
+  const patientFormat = !!(opts && opts.patientFormat);
   if(isNoMealKey(key)){
     traceDecision('mealText','return-empty',{key, lang, reason:'no-meal'});
     return '';
@@ -4944,8 +5939,10 @@ function mealText(key, portions, lang){
   if(isMigratedMeal(key)){
     const engineLang = (lang||S.mealLanguage)==='EN' ? 'en' : 'gr';
     const inst = getStructuredInstanceForSlot(key, portions);
-    const text = window.NutreseEngine.renderMealText(inst, engineLang);
-    traceDecision('mealText','return-migrated',{key, lang, text});
+    const text = patientFormat
+      ? window.NutreseEngine.renderMealTextPatient(inst, engineLang).join(' + ')
+      : window.NutreseEngine.renderMealText(inst, engineLang);
+    traceDecision('mealText','return-migrated',{key, lang, text, patientFormat});
     return text;
   }
   const comp=mealCatalogIsFixedComposition(key) ? (mealCatalogExchangeComposition(key)||null) : null;
@@ -9094,7 +10091,31 @@ function strictMainDescription(mealKey, exch, lang='GR'){
   return (lang==='EN' ? enMap[mealKey] : grMap[mealKey]) || mealText(mealKey, portions, lang);
 }
 
+// SINGLE SOURCE OF TRUTH for "should this slot render via the structured
+// engine, and if so, what text?" Returns the structured text for a migrated
+// main-meal/breakfast slot, or null if the slot is not a migrated meal (so
+// the caller falls through to its legacy path). Centralizing this means:
+//   - all render surfaces (planner, strict fallback, report) share ONE
+//     decision, so they can never drift apart again (the Priority 5 bug
+//     was exactly such a drift);
+//   - when MIGRATED_MEAL_KEYS is expanded, every template automatically
+//     routes through the engine with no further per-surface changes.
+// opts.patientFormat selects the concise report render; opts.portions passes
+// slot portions through for the report path.
+function migratedSlotText(dayPlan, slotKey, lang, opts){
+  const slotToKey={brk:'brk', lun:'lun', din:'din'};
+  const mealKey = slotToKey[slotKey] ? dayPlan[slotToKey[slotKey]] : null;
+  if(!mealKey || !isMigratedMeal(mealKey)) return null;
+  return mealText(mealKey, (opts && opts.portions) || null, lang, opts && opts.patientFormat ? {patientFormat:true} : undefined);
+}
+
 function strictSlotText(dayPlan, slotKey, lang='GR', dayIndex=0){
+  // Migrated meals render exclusively from the structured instance via the
+  // shared migratedSlotText() helper — never through the legacy
+  // strictMainDescription path, which would append formula-derived
+  // oil/portion text and duplicate the quantity display.
+  const migrated = migratedSlotText(dayPlan, slotKey, lang);
+  if(migrated !== null) return migrated;
   const ledger=strictFallbackLedger(dayPlan, dayIndex);
   if(!ledger?.valid) return null;
   const exch=ledger.slots[slotKey]||{};
@@ -9170,6 +10191,8 @@ function fallbackSlotData(dayPlan, dt, slotKey, lang, dayIndex){
       sleep:lang==='EN'?'Before sleep':'Πριν τον ύπνο'
     };
     const slotText=()=>{
+      const migrated = migratedSlotText(dayPlan, slotKey, lang);
+      if(migrated !== null) return migrated;
       if(slotKey==='brk') return mealText(dayPlan.brk, null, lang);
       if(slotKey==='lun') return strictMainDescription(dayPlan.lun, dt.strictSlots.lun||{}, lang);
       if(slotKey==='din') return strictMainDescription(dayPlan.din, dt.strictSlots.din||{}, lang);
@@ -9208,6 +10231,11 @@ function getSevenDaySlotData(dayPlan, dt, slotKey, lang, dayIndex){
 function reportSevenDaySlotText(dayPlan, dt, slotKey, lang, dayIndex, extraOpts){
   const ai=aiMealForSlot(dayPlan, slotKey);
   if(ai) return aiMealText(ai, lang)+renderExtraFoodsForSlot(slotKey, dayIndex, extraOpts);
+  // Migrated meals render in the concise patient-facing format for reports,
+  // via the shared migratedSlotText() helper.
+  const portions = slotKey==='lun'?dt.portions.lunch:slotKey==='din'?dt.portions.dinner:null;
+  const migrated = migratedSlotText(dayPlan, slotKey, lang, {patientFormat:true, portions});
+  if(migrated !== null) return migrated + renderExtraFoodsForSlot(slotKey, dayIndex, extraOpts);
   if(dt?.strictSlots) return (strictSlotText(dayPlan, slotKey, lang, dayIndex)||'—')+renderExtraFoodsForSlot(slotKey, dayIndex, extraOpts);
   if(slotKey==='brk') return mealText(dayPlan.brk,null,lang)+renderExtraFoodsForSlot('brk', dayIndex, extraOpts);
   if(slotKey==='snk1') return dt.snk1Text+renderExtraFoodsForSlot('snk1', dayIndex, extraOpts);
@@ -11119,7 +12147,7 @@ function buildReport(){
       ${selectedReportRows.map(({plan:p,dayIndex,ordinal,dt},rowIndex)=>{
         const ok=Math.abs(dt.gap)<=100;
         const dayLabel=singleReportDay ? '' : (fullWeekReport ? weekDayLabel(p, dayIndex, lang) : (isEn?`Day ${ordinal+1}`:`Ημέρα ${ordinal+1}`));
-        const rowHeightStyle=fullWeekReport?'height:25.5mm;':'';
+        const rowHeightStyle=fullWeekReport?'height:23mm;':'';
         return `<tr style="${rowHeightStyle}background:${rowIndex%2===0?'var(--bg-surface)':'var(--teal-50)'};border-bottom:1px solid var(--border)">
           <td style="padding:4px;font-weight:700;word-wrap:break-word">${dayLabel}</td>
           <td style="padding:4px;word-wrap:break-word">${reportSevenDaySlotText(p,dt,'brk',lang,dayIndex,reportExtraOpts)}</td>
@@ -13558,6 +14586,21 @@ function setActiveClientIdentity(id, ref){
   const display=document.getElementById('p-id-display');
   if(hidden) hidden.value = S.activeClientRef;
   if(display) display.textContent = S.activeClientRef || 'New client';
+  updateGlobalSaveButton();
+}
+// Shows the always-available Save Client button whenever a client is being
+// worked on. Previously the client was only persisted if the dietitian
+// happened to click a save button on the Intake or Macros sub-screens — so
+// creating a client and going straight to meal planning never saved it.
+function updateGlobalSaveButton(){
+  const btn=document.getElementById('global-save-client-btn');
+  if(!btn) return;
+  const hasClient = !!(S.activeClientId || (v('p-name')||'').trim());
+  btn.style.display = hasClient ? '' : 'none';
+  if(hasClient && S_isDirty){
+    btn.classList.add('primary');
+    btn.title='You have unsaved changes — click to save this client';
+  }
 }
 function clientReferenceNumber(ref){
   const m=String(ref||'').match(/^C(\d+)$/i);
@@ -13757,6 +14800,17 @@ async function newClient(){
 // scoped to the signed-in user via Row Level Security
 async function saveCurrentClient(options={}){
   const silent=!!options.silent;
+  const gbtn=document.getElementById('global-save-client-btn');
+  if(gbtn && !silent){ gbtn.disabled=true; gbtn.dataset.orig=gbtn.innerHTML; gbtn.innerHTML='<i class="ti ti-loader" aria-hidden="true"></i> '+(window.appLang==='gr'?'Αποθήκευση...':'Saving...'); }
+  const finishBtn=(ok)=>{
+    if(gbtn && !silent){
+      gbtn.disabled=false;
+      gbtn.innerHTML = ok
+        ? '<i class="ti ti-circle-check" aria-hidden="true"></i> '+(window.appLang==='gr'?'Αποθηκεύτηκε':'Saved')
+        : (gbtn.dataset.orig || gbtn.innerHTML);
+      if(ok) setTimeout(()=>{ gbtn.innerHTML=gbtn.dataset.orig || gbtn.innerHTML; updateGlobalSaveButton(); }, 2000);
+    }
+  };
   saveIntake();
   saveNotes();
   const name=(v('p-name')||'').trim();
@@ -13766,6 +14820,7 @@ async function saveCurrentClient(options={}){
       nav('profile');
       setTimeout(()=>document.getElementById('p-name')?.focus(), 50);
     }
+    finishBtn(false);
     return false;
   }
   const identity=await ensureActiveClientIdentity();
@@ -13784,6 +14839,7 @@ async function saveCurrentClient(options={}){
     if(!silent) alert('<i class="ti ti-circle-check" aria-hidden="true"></i> Client saved locally: '+name+'\n\nFind it anytime under "My Clients".');
     await renderClientList();
     refreshConditionVisualState();
+    finishBtn(true);
     return true;
   }
   let error=null;
@@ -13819,6 +14875,7 @@ async function saveCurrentClient(options={}){
   }
   await renderClientList();
   refreshConditionVisualState();
+  finishBtn(!error);
   return !error;
 }
 
@@ -13874,7 +14931,7 @@ async function deleteClientById(rowId){
 async function renderClientList(){
   const el=document.getElementById('clients-table');
   if(!el) return;
-  el.innerHTML='<div style="color:var(--text-muted);text-align:center;padding:24px">Loading clients...</div>';
+  el.innerHTML='<div class="nutrese-loading"><span class="nutrese-spinner"></span> Loading clients...</div>';
   if(window.authReadyPromise) await window.authReadyPromise;
   const localClients=loadLocalClients();
   const searchEl=document.getElementById('client-search');
@@ -13884,7 +14941,7 @@ async function renderClientList(){
     renderClientListRows(S.clientListCache);
     return;
   }
-  el.innerHTML='<div style="color:var(--text-muted);text-align:center;padding:24px">Loading clients from Supabase...</div>';
+  el.innerHTML='<div class="nutrese-loading"><span class="nutrese-spinner"></span> Loading clients from Supabase...</div>';
   try{
     const remote=await fetchSupabaseClients();
     S.clientListCache=remote;
@@ -13925,7 +14982,7 @@ function renderClientListRows(clients){
   const loadLbl=isGr?'Άνοιγμα':'Open', delLbl=isGr?'Διαγραφή':'Delete', unnamedLbl=isGr?'Χωρίς όνομα':'Unnamed client', lastSavedLbl=isGr?'Τελ. αποθήκευση':'Last saved';
   const tableHtml='<table class="clients-table-modern"><thead><tr><th></th><th>'+(isGr?'Όνομα':'Name')+'</th><th>'+(isGr?'Αναφορά':'Reference')+'</th><th>'+lastSavedLbl+'</th><th></th></tr></thead><tbody>'+
     rows.map(({c,cond,savedAt,badge})=>`<tr><td style="width:44px">${clientAvatarHtml(c.data&&c.data.clientPhoto, c.name, 32)}</td><td><strong>${safeHtml(c.name||unnamedLbl)}</strong>${badge}<div style="font-size:11px;color:var(--text-muted)">${safeHtml(cond)}</div></td><td>${safeHtml(c.client_ref||'—')}</td><td>${safeHtml(savedAt)}</td>
-        <td style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn primary" style="padding:5px 10px;font-size:12px" onclick="loadClientById('${c.id}')"><i class="ti ti-eye" aria-hidden="true"></i> ${loadLbl}</button><button class="btn" style="padding:5px 10px;font-size:12px" onclick="deleteClientById('${c.id}')"><i class="ti ti-trash" aria-hidden="true"></i> ${delLbl}</button></td></tr>`).join('')+
+        <td style="text-align:right;white-space:nowrap"><div style="display:inline-flex;gap:8px;align-items:center"><button class="btn primary" style="padding:5px 12px;font-size:12px" onclick="loadClientById('${c.id}')"><i class="ti ti-eye" aria-hidden="true"></i> ${loadLbl}</button><button class="btn client-delete-btn" style="padding:5px 9px;font-size:12px" onclick="deleteClientById('${c.id}')" title="${delLbl}"><i class="ti ti-trash" aria-hidden="true"></i></button></div></td></tr>`).join('')+
     '</tbody></table>';
   const cardsHtml='<div class="client-cards-mobile">'+rows.map(({c,cond,savedAt,badge})=>`<div class="client-card-mobile">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
@@ -13933,7 +14990,7 @@ function renderClientListRows(clients){
       <div class="client-card-title" style="margin:0">${safeHtml(c.name||unnamedLbl)}</div>
     </div>${badge}
     <div class="client-card-meta">${safeHtml(c.client_ref||'—')} · ${safeHtml(cond)}<br>${lastSavedLbl}: ${safeHtml(savedAt)}</div>
-    <div class="client-card-actions"><button class="btn primary" style="padding:6px 10px;font-size:12px" onclick="loadClientById('${c.id}')"><i class="ti ti-eye" aria-hidden="true"></i> ${loadLbl}</button><button class="btn" style="padding:6px 10px;font-size:12px" onclick="deleteClientById('${c.id}')"><i class="ti ti-trash" aria-hidden="true"></i> ${delLbl}</button></div>
+    <div class="client-card-actions"><button class="btn primary" style="padding:6px 12px;font-size:12px" onclick="loadClientById('${c.id}')"><i class="ti ti-eye" aria-hidden="true"></i> ${loadLbl}</button><button class="btn client-delete-btn" style="padding:6px 10px;font-size:12px" onclick="deleteClientById('${c.id}')" title="${delLbl}"><i class="ti ti-trash" aria-hidden="true"></i></button></div>
   </div>`).join('')+'</div>';
   el.innerHTML=tableHtml+cardsHtml;
 }
@@ -14012,12 +15069,18 @@ function setAutosaveStatus(state, text){
   const el=document.getElementById('autosave-status'); if(!el) return;
   el.className='no-print autosave-status '+(state||'');
   el.textContent=text || '';
+  updateGlobalSaveButton();
 }
 function autosaveSession(){
   setAutosaveStatus('saving', window.appLang==='gr'?'Αποθήκευση...':'Saving...');
   try{
     localStorage.setItem('nutriflow_autosave', JSON.stringify(captureState()));
-    setAutosaveStatus('saved', window.appLang==='gr'?'Αποθηκεύτηκε ✓':'Saved ✓');
+    // NOTE: this is a local working-draft only — it protects against tab
+    // closes/refreshes, but does NOT add/update the client record in "My
+    // Clients". The wording deliberately avoids a bare "Saved ✓", which
+    // previously led dietitians to believe a new client had been persisted
+    // to My Clients when it had not (that requires "Save Client").
+    setAutosaveStatus('saved', window.appLang==='gr'?'Πρόχειρο αποθηκεύτηκε':'Draft autosaved');
   }catch(e){
     setAutosaveStatus('error', window.appLang==='gr'?'Αποτυχία αποθήκευσης':'Save failed');
   }
@@ -14140,6 +15203,7 @@ window.onload=function(){
   // Auto-save on any input/change anywhere in the form
   document.addEventListener('input', scheduleAutosave);
   document.addEventListener('change', scheduleAutosave);
+  restoreSidebarCollapsed();
 };
 </script>
 
@@ -14336,6 +15400,37 @@ function closeSidebar() {
   document.querySelector('.sidebar').classList.remove('open');
   document.getElementById('sidebar-overlay').classList.remove('open');
   document.body.style.overflow = '';
+}
+
+// ─── DESKTOP SIDEBAR COLLAPSE ───
+// Collapses the sidebar to a slim icon rail to reclaim screen space while
+// editing meals/plans (Notion/Linear/VS Code style). The collapsed state is
+// remembered across sessions via localStorage.
+function toggleSidebarCollapse() {
+  const sb = document.querySelector('.sidebar');
+  if (!sb) return;
+  const collapsed = sb.classList.toggle('collapsed');
+  try { localStorage.setItem('nutrese_sidebar_collapsed', collapsed ? '1' : '0'); } catch(e) {}
+  const btn = sb.querySelector('.sidebar-collapse-btn');
+  if (btn) {
+    btn.title = collapsed ? 'Expand sidebar' : 'Collapse sidebar';
+    const icon = btn.querySelector('i');
+    if (icon) icon.className = collapsed ? 'ti ti-layout-sidebar-left-expand' : 'ti ti-layout-sidebar-left-collapse';
+  }
+}
+function restoreSidebarCollapsed() {
+  let collapsed = false;
+  try { collapsed = localStorage.getItem('nutrese_sidebar_collapsed') === '1'; } catch(e) {}
+  if (!collapsed) return;
+  const sb = document.querySelector('.sidebar');
+  if (!sb) return;
+  sb.classList.add('collapsed');
+  const btn = sb.querySelector('.sidebar-collapse-btn');
+  if (btn) {
+    btn.title = 'Expand sidebar';
+    const icon = btn.querySelector('i');
+    if (icon) icon.className = 'ti ti-layout-sidebar-left-expand';
+  }
 }
 
 // ─── BOTTOM NAV ───
