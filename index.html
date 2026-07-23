@@ -3446,29 +3446,35 @@ function legacyMatchesClinical(foodOrName) {
  * NAME SNAPSHOT for frozen meal instances.
  *
  * This is the SINGLE place that decides what name data gets frozen into a
- * meal instance. Consumers (edit_meal, meal_instance) call this instead of
- * copying `food.name` themselves, so the snapshot shape is owned by the
- * accessor layer rather than scattered across modules.
+ * meal instance, and it implements the ratified FROZEN-RECORD CONTRACT:
  *
- * CURRENT BEHAVIOUR: returns the full name bundle, byte-identical to the
- * previous direct `food.name` copy. This is deliberate — historical frozen
- * instances and the current renderers both read the legacy `food_name[lang]`
- * / `food_name.en` fields off the snapshot, so narrowing the shape NOW would
- * break rendering of existing records.
+ *   1. MINIMAL SHAPE — only what rendering actually requires:
+ *          { clinical: {en, gr}, patient: {en, gr} }
+ *      The former top-level en/gr were duplicates of clinical (the audit
+ *      drift guard proves it), so dropping them loses no information.
  *
- * FUTURE (meal_instance migration phase): once every renderer resolves names
- * through the accessors, this can be narrowed to only the fields actually
- * required for rendering historical records — and that becomes a ONE-LINE
- * change here, with no consumer edits.
+ *   2. DEEP COPY — the returned object is built from freshly RESOLVED
+ *      strings, so it shares NO reference with FOOD_DATABASE. A later
+ *      canonical correction can therefore never retroactively rewrite an
+ *      existing historical record. (Before this, snapshots shared a live
+ *      reference and a canonical rename silently rewrote old plans AND
+ *      their rendered text.)
  *
- * NOTE: this intentionally returns the SAME object reference the previous
- * code copied, to preserve behaviour exactly. That means the snapshot shares
- * a reference with the canonical food object — a pre-existing characteristic,
- * flagged for the frozen-instance analysis rather than silently changed here.
+ *   3. INPUT-SHAPE TOLERANT — resolution runs through the accessors, so a
+ *      legacy {en, gr} food, a Step-2 food, or an already-minimal bundle
+ *      all snapshot correctly.
+ *
+ * Historical records written in ANY earlier shape keep rendering correctly,
+ * because the READ accessors retain their legacy fallbacks.
  */
 function getNameSnapshot(food) {
   const n = nameHolder(food);
-  return n || {};
+  if (!n) return { clinical: { en: '', gr: '' }, patient: { en: '', gr: '' } };
+  // Resolving to primitives is what makes this a genuine deep copy.
+  return {
+    clinical: { en: getClinicalName(n, 'en'), gr: getClinicalName(n, 'gr') },
+    patient:  { en: getPatientName(n, 'en'),  gr: getPatientName(n, 'gr')  },
+  };
 }
 
 // ---- from fat_role.js ----
@@ -4599,7 +4605,7 @@ function freezeMealInstance(recipeKey, { servingsUsed = 1, scaledIngredients = n
     // plan and NEVER changes even if the catalog recipe is edited later
     ingredients: ingredients.map(i => ({
       food_id: i.food_id,
-      food_name: FOOD_DATABASE[i.food_id].name,
+      food_name: getNameSnapshot(FOOD_DATABASE[i.food_id]),
       grams: i.grams,
       state: i.state,
       ...(i.fat_role === 'added' || i.fat_role === 'intrinsic' ? { fat_role: i.fat_role } : {}), // per-recipe override, when present (see fat_role.js)
@@ -4633,7 +4639,7 @@ const STATE_LABELS = {
 };
 function renderMealText(instance, lang = 'en') {
   const parts = instance.ingredients.map(i => {
-    const name = i.food_name[lang] || i.food_name.en;
+    const name = getClinicalName(i.food_name, lang);
     const stateLabel = STATE_LABELS[i.state];
     const stateTxt = stateLabel ? ` (${stateLabel[lang] || stateLabel.en})` : '';
     return `${name}${stateTxt} — ${i.grams}g`;
@@ -4676,7 +4682,13 @@ const PATIENT_FOOD_NAME = {
 function renderMealTextPatient(instance, lang = 'en') {
   return instance.ingredients.map(i => {
     const shortName = (PATIENT_FOOD_NAME[i.food_id] && (PATIENT_FOOD_NAME[i.food_id][lang] || PATIENT_FOOD_NAME[i.food_id].en))
-      || (i.food_name[lang] || i.food_name.en);
+    // SCOPE NOTE: the fallback deliberately resolves the CLINICAL name, not
+    // getPatientName(). The pre-migration fallback was `food_name[lang]`,
+    // i.e. the clinical/legacy name. Switching it to the snapshot's patient
+    // name would change rendered output for every food absent from the
+    // PATIENT_FOOD_NAME map below — a behaviour change outside this
+    // migration's scope. See checkpoint note on PATIENT_FOOD_NAME duplication.
+      || getClinicalName(i.food_name, lang);
     // Keep 'drained' only — it materially changes the weight's meaning for
     // canned goods. 'cooked'/'raw' are dropped as redundant on a handout.
     const drainedTxt = i.state === 'drained' ? (lang === 'gr' ? ' (στραγγισμένο)' : ' (drained)') : '';
@@ -4958,6 +4970,10 @@ window.NutreseEngine = {
   setIngredientQuantity, addIngredient, removeIngredient, replaceIngredient, setServings, recalculate,
   resolveAiFoodSuggestion, validateAiMealSuggestion,
   exportPlanJSON, suggestAdjustmentLevers, effectiveFatRole,
+  // Name accessors — app-side code must resolve snapshot names through
+  // these rather than reading food_name fields directly, so historical
+  // snapshot shapes stay handled in one place.
+  getClinicalName, getPatientName, getFoodName, getNameSnapshot,
 };
 })();
 
@@ -6322,7 +6338,7 @@ function exportStructuredPlanJSON(){
           ? plan.structuredInstances[sk]
           : window.NutreseEngine.freezeMealInstance(key);
         meals.push({ meal:slotName, recipe_id:key, structured:true,
-          items:stored.ingredients.map(i=>({food_id:i.food_id, name:i.food_name.en, quantity:i.grams, unit:'g', state:i.state, fdc_id:i.fdc_id, source:i.source, kcal:i.kcal, protein_g:i.protein_g, carbohydrate_g:i.carbohydrate_g, fat_g:i.fat_g})),
+          items:stored.ingredients.map(i=>({food_id:i.food_id, name:window.NutreseEngine.getClinicalName(i.food_name,'en'), quantity:i.grams, unit:'g', state:i.state, fdc_id:i.fdc_id, source:i.source, kcal:i.kcal, protein_g:i.protein_g, carbohydrate_g:i.carbohydrate_g, fat_g:i.fat_g})),
           totals:stored.totals, exchanges:stored.exchanges });
       } else {
         meals.push({ meal:slotName, recipe_id:key, structured:false, status:'legacy_pending', note:'This meal has not yet been migrated to the structured engine; ingredient-level data is not available.' });
