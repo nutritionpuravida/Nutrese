@@ -3473,6 +3473,51 @@ function legacyMatchesClinical(foodOrName) {
 }
 
 /**
+ * PREPARATION-STATE DUPLICATION CHECK.
+ *
+ * Clinical names are authored USDA-style descriptors and very often already
+ * state their preparation ("Chicken breast, cooked, skinless", "Cod fillet,
+ * baked", "Potato, boiled, without skin"). Appending the structured `state`
+ * on top produced visible duplication in generated plans:
+ *     "Chicken breast, cooked, skinless (cooked)"
+ *
+ * This returns true when the resolved NAME already conveys the preparation,
+ * so the renderer can suppress the redundant suffix.
+ *
+ * WHY THIS OPERATES ON THE NAME, not on a food-level flag: historical frozen
+ * snapshots contain only the name and state. A flag added to FOOD_DATABASE
+ * would not exist in records already written, so those would keep rendering
+ * duplicates forever. Checking the name works identically for LEGACY,
+ * CURRENT and MINIMAL snapshot shapes.
+ *
+ * Matching uses explicit STEMS rather than a loose regex — Greek inflects
+ * heavily (βρασμένο / βρασμένη / βρασμένα), and an early regex attempt here
+ * silently missed "braised" and "prepared", which is exactly the fragility
+ * this list is designed to avoid.
+ *
+ * NOTE: this suppresses only genuine DUPLICATION. A state that is absent
+ * from the name (e.g. "Banana" + raw) is informative and is NOT suppressed.
+ */
+const PREP_STEMS_EN = [
+  'cooked', 'raw', 'drained', 'baked', 'boiled', 'grilled', 'sauteed',
+  'sautéed', 'steamed', 'roasted', 'fried', 'braised', 'prepared',
+  // "dry" conveys the same information as the `raw` state for grains
+  // ("Oats, rolled (dry)" + raw rendered as "…(dry) (raw)").
+  'dry',
+];
+const PREP_STEMS_GR = [
+  'μαγειρεμ', 'ωμ', 'στραγγισμ', 'ψητ', 'βρασμ', 'σοταρισμ', 'ατμού',
+  'λαδερ', 'έτοιμ', 'ξηρ',
+];
+
+function nameStatesPreparation(resolvedName, lang = 'en') {
+  const s = String(resolvedName || '').toLowerCase();
+  if (!s) return false;
+  const stems = normalizeLang(lang) === 'gr' ? PREP_STEMS_GR : PREP_STEMS_EN;
+  return stems.some(stem => s.includes(stem.toLowerCase()));
+}
+
+/**
  * NAME SNAPSHOT for frozen meal instances.
  *
  * This is the SINGLE place that decides what name data gets frozen into a
@@ -4671,7 +4716,14 @@ function renderMealText(instance, lang = 'en') {
   const parts = instance.ingredients.map(i => {
     const name = getClinicalName(i.food_name, lang);
     const stateLabel = STATE_LABELS[i.state];
-    const stateTxt = stateLabel ? ` (${stateLabel[lang] || stateLabel.en})` : '';
+    // Suppress the structured state suffix when the authored clinical name
+    // ALREADY conveys the preparation — otherwise plans render duplicates
+    // like "Chicken breast, cooked, skinless (cooked)". Where the name does
+    // NOT mention preparation (e.g. "Tofu, firm"), the suffix is retained
+    // because it is genuinely informative about the weight basis.
+    const stateTxt = (stateLabel && !nameStatesPreparation(name, lang))
+      ? ` (${stateLabel[lang] || stateLabel.en})`
+      : '';
     return `${name}${stateTxt} — ${i.grams}g`;
   });
   return parts.join(' + ');
