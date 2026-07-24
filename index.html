@@ -2757,6 +2757,7 @@ const FOOD_DATABASE = {
     exchange: { category: 'starch', grams_per_exchange: 60, note: '1 starch exchange ≈ 1/3 cup cooked rice' },
     aliases: ["white rice, cooked","white rice","λευκό ρύζι, βρασμένο","λευκό ρύζι","rice white cooked"],
     provenance_tier: 'usda_exact',
+    household: { unit: 'cup', grams_per_unit: 158 },
     version: FOOD_DB_VERSION
   },
   potato_boiled: {
@@ -2766,6 +2767,7 @@ const FOOD_DATABASE = {
     exchange: { category: 'starch', grams_per_exchange: 90, note: '1 starch exchange ≈ 1 small potato (~90g)' },
     aliases: ["potato, boiled, without skin","potato","πατάτα, βραστή, χωρίς φλούδα","πατάτα","potato boiled"],
     provenance_tier: 'usda_exact',
+    household: { unit: 'sized_piece', sizes: { small: 90, medium: 150, large: 200 } },
     version: FOOD_DB_VERSION
   },
   lentils_cooked: {
@@ -2775,6 +2777,7 @@ const FOOD_DATABASE = {
     exchange: { category: 'starch', grams_per_exchange: 90, note: 'ADA classifies legumes under starch; 1 exchange ≈ 1/2 cup (~90g) cooked' },
     aliases: ["lentils, cooked","lentils","φακές, βρασμένες","φακές","lentils cooked"],
     provenance_tier: 'usda_exact',
+    household: { unit: 'cup', grams_per_unit: 198 },
     version: FOOD_DB_VERSION
   },
   olive_oil: {
@@ -2785,6 +2788,7 @@ const FOOD_DATABASE = {
     aliases: ["olive oil","ελαιόλαδο"],
     provenance_tier: 'usda_exact',
     fiber100: 0,
+    household: { unit: 'tsp', grams_per_unit: 5 },
     version: FOOD_DB_VERSION
   },
   salad_mixed_raw: {
@@ -2794,6 +2798,7 @@ const FOOD_DATABASE = {
     exchange: { category: 'veg', grams_per_exchange: 85, note: '1 veg exchange ≈ 1 cup raw' },
     aliases: ["mixed salad (lettuce, tomato, cucumber)","mixed salad","ανάμεικτη σαλάτα (μαρούλι, ντομάτα, αγγούρι)","ανάμεικτη σαλάτα","salad mixed raw"],
     provenance_tier: 'composite_estimate',
+    household: { unit: 'cup', grams_per_unit: 85 },
     version: FOOD_DB_VERSION
   },
   mixed_vegetables_cooked: {
@@ -2803,6 +2808,7 @@ const FOOD_DATABASE = {
     exchange: { category: 'veg', grams_per_exchange: 90, note: '1 veg exchange ≈ 1 cup cooked' },
     aliases: ["mixed vegetables, steamed (carrot, green bean, zucchini)","mixed vegetables","ανάμεικτα λαχανικά στον ατμό (καρότο, φασολάκι, κολοκυθάκι)","ανάμεικτα λαχανικά στον ατμό","mixed vegetables cooked"],
     provenance_tier: 'composite_estimate',
+    household: { unit: 'cup', grams_per_unit: 180 },
     version: FOOD_DB_VERSION
   },
   egg_whole_cooked: {
@@ -2813,6 +2819,7 @@ const FOOD_DATABASE = {
     aliases: ["egg, whole, cooked (boiled/poached)","egg","αυγό, ολόκληρο, μαγειρεμένο (βραστό/ποσέ)","αυγό","egg whole cooked"],
     provenance_tier: 'usda_exact',
     fiber100: 0,
+    household: { unit: 'piece', grams_per_unit: 50 },
     version: FOOD_DB_VERSION
   },
   lemon_juice: {
@@ -2823,6 +2830,7 @@ const FOOD_DATABASE = {
     aliases: ["lemon juice","χυμός λεμονιού"],
     provenance_tier: 'usda_exact',
     fiber100: 0,
+    household: { unit: 'tbsp', grams_per_unit: 15 },
     version: FOOD_DB_VERSION
   },
   chicken_broth: {
@@ -2833,6 +2841,7 @@ const FOOD_DATABASE = {
     aliases: ["chicken broth, clear","chicken broth","ζωμός κότας, διάφανος","ζωμός κότας"],
     provenance_tier: 'usda_exact',
     fiber100: 0,
+    household: { unit: 'cup', grams_per_unit: 240 },
     version: FOOD_DB_VERSION
   },
   halloumi_cheese: {
@@ -2852,6 +2861,7 @@ const FOOD_DATABASE = {
     exchange: { category: 'starch', grams_per_exchange: 30, note: '1 starch exchange = 1 slice (~30g)' },
     aliases: ["wholegrain bread","ψωμί ολικής άλεσης"],
     provenance_tier: 'usda_exact',
+    household: { unit: 'slice', grams_per_unit: 30 },
     version: FOOD_DB_VERSION
   },
   cheese_light_slice: {
@@ -2862,6 +2872,7 @@ const FOOD_DATABASE = {
     aliases: ["cheese, light/reduced-fat, sliced","cheese","τυρί light σε φέτες","cheese light slice"],
     provenance_tier: 'composite_estimate',
     fiber100: 0,
+    household: { unit: 'slice', grams_per_unit: 30 },
     version: FOOD_DB_VERSION
   },
   ricotta_anthotyro: {
@@ -2881,6 +2892,7 @@ const FOOD_DATABASE = {
     exchange: { category: 'starch', grams_per_exchange: 20, note: '1 starch exchange ≈ 1 rusk piece (~20g)' },
     aliases: ["wholegrain rusk (barley)","wholegrain rusk","παξιμάδι ολικής (κριθαρένιο)","παξιμάδι ολικής","rusk wholegrain"],
     provenance_tier: 'composite_estimate',
+    household: { unit: 'piece', grams_per_unit: 20 },
     version: FOOD_DB_VERSION
   },
   apple: {
@@ -2890,6 +2902,7 @@ const FOOD_DATABASE = {
     exchange: { category: 'fruit', grams_per_exchange: 120, note: '1 fruit exchange ≈ 1 small apple (~120g)' },
     aliases: ["apple, whole, raw","apple","μήλο, ολόκληρο, ωμό","μήλο"],
     provenance_tier: 'usda_exact',
+    household: { unit: 'piece', grams_per_unit: 120 },
     version: FOOD_DB_VERSION
   },
   // ---- Batch 2 additions ----
@@ -2940,6 +2953,7 @@ const FOOD_DATABASE = {
     exchange: { category: 'starch', grams_per_exchange: 90, note: '1 starch exchange ≈ 1/2 cup cooked bulgur' },
     aliases: ["bulgur wheat, cooked","bulgur wheat","πλιγούρι, βρασμένο","πλιγούρι","bulgur cooked"],
     provenance_tier: 'usda_exact',
+    household: { unit: 'cup', grams_per_unit: 182 },
     version: FOOD_DB_VERSION
   },
   green_beans_cooked: {
@@ -2949,6 +2963,7 @@ const FOOD_DATABASE = {
     exchange: { category: 'veg', grams_per_exchange: 90, note: '1 veg exchange ≈ 1 cup cooked' },
     aliases: ["green beans, cooked in tomato sauce","green beans","φασολάκια, βρασμένα σε σάλτσα ντομάτας","φασολάκια","green beans cooked"],
     provenance_tier: 'composite_estimate',
+    household: { unit: 'cup', grams_per_unit: 180 },
     version: FOOD_DB_VERSION
   },
   pasta_cooked: {
@@ -2958,6 +2973,7 @@ const FOOD_DATABASE = {
     exchange: { category: 'starch', grams_per_exchange: 75, note: '1 starch exchange ≈ 1/2 cup cooked pasta' },
     aliases: ["pasta, cooked","pasta","ζυμαρικά, βρασμένα","ζυμαρικά","pasta cooked"],
     provenance_tier: 'usda_exact',
+    household: { unit: 'cup', grams_per_unit: 140 },
     version: FOOD_DB_VERSION
   },
   pita_bread: {
@@ -2967,6 +2983,7 @@ const FOOD_DATABASE = {
     exchange: { category: 'starch', grams_per_exchange: 30, note: '1 starch exchange ≈ 1/3 pita' },
     aliases: ["pita bread","πίτα"],
     provenance_tier: 'usda_exact',
+    household: { unit: 'piece', grams_per_unit: 60 },
     version: FOOD_DB_VERSION
   },
   tomato_sauce: {
@@ -2977,6 +2994,7 @@ const FOOD_DATABASE = {
     aliases: ["tomato sauce","σάλτσα ντομάτας"],
     provenance_tier: 'usda_exact',
     fiber100: 0,
+    household: { unit: 'tbsp', grams_per_unit: 15 },
     version: FOOD_DB_VERSION
   },
   // ---- Batch 3 additions ----
@@ -2998,6 +3016,7 @@ const FOOD_DATABASE = {
     exchange: { category: 'starch', grams_per_exchange: 85, note: 'ADA classifies legumes under starch; 1 exchange ≈ 1/2 cup (~85g) cooked chickpeas' },
     aliases: ["chickpeas, cooked","chickpeas","ρεβίθια, βρασμένα","ρεβίθια","chickpeas cooked"],
     provenance_tier: 'usda_exact',
+    household: { unit: 'cup', grams_per_unit: 164 },
     version: FOOD_DB_VERSION
   },
   tofu_firm: {
@@ -3016,6 +3035,7 @@ const FOOD_DATABASE = {
     exchange: { category: 'starch', grams_per_exchange: 75, note: '1 starch exchange ≈ 1/2 cup (~75g) cooked quinoa' },
     aliases: ["quinoa, cooked","quinoa","κινόα, βρασμένη","κινόα","quinoa cooked"],
     provenance_tier: 'usda_exact',
+    household: { unit: 'cup', grams_per_unit: 185 },
     version: FOOD_DB_VERSION
   },
   cannellini_beans_cooked: {
@@ -3025,6 +3045,7 @@ const FOOD_DATABASE = {
     exchange: { category: 'starch', grams_per_exchange: 90, note: 'ADA classifies legumes under starch; 1 exchange ≈ 1/2 cup (~90g) cooked beans' },
     aliases: ["white (cannellini) beans, cooked","white","φασόλια (κανελίνι), βρασμένα","φασόλια","cannellini beans cooked"],
     provenance_tier: 'usda_exact',
+    household: { unit: 'cup', grams_per_unit: 179 },
     version: FOOD_DB_VERSION
   },
   spinach_cooked: {
@@ -3034,6 +3055,7 @@ const FOOD_DATABASE = {
     exchange: { category: 'veg', grams_per_exchange: 90, note: '1 veg exchange ≈ 1/2 cup (~90g) cooked spinach (denser than raw)' },
     aliases: ["spinach, cooked","spinach","σπανάκι, βρασμένο","σπανάκι","spinach cooked"],
     provenance_tier: 'usda_exact',
+    household: { unit: 'cup', grams_per_unit: 180 },
     version: FOOD_DB_VERSION
   },
   feta_cheese: {
@@ -3062,6 +3084,7 @@ const FOOD_DATABASE = {
     exchange: { category: 'veg', grams_per_exchange: 90, note: '1 veg exchange ≈ 1 medium pepper shell' },
     aliases: ["bell pepper (for stuffing)","bell pepper","πιπεριά (για γεμιστά)","πιπεριά","bell pepper raw"],
     provenance_tier: 'usda_exact',
+    household: { unit: 'cup', grams_per_unit: 90 },
     version: FOOD_DB_VERSION
   },
   tomato_raw: {
@@ -3071,6 +3094,7 @@ const FOOD_DATABASE = {
     exchange: { category: 'veg', grams_per_exchange: 90, note: '1 veg exchange ≈ 1 medium tomato shell' },
     aliases: ["tomato (for stuffing)","tomato","ντομάτα (για γεμιστά)","ντομάτα","tomato raw"],
     provenance_tier: 'usda_exact',
+    household: { unit: 'piece', grams_per_unit: 120 },
     version: FOOD_DB_VERSION
   },
   // ---- Batch 6 additions ----
@@ -3091,6 +3115,7 @@ const FOOD_DATABASE = {
     exchange: { category: 'starch', grams_per_exchange: 90, note: 'ADA classifies legumes under starch; 1 exchange ≈ 1/2 cup (~90g) cooked' },
     aliases: ["black-eyed beans (louvi), cooked","black-eyed beans","λουβί (μαυρομάτικα), βρασμένα","λουβί","black eyed beans cooked"],
     provenance_tier: 'usda_exact',
+    household: { unit: 'cup', grams_per_unit: 172 },
     version: FOOD_DB_VERSION
   },
   peas_cooked: {
@@ -3100,6 +3125,7 @@ const FOOD_DATABASE = {
     exchange: { category: 'starch', grams_per_exchange: 80, note: 'Starchy vegetable; ADA lists peas under starch. 1 exchange ≈ 1/2 cup (~80g)' },
     aliases: ["green peas (arakas), braised","green peas","αρακάς, λαδερός","αρακάς","peas cooked"],
     provenance_tier: 'usda_exact',
+    household: { unit: 'cup', grams_per_unit: 160 },
     version: FOOD_DB_VERSION
   },
   trachanas_soup: {
@@ -3109,6 +3135,7 @@ const FOOD_DATABASE = {
     exchange: { category: 'starch', grams_per_exchange: 120, note: 'Wheat-based soup; 1 starch exchange ≈ ~120g prepared soup' },
     aliases: ["trahanas soup (prepared)","trahanas soup","τραχανάς σούπα (έτοιμη)","τραχανάς σούπα","trachanas soup"],
     provenance_tier: 'composite_estimate',
+    household: { unit: 'cup', grams_per_unit: 240 },
     version: FOOD_DB_VERSION
   },
   // ---- Batch 7 additions ----
@@ -3130,6 +3157,7 @@ const FOOD_DATABASE = {
     exchange: { category: 'dairy', grams_per_exchange: 240, note: '1 dairy exchange ≈ 1 cup (~240g) milk' },
     aliases: ["milk, 1.5% fat","milk","γάλα 1,5%","γάλα 1","milk lowfat"],
     provenance_tier: 'usda_exact',
+    household: { unit: 'cup', grams_per_unit: 240 },
     version: FOOD_DB_VERSION
   },
   plant_milk_fortified: {
@@ -3139,6 +3167,7 @@ const FOOD_DATABASE = {
     exchange: { category: 'dairy', grams_per_exchange: 240, note: 'Plant-based dairy alternative; 1 exchange ≈ 1 cup (~240g)' },
     aliases: ["fortified plant milk (almond/soy)","fortified plant milk","εμπλουτισμένο φυτικό γάλα (αμύγδαλο/σόγια)","εμπλουτισμένο φυτικό γάλα","plant milk fortified"],
     provenance_tier: 'usda_approximate',
+    household: { unit: 'cup', grams_per_unit: 240 },
     version: FOOD_DB_VERSION
   },
   greek_yogurt_2pct: {
@@ -3148,6 +3177,7 @@ const FOOD_DATABASE = {
     exchange: { category: 'protein', grams_per_exchange: 60, note: 'Protein-rich dairy; counted as protein exchange (~60g per exchange for strained yogurt)' },
     aliases: ["greek yogurt, 2%","greek yogurt","γιαούρτι στραγγιστό 2%","greek yogurt 2pct"],
     provenance_tier: 'usda_exact',
+    household: { unit: 'cup', grams_per_unit: 245 },
     version: FOOD_DB_VERSION
   },
   soy_yogurt: {
@@ -3157,6 +3187,7 @@ const FOOD_DATABASE = {
     exchange: { category: 'dairy', grams_per_exchange: 150, note: 'Plant-based yogurt; 1 exchange ≈ small pot (~150g)' },
     aliases: ["soy yogurt","γιαούρτι σόγιας"],
     provenance_tier: 'composite_estimate',
+    household: { unit: 'pot', grams_per_unit: 150 },
     version: FOOD_DB_VERSION
   },
   oats_dry: {
@@ -3166,6 +3197,7 @@ const FOOD_DATABASE = {
     exchange: { category: 'starch', grams_per_exchange: 20, note: '1 starch exchange ≈ 20g dry oats (~2.5 tbsp)' },
     aliases: ["oats, rolled (dry)","oats","βρώμη, νιφάδες (ξηρή)","βρώμη","oats dry"],
     provenance_tier: 'usda_exact',
+    household: { unit: 'tbsp', grams_per_unit: 8 },
     version: FOOD_DB_VERSION
   },
   walnuts: {
@@ -3175,6 +3207,7 @@ const FOOD_DATABASE = {
     exchange: { category: 'fat', grams_per_exchange: 8, note: 'Nut fat is intrinsic; ~8g (about 4 halves) per fat exchange' },
     aliases: ["walnuts","καρύδια"],
     provenance_tier: 'usda_exact',
+    household: { unit: 'piece', grams_per_unit: 2 },
     version: FOOD_DB_VERSION
   },
   honey: {
@@ -3184,6 +3217,7 @@ const FOOD_DATABASE = {
     exchange: { category: 'starch', grams_per_exchange: 15, note: 'Concentrated sugar; ~15g (~1 tsp) counted as 1 starch/carb exchange' },
     aliases: ["honey","μέλι"],
     provenance_tier: 'usda_exact',
+    household: { unit: 'tsp', grams_per_unit: 7 },
     version: FOOD_DB_VERSION
   },
   tahini: {
@@ -3193,6 +3227,7 @@ const FOOD_DATABASE = {
     exchange: { category: 'fat', grams_per_exchange: 10, note: 'Seed paste; fat is intrinsic; ~10g per fat exchange' },
     aliases: ["tahini (sesame paste)","tahini","ταχίνι"],
     provenance_tier: 'usda_exact',
+    household: { unit: 'tsp', grams_per_unit: 5 },
     version: FOOD_DB_VERSION
   },
   banana: {
@@ -3202,6 +3237,7 @@ const FOOD_DATABASE = {
     exchange: { category: 'fruit', grams_per_exchange: 100, note: '1 fruit exchange ≈ 1 small banana (~100g)' },
     aliases: ["banana","μπανάνα"],
     provenance_tier: 'usda_exact',
+    household: { unit: 'piece', grams_per_unit: 100 },
     version: FOOD_DB_VERSION
   },
   turkey_slice: {
@@ -3211,6 +3247,7 @@ const FOOD_DATABASE = {
     exchange: { category: 'protein', grams_per_exchange: 30, note: 'Lean protein exchange; 1 slice ≈ 30g' },
     aliases: ["turkey breast, sliced (deli)","turkey breast","γαλοπούλα, φέτες","γαλοπούλα","turkey slice"],
     provenance_tier: 'usda_exact',
+    household: { unit: 'slice', grams_per_unit: 30 },
     version: FOOD_DB_VERSION
   },
   cucumber_raw: {
@@ -3250,6 +3287,7 @@ const FOOD_DATABASE = {
     exchange: { category: 'protein', grams_per_exchange: 60, note: 'Protein-rich fresh cheese; ~60g per protein exchange' },
     aliases: ["cottage cheese, low-fat","cottage cheese","τυρί cottage, χαμηλών λιπαρών","τυρί cottage"],
     provenance_tier: 'usda_exact',
+    household: { unit: 'cup', grams_per_unit: 226 },
     version: FOOD_DB_VERSION
   },
   crackers_wholegrain: {
@@ -3259,6 +3297,7 @@ const FOOD_DATABASE = {
     exchange: { category: 'starch', grams_per_exchange: 18, note: '1 starch exchange ≈ 4 crackers (~18g)' },
     aliases: ["wholegrain crackers","κράκερ ολικής","crackers wholegrain"],
     provenance_tier: 'usda_exact',
+    household: { unit: 'piece', grams_per_unit: 4.5 },
     version: FOOD_DB_VERSION
   },
   rice_cakes: {
@@ -3268,6 +3307,7 @@ const FOOD_DATABASE = {
     exchange: { category: 'starch', grams_per_exchange: 10, note: '1 starch exchange ≈ 1-2 rice cakes (~10g)' },
     aliases: ["rice cakes","ρυζογκοφρέτες"],
     provenance_tier: 'usda_exact',
+    household: { unit: 'piece', grams_per_unit: 10 },
     version: FOOD_DB_VERSION
   },
   almonds: {
@@ -3277,6 +3317,7 @@ const FOOD_DATABASE = {
     exchange: { category: 'fat', grams_per_exchange: 8, note: 'Nut fat is intrinsic; ~8g (about 6 almonds) per fat exchange' },
     aliases: ["almonds","αμύγδαλα"],
     provenance_tier: 'usda_exact',
+    household: { unit: 'piece', grams_per_unit: 1.2 },
     version: FOOD_DB_VERSION
   },
   dried_fruit: {
@@ -3286,6 +3327,7 @@ const FOOD_DATABASE = {
     exchange: { category: 'fruit', grams_per_exchange: 20, note: 'Concentrated fruit; 1 fruit exchange ≈ ~20g (2 tbsp)' },
     aliases: ["dried fruit (raisins/apricots)","dried fruit","αποξηραμένα φρούτα (σταφίδες/βερίκοκα)","αποξηραμένα φρούτα"],
     provenance_tier: 'usda_approximate',
+    household: { unit: 'tbsp', grams_per_unit: 10 },
     version: FOOD_DB_VERSION
   },
   cocoa_powder: {
@@ -3295,6 +3337,7 @@ const FOOD_DATABASE = {
     exchange: { category: 'free', grams_per_exchange: null, note: 'Used in small quantities (~5g) as flavoring; treated as free at typical amounts' },
     aliases: ["cocoa powder, unsweetened","cocoa powder","κακάο σκόνη, χωρίς ζάχαρη","κακάο σκόνη"],
     provenance_tier: 'usda_exact',
+    household: { unit: 'tsp', grams_per_unit: 5 },
     version: FOOD_DB_VERSION
   },
   oat_biscuits: {
@@ -3304,6 +3347,7 @@ const FOOD_DATABASE = {
     exchange: { category: 'starch', grams_per_exchange: 20, note: '2-3 biscuits ≈ 1 starch + 1 fat; ~20g per starch exchange' },
     aliases: ["oat biscuits","μπισκότα βρώμης"],
     provenance_tier: 'composite_estimate',
+    household: { unit: 'piece', grams_per_unit: 10 },
     version: FOOD_DB_VERSION
   },
   cereal_bar: {
@@ -3313,6 +3357,7 @@ const FOOD_DATABASE = {
     exchange: { category: 'starch', grams_per_exchange: 25, note: '1 bar (~25g) ≈ 1 starch + 1 fat exchange' },
     aliases: ["cereal bar","μπάρα δημητριακών"],
     provenance_tier: 'composite_estimate',
+    household: { unit: 'piece', grams_per_unit: 25 },
     version: FOOD_DB_VERSION
   },
 };
@@ -3473,6 +3518,136 @@ function legacyMatchesClinical(foodOrName) {
 }
 
 /**
+ * HOUSEHOLD MEASURE PRESENTATION (Presentation Spec v1)
+ * ------------------------------------------------------------
+ * Converts a canonical USDA gram weight into a dietitian-friendly household
+ * measure. PRESENTATION ONLY — grams remain the calculation source and are
+ * never altered. Nutrition, exchanges and recipe weights are untouched.
+ *
+ * Rules implemented:
+ *   * kitchen increments only (¼ ⅓ ½ ⅔ ¾ 1 1¼ 1⅓ 1½ …) — never "0.73 cups"
+ *   * tsp rolls into tbsp at 3 tsp
+ *   * potatoes render as sized pieces (small/medium/large)
+ *   * DEVIATION GUARD: if the rounded measure is more than 10% away from the
+ *     true grams, we do NOT silently mislead — the caller is told to fall
+ *     back to grams (returns null).
+ *   * foods with no authored household unit always return null -> grams.
+ */
+const HOUSEHOLD_INCREMENTS = [0.25, 1 / 3, 0.5, 2 / 3, 0.75, 1];
+const FRACTION_GLYPH = { 0.25: '¼', 0.5: '½', 0.75: '¾' };
+const HOUSEHOLD_TOLERANCE = 0.10;
+
+const UNIT_LABELS = {
+  slice:  { en: ['slice', 'slices'],   gr: ['φέτα', 'φέτες'] },
+  piece:  { en: ['piece', 'pieces'],   gr: ['τεμάχιο', 'τεμάχια'] },
+  cup:    { en: ['cup', 'cups'],       gr: ['φλ.', 'φλ.'] },
+  tbsp:   { en: ['tbsp', 'tbsp'],      gr: ['κ.σ.', 'κ.σ.'] },
+  tsp:    { en: ['tsp', 'tsp'],        gr: ['κ.γ.', 'κ.γ.'] },
+  pot:    { en: ['pot', 'pots'],       gr: ['κεσεδάκι', 'κεσεδάκια'] },
+};
+const POTATO_SIZE_LABELS = {
+  // Size words only — the FOOD NAME already supplies the noun, so labelling
+  // the full "medium potato" would render "Potato – 1 medium potato".
+  small:  { en: ['small', 'small'],   gr: ['μικρή', 'μικρές'] },
+  medium: { en: ['medium', 'medium'], gr: ['μέτρια', 'μέτριες'] },
+  large:  { en: ['large', 'large'],   gr: ['μεγάλη', 'μεγάλες'] },
+};
+
+function formatQuantity(n) {
+  const whole = Math.floor(n);
+  const frac = Math.round((n - whole) * 1000) / 1000;
+  let fracTxt = '';
+  if (frac > 0.001) {
+    if (Math.abs(frac - 1 / 3) < 0.02) fracTxt = '⅓';
+    else if (Math.abs(frac - 2 / 3) < 0.02) fracTxt = '⅔';
+    else fracTxt = FRACTION_GLYPH[frac] || String(frac);
+  }
+  if (whole === 0) return fracTxt || '0';
+  return fracTxt ? `${whole}${fracTxt}` : String(whole);
+}
+
+function snapToIncrement(value) {
+  const whole = Math.floor(value);
+  const rem = value - whole;
+  let best = 0, bestDiff = Infinity;
+  [0, ...HOUSEHOLD_INCREMENTS].forEach(inc => {
+    const d = Math.abs(rem - inc);
+    if (d < bestDiff) { bestDiff = d; best = inc; }
+  });
+  return best === 1 ? whole + 1 : whole + best;
+}
+
+function unitLabel(unit, count, lang) {
+  // `piece` is a generic placeholder — for self-naming foods it reads badly
+  // ("Apple – 1 piece"). Omitting it gives "Apple – 1", "Egg – 2", which is
+  // how a dietitian would actually write it.
+  if (unit === 'piece') return '';
+  const l = normalizeLang(lang);
+  const pair = UNIT_LABELS[unit];
+  if (!pair) return unit;
+  const forms = pair[l] || pair.en;
+  // Plural only above 1 — "¾ cups" is wrong, "¾ cup" is correct.
+  return count > 1 ? forms[1] : forms[0];
+}
+
+/**
+ * Returns a household-measure string, or NULL when grams should be shown
+ * instead (no authored unit, or rounding would exceed the tolerance).
+ */
+function formatHouseholdMeasure(household, grams, lang = 'en') {
+  if (!household || !grams || grams <= 0) return null;
+  const l = normalizeLang(lang);
+
+  // --- sized pieces (potatoes) ---
+  if (household.unit === 'sized_piece' && household.sizes) {
+    let best = null;
+    Object.entries(household.sizes).forEach(([size, g]) => {
+      const count = snapToIncrement(grams / g);
+      if (count < 0.5) return;
+      const dev = Math.abs(count * g - grams) / grams;
+      if (dev > HOUSEHOLD_TOLERANCE) return;
+      // Prefer a size that yields a WHOLE count ("1 medium potato") over one
+      // that needs a fraction ("1⅔ small potato"); tie-break on fewer pieces.
+      const fracPenalty = Math.abs(count - Math.round(count));
+      const score = fracPenalty * 10 + count * 0.1 + dev;
+      if (!best || score < best.score) best = { size, count, dev, score };
+    });
+    if (!best) return null;
+    const forms = POTATO_SIZE_LABELS[best.size][l] || POTATO_SIZE_LABELS[best.size].en;
+    const label = best.count > 1 ? forms[1] : forms[0];
+    return `${formatQuantity(best.count)} ${label}`;
+  }
+
+  const gpu = household.grams_per_unit;
+  if (!gpu) return null;
+
+  // --- tsp rolls into tbsp at 3 tsp ---
+  if (household.unit === 'tsp') {
+    const tsp = grams / gpu;
+    const snappedTsp = snapToIncrement(tsp);
+    if (Math.abs(snappedTsp * gpu - grams) / grams > HOUSEHOLD_TOLERANCE) return null;
+    if (snappedTsp >= 3) {
+      const tbsp = Math.floor(snappedTsp / 3);
+      const rest = Math.round((snappedTsp - tbsp * 3) * 100) / 100;
+      const tbspTxt = `${tbsp} ${unitLabel('tbsp', tbsp, l)}`;
+      return rest > 0.05 ? `${tbspTxt} + ${formatQuantity(rest)} ${unitLabel('tsp', rest, l)}` : tbspTxt;
+    }
+    return `${formatQuantity(snappedTsp)} ${unitLabel('tsp', snappedTsp, l)}`;
+  }
+
+  const raw = grams / gpu;
+  // Countable `piece` items are whole things — you cannot serve 7½ walnuts or
+  // 4¼ crackers. Everything else may take kitchen fractions (½ cup, ¾ slice).
+  const snapped = household.unit === 'piece'
+    ? Math.max(1, Math.round(raw))
+    : snapToIncrement(raw);
+  if (snapped <= 0) return null;
+  if (Math.abs(snapped * gpu - grams) / grams > HOUSEHOLD_TOLERANCE) return null;
+  const label = unitLabel(household.unit, snapped, l);
+  return label ? `${formatQuantity(snapped)} ${label}` : formatQuantity(snapped);
+}
+
+/**
  * PREPARATION-STATE DUPLICATION CHECK.
  *
  * Clinical names are authored USDA-style descriptors and very often already
@@ -3515,6 +3690,29 @@ function nameStatesPreparation(resolvedName, lang = 'en') {
   if (!s) return false;
   const stems = normalizeLang(lang) === 'gr' ? PREP_STEMS_GR : PREP_STEMS_EN;
   return stems.some(stem => s.includes(stem.toLowerCase()));
+}
+
+/**
+ * HOUSEHOLD SNAPSHOT for frozen meal instances.
+ *
+ * Rendering a historical plan needs its household unit, so per the ratified
+ * FROZEN-RECORD CONTRACT the snapshot must carry it. Deep-copied (built from
+ * primitives) so a later correction to FOOD_DATABASE can never rewrite an
+ * existing record's presentation.
+ *
+ * Returns null for foods with no authored household unit — those render in
+ * grams by design (meat, fish, block cheese, aromatics). Historical snapshots
+ * written before this field existed also yield null, and therefore keep
+ * rendering in grams exactly as they always did.
+ */
+function getHouseholdSnapshot(food) {
+  const hh = food && food.household;
+  if (!hh) return null;
+  if (hh.unit === 'sized_piece' && hh.sizes) {
+    return { unit: 'sized_piece', sizes: { small: hh.sizes.small, medium: hh.sizes.medium, large: hh.sizes.large } };
+  }
+  if (!hh.grams_per_unit) return null;
+  return { unit: hh.unit, grams_per_unit: hh.grams_per_unit };
 }
 
 /**
@@ -4681,6 +4879,7 @@ function freezeMealInstance(recipeKey, { servingsUsed = 1, scaledIngredients = n
     ingredients: ingredients.map(i => ({
       food_id: i.food_id,
       food_name: getNameSnapshot(FOOD_DATABASE[i.food_id]),
+      household: getHouseholdSnapshot(FOOD_DATABASE[i.food_id]),
       grams: i.grams,
       state: i.state,
       ...(i.fat_role === 'added' || i.fat_role === 'intrinsic' ? { fat_role: i.fat_role } : {}), // per-recipe override, when present (see fat_role.js)
@@ -4724,7 +4923,11 @@ function renderMealText(instance, lang = 'en') {
     const stateTxt = (stateLabel && !nameStatesPreparation(name, lang))
       ? ` (${stateLabel[lang] || stateLabel.en})`
       : '';
-    return `${name}${stateTxt} — ${i.grams}g`;
+    // CLINICAL VIEW: household measure + grams, so the dietitian sees the
+    // practical portion AND the exact calculation weight.
+    const hh = formatHouseholdMeasure(i.household, i.grams, lang);
+    const qty = hh ? `${hh} (${i.grams}g)` : `${i.grams}g`;
+    return `${name}${stateTxt} — ${qty}`;
   });
   return parts.join(' + ');
 }
@@ -4740,7 +4943,14 @@ function renderMealTextPatient(instance, lang = 'en') {
     // Keep 'drained' only — it materially changes the weight's meaning for
     // canned goods. 'cooked'/'raw' are dropped as redundant on a handout.
     const drainedTxt = i.state === 'drained' ? (lang === 'gr' ? ' (στραγγισμένο)' : ' (drained)') : '';
-    return `${shortName}${drainedTxt} – ${i.grams} g`;
+    // PATIENT VIEW: household measure ALONE where the food has an authored
+    // unit (bread -> slices, rice -> cups, oil -> tsp). Foods deliberately
+    // without a household unit (meat, fish, block cheese) keep grams, exactly
+    // as the Clinical Presentation Specification requires. The 10% rounding
+    // guard inside the formatter falls back to grams rather than mislead.
+    const hh = formatHouseholdMeasure(i.household, i.grams, lang);
+    const qty = hh || `${i.grams} g`;
+    return `${shortName}${drainedTxt} – ${qty}`;
   });
 }
 
@@ -4764,6 +4974,7 @@ function recalculate(instance) {
         food_id: i.food_id,
         // Snapshot shape is owned by the accessor layer (see getNameSnapshot).
         food_name: getNameSnapshot(food),
+        household: getHouseholdSnapshot(food),
         grams: Math.round(i.grams * 10) / 10,
         state: i.state,
         source: food.source,
@@ -5022,6 +5233,7 @@ window.NutreseEngine = {
   // these rather than reading food_name fields directly, so historical
   // snapshot shapes stay handled in one place.
   getClinicalName, getPatientName, getFoodName, getNameSnapshot,
+  formatHouseholdMeasure, getHouseholdSnapshot,
 };
 })();
 
@@ -7875,7 +8087,7 @@ function mealOptionsHtml(options, current){
   const lang=S.mealLanguage||'GR';
   const noneOption=`<option value="__NONE__" ${current==='__NONE__'?'selected':''}>${lang==='EN'?'— No selection —':'— Καμία επιλογή —'}</option>`;
   const base=options.map(o=>`<option value="${o.v}" ${o.v===current?'selected':''}>${safeHtml(mealOptionDisplayLabel(o, lang))}</option>`).join('');
-  const customCreate=`<option value="__CUSTOM__">＋ Custom meal</option>`;
+  const customCreate=`<option value="__CUSTOM__">${lang==='EN'?'＋ Custom meal':'＋ Προσαρμοσμένο γεύμα'}</option>`;
   const custom=(S.customMeals||[]).map(m=>{
     const v='CUSTOM_'+m.id;
     return `<option value="${v}" ${v===current?'selected':''}><i class="ti ti-pencil" aria-hidden="true"></i> Custom — ${safeHtml(m.name||'Meal')}</option>`;
@@ -14012,7 +14224,9 @@ const NUTRESE_RECIPE_TEMPLATES = [
 ];
 function localizeRecipeTemplateIngredient(ing){
   const isGr=window.appLang==='gr';
-  return {...ing, name: typeof ing.name==='object' ? (isGr ? ing.name.gr : ing.name.en) : ing.name};
+  // ACCESSOR: resolve through the canonical layer so any snapshot shape
+  // (legacy {en,gr}, Step-2, or minimal {clinical,patient}) renders correctly.
+  return {...ing, name: typeof ing.name==='object' ? window.NutreseEngine.getClinicalName(ing.name, isGr?'gr':'en') : ing.name};
 }
 function recipeTemplatePhotoUrl(key){
   const photos={
@@ -14066,7 +14280,7 @@ function renderRecipeTemplates(){
     const ingredients=t.ingredients.map(localizeRecipeTemplateIngredient);
     const total=recipeTotals(ingredients);
     const per=Math.round(total.kcal/Math.max(1,t.servings||1));
-    const name=isGr?t.name.gr:t.name.en;
+    const name=window.NutreseEngine.getClinicalName(t.name, isGr?'gr':'en');
     const summary=isGr?t.summary.gr:t.summary.en;
     const image=recipeTemplateImage(t.imageKey);
     return `<div style="border:1px solid var(--border);border-radius:12px;background:var(--bg-surface);overflow:hidden;display:flex;flex-direction:column">
@@ -14084,7 +14298,7 @@ function loadRecipeTemplate(id){
   const t=NUTRESE_RECIPE_TEMPLATES.find(x=>x.id===id); if(!t) return;
   const isGr=window.appLang==='gr';
   const n=document.getElementById('recipe-name'), s=document.getElementById('recipe-servings'), ins=document.getElementById('recipe-instructions');
-  if(n) n.value=isGr?t.name.gr:t.name.en;
+  if(n) n.value=window.NutreseEngine.getClinicalName(t.name, isGr?'gr':'en');
   if(s) s.value=t.servings||1;
   if(ins) ins.value=isGr?t.instructions.gr:t.instructions.en;
   S.recipeDraft=t.ingredients.map(localizeRecipeTemplateIngredient);
@@ -15010,7 +15224,13 @@ function applyState(state){
   if(state.aiPlanStatus!==undefined) S.aiPlanStatus=state.aiPlanStatus;
   S.extraFoods=Array.isArray(state.extraFoods)?state.extraFoods:[];
   S.equivalentNotes=state.equivalentNotes&&typeof state.equivalentNotes==='object' ? state.equivalentNotes : {};
-  if(state.mealLanguage) S.mealLanguage=state.mealLanguage;
+  // LANGUAGE: a saved client must NEVER silently change the interface
+  // language. Opening an English-era client while working in Greek used to
+  // flip meal rendering to English mid-session. The saved value is retained
+  // as historical metadata only; rendering always follows the CURRENT
+  // application language.
+  if(state.mealLanguage) S.savedMealLanguage=state.mealLanguage;
+  S.mealLanguage = (window.appLang==='en') ? 'EN' : 'GR';
   if(state.reportOptions){
     S.reportOptions={includeBlood:true,includeEquivalents:false,days:allReportDayIndexes(),...state.reportOptions,oneDay:false,sevenDay:true};
     syncReportModeControls();
@@ -15064,7 +15284,11 @@ function resetForm(){
   S.weekPlans=WEEK_PLANS.map(p=>({...p}));
   S.currentTemplate=null;
   S.savedWeeklyPlan=null;
-  S.mealLanguage='GR';
+  // LANGUAGE: the application language is the single source of truth. A new
+  // client must inherit the dietitian's CURRENT choice. This previously
+  // hardcoded 'GR', so creating a client while the UI was in English forced
+  // Greek meal dropdowns into an English interface — the mixed-language bug.
+  S.mealLanguage = (window.appLang==='en') ? 'EN' : 'GR';
   S.reportOptions={oneDay:false,sevenDay:true,includeBlood:true,includeEquivalents:false,days:allReportDayIndexes()};
   syncReportModeControls();
   if(document.getElementById('page-labs')?.classList.contains('active')) { const labDateEl=document.getElementById('lab-date'); if(labDateEl) labDateEl.value=S.labDate||''; renderClientDocuments(); renderLabsTable(); }
