@@ -525,12 +525,6 @@ i.ti-circle-x { color: var(--red-text); }
 #page-dashboard #dash-appointments > div { padding:2px 0; }
 #page-dashboard #dash-quick-actions .btn { border-radius:var(--radius); }
 #page-dashboard #dash-no-client-prompt.bento-accent { background:transparent; border:0; box-shadow:none; padding:0; }
-#page-dashboard .dashboard-empty-state { min-height:250px; border-radius:22px; gap:12px; padding:28px; background:linear-gradient(145deg,rgba(233,246,240,.82),rgba(255,255,255,.86)); border:1px solid rgba(17,135,93,.14); box-shadow:var(--dash-shadow); }
-#page-dashboard .dashboard-empty-icon { width:auto; height:auto; border-radius:0; background:transparent; font-size:34px; line-height:1; }
-#page-dashboard .dashboard-empty-title { font-size:20px; font-weight:900; letter-spacing:-.01em; }
-#page-dashboard .dashboard-empty-copy { max-width:470px; color:var(--text-muted); font-size:13px; line-height:1.65; }
-#page-dashboard .dashboard-empty-actions .btn { min-width:132px; justify-content:center; }
-#page-dashboard .dash-section-label { margin:18px 0 10px; font-size:10px; font-weight:900; color:var(--text-muted); letter-spacing:.09em; }
 #page-dashboard .metrics-grid { gap:12px; margin-top:0; }
 #page-dashboard .metrics-grid .metric { border-radius:18px; padding:16px; box-shadow:0 14px 34px rgba(16,24,20,.045); border:1px solid var(--dash-line); background:rgba(255,255,255,.9); }
 #page-dashboard .metrics-grid .metric:hover { border-color:rgba(15,118,110,.22); }
@@ -564,31 +558,50 @@ i.ti-circle-x { color: var(--red-text); }
 @media (max-width: 980px){ #page-dashboard .bento-grid{grid-template-columns:1fr} #page-dashboard .bento-header{gap:24px} }
 @media (max-width: 640px){ #page-dashboard .bento-header{flex-direction:column;gap:18px} #page-dashboard .bento-stats{width:100%} #page-dashboard .bento-stats > div{min-width:0;width:100%} }
 
-/* ─── DASHBOARD v2 — premium clinical workspace: spacing/hierarchy over boxes ─── */
-#page-dashboard .dash-stat-strip { display:flex; align-items:stretch; padding:4px 0 20px; border-bottom:0.5px solid var(--border); margin-bottom:24px; }
+/* ─── DASHBOARD v2 — premium clinical workspace: grouped clinical cards, not disconnected KPI tiles ─── */
+#page-dashboard #dash-alert .alert { padding:6px 10px; font-size:12px; margin-bottom:16px; border-left-width:2px; box-shadow:none; }
+#page-dashboard .dash-stat-strip { display:flex; align-items:stretch; padding:2px 0 18px; border-bottom:0.5px solid var(--border); margin-bottom:26px; }
 #page-dashboard .dash-stat-strip > div { flex:1; text-align:center; cursor:pointer; }
 #page-dashboard .dash-stat-strip > div:hover .bs-value { color:var(--teal-700); }
 #page-dashboard .dash-stat-strip .dash-stat-divider { width:0.5px; background:var(--border); flex:none; }
-#page-dashboard .dash-stat-strip .bs-value { font-size:24px; font-weight:700; letter-spacing:-.01em; color:var(--text-primary); transition:color .15s ease; }
-#page-dashboard .dash-stat-strip .bs-label { display:block; font-size:12px; color:var(--text-secondary); margin-top:4px; }
-#page-dashboard .dash-snapshot { background:var(--bg-surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:22px 24px; margin-bottom:28px; box-shadow:var(--shadow-sm); }
+/* Kept deliberately smaller than the snapshot name below — the strip is
+   context (how many, today), not the primary focus of the page. */
+#page-dashboard .dash-stat-strip .bs-value { font-size:19px; font-weight:600; letter-spacing:-.01em; color:var(--text-secondary); transition:color .15s ease; }
+#page-dashboard .dash-stat-strip .bs-label { display:block; font-size:12px; color:var(--text-muted); margin-top:4px; }
+#page-dashboard .dash-snapshot { background:var(--bg-surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:22px 24px; margin-bottom:22px; box-shadow:var(--shadow-sm); }
 #page-dashboard .dash-snapshot-head { display:flex; align-items:center; gap:12px; margin-bottom:18px; }
-#page-dashboard .dash-snapshot-avatar { width:40px; height:40px; border-radius:50%; background:var(--teal-50); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; color:var(--teal-700); flex:none; }
-#page-dashboard .dash-snapshot-name { font-weight:700; font-size:17px; color:var(--text-primary); }
+#page-dashboard .dash-snapshot-avatar { width:42px; height:42px; border-radius:50%; background:var(--teal-50); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; color:var(--teal-700); flex:none; }
+/* Primary anchor of the whole page — the answer to "who is this patient?" */
+#page-dashboard .dash-snapshot-name { font-weight:700; font-size:20px; letter-spacing:-.01em; color:var(--text-primary); }
 #page-dashboard .dash-snapshot-sub { font-size:13px; color:var(--text-secondary); margin-top:2px; }
 #page-dashboard .dash-snapshot-values { display:flex; gap:36px; flex-wrap:wrap; }
 #page-dashboard .dash-snapshot-values .m-label { font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.04em; }
-#page-dashboard .dash-snapshot-values .m-value { font-size:20px; font-weight:700; margin-top:3px; }
+/* Smaller than the patient name — supporting context, not competing for
+   attention with patient identity (per the "who is this patient first"
+   requirement). */
+#page-dashboard .dash-snapshot-values .m-value { font-size:18px; font-weight:600; margin-top:3px; }
 #page-dashboard .dash-snapshot-values .m-value.warn { color: var(--amber-text); }
 #page-dashboard .dash-snapshot-values .m-value.err { color: var(--red-text); }
 #page-dashboard .dash-snapshot-values .m-sub { font-size:12px; font-weight:400; color:var(--text-secondary); }
-#page-dashboard .dash-insight-row { display:grid; grid-template-columns:1fr 1px 1fr; gap:28px; margin-bottom:24px; }
-#page-dashboard .dash-insight-row .dash-insight-divider { background:var(--border); }
+/* Grouped clinical section cards — Nutrition Targets, Safety Checks,
+   Appointments/Activity. Each is a real card (light border, minimal
+   shadow), because these are meaningful clinical sections, not single
+   metrics. The point isn't "no cards" — it's no small disconnected tiles. */
+#page-dashboard .dash-card { background:var(--bg-surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:18px 20px; box-shadow:var(--shadow-xs); }
+#page-dashboard .dash-insight-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
 #page-dashboard .dash-insight-label { font-size:12px; font-weight:700; color:var(--text-secondary); text-transform:uppercase; letter-spacing:.04em; margin-bottom:14px; }
 #page-dashboard .dash-insight-label .card-action { text-transform:none; letter-spacing:normal; font-weight:600; }
-@media (max-width: 720px){ #page-dashboard .dash-insight-row { grid-template-columns:1fr; } #page-dashboard .dash-insight-row .dash-insight-divider { display:none; } #page-dashboard .dash-stat-strip { flex-wrap:wrap; gap:16px; } }
+#page-dashboard .dash-activity-card #dash-quick-actions { margin-top:16px; padding-top:14px; border-top:0.5px solid var(--border); }
+@media (max-width: 720px){ #page-dashboard .dash-insight-row { grid-template-columns:1fr; } #page-dashboard .dash-stat-strip { flex-wrap:wrap; gap:16px; } }
 [data-theme="dark"] #page-dashboard .dash-snapshot-avatar { background:rgba(78,205,196,.14); color:var(--teal-300); }
-[data-theme="dark"] #page-dashboard .dash-snapshot { box-shadow:none; }
+[data-theme="dark"] #page-dashboard .dash-snapshot,
+[data-theme="dark"] #page-dashboard .dash-card { box-shadow:none; }
+
+/* Sidebar: replace boxed nav groups with plain grouped sections — labels
+   and spacing carry the grouping, not borders/background fills. */
+.nav-group-card { background:transparent; border:none; padding:0; margin:0 5px 18px; }
+[data-theme="dark"] .nav-group-card { background:transparent; border:none; }
+.nav-group-card .nav-group-label { padding: 4px 9px 6px; margin: 0; }
 
 .metric .m-label { font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
 .metric .m-value { font-size: 24px; font-weight: 700; color: var(--text-primary); line-height: 1; }
@@ -1792,7 +1805,7 @@ table th,
       <div class="topbar-sub" id="page-sub">Quick overview · Engine status · Appointments</div>
     </div>
     <div class="topbar-actions">
-      <span class="no-print" style="font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:6px;padding:4px 10px" title="Opened-on date — this is today's date, whenever you happen to open this file. Build fingerprint is computed fresh from this file's exact content, so identical content always produces an identical fingerprint."><i class="ti ti-info-circle" aria-hidden="true"></i> <span id="opened-date-topbar">—</span><span style="opacity:.5">·</span><span id="build-date-topbar" style="font-family:monospace">—</span></span>
+      <span class="no-print" id="header-clock" style="font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:6px;padding:4px 10px"><i class="ti ti-clock" aria-hidden="true"></i> <span id="header-clock-text">—</span></span>
       <span class="no-print" id="user-email" style="display:none"></span>
       <!-- Save state lives in a FIXED-WIDTH slot so the theme/language
            controls never shift when its contents change. The header shows
@@ -1831,7 +1844,7 @@ table th,
     <div class="dash-stat-strip">
       <div onclick="nav('clients')"><span class="bs-value" id="d-total-clients">—</span><span class="bs-label"><span class="i18n" data-en="Active clients" data-gr="Ενεργοί πελάτες">Active clients</span></span></div>
       <div class="dash-stat-divider"></div>
-      <div onclick="nav('appointments')"><span class="bs-value" id="d-today-appts">—</span><span class="bs-label"><span id="d-today-appts-sub"><span class="i18n" data-en="Today's appointments" data-gr="Σημερινά ραντεβού">Today's appointments</span></span></span></div>
+      <div onclick="nav('appointments')"><span class="bs-value" id="d-today-appts">—</span><span class="bs-label"><span id="d-today-appts-sub"><span class="i18n" data-en="Appointments today" data-gr="Ραντεβού σήμερα">Appointments today</span></span></span></div>
     </div>
 
     <div id="dash-no-client-prompt" style="display:none">
@@ -1875,26 +1888,25 @@ table th,
       </div>
 
       <div class="dash-insight-row">
-        <div>
+        <div class="dash-card">
           <div class="dash-insight-label"><span class="i18n" data-en="Nutrition targets" data-gr="Στόχοι Θρεπτικών">Nutrition targets</span> <span class="card-action" onclick="nav('macros')"><span class="i18n" data-en="Edit →" data-gr="Επεξεργασία →">Edit →</span></span></div>
           <div id="dash-macros"></div>
         </div>
-        <div class="dash-insight-divider"></div>
-        <div>
+        <div class="dash-card">
           <div class="dash-insight-label"><span class="i18n" data-en="Safety checks" data-gr="Έλεγχοι ασφαλείας">Safety checks</span></div>
           <div id="dash-engine-checks"><div style="color:var(--text-muted);font-size:13px"><span class="i18n" data-en="Fill client profile to run checks" data-gr="Συμπληρώστε το προφίλ πελάτη για έλεγχο">Fill client profile to run checks</span></div></div>
         </div>
       </div>
 
-      <div class="dash-section-label"><span class="i18n" data-en="Today's appointments" data-gr="Σημερινά ραντεβού">Today's appointments</span> <span class="card-action" onclick="nav('appointments')"><span class="i18n" data-en="Calendar →" data-gr="Ημερολόγιο →">Calendar →</span></span></div>
-      <div id="dash-appointments"><div style="color:var(--text-muted);font-size:13px"><span class="i18n" data-en="No appointments today." data-gr="Κανένα ραντεβού σήμερα.">No appointments today.</span></div></div>
-
-      <div id="dash-quick-actions" style="display:none;margin-top:22px">
-        <div class="dash-section-label"><span class="i18n" data-en="Quick actions" data-gr="Γρήγορες ενέργειες">Quick actions</span></div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn" onclick="nav('appointments');openAppointmentForm(todayISO())"><i class="ti ti-calendar-plus" aria-hidden="true"></i> <span class="i18n" data-en="New appointment" data-gr="Νέο ραντεβού">New appointment</span></button>
-          <button class="btn" onclick="nav('clients');newClient()"><i class="ti ti-user-plus" aria-hidden="true"></i> <span class="i18n" data-en="New client" data-gr="Νέος πελάτης">New client</span></button>
-          <button class="btn" onclick="S.sevenDayView='week';nav('sevenday')"><i class="ti ti-calendar-week" aria-hidden="true"></i> <span class="i18n" data-en="View weekly plan" data-gr="Προβολή εβδομαδιαίου πλάνου">View weekly plan</span></button>
+      <div class="dash-card dash-activity-card">
+        <div class="dash-insight-label"><span class="i18n" data-en="Today's appointments" data-gr="Σημερινά ραντεβού">Today's appointments</span> <span class="card-action" onclick="nav('appointments')"><span class="i18n" data-en="Calendar →" data-gr="Ημερολόγιο →">Calendar →</span></span></div>
+        <div id="dash-appointments"><div style="color:var(--text-muted);font-size:13px"><span class="i18n" data-en="No appointments today." data-gr="Κανένα ραντεβού σήμερα.">No appointments today.</span></div></div>
+        <div id="dash-quick-actions" style="display:none">
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn" onclick="nav('appointments');openAppointmentForm(todayISO())"><i class="ti ti-calendar-plus" aria-hidden="true"></i> <span class="i18n" data-en="New appointment" data-gr="Νέο ραντεβού">New appointment</span></button>
+            <button class="btn" onclick="nav('clients');newClient()"><i class="ti ti-user-plus" aria-hidden="true"></i> <span class="i18n" data-en="New client" data-gr="Νέος πελάτης">New client</span></button>
+            <button class="btn" onclick="S.sevenDayView='week';nav('sevenday')"><i class="ti ti-calendar-week" aria-hidden="true"></i> <span class="i18n" data-en="View weekly plan" data-gr="Προβολή εβδομαδιαίου πλάνου">View weekly plan</span></button>
+          </div>
         </div>
       </div>
     </div>
@@ -14926,6 +14938,26 @@ function formatDateDMY(date=new Date()){
   const d = date instanceof Date ? date : new Date(date);
   return `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()}`;
 }
+// Header clock: current date + local time in the device's own timezone.
+// Intentionally does NOT pass a `timeZone` option to Intl — omitting it
+// means the browser's own local timezone is used automatically, which is
+// exactly the "auto-detect, never fixed" requirement. No seconds (minute
+// precision only), locale-aware month/date ordering via Intl so EN and GR
+// both read naturally without a hand-maintained translation table.
+function updateHeaderClock(){
+  const el = document.getElementById('header-clock-text');
+  if(!el) return;
+  const isGr = window.appLang==='gr';
+  const locale = isGr ? 'el-GR' : 'en-GB';
+  const now = new Date();
+  try{
+    const datePart = new Intl.DateTimeFormat(locale, { day:'numeric', month:'short', year:'numeric' }).format(now);
+    const timePart = new Intl.DateTimeFormat(locale, { hour:'2-digit', minute:'2-digit', hour12:false }).format(now);
+    el.textContent = `${datePart} · ${timePart}`;
+  }catch(e){
+    el.textContent = formatDateDMY(now);
+  }
+}
 function parseISODate(iso){
   const parts=String(iso||todayISO()).split('-').map(Number);
   return new Date(parts[0]||new Date().getFullYear(), (parts[1]||1)-1, parts[2]||1);
@@ -16017,55 +16049,8 @@ function v(id){const el=document.getElementById(id); return el?el.value:'';}
 function setEl(id,html){const el=document.getElementById(id); if(el) el.innerHTML=html;}
 
 window.onload=function(){
-  // FIX (2026-06-21): the build-date label was a hand-typed string that had
-  // to be manually updated on every edit — it went stale twice (once by
-  // several days, once by a full extra round of real fixes shipped with no
-  // version bump at all). document.lastModified was considered next, but
-  // rejected: for a freshly-downloaded file it just shows "today, whenever
-  // you happened to download it" — true but useless for answering "does
-  // this file actually contain the latest fixes." Instead: a content
-  // fingerprint computed fresh from the page's own current HTML every time
-  // it loads. This CANNOT go stale or be forgotten — it's not typed by
-  // anyone, it's calculated from whatever content is actually present. Two
-  // copies of the file have the same content if and only if they show the
-  // same fingerprint; this lets you directly verify you have the version
-  // you think you have, instead of trusting a label a human might forget
-  // to update.
-  try{
-    // IMPORTANT: hash only the <script> tags' literal source text, NOT
-    // document.documentElement.outerHTML. The full live DOM includes a PWA
-    // manifest <link> whose href is a browser-generated blob: URL with a
-    // fresh random UUID on every single page load (confirmed by directly
-    // diffing two loads of the identical file) — hashing that would make
-    // the fingerprint different every time even for byte-identical files,
-    // defeating the entire point. Script source text has no such runtime
-    // randomness, so it's a reliable, deterministic stand-in for "is this
-    // the same file content."
-    const scriptText = Array.from(document.querySelectorAll('script'))
-      .filter(s=>!s.src) // exclude external scripts (e.g. the Supabase CDN tag) — only this file's own inline code
-      .map(s=>s.textContent).join('');
-    let hash = 5381;
-    for(let i=0;i<scriptText.length;i++){ hash = ((hash*33) ^ scriptText.charCodeAt(i)) >>> 0; }
-    const fingerprint = hash.toString(16).padStart(8,'0').toUpperCase();
-    const sidebarEl = document.getElementById('build-date-sidebar');
-    const topbarEl = document.getElementById('build-date-topbar');
-    if(sidebarEl) sidebarEl.textContent = fingerprint;
-    if(topbarEl) topbarEl.textContent = fingerprint;
-
-    // Human-readable "opened on" date, shown alongside the fingerprint —
-    // requested back after the fingerprint-only version. This is
-    // intentionally just today's date (whenever the file happens to be
-    // opened), NOT a record of when the content was last edited — a real
-    // per-edit date would require a build server this static file doesn't
-    // have, and a hand-typed one is exactly what caused the original bug
-    // (see the fingerprint comment above). The fingerprint remains the only
-    // way to actually verify two copies share identical content.
-    const openedDate = formatDateDMY(new Date());
-    const openedSidebarEl = document.getElementById('opened-date-sidebar');
-    const openedTopbarEl = document.getElementById('opened-date-topbar');
-    if(openedSidebarEl) openedSidebarEl.textContent = openedDate;
-    if(openedTopbarEl) openedTopbarEl.textContent = openedDate;
-  }catch(e){ /* non-critical — leave the '—' placeholder if this ever fails */ }
+  updateHeaderClock();
+  if(!window._headerClockInterval) window._headerClockInterval = setInterval(updateHeaderClock, 30000);
 
   document.getElementById('p-date').value=new Date().toISOString().split('T')[0];
   document.getElementById('t-date').value=new Date().toISOString().split('T')[0];
@@ -16225,6 +16210,7 @@ function applyLanguage(lang){
   applyOptionLanguage();
   refreshExMetaLabels();
   setMealLanguage(lang==='gr'?'GR':'EN');
+  if(typeof updateHeaderClock==='function') updateHeaderClock();
   document.querySelectorAll('.i18n').forEach(el=>{
     const val = lang==='gr' ? el.getAttribute('data-gr') : el.getAttribute('data-en');
     if(val!=null) el.textContent = val;
