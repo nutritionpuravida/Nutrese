@@ -76,7 +76,8 @@
   --green-bg: #102D20; --green-border: #14795E; --green-text: #B5F0DD; --green-badge: #33C394;
   --blue-bg: #0B1C2C; --blue-border: #203A56; --blue-text: #5FB3FF;
   --metric-bg: #171B24;
-  --teal-50: #0E3A2B; --teal-100: #124B38; --teal-700: #199C71; --bg-muted: #1D2230;
+  --teal-50: #0E3A2B; --teal-100: #124B38; --teal-300: #6FE8C4; --teal-400: #3DCB9B;
+  --teal-600: #1FAB80; --teal-700: #199C71; --teal-800: #128F68; --bg-muted: #1D2230;
   /* Dark elevation — deeper, cooler shadows */
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, .3);
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, .35), 0 1px 2px rgba(0, 0, 0, .3);
@@ -241,7 +242,7 @@ i.ti-circle-x { color: var(--red-text); }
 .mk-header {
   position:sticky; top:0; z-index:4;
   border-bottom:1px solid var(--border);
-  background:rgba(246,245,242,.82);
+  background:color-mix(in srgb, var(--bg-page) 82%, transparent);
   backdrop-filter:blur(18px);
 }
 .mk-header-inner { display:flex; align-items:center; justify-content:space-between; gap:22px; min-height:76px; }
@@ -262,8 +263,15 @@ i.ti-circle-x { color: var(--red-text); }
 .mk-btn:hover { transform:translateY(-1px); background:var(--bg-hover); border-color:var(--border-strong); }
 .mk-btn-primary { background:var(--teal-600); border-color:var(--teal-600); color:#fff; box-shadow:0 12px 28px rgba(15,132,89,.22); }
 .mk-btn-primary:hover { background:var(--teal-700); border-color:var(--teal-700); }
+[data-theme="dark"] .mk-btn-primary { box-shadow:0 12px 28px rgba(0,0,0,.4); }
+[data-theme="dark"] .mk-product-stage::before { background:radial-gradient(circle, rgba(31,171,128,.14), transparent 64%); }
+[data-theme="dark"] .mk-laptop,
+[data-theme="dark"] .mk-phone { box-shadow:0 1px 3px rgba(0,0,0,.3), 0 24px 60px rgba(0,0,0,.5); }
+[data-theme="dark"] .mk-card:hover,
+[data-theme="dark"] .mk-price:hover { box-shadow:0 2px 6px rgba(0,0,0,.35), 0 22px 44px rgba(0,0,0,.4); border-color:rgba(51,195,148,.3); }
 .mk-btn-light { background:var(--bg-surface); color:var(--text-primary); border-color:var(--border); }
 .mk-menu-btn { display:none; }
+.mk-theme-btn { width:42px; padding:0; flex:none; font-size:16px; }
 .mk-page { display:none; }
 .mk-page.mk-active { display:block; }
 .mk-hero { padding:86px 0 76px; }
@@ -332,6 +340,15 @@ i.ti-circle-x { color: var(--red-text); }
 .mk-card h3 { margin:0 0 10px; font-size:20px; letter-spacing:-.01em; color:var(--text-primary); }
 .mk-card p { margin:0; color:var(--text-secondary); line-height:1.6; }
 .mk-feature-icon { width:40px; height:40px; border-radius:12px; display:grid; place-items:center; background:var(--teal-50); color:var(--teal-700); margin-bottom:16px; font-weight:800; }
+/* Homepage feature storytelling — same three ideas as the card-grid used
+   on the Product/Security detail pages, but flowing (divided by hairlines
+   and whitespace, not individual bordered boxes) since this is the
+   narrative landing experience, not a reference page. */
+.mk-feature-flow { display:grid; grid-template-columns:repeat(3, 1fr); gap:0; }
+.mk-feature-flow > div { padding:0 28px; border-left:1px solid var(--border); }
+.mk-feature-flow > div:first-child { padding-left:0; border-left:none; }
+.mk-feature-flow h3 { margin:0 0 8px; font-size:18px; color:var(--text-primary); }
+.mk-feature-flow p { margin:0; color:var(--text-secondary); line-height:1.6; }
 /* Process flow: numbered steps connected by spacing/typography, not four
    separate bordered boxes — same "wider panel over small tiles" principle
    as the dashboard. */
@@ -354,10 +371,11 @@ i.ti-circle-x { color: var(--red-text); }
 .mk-price ul { margin:22px 0; padding:0; list-style:none; color:var(--text-secondary); }
 .mk-price li { margin:10px 0; }
 .mk-price li::before { content:"\2713"; color:var(--teal-600); margin-right:8px; font-weight:700; }
-.mk-faq { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
-.mk-faq details { border:1px solid var(--border); border-radius:14px; padding:18px 20px; background:var(--bg-surface); }
+.mk-faq { display:block; max-width:760px; }
+.mk-faq details { border:none; border-bottom:1px solid var(--border); border-radius:0; padding:20px 0; background:transparent; }
+.mk-faq details:first-child { padding-top:0; }
 .mk-faq summary { cursor:pointer; font-weight:700; color:var(--text-primary); }
-.mk-faq p { color:var(--text-secondary); line-height:1.55; margin-top:8px; }
+.mk-faq p { color:var(--text-secondary); line-height:1.55; margin-top:10px; }
 .mk-final { text-align:center; padding:96px 0; }
 .mk-final .mk-lead { margin-left:auto; margin-right:auto; }
 .mk-footer { border-top:1px solid var(--border); padding:34px 0; color:var(--text-muted); }
@@ -375,7 +393,9 @@ i.ti-circle-x { color: var(--red-text); }
   .mk-product-stage { min-height:auto; }
   .mk-laptop { transform:none; }
   .mk-phone { position:relative; right:auto; bottom:auto; margin:18px auto 0; }
-  .mk-card-grid, .mk-flow, .mk-faq, .mk-price-grid { grid-template-columns:1fr; }
+  .mk-card-grid, .mk-flow, .mk-faq, .mk-price-grid, .mk-feature-flow { grid-template-columns:1fr; }
+  .mk-feature-flow > div { padding-left:0; border-left:none; border-top:1px solid var(--border); padding-top:24px; margin-top:24px; }
+  .mk-feature-flow > div:first-child { border-top:none; padding-top:0; margin-top:0; }
   .mk-flow::before { display:none; }
   .mk-section-head { display:block; }
 }
@@ -1665,6 +1685,7 @@ table th,
         <a href="#" onclick="marketingOpenAuth('signin');return false;">Sign in</a>
       </nav>
       <div class="mk-actions">
+        <button class="mk-btn mk-theme-btn" id="mk-theme-btn" type="button" onclick="toggleTheme()" aria-label="Toggle dark mode" title="Toggle dark mode"><i class="ti ti-moon" aria-hidden="true"></i></button>
         <button class="mk-btn mk-signin" type="button" onclick="marketingOpenAuth('signin')">Sign in</button>
         <button class="mk-btn mk-btn-primary" type="button" onclick="marketingOpenAuth('signup')">Start Free Trial</button>
         <button class="mk-btn mk-menu-btn" id="mk-menu-btn" type="button" aria-controls="mk-nav" aria-expanded="false">Menu</button>
@@ -1707,15 +1728,14 @@ table th,
     </div>
     <div class="mk-shell mk-section">
       <div class="mk-section-head"><h2 class="mk-h2">Built for the everyday practice rhythm.</h2><p>Nutrese focuses on the work dietitians repeat every week: organizing clients, generating plans, documenting care and following up.</p></div>
-      <div class="mk-card-grid"><article class="mk-card"><div class="mk-feature-icon">PE</div><h3>Planning Engine</h3><p>Exchange-aware planning tools for structured, reviewable nutrition plans.</p></article><article class="mk-card"><div class="mk-feature-icon">R</div><h3>Professional reports</h3><p>Client reports, instructions and meal plans designed for clear handoff.</p></article><article class="mk-card"><div class="mk-feature-icon">W</div><h3>Practice workspace</h3><p>Client profiles, appointments, notes and settings in one authenticated app.</p></article></div>
+      <div class="mk-feature-flow"><div><div class="mk-feature-icon">PE</div><h3>Planning Engine</h3><p>Exchange-aware planning tools for structured, reviewable nutrition plans.</p></div><div><div class="mk-feature-icon">R</div><h3>Professional reports</h3><p>Client reports, instructions and meal plans designed for clear handoff.</p></div><div><div class="mk-feature-icon">W</div><h3>Practice workspace</h3><p>Client profiles, appointments, notes and settings in one authenticated app.</p></div></div>
     </div>
     <div class="mk-shell mk-section">
       <div class="mk-section-head"><h2 class="mk-h2">Less scattered than spreadsheets. More focused than generic tools.</h2><p>Nutrese is designed around clinical nutrition workflows, while keeping the interface calm and editable.</p></div>
       <div class="mk-comparison"><table><thead><tr><th>Workflow</th><th>Generic tools</th><th>Nutrese</th></tr></thead><tbody><tr><td>Client context</td><td>Split across files and notes</td><td>Profile, notes, labs and goals together</td></tr><tr><td>Meal planning</td><td>Manual calculations and retyping</td><td>Structured exchange targets and rendered plans</td></tr><tr><td>Reports</td><td>Rebuilt manually for each client</td><td>Generated from the active plan and profile</td></tr></tbody></table></div>
     </div>
     <div class="mk-shell mk-section" id="pricing-preview"><div class="mk-section-head"><h2 class="mk-h2">Simple pricing for professional use.</h2><p>Start with the existing Nutrese free-trial flow. Billing remains handled by the current Stripe subscription system.</p></div><div class="mk-price-grid"><article class="mk-price"><h3>Monthly</h3><strong>&euro;29</strong><span>/month</span><ul><li>Full Nutrese workspace</li><li>Client reports and planning tools</li><li>Cancel through billing management</li></ul><button class="mk-btn mk-btn-primary" type="button" onclick="marketingOpenAuth('signup')">Start Free Trial</button></article><article class="mk-price"><h3>Yearly</h3><strong>&euro;249</strong><span>/year</span><ul><li>Same professional workspace</li><li>Lower annual price</li><li>Best for established practices</li></ul><button class="mk-btn mk-btn-light" type="button" onclick="marketingOpenAuth('signup')">Start Free Trial</button></article></div></div>
-    <div class="mk-shell mk-section"><div class="mk-section-head"><h2 class="mk-h2">FAQ</h2><p>Short answers for dietitians evaluating Nutrese.</p></div><div class="mk-faq"><details><summary>Is Nutrese for independent dietitians?</summary><p>Yes. Nutrese is built for independent clinicians and small or growing nutrition practices.</p></details><details><summary>Does the public site change my existing app?</summary><p>No. Signed-in users continue into the existing authenticated Nutrese workspace.</p></details><details><summary>How does the free trial start?</summary><p>Use the existing registration and subscription flow. Nutrese does not create a separate checkout implementation here.</p></details><details><summary>Can I contact support?</summary><p>Yes. Email <a href="mailto:support@nutrese.eu">support@nutrese.eu</a> for product support and <a href="mailto:privacy@nutrese.eu">privacy@nutrese.eu</a> for privacy questions.</p></details></div></div>
-    <div class="mk-shell mk-final"><h2 class="mk-h2">A calmer way to run clinical nutrition work.</h2><p class="mk-lead">Spend more time with clients. Less time on admin.</p><div class="mk-hero-actions" style="justify-content:center"><button class="mk-btn mk-btn-primary" type="button" onclick="marketingOpenAuth('signup')">Start Free Trial</button><button class="mk-btn" type="button" onclick="marketingOpenAuth('signin')">Sign in</button></div></div>
+    <div class="mk-shell mk-section"><div class="mk-section-head"><h2 class="mk-h2">FAQ</h2><p>Short answers for dietitians evaluating Nutrese.</p></div><div class="mk-faq"><details><summary>Is Nutrese for independent dietitians?</summary><p>Yes. Nutrese is built for independent clinicians and small or growing nutrition practices.</p></details><details><summary>Does the public site change my existing app?</summary><p>No. Signed-in users continue into the existing authenticated Nutrese workspace.</p></details><details><summary>How does the free trial start?</summary><p>Use the existing registration and subscription flow. Nutrese does not create a separate checkout implementation here.</p></details><details><summary>Can I contact support?</summary><p>Yes. Email <a href="mailto:support@nutrese.eu">support@nutrese.eu</a> for product support and <a href="mailto:privacy@nutrese.eu">privacy@nutrese.eu</a> for privacy questions.</p></details></div></div>    <div class="mk-shell mk-final"><h2 class="mk-h2">A calmer way to run clinical nutrition work.</h2><p class="mk-lead">Spend more time with clients. Less time on admin.</p><div class="mk-hero-actions" style="justify-content:center"><button class="mk-btn mk-btn-primary" type="button" onclick="marketingOpenAuth('signup')">Start Free Trial</button><button class="mk-btn" type="button" onclick="marketingOpenAuth('signin')">Sign in</button></div></div>
   </section>
 
   <section class="mk-page" data-mk-page="product"><div class="mk-shell mk-page-hero"><div class="mk-eyebrow">Product</div><h1 class="mk-h2">The Nutrese workspace connects the pieces of dietetic practice.</h1><p class="mk-lead">Use one authenticated app for client profiles, notes, appointments, exchange planning, reports and follow-up.</p></div><div class="mk-shell mk-section"><div class="mk-card-grid"><article class="mk-card"><h3>Client workspace</h3><p>Keep profile, intake, body composition and clinical notes together.</p></article><article class="mk-card"><h3>Planning tools</h3><p>Build plans with exchange targets and clear rendered meal text.</p></article><article class="mk-card"><h3>Reporting</h3><p>Create client-facing reports from the active profile and meal plan.</p></article></div><p class="mk-note">Product previews use representative sample data. The authenticated app remains the source of truth.</p></div></section>
@@ -16133,8 +16153,11 @@ function currentAppTheme(){
   return document.documentElement.getAttribute('data-theme')==='dark' ? 'dark' : 'light';
 }
 function updateThemeButton(){
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
   const btn = document.getElementById('theme-btn');
-  if (btn) btn.innerHTML = document.documentElement.getAttribute('data-theme') === 'dark' ? '<i class="ti ti-sun" aria-hidden="true"></i> Light' : '<i class="ti ti-moon" aria-hidden="true"></i> Dark';
+  if (btn) btn.innerHTML = isDark ? '<i class="ti ti-sun" aria-hidden="true"></i> Light' : '<i class="ti ti-moon" aria-hidden="true"></i> Dark';
+  const mkBtn = document.getElementById('mk-theme-btn');
+  if (mkBtn) mkBtn.innerHTML = isDark ? '<i class="ti ti-sun" aria-hidden="true"></i>' : '<i class="ti ti-moon" aria-hidden="true"></i>';
 }
 function toggleTheme() {
   const html = document.documentElement;
