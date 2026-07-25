@@ -14300,20 +14300,6 @@ const NUTRESE_RECIPE_TEMPLATES = [
     ]
   },
   {
-    id:'feta_tomato_breakfast_plate', servings:1, imageKey:'fetaplate',
-    name:{en:'Tomato, feta & olive breakfast plate', gr:'Πιάτο πρωινού με ντομάτα, φέτα & ελιές'},
-    summary:{en:'Traditional Mediterranean breakfast with wholegrain bread, calcium-rich feta and heart-healthy olive oil.', gr:'Παραδοσιακό μεσογειακό πρωινό με ψωμί ολικής, φέτα πλούσια σε ασβέστιο και ελαιόλαδο.'},
-    instructions:{en:'Serve sliced tomato, feta and olives with wholegrain bread and a boiled egg. Drizzle with olive oil and oregano.', gr:'Σερβίρετε φέτες ντομάτας, φέτα και ελιές με ψωμί ολικής και ένα βραστό αυγό. Περιχύστε με ελαιόλαδο και ρίγανη.'},
-    ingredients:[
-      {name:{en:'Wholegrain bread',gr:'Ψωμί ολικής'}, grams:60, kcal100:247, carbs100:41.0, protein100:9.0, fat100:4.0},
-      {name:{en:'Feta cheese',gr:'Φέτα'}, grams:40, kcal100:264, carbs100:4.1, protein100:14.2, fat100:21.3},
-      {name:{en:'Tomato',gr:'Ντομάτα'}, grams:120, kcal100:18, carbs100:3.9, protein100:0.9, fat100:0.2},
-      {name:{en:'Kalamata olives',gr:'Ελιές Καλαμών'}, grams:20, kcal100:115, carbs100:6.3, protein100:0.8, fat100:10.7},
-      {name:{en:'Boiled egg',gr:'Βραστό αυγό'}, grams:50, kcal100:155, carbs100:1.1, protein100:12.6, fat100:10.6},
-      {name:{en:'Extra virgin olive oil',gr:'Εξαιρετικό παρθένο ελαιόλαδο'}, grams:8, kcal100:884, carbs100:0, protein100:0, fat100:100}
-    ]
-  },
-  {
     id:'baked_cod_orzo_courgette', servings:2, imageKey:'codtraybake',
     name:{en:'Baked cod, orzo & courgette traybake', gr:'Ταψί ψητού μπακαλιάρου με κριθαράκι & κολοκυθάκι'},
     summary:{en:'One-pan Mediterranean dinner with lean white fish, wholegrain orzo and roasted vegetables in olive oil.', gr:'Μεσογειακό βραδινό με λευκό ψάρι, κριθαράκι και ψητά λαχανικά σε ελαιόλαδο.'},
@@ -14360,7 +14346,6 @@ function recipeTemplatePhotoUrl(key){
     chia:'https://images.unsplash.com/photo-1494597564530-871f2b93ac55?auto=format&fit=crop&w=960&q=80',
     smoothie:'https://images.unsplash.com/photo-1645783916385-1c99860a2a42?auto=format&fit=crop&w=960&q=80',
     beansalad:'https://images.unsplash.com/photo-1662743086910-38419bbf7f34?auto=format&fit=crop&w=960&q=80',
-    fetaplate:'https://images.unsplash.com/photo-1635432877848-9c86755eb2f9?auto=format&fit=crop&w=960&q=80',
     codtraybake:'https://images.unsplash.com/photo-1644784643137-b9073dd262f6?auto=format&fit=crop&w=960&q=80',
     bananabread:'https://images.unsplash.com/photo-1675712841671-cbcbe2c84103?auto=format&fit=crop&w=960&q=80'
   };
@@ -14378,7 +14363,6 @@ function recipeTemplateFallbackImage(key){
     chia:{bg:'#F7F3FF',accent:'#5E4AA8',soft:'#E5DAFF',food:'#3B2F4A',food2:'#9B3F72'},
     smoothie:{bg:'#FFF0F5',accent:'#C2447A',soft:'#FBD6E4',food:'#8C3E75',food2:'#F5A623'},
     beansalad:{bg:'#F5FBF2',accent:'#5E8C4A',soft:'#DFF0D4',food:'#B5702F',food2:'#D94A2F'},
-    fetaplate:{bg:'#FFF8ED',accent:'#B5702F',soft:'#F6E3C4',food:'#FFFFFF',food2:'#D94A2F'},
     codtraybake:{bg:'#F0FAFF',accent:'#177A8A',soft:'#CFEFF4',food:'#E8E0C8',food2:'#5E8C4A'},
     bananabread:{bg:'#FFF8EF',accent:'#B5702F',soft:'#F1DFC0',food:'#D9A24B',food2:'#8C5A2B'}
   }[key]||{bg:'#F3FAF5',accent:'#0F6E56',soft:'#CDEDE2',food:'#ffffff',food2:'#9FE1CB'};
