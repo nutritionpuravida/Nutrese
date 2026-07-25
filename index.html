@@ -39,7 +39,7 @@
   /* Surfaces — warm off-white page, clean white cards that lift off it.
      The page is intentionally NOT pure white (reduces glare/fatigue); cards
      are near-white and separated by elevation rather than hard borders. */
-  --bg-page: #F6F5F2; --bg-surface: #FFFFFF; --bg-sidebar: #F4F3EF;
+  --bg-page: #F8F6F1; --bg-surface: #FFFFFF; --bg-sidebar: #F5F3EE;
   --bg-input: #FFFFFF; --bg-hover: #F0EFEB; --bg-active: #E4F1EA;
   /* Borders — soft, low-contrast; elevation does most of the separation */
   --border: #E8E6E0; --border-strong: #D8D5CD;
@@ -372,10 +372,25 @@ i.ti-circle-x { color: var(--red-text); }
 .mk-price li { margin:10px 0; }
 .mk-price li::before { content:"\2713"; color:var(--teal-600); margin-right:8px; font-weight:700; }
 .mk-faq { display:block; max-width:760px; }
-.mk-faq details { border:none; border-bottom:1px solid var(--border); border-radius:0; padding:20px 0; background:transparent; }
+.mk-faq details { border:none; border-bottom:1px solid var(--border); border-radius:0; padding:22px 0; background:transparent; }
 .mk-faq details:first-child { padding-top:0; }
-.mk-faq summary { cursor:pointer; font-weight:700; color:var(--text-primary); }
-.mk-faq p { color:var(--text-secondary); line-height:1.55; margin-top:10px; }
+.mk-faq summary {
+  display:flex; align-items:center; justify-content:space-between; gap:20px;
+  list-style:none; cursor:pointer; font-weight:700; font-size:16px; color:var(--text-primary);
+  transition:color .18s ease;
+}
+.mk-faq summary::-webkit-details-marker { display:none; }
+.mk-faq summary:hover { color:var(--teal-700); }
+.mk-faq summary::after {
+  content:"+"; flex:none; width:24px; height:24px; display:grid; place-items:center;
+  font-size:20px; font-weight:400; color:var(--text-muted); line-height:1;
+  transition:transform .25s cubic-bezier(.16,.84,.44,1), color .18s ease;
+}
+.mk-faq summary:hover::after { color:var(--teal-700); }
+.mk-faq details[open] summary::after { transform:rotate(135deg); }
+.mk-faq p { color:var(--text-secondary); line-height:1.6; margin-top:12px; max-width:640px; overflow:hidden; max-height:0; opacity:0; transition:max-height .32s cubic-bezier(.16,.84,.44,1), opacity .24s ease .04s, margin-top .32s cubic-bezier(.16,.84,.44,1); }
+.mk-faq details[open] p { max-height:60px; opacity:1; }
+.mk-faq details:not([open]) p { margin-top:0; }
 .mk-final { text-align:center; padding:96px 0; }
 .mk-final .mk-lead { margin-left:auto; margin-right:auto; }
 .mk-footer { border-top:1px solid var(--border); padding:34px 0; color:var(--text-muted); }
@@ -1685,7 +1700,7 @@ table th,
         <a href="#" onclick="marketingOpenAuth('signin');return false;">Sign in</a>
       </nav>
       <div class="mk-actions">
-        <button class="mk-btn mk-theme-btn" id="mk-theme-btn" type="button" onclick="toggleTheme()" aria-label="Toggle dark mode" title="Toggle dark mode"><i class="ti ti-moon" aria-hidden="true"></i></button>
+        <button class="mk-btn mk-theme-btn" id="mk-theme-btn" type="button" onclick="toggleMarketingTheme()" aria-label="Toggle dark mode" title="Toggle dark mode"><i class="ti ti-moon" aria-hidden="true"></i></button>
         <button class="mk-btn mk-signin" type="button" onclick="marketingOpenAuth('signin')">Sign in</button>
         <button class="mk-btn mk-btn-primary" type="button" onclick="marketingOpenAuth('signup')">Start Free Trial</button>
         <button class="mk-btn mk-menu-btn" id="mk-menu-btn" type="button" aria-controls="mk-nav" aria-expanded="false">Menu</button>
@@ -5745,6 +5760,7 @@ function hideAppShell(){
 function showMarketingSite(pageKey){
   const site=document.getElementById('marketing-site');
   if(!site || currentUser || isPasswordRecoveryFlow) return;
+  applyMarketingTheme();
   const route=pageKey || marketingRouteFromHash() || 'home';
   hideAppShell();
   hideAuthScreen();
@@ -5765,17 +5781,32 @@ function hideMarketingSite(){
 }
 function marketingOpenAuth(tab='signin'){
   hideMarketingSite();
-  applyMarketingAuthThemeDefault();
+  applyMarketingTheme();
   setAuthTab(tab);
   showAuthScreen();
   if(history.pushState) history.pushState({}, document.title, window.location.pathname + (tab==='signup' ? '#signup' : '#signin'));
 }
-function applyMarketingAuthThemeDefault(){
+// The marketing site's theme is intentionally independent from the
+// authenticated app's theme — they used to share the 'nutrese-theme' key,
+// which caused the app's dark-mode choice to leak onto the public page
+// after sign-out (a user could end up dark-mode-in-app, sign out, and see
+// the marketing site rendered with stale/mixed theme state). Separate key,
+// separate toggle, and re-applied every time the marketing site becomes
+// visible — not just on first load — so sign-out always lands on a single,
+// deterministic, fully-applied theme with nothing left over from the app.
+function applyMarketingTheme(){
+  let theme = 'light';
   try {
-    const saved = localStorage.getItem('nutrese-theme');
-    if (saved === 'dark' || saved === 'light') return;
+    const saved = localStorage.getItem('nutrese-mk-theme');
+    if (saved === 'dark') theme = 'dark';
   } catch(e) {}
-  document.documentElement.setAttribute('data-theme', 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+  if (typeof updateThemeButton === 'function') updateThemeButton();
+}
+function toggleMarketingTheme(){
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  try { localStorage.setItem('nutrese-mk-theme', isDark ? 'light' : 'dark'); } catch(e) {}
   if (typeof updateThemeButton === 'function') updateThemeButton();
 }
 function bindMarketingSite(){
