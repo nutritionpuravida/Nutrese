@@ -6680,11 +6680,11 @@ function mealText(key, portions, lang, opts){
     if((lang||S.mealLanguage)==='EN'){
       text += key==='DIN_OMELETTE'
         ? ' + 30g light turkey'
-        : ` + ${extraProt*gramsPerEx}g cooked lean protein`;
+        : ` + ${extraProt*gramsPerEx}g ${patientFormat ? 'lean protein' : 'cooked lean protein'}`;
     } else {
       text += key==='DIN_OMELETTE'
         ? ' + 30g γαλοπούλα light'
-        : ` + ${extraProt*gramsPerEx}g μαγειρεμένη άπαχη πρωτεΐνη`;
+        : ` + ${extraProt*gramsPerEx}g ${patientFormat ? 'άπαχη πρωτεΐνη' : 'μαγειρεμένη άπαχη πρωτεΐνη'}`;
     }
   }
   if(text && mealCatalogIsFixedComposition(key) && extraFat>0 && !noFixedExtraDisplay.has(key)){
@@ -10729,7 +10729,18 @@ function strictSnackDescription(exch, extras, lang='GR'){
   return parts.length ? parts.join(' + ') : '—';
 }
 
-function strictMainDescription(mealKey, exch, lang='GR'){
+// Removes the redundant "cooked"/"μαγειρεμένο" prep-state word from a
+// protein clause for patient-facing text, while leaving the gram figure
+// (clinically meaningful) untouched. Only strips the specific "{N}g cooked
+// {food}" / "{N}g μαγειρεμένο {food}" pattern produced by strictMainDescription
+// — does not touch cup/tsp/tbsp measures, dish names, or any other wording.
+function stripPatientPrepWording(text, lang){
+  if(!text) return text;
+  return lang==='EN'
+    ? text.replace(/(\d+g) cooked /g, '$1 ')
+    : text.replace(/(\d+g) μαγειρεμένο /g, '$1 ');
+}
+function strictMainDescription(mealKey, exch, lang='GR', audience='clinical'){
   if(isCustomMealKey(mealKey)) return customMealText(mealKey, lang);
   const portions={starch:Number(exch.starch||0), prot:Number(exch.protein||0), fat:Number(exch.fat||0), veg:Number(exch.veg||0)};
   const proteinGr=portions.prot===4 ? 140 : portions.prot*30;
@@ -10810,7 +10821,8 @@ function strictMainDescription(mealKey, exch, lang='GR'){
     LUN_VEG_SOUP_CHICKEN:`Vegetable soup with chicken (${joinParts([`${proteinGr}g cooked chicken`,starchEN,visibleFatEN])}) - ${soupVegEN}`,
     DIN_VEG_SOUP_CHICKEN:`Vegetable soup with chicken (${joinParts([`${proteinGr}g cooked chicken`,starchEN,visibleFatEN])}) - ${soupVegEN}`,
   };
-  return (lang==='EN' ? enMap[mealKey] : grMap[mealKey]) || mealText(mealKey, portions, lang);
+  const raw = (lang==='EN' ? enMap[mealKey] : grMap[mealKey]) || mealText(mealKey, portions, lang);
+  return audience === 'patient' ? stripPatientPrepWording(raw, lang) : raw;
 }
 
 // SINGLE SOURCE OF TRUTH for "should this slot render via the structured
@@ -10831,7 +10843,7 @@ function migratedSlotText(dayPlan, slotKey, lang, opts){
   return mealText(mealKey, (opts && opts.portions) || null, lang, opts && opts.patientFormat ? {patientFormat:true} : undefined);
 }
 
-function strictSlotText(dayPlan, slotKey, lang='GR', dayIndex=0){
+function strictSlotText(dayPlan, slotKey, lang='GR', dayIndex=0, audience='clinical'){
   // Migrated meals render exclusively from the structured instance via the
   // shared migratedSlotText() helper — never through the legacy
   // strictMainDescription path, which would append formula-derived
@@ -10842,8 +10854,8 @@ function strictSlotText(dayPlan, slotKey, lang='GR', dayIndex=0){
   if(!ledger?.valid) return null;
   const exch=ledger.slots[slotKey]||{};
   if(slotKey==='brk') return mealText(dayPlan.brk, null, lang);
-  if(slotKey==='lun') return strictMainDescription(dayPlan.lun, exch, lang);
-  if(slotKey==='din') return strictMainDescription(dayPlan.din, exch, lang);
+  if(slotKey==='lun') return strictMainDescription(dayPlan.lun, exch, lang, audience);
+  if(slotKey==='din') return strictMainDescription(dayPlan.din, exch, lang, audience);
   const extrasKey=slotKey==='snk1'?'snk1Extras':slotKey==='snk2'?'snk2Extras':'sleepExtras';
   return strictSnackDescription(exch, dayPlan[extrasKey]||[], lang);
 }
@@ -10886,6 +10898,14 @@ function aiMealForSlot(dayPlan, slotKey){
   return slot && dayPlan?.aiMeals ? dayPlan.aiMeals[slot.ai] : null;
 }
 
+// FUTURE REVIEW ITEM (flagged during presentation-pass audit, not yet
+// addressed): unlike every other render path, AI-suggested meal text below
+// is passed straight from meal.description_en/description_gr with no pass
+// through getPatientName()/getClinicalName() or any wording governance.
+// Nothing currently prevents an AI-drafted description from containing
+// prep-state or database-style wording before it reaches a patient report.
+// Left unchanged for now — scope this separately when AI meal suggestions
+// are revisited.
 function aiMealText(meal, lang='GR'){
   if(!meal) return '';
   if(lang==='EN') return meal.description_en || meal.description_gr || meal.description || meal.name || '';
@@ -10958,7 +10978,7 @@ function reportSevenDaySlotText(dayPlan, dt, slotKey, lang, dayIndex, extraOpts)
   const portions = slotKey==='lun'?dt.portions.lunch:slotKey==='din'?dt.portions.dinner:null;
   const migrated = migratedSlotText(dayPlan, slotKey, lang, {patientFormat:true, portions});
   if(migrated !== null) return migrated + renderExtraFoodsForSlot(slotKey, dayIndex, extraOpts);
-  if(dt?.strictSlots) return (strictSlotText(dayPlan, slotKey, lang, dayIndex)||'—')+renderExtraFoodsForSlot(slotKey, dayIndex, extraOpts);
+  if(dt?.strictSlots) return (strictSlotText(dayPlan, slotKey, lang, dayIndex, 'patient')||'—')+renderExtraFoodsForSlot(slotKey, dayIndex, extraOpts);
   if(slotKey==='brk') return mealText(dayPlan.brk,null,lang)+renderExtraFoodsForSlot('brk', dayIndex, extraOpts);
   if(slotKey==='snk1') return dt.snk1Text+renderExtraFoodsForSlot('snk1', dayIndex, extraOpts);
   if(slotKey==='lun') return mealText(dayPlan.lun,dt.portions.lunch,lang)+renderExtraFoodsForSlot('lun', dayIndex, extraOpts);
@@ -14223,6 +14243,33 @@ const NUTRESE_RECIPE_TEMPLATES = [
       {name:{en:'Feta cheese',gr:'Φέτα'}, grams:60, kcal100:264, carbs100:4.1, protein100:14.2, fat100:21.3},
       {name:{en:'Extra virgin olive oil',gr:'Εξαιρετικό παρθένο ελαιόλαδο'}, grams:15, kcal100:884, carbs100:0, protein100:0, fat100:100}
     ]
+  },
+  {
+    id:'feta_tomato_breakfast_plate', servings:1, imageKey:'fetaplate',
+    name:{en:'Tomato, feta & olive breakfast plate', gr:'Πιάτο πρωινού με ντομάτα, φέτα & ελιές'},
+    summary:{en:'Traditional Mediterranean breakfast with wholegrain bread, calcium-rich feta and heart-healthy olive oil.', gr:'Παραδοσιακό μεσογειακό πρωινό με ψωμί ολικής, φέτα πλούσια σε ασβέστιο και ελαιόλαδο.'},
+    instructions:{en:'Serve sliced tomato, feta and olives with wholegrain bread and a boiled egg. Drizzle with olive oil and oregano.', gr:'Σερβίρετε φέτες ντομάτας, φέτα και ελιές με ψωμί ολικής και ένα βραστό αυγό. Περιχύστε με ελαιόλαδο και ρίγανη.'},
+    ingredients:[
+      {name:{en:'Wholegrain bread',gr:'Ψωμί ολικής'}, grams:60, kcal100:247, carbs100:41.0, protein100:9.0, fat100:4.0},
+      {name:{en:'Feta cheese',gr:'Φέτα'}, grams:40, kcal100:264, carbs100:4.1, protein100:14.2, fat100:21.3},
+      {name:{en:'Tomato',gr:'Ντομάτα'}, grams:120, kcal100:18, carbs100:3.9, protein100:0.9, fat100:0.2},
+      {name:{en:'Kalamata olives',gr:'Ελιές Καλαμών'}, grams:20, kcal100:115, carbs100:6.3, protein100:0.8, fat100:10.7},
+      {name:{en:'Boiled egg',gr:'Βραστό αυγό'}, grams:50, kcal100:155, carbs100:1.1, protein100:12.6, fat100:10.6},
+      {name:{en:'Extra virgin olive oil',gr:'Εξαιρετικό παρθένο ελαιόλαδο'}, grams:8, kcal100:884, carbs100:0, protein100:0, fat100:100}
+    ]
+  },
+  {
+    id:'baked_cod_orzo_courgette', servings:2, imageKey:'codtraybake',
+    name:{en:'Baked cod, orzo & courgette traybake', gr:'Ταψί ψητού μπακαλιάρου με κριθαράκι & κολοκυθάκι'},
+    summary:{en:'One-pan Mediterranean dinner with lean white fish, wholegrain orzo and roasted vegetables in olive oil.', gr:'Μεσογειακό βραδινό με λευκό ψάρι, κριθαράκι και ψητά λαχανικά σε ελαιόλαδο.'},
+    instructions:{en:'Toss cod, orzo, courgette and cherry tomatoes with olive oil, lemon and oregano. Bake until the fish flakes easily and the orzo is tender.', gr:'Ανακατέψτε μπακαλιάρο, κριθαράκι, κολοκυθάκι και ντοματίνια με ελαιόλαδο, λεμόνι και ρίγανη. Ψήστε μέχρι το ψάρι να ξεφλουδίζει εύκολα και το κριθαράκι να μαλακώσει.'},
+    ingredients:[
+      {name:{en:'Cod fillet, baked',gr:'Φιλέτο μπακαλιάρου, ψητό'}, grams:240, kcal100:105, carbs100:0, protein100:23.0, fat100:0.9},
+      {name:{en:'Orzo, cooked',gr:'Κριθαράκι, βρασμένο'}, grams:200, kcal100:131, carbs100:25.0, protein100:5.0, fat100:1.1},
+      {name:{en:'Courgette, roasted',gr:'Κολοκυθάκι, ψητό'}, grams:200, kcal100:17, carbs100:3.1, protein100:1.2, fat100:0.3},
+      {name:{en:'Cherry tomatoes',gr:'Ντοματίνια'}, grams:150, kcal100:18, carbs100:3.9, protein100:0.9, fat100:0.2},
+      {name:{en:'Extra virgin olive oil',gr:'Εξαιρετικό παρθένο ελαιόλαδο'}, grams:16, kcal100:884, carbs100:0, protein100:0, fat100:100}
+    ]
   }
 ];
 function localizeRecipeTemplateIngredient(ing){
@@ -14242,7 +14289,9 @@ function recipeTemplatePhotoUrl(key){
     soup:'https://images.unsplash.com/photo-1547592166-23ac45744acd?auto=format&fit=crop&w=960&q=80',
     chia:'https://images.unsplash.com/photo-1494597564530-871f2b93ac55?auto=format&fit=crop&w=960&q=80',
     smoothie:'https://images.unsplash.com/photo-1645783916385-1c99860a2a42?auto=format&fit=crop&w=960&q=80',
-    beansalad:'https://images.unsplash.com/photo-1662743086910-38419bbf7f34?auto=format&fit=crop&w=960&q=80'
+    beansalad:'https://images.unsplash.com/photo-1662743086910-38419bbf7f34?auto=format&fit=crop&w=960&q=80',
+    fetaplate:'https://images.unsplash.com/photo-1635432877848-9c86755eb2f9?auto=format&fit=crop&w=960&q=80',
+    codtraybake:'https://images.unsplash.com/photo-1644784643137-b9073dd262f6?auto=format&fit=crop&w=960&q=80'
   };
   return photos[key] || recipeTemplateFallbackImage(key);
 }
@@ -14257,7 +14306,9 @@ function recipeTemplateFallbackImage(key){
     soup:{bg:'#FFF7EF',accent:'#B76E22',soft:'#F5D9B8',food:'#E38D45',food2:'#5E8C4A'},
     chia:{bg:'#F7F3FF',accent:'#5E4AA8',soft:'#E5DAFF',food:'#3B2F4A',food2:'#9B3F72'},
     smoothie:{bg:'#FFF0F5',accent:'#C2447A',soft:'#FBD6E4',food:'#8C3E75',food2:'#F5A623'},
-    beansalad:{bg:'#F5FBF2',accent:'#5E8C4A',soft:'#DFF0D4',food:'#B5702F',food2:'#D94A2F'}
+    beansalad:{bg:'#F5FBF2',accent:'#5E8C4A',soft:'#DFF0D4',food:'#B5702F',food2:'#D94A2F'},
+    fetaplate:{bg:'#FFF8ED',accent:'#B5702F',soft:'#F6E3C4',food:'#FFFFFF',food2:'#D94A2F'},
+    codtraybake:{bg:'#F0FAFF',accent:'#177A8A',soft:'#CFEFF4',food:'#E8E0C8',food2:'#5E8C4A'}
   }[key]||{bg:'#F3FAF5',accent:'#0F6E56',soft:'#CDEDE2',food:'#ffffff',food2:'#9FE1CB'};
   const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-label="Recipe image">
     <defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop stop-color="${palette.bg}"/><stop offset="1" stop-color="${palette.soft}"/></linearGradient></defs>
