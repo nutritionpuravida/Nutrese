@@ -389,7 +389,34 @@ i.ti-circle-x { color: var(--red-text); }
 .mk-faq summary:hover::after { color:var(--teal-700); }
 .mk-faq details[open] summary::after { transform:rotate(135deg); }
 .mk-faq p { color:var(--text-secondary); line-height:1.6; margin-top:12px; max-width:640px; overflow:hidden; max-height:0; opacity:0; transition:max-height .32s cubic-bezier(.16,.84,.44,1), opacity .24s ease .04s, margin-top .32s cubic-bezier(.16,.84,.44,1); }
-.mk-faq details[open] p { max-height:60px; opacity:1; }
+/* Help Center — same accordion component/visual language as the marketing
+   FAQ (.mk-faq), reused rather than reinvented, but tuned for longer
+   genuine help-article answers instead of one-sentence marketing copy. */
+.help-faq { display:block; }
+.help-faq details { border:none; border-bottom:1px solid var(--border); border-radius:0; padding:16px 0; background:transparent; }
+.help-faq details:first-child { padding-top:0; }
+.help-faq details:last-child { border-bottom:none; }
+.help-faq summary {
+  display:flex; align-items:center; justify-content:space-between; gap:20px;
+  list-style:none; cursor:pointer; font-weight:600; font-size:14px; color:var(--text-primary);
+  transition:color .18s ease;
+}
+.help-faq summary::-webkit-details-marker { display:none; }
+.help-faq summary:hover { color:var(--teal-700); }
+.help-faq summary::after {
+  content:"+"; flex:none; width:20px; height:20px; display:grid; place-items:center;
+  font-size:17px; font-weight:400; color:var(--text-muted); line-height:1;
+  transition:transform .25s cubic-bezier(.16,.84,.44,1), color .18s ease;
+}
+.help-faq summary:hover::after { color:var(--teal-700); }
+.help-faq details[open] summary::after { transform:rotate(135deg); }
+.help-faq p { color:var(--text-secondary); line-height:1.6; font-size:13px; margin-top:10px; max-width:640px; overflow:hidden; max-height:0; opacity:0; transition:max-height .32s cubic-bezier(.16,.84,.44,1), opacity .24s ease .04s, margin-top .32s cubic-bezier(.16,.84,.44,1); }
+.help-faq details[open] p { max-height:80px; opacity:1; }
+.help-faq details:not([open]) p { margin-top:0; }
+.help-category { margin-bottom:8px; }
+.help-category + .help-category { margin-top:30px; padding-top:30px; border-top:1px solid var(--border); }
+.help-category-label { font-size:12px; font-weight:700; color:var(--teal-700); text-transform:uppercase; letter-spacing:.06em; margin-bottom:14px; }
+.mk-faq details[open] p { max-height:75px; opacity:1; }
 .mk-faq details:not([open]) p { margin-top:0; }
 .mk-final { text-align:center; padding:96px 0; }
 .mk-final .mk-lead { margin-left:auto; margin-right:auto; }
@@ -399,6 +426,28 @@ i.ti-circle-x { color: var(--red-text); }
 .mk-page-hero { padding:74px 0 34px; }
 .mk-split { display:grid; grid-template-columns:1fr 1fr; gap:22px; align-items:start; }
 .mk-note { color:var(--text-muted); font-size:13px; margin-top:12px; }
+/* GDPR cookie notice — a quiet bottom bar, not a blocking overlay. Only
+   ever shown on the public marketing site (never inside the authenticated
+   app), and only until the visitor accepts it once. */
+.mk-cookie-banner {
+  position:fixed; left:0; right:0; bottom:0; z-index:60;
+  background:var(--bg-surface); border-top:1px solid var(--border);
+  box-shadow:0 -1px 3px rgba(45,42,34,.05), 0 -8px 20px rgba(45,42,34,.06);
+  padding:16px 0; display:none;
+}
+.mk-cookie-banner.show { display:block; }
+.mk-cookie-inner { display:flex; align-items:center; gap:20px; flex-wrap:wrap; }
+.mk-cookie-inner p { margin:0; font-size:13px; color:var(--text-secondary); line-height:1.5; flex:1; min-width:240px; }
+.mk-cookie-inner a { color:var(--teal-700); text-decoration:underline; text-underline-offset:2px; }
+.mk-cookie-inner .mk-btn { flex:none; min-height:38px; padding:0 20px; }
+@media (max-width:640px){ .mk-cookie-inner { flex-direction:column; align-items:stretch; } .mk-cookie-inner .mk-btn { width:100%; } }
+.mk-legal { max-width:720px; }
+.mk-legal h2 { font-size:18px; font-weight:700; color:var(--text-primary); margin:34px 0 12px; letter-spacing:-.01em; }
+.mk-legal h2:first-child { margin-top:0; }
+.mk-legal p { font-size:15px; line-height:1.7; color:var(--text-secondary); margin-bottom:4px; }
+.mk-legal a { color:var(--teal-700); text-decoration:underline; text-underline-offset:2px; }
+.mk-legal-placeholder { color:var(--teal-700); background:var(--teal-50); padding:1px 6px; border-radius:5px; font-size:13px; }
+[data-theme="dark"] .mk-legal-placeholder { background:rgba(51,195,148,.14); }
 @media (max-width: 980px){
   .mk-menu-btn { display:inline-flex; }
   .mk-nav { position:absolute; left:20px; right:20px; top:78px; display:none; flex-direction:column; align-items:stretch; padding:12px; border-radius:18px; background:var(--bg-surface); border:1px solid var(--border); box-shadow:0 24px 60px rgba(45,42,34,.14); }
@@ -556,6 +605,12 @@ i.ti-circle-x { color: var(--red-text); }
 #page-dashboard .dashboard-empty-title { font-size: 18px; font-weight: 800; color: var(--text-primary); }
 #page-dashboard .dashboard-empty-copy { max-width: 420px; font-size: 13px; line-height: 1.55; color: var(--text-secondary); }
 #page-dashboard .dashboard-empty-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 4px; }
+#page-dashboard .dashboard-first-steps { margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--border); max-width: 360px; text-align: left; }
+#page-dashboard .dashboard-first-steps-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 10px; text-align: center; }
+#page-dashboard .dashboard-first-steps ol { margin: 0; padding-left: 20px; color: var(--text-secondary); font-size: 13px; line-height: 1.9; }
+#page-dashboard .dashboard-first-steps .field-note { text-align: center; }
+#page-dashboard .dashboard-first-steps .field-note a { display: inline-block; }
+#page-dashboard .dashboard-first-steps .field-note a { color: var(--teal-700); text-decoration: underline; text-underline-offset: 2px; }
 [data-theme="dark"] #page-dashboard .dashboard-empty-state { background: rgba(255,255,255,.025); border-color: var(--border); }
 [data-theme="dark"] #page-dashboard .dashboard-empty-icon { background: rgba(78,205,196,.1); color: var(--teal-300); }
 /* Minimal dashboard refinement: dashboard-only visual layer. */
@@ -1750,7 +1805,7 @@ table th,
       <div class="mk-comparison"><table><thead><tr><th>Workflow</th><th>Generic tools</th><th>Nutrese</th></tr></thead><tbody><tr><td>Client context</td><td>Split across files and notes</td><td>Profile, notes, labs and goals together</td></tr><tr><td>Meal planning</td><td>Manual calculations and retyping</td><td>Structured exchange targets and rendered plans</td></tr><tr><td>Reports</td><td>Rebuilt manually for each client</td><td>Generated from the active plan and profile</td></tr></tbody></table></div>
     </div>
     <div class="mk-shell mk-section" id="pricing-preview"><div class="mk-section-head"><h2 class="mk-h2">Simple pricing for professional use.</h2><p>Start with the existing Nutrese free-trial flow. Billing remains handled by the current Stripe subscription system.</p></div><div class="mk-price-grid"><article class="mk-price"><h3>Monthly</h3><strong>&euro;29</strong><span>/month</span><ul><li>Full Nutrese workspace</li><li>Client reports and planning tools</li><li>Cancel through billing management</li></ul><button class="mk-btn mk-btn-primary" type="button" onclick="marketingOpenAuth('signup')">Start Free Trial</button></article><article class="mk-price"><h3>Yearly</h3><strong>&euro;249</strong><span>/year</span><ul><li>Same professional workspace</li><li>Lower annual price</li><li>Best for established practices</li></ul><button class="mk-btn mk-btn-light" type="button" onclick="marketingOpenAuth('signup')">Start Free Trial</button></article></div></div>
-    <div class="mk-shell mk-section"><div class="mk-section-head"><h2 class="mk-h2">FAQ</h2><p>Short answers for dietitians evaluating Nutrese.</p></div><div class="mk-faq"><details><summary>Is Nutrese for independent dietitians?</summary><p>Yes. Nutrese is built for independent clinicians and small or growing nutrition practices.</p></details><details><summary>Does the public site change my existing app?</summary><p>No. Signed-in users continue into the existing authenticated Nutrese workspace.</p></details><details><summary>How does the free trial start?</summary><p>Use the existing registration and subscription flow. Nutrese does not create a separate checkout implementation here.</p></details><details><summary>Can I contact support?</summary><p>Yes. Email <a href="mailto:support@nutrese.eu">support@nutrese.eu</a> for product support and <a href="mailto:privacy@nutrese.eu">privacy@nutrese.eu</a> for privacy questions.</p></details></div></div>    <div class="mk-shell mk-final"><h2 class="mk-h2">A calmer way to run clinical nutrition work.</h2><p class="mk-lead">Spend more time with clients. Less time on admin.</p><div class="mk-hero-actions" style="justify-content:center"><button class="mk-btn mk-btn-primary" type="button" onclick="marketingOpenAuth('signup')">Start Free Trial</button><button class="mk-btn" type="button" onclick="marketingOpenAuth('signin')">Sign in</button></div></div>
+    <div class="mk-shell mk-section"><div class="mk-section-head"><h2 class="mk-h2">FAQ</h2><p>Short answers for dietitians evaluating Nutrese.</p></div><div class="mk-faq"><details><summary>Is Nutrese for independent dietitians?</summary><p>Yes. Nutrese is built for independent clinicians and small or growing nutrition practices.</p></details><details><summary>How is my client data handled?</summary><p>Client data is entered and controlled by you, stored behind authenticated access, and never sold or used for advertising. See our Privacy Policy for full details.</p></details><details><summary>How are nutrition plans created?</summary><p>You build plans around each client's exchange-based targets. Nutrese renders the meal text and calculations for you, while you stay in control of every portion and swap.</p></details><details><summary>What is the exchange system?</summary><p>Nutrese uses standard food exchange lists (starch, protein, fat, fruit, vegetable, dairy) as the basis for meal planning — the same system dietitians already use, just calculated and rendered automatically.</p></details><details><summary>Can I generate client reports?</summary><p>Yes. One-day and 7-day reports are generated directly from a client's active plan, with your own logo applied automatically, ready to print or share.</p></details><details><summary>Does Nutrese fit an existing professional workflow?</summary><p>Nutrese keeps client profiles, planning, appointments and reports in one authenticated workspace, reducing the admin usually spread across separate files and spreadsheets — without replacing your clinical judgement.</p></details><details><summary>How does Nutrese approach security and privacy?</summary><p>Access requires authentication, professional and trial access are handled separately from billing, and only necessary cookies are used. See Security & Privacy and our Privacy Policy for details.</p></details><details><summary>Does the public site change my existing app?</summary><p>No. Signed-in users continue into the existing authenticated Nutrese workspace.</p></details><details><summary>How does the free trial start?</summary><p>Use the existing registration and subscription flow. Nutrese does not create a separate checkout implementation here.</p></details><details><summary>Can I contact support?</summary><p>Yes. Email <a href="mailto:support@nutrese.eu">support@nutrese.eu</a> for product support and <a href="mailto:privacy@nutrese.eu">privacy@nutrese.eu</a> for privacy questions.</p></details></div></div>    <div class="mk-shell mk-final"><h2 class="mk-h2">A calmer way to run clinical nutrition work.</h2><p class="mk-lead">Spend more time with clients. Less time on admin.</p><div class="mk-hero-actions" style="justify-content:center"><button class="mk-btn mk-btn-primary" type="button" onclick="marketingOpenAuth('signup')">Start Free Trial</button><button class="mk-btn" type="button" onclick="marketingOpenAuth('signin')">Sign in</button></div></div>
   </section>
 
   <section class="mk-page" data-mk-page="product"><div class="mk-shell mk-page-hero"><div class="mk-eyebrow">Product</div><h1 class="mk-h2">The Nutrese workspace connects the pieces of dietetic practice.</h1><p class="mk-lead">Use one authenticated app for client profiles, notes, appointments, exchange planning, reports and follow-up.</p></div><div class="mk-shell mk-section"><div class="mk-card-grid"><article class="mk-card"><h3>Client workspace</h3><p>Keep profile, intake, body composition and clinical notes together.</p></article><article class="mk-card"><h3>Planning tools</h3><p>Build plans with exchange targets and clear rendered meal text.</p></article><article class="mk-card"><h3>Reporting</h3><p>Create client-facing reports from the active profile and meal plan.</p></article></div><p class="mk-note">Product previews use representative sample data. The authenticated app remains the source of truth.</p></div></section>
@@ -1761,7 +1816,70 @@ table th,
 
   <section class="mk-page" data-mk-page="security"><div class="mk-shell mk-page-hero"><div class="mk-eyebrow">Security & Privacy</div><h1 class="mk-h2">Designed for careful professional workflows.</h1><p class="mk-lead">Nutrese uses authenticated access, server-side access checks and Stripe-managed billing. Operational privacy practices should be reviewed by each practice according to local requirements.</p></div><div class="mk-shell mk-section"><div class="mk-card-grid"><article class="mk-card"><h3>Authenticated access</h3><p>Users sign in with their Nutrese account before entering the application workspace.</p></article><article class="mk-card"><h3>Access controls</h3><p>Professional, trial and administrator access are handled separately from Stripe billing status.</p></article><article class="mk-card"><h3>Privacy contact</h3><p>For privacy questions, contact <a href="mailto:privacy@nutrese.eu">privacy@nutrese.eu</a>. For product help, contact <a href="mailto:support@nutrese.eu">support@nutrese.eu</a>.</p></article></div><p class="mk-note">This page avoids unsupported legal, medical or compliance claims. It summarizes product design intent, not legal advice.</p></div></section>
 
-  <footer class="mk-footer"><div class="mk-shell mk-footer-inner"><div>&copy; 2026 Nutrese. Professional Nutrition Platform.</div><div class="mk-footer-links"><a href="mailto:hello@nutrese.eu">hello@nutrese.eu</a><a href="mailto:info@nutrese.eu">Info</a><a href="mailto:support@nutrese.eu">Support</a><a href="mailto:privacy@nutrese.eu">Privacy</a></div></div></footer>
+  <section class="mk-page" data-mk-page="privacy"><div class="mk-shell mk-page-hero"><div class="mk-eyebrow">Legal</div><h1 class="mk-h2">Privacy Policy.</h1><p class="mk-lead">Last updated: [placeholder — set on publish]. This describes how Nutrese handles account and client information for professional users of the platform.</p></div><div class="mk-shell mk-section mk-legal">
+    <h2>1. Who this applies to</h2>
+    <p>This policy covers Nutrese accounts used by registered dietitians and nutrition professionals ("professional users"), and describes how we handle the account information you provide and the client information you enter while using the platform.</p>
+
+    <h2>2. Information we collect</h2>
+    <p>Account information: your name, email address and billing details, collected when you register and subscribe. Client information: profile, health and nutrition data you enter for your own clients — this is entered and controlled by you as the professional user, and Nutrese processes it on your behalf to provide the service. Usage information: basic technical data (such as sign-in activity) needed to keep the platform secure and functioning.</p>
+
+    <h2>3. How information is used</h2>
+    <p>To provide the core service — authentication, saving your client data, generating plans and reports, and managing your subscription. We do not sell account or client data, and we do not use client health information for advertising.</p>
+
+    <h2>4. Where information is stored</h2>
+    <p>Data is stored with our infrastructure provider behind authenticated, access-controlled systems. <span class="mk-legal-placeholder">[Placeholder — final wording on data hosting location, sub-processors and retention periods to be confirmed during legal review.]</span></p>
+
+    <h2>5. Your rights</h2>
+    <p>Depending on your jurisdiction, you may have rights to access, correct, export or delete your account information. As the professional user, you are responsible for handling equivalent rights requests from your own clients regarding the data you enter about them. <span class="mk-legal-placeholder">[Placeholder — jurisdiction-specific rights language to be finalized by legal review.]</span></p>
+
+    <h2>6. Cookies</h2>
+    <p>Nutrese uses only the cookies necessary to keep you signed in and remember basic preferences (such as light/dark mode and language). See the cookie notice shown on this site for details.</p>
+
+    <h2>7. Contact</h2>
+    <p>For privacy questions or requests, contact <a href="mailto:privacy@nutrese.eu">privacy@nutrese.eu</a>.</p>
+
+    <p class="mk-note">This page summarizes our intended privacy approach and is not a substitute for legal advice. Sections marked as placeholders are intended to be finalized during legal review before public launch.</p>
+  </div></section>
+
+  <section class="mk-page" data-mk-page="terms"><div class="mk-shell mk-page-hero"><div class="mk-eyebrow">Legal</div><h1 class="mk-h2">Terms of Service.</h1><p class="mk-lead">Last updated: [placeholder — set on publish]. These terms cover use of the Nutrese platform by registered professional users.</p></div><div class="mk-shell mk-section mk-legal">
+    <h2>1. Acceptance of terms</h2>
+    <p>By creating a Nutrese account, you agree to these terms. If you do not agree, please do not use the platform.</p>
+
+    <h2>2. Who can use Nutrese</h2>
+    <p>Nutrese is intended for use by qualified dietitians and nutrition professionals managing their own clients. You are responsible for ensuring your use of the platform complies with the professional and regulatory obligations that apply to you.</p>
+
+    <h2>3. Your account</h2>
+    <p>You are responsible for keeping your login credentials secure and for all activity under your account. Let us know promptly if you suspect unauthorized access.</p>
+
+    <h2>4. Client data responsibility</h2>
+    <p>You are responsible for the accuracy of the client information you enter, for having the appropriate basis and consent to process it, and for the clinical judgement applied to any plan or report generated. Nutrese provides calculation and organizational tools; it does not replace professional clinical judgement.</p>
+
+    <h2>5. Subscription and billing</h2>
+    <p>Paid access is billed monthly or yearly as selected at checkout and managed through our payment provider. <span class="mk-legal-placeholder">[Placeholder — final cancellation, refund and trial-conversion terms to be confirmed during legal review.]</span></p>
+
+    <h2>6. Acceptable use</h2>
+    <p>Please use Nutrese only for legitimate professional nutrition practice. Attempting to disrupt the service, access other users' accounts, or misuse the platform is not permitted.</p>
+
+    <h2>7. Availability and changes</h2>
+    <p>We aim to keep Nutrese reliably available but cannot guarantee uninterrupted service. Features may be updated, and these terms may change — we'll make reasonable efforts to communicate material changes.</p>
+
+    <h2>8. Limitation of liability</h2>
+    <p><span class="mk-legal-placeholder">[Placeholder — liability limitations, warranty disclaimers and indemnification language to be finalized during legal review, consistent with applicable EU/local law.]</span></p>
+
+    <h2>9. Contact</h2>
+    <p>Questions about these terms can be sent to <a href="mailto:support@nutrese.eu">support@nutrese.eu</a>.</p>
+
+    <p class="mk-note">This page summarizes our intended terms and is not a substitute for legal advice. Sections marked as placeholders are intended to be finalized during legal review before public launch.</p>
+  </div></section>
+
+  <footer class="mk-footer"><div class="mk-shell mk-footer-inner"><div>&copy; 2026 Nutrese. Professional Nutrition Platform.</div><div class="mk-footer-links"><a href="#" onclick="showMarketingSite('privacy');return false;">Privacy Policy</a><a href="#" onclick="showMarketingSite('terms');return false;">Terms</a><a href="mailto:hello@nutrese.eu">hello@nutrese.eu</a><a href="mailto:support@nutrese.eu">Support</a></div></div></footer>
+
+  <div class="mk-cookie-banner" id="mk-cookie-banner" role="dialog" aria-label="Cookie notice">
+    <div class="mk-shell mk-cookie-inner">
+      <p>We use only the cookies necessary to keep you signed in and remember your preferences — no tracking or advertising cookies. See our <a href="#" onclick="showMarketingSite('privacy');return false;">Privacy Policy</a> for details.</p>
+      <button class="mk-btn mk-btn-primary" type="button" onclick="acceptCookieNotice()">Accept</button>
+    </div>
+  </div>
 </main>
 
 <!-- AUTH SCREEN -->
@@ -1869,7 +1987,7 @@ table th,
     <button class="nav-item" onclick="nav('account')"><i class="ti ti-credit-card" aria-hidden="true"></i> <span class="i18n" data-en="Account / Subscription" data-gr="Λογαριασμός / Συνδρομή">Account / Subscription</span></button>
     <button class="nav-item" onclick="handleSignOut()"><i class="ti ti-logout" aria-hidden="true"></i> <span class="i18n" data-en="Log out" data-gr="Αποσύνδεση">Log out</span></button>
   </div>
-  <button class="sidebar-help-card" onclick="openFeedbackModal()" type="button">
+  <button class="sidebar-help-card" onclick="nav('help');closeSidebar()" type="button">
     <span class="sidebar-help-logo"><img src="data:image/png;base64,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" alt=""></span>
     <span class="sidebar-help-copy"><strong><span class="i18n" data-en="Need help?" data-gr="Χρειάζεστε βοήθεια;">Need help?</span></strong><small><span class="i18n" data-en="Questions, bugs and requests" data-gr="Ερωτήσεις, σφάλματα και αιτήματα">Questions, bugs and requests</span></small></span>
     <i class="ti ti-arrow-right" aria-hidden="true"></i>
@@ -1934,6 +2052,15 @@ table th,
         <div class="dashboard-empty-actions">
           <button class="btn primary" onclick="nav('clients')"><i class="ti ti-users" aria-hidden="true"></i> <span class="i18n" data-en="Go to My Clients" data-gr="Οι Πελάτες μου">Go to My Clients</span></button>
           <button class="btn" onclick="nav('clients');newClient()"><i class="ti ti-user-plus" aria-hidden="true"></i> <span class="i18n" data-en="New client" data-gr="Νέος πελάτης">New client</span></button>
+        </div>
+        <div class="dashboard-first-steps">
+          <div class="dashboard-first-steps-label"><span class="i18n" data-en="First steps" data-gr="Πρώτα βήματα">First steps</span></div>
+          <ol>
+            <li><span class="i18n" data-en="Add your first client" data-gr="Προσθέστε τον πρώτο σας πελάτη">Add your first client</span></li>
+            <li><span class="i18n" data-en="Build a nutrition plan around their exchange targets" data-gr="Δημιουργήστε ένα διατροφικό πλάνο γύρω από τους στόχους ισοδυνάμων">Build a nutrition plan around their exchange targets</span></li>
+            <li><span class="i18n" data-en="Generate a report to share with them" data-gr="Δημιουργήστε μια αναφορά για να μοιραστείτε μαζί τους">Generate a report to share with them</span></li>
+          </ol>
+          <div class="field-note" style="margin-top:8px"><span class="i18n" data-en="Need more detail?" data-gr="Χρειάζεστε περισσότερες λεπτομέρειες;">Need more detail?</span> <a href="#" onclick="nav('help');return false;"><span class="i18n" data-en="Visit the Help Center" data-gr="Επισκεφθείτε το Κέντρο Βοήθειας">Visit the Help Center</span></a></div>
         </div>
       </div>
     </div>
@@ -2739,6 +2866,108 @@ table th,
           <span id="report-logo-status" class="field-note" style="margin-left:0"></span>
         </div>
         <div id="report-logo-preview" style="width:100%;display:none"></div>
+      </div>
+    </div>
+  </div>
+  <div class="page" id="page-help">
+    <div class="card">
+      <div class="card-header"><span class="card-title"><i class="ti ti-lifebuoy" aria-hidden="true"></i> <span class="i18n" data-en="Help Center" data-gr="Κέντρο Βοήθειας">Help Center</span></span></div>
+      <div class="card-body">
+        <div class="field-note" style="margin-bottom:24px;max-width:640px"><span class="i18n" data-en="Short answers for the questions dietitians ask most. If you can't find what you need, report a problem below and we'll follow up." data-gr="Σύντομες απαντήσεις στις πιο συχνές ερωτήσεις διαιτολόγων. Αν δεν βρίσκετε αυτό που χρειάζεστε, αναφέρετε ένα πρόβλημα παρακάτω και θα επικοινωνήσουμε.">Short answers for the questions dietitians ask most. If you can't find what you need, report a problem below and we'll follow up.</span></div>
+
+        <div class="help-category">
+          <div class="help-category-label"><span class="i18n" data-en="Getting Started" data-gr="Ξεκινώντας">Getting Started</span></div>
+          <div class="help-faq">
+            <details>
+              <summary><span class="i18n" data-en="What happens after my first login?" data-gr="Τι συμβαίνει μετά την πρώτη σύνδεση;">What happens after my first login?</span></summary>
+              <p><span class="i18n" data-en="You'll land on your Dashboard. It stays empty until you add a client — that's expected, not a bug. Start from My Clients in the sidebar to create your first client profile." data-gr="Θα βρεθείτε στον Πίνακα Ελέγχου. Παραμένει κενός μέχρι να προσθέσετε πελάτη — αυτό είναι αναμενόμενο, όχι σφάλμα. Ξεκινήστε από τους Πελάτες μου στο πλαϊνό μενού για να δημιουργήσετε τον πρώτο πελάτη σας.">You'll land on your Dashboard. It stays empty until you add a client — that's expected, not a bug. Start from My Clients in the sidebar to create your first client profile.</span></p>
+            </details>
+            <details>
+              <summary><span class="i18n" data-en="How do I create my first client?" data-gr="Πώς δημιουργώ τον πρώτο μου πελάτη;">How do I create my first client?</span></summary>
+              <p><span class="i18n" data-en="Go to My Clients → New client, then fill in the Client Profile tab (age, sex, height, weight, goal and any conditions). Nutrese calculates calorie and macro targets automatically once the profile is complete." data-gr="Πηγαίνετε στους Πελάτες μου → Νέος πελάτης και συμπληρώστε την καρτέλα Προφίλ Πελάτη (ηλικία, φύλο, ύψος, βάρος, στόχο και τυχόν παθήσεις). Το Nutrese υπολογίζει αυτόματα τους στόχους θερμίδων και μακροθρεπτικών μόλις ολοκληρωθεί το προφίλ.">Go to My Clients → New client, then fill in the Client Profile tab (age, sex, height, weight, goal and any conditions). Nutrese calculates calorie and macro targets automatically once the profile is complete.</span></p>
+            </details>
+            <details>
+              <summary><span class="i18n" data-en="How do I set up a nutrition plan?" data-gr="Πώς δημιουργώ ένα διατροφικό πλάνο;">How do I set up a nutrition plan?</span></summary>
+              <p><span class="i18n" data-en="Once a client's profile is complete, use One Day Plan or 7-Day Plan to build a meal plan around their exchange targets. Nutrese renders the meal text for you — you can still adjust portions and swap meals as needed." data-gr="Μόλις ολοκληρωθεί το προφίλ πελάτη, χρησιμοποιήστε το Πλάνο Μίας Ημέρας ή το 7ήμερο Πλάνο για να χτίσετε ένα πλάνο γευμάτων γύρω από τους στόχους ισοδυνάμων. Το Nutrese αποδίδει το κείμενο γεύματος αυτόματα — μπορείτε να προσαρμόσετε μερίδες και να αλλάξετε γεύματα όποτε χρειάζεται.">Once a client's profile is complete, use One Day Plan or 7-Day Plan to build a meal plan around their exchange targets. Nutrese renders the meal text for you — you can still adjust portions and swap meals as needed.</span></p>
+            </details>
+          </div>
+        </div>
+
+        <div class="help-category">
+          <div class="help-category-label"><span class="i18n" data-en="Clients" data-gr="Πελάτες">Clients</span></div>
+          <div class="help-faq">
+            <details>
+              <summary><span class="i18n" data-en="How do I add or edit a client?" data-gr="Πώς προσθέτω ή επεξεργάζομαι πελάτη;">How do I add or edit a client?</span></summary>
+              <p><span class="i18n" data-en="Add clients from My Clients → New client. You can edit any saved client's profile, body composition, notes and documents at any time from their profile tabs." data-gr="Προσθέστε πελάτες από τους Πελάτες μου → Νέος πελάτης. Μπορείτε να επεξεργαστείτε το προφίλ, τη σύσταση σώματος, τις σημειώσεις και τα έγγραφα οποιουδήποτε αποθηκευμένου πελάτη ανά πάσα στιγμή από τις καρτέλες προφίλ του.">Add clients from My Clients → New client. You can edit any saved client's profile, body composition, notes and documents at any time from their profile tabs.</span></p>
+            </details>
+            <details>
+              <summary><span class="i18n" data-en="What client information does Nutrese keep track of?" data-gr="Ποιες πληροφορίες πελάτη παρακολουθεί το Nutrese;">What client information does Nutrese keep track of?</span></summary>
+              <p><span class="i18n" data-en="Each client's profile brings together demographics, goals, conditions, body composition history, notes and lab values in one place, instead of being split across separate files and spreadsheets." data-gr="Κάθε προφίλ πελάτη συγκεντρώνει δημογραφικά στοιχεία, στόχους, παθήσεις, ιστορικό σύστασης σώματος, σημειώσεις και εργαστηριακές τιμές σε ένα σημείο, αντί να είναι διάσπαρτα σε ξεχωριστά αρχεία και υπολογιστικά φύλλα.">Each client's profile brings together demographics, goals, conditions, body composition history, notes and lab values in one place, instead of being split across separate files and spreadsheets.</span></p>
+            </details>
+          </div>
+        </div>
+
+        <div class="help-category">
+          <div class="help-category-label"><span class="i18n" data-en="Nutrition Planning" data-gr="Σχεδιασμός Διατροφής">Nutrition Planning</span></div>
+          <div class="help-faq">
+            <details>
+              <summary><span class="i18n" data-en="How does the calorie calculation work?" data-gr="Πώς λειτουργεί ο υπολογισμός θερμίδων;">How does the calorie calculation work?</span></summary>
+              <p><span class="i18n" data-en="Nutrese calculates a goal calorie target from the client's profile — using standard TDEE estimation plus their stated goal (maintenance, loss or gain). You can review and manually adjust this at any time on the Macro Targets page." data-gr="Το Nutrese υπολογίζει τον στόχο θερμίδων από το προφίλ του πελάτη — χρησιμοποιώντας τυπική εκτίμηση TDEE συν τον δηλωμένο στόχο (συντήρηση, απώλεια ή αύξηση). Μπορείτε να το ελέγξετε και να το προσαρμόσετε χειροκίνητα ανά πάσα στιγμή στη σελίδα Στόχων Μακροθρεπτικών.">Nutrese calculates a goal calorie target from the client's profile — using standard TDEE estimation plus their stated goal (maintenance, loss or gain). You can review and manually adjust this at any time on the Macro Targets page.</span></p>
+            </details>
+            <details>
+              <summary><span class="i18n" data-en="How do macro targets work?" data-gr="Πώς λειτουργούν οι στόχοι μακροθρεπτικών;">How do macro targets work?</span></summary>
+              <p><span class="i18n" data-en="Carbohydrate, protein and fat percentages are shown as an editable breakdown on the Macro Targets page, and always add up to the client's total goal calories." data-gr="Τα ποσοστά υδατανθράκων, πρωτεΐνης και λίπους εμφανίζονται ως επεξεργάσιμη κατανομή στη σελίδα Στόχων Μακροθρεπτικών και πάντα αθροίζουν στον συνολικό στόχο θερμίδων του πελάτη.">Carbohydrate, protein and fat percentages are shown as an editable breakdown on the Macro Targets page, and always add up to the client's total goal calories.</span></p>
+            </details>
+            <details>
+              <summary><span class="i18n" data-en="What is the exchange system?" data-gr="Τι είναι το σύστημα ισοδυνάμων;">What is the exchange system?</span></summary>
+              <p><span class="i18n" data-en="Nutrese uses food exchange lists (starch, protein, fat, fruit, vegetable, dairy) as the foundation for meal planning, so portions stay clinically realistic and easy to adjust — the same system dietitians already use, calculated and rendered for you automatically." data-gr="Το Nutrese χρησιμοποιεί λίστες ισοδυνάμων τροφίμων (άμυλο, πρωτεΐνη, λίπος, φρούτα, λαχανικά, γαλακτοκομικά) ως βάση για τον σχεδιασμό γευμάτων, ώστε οι μερίδες να παραμένουν κλινικά ρεαλιστικές και εύκολα προσαρμόσιμες — το ίδιο σύστημα που ήδη χρησιμοποιούν οι διαιτολόγοι, υπολογισμένο και αποδοσμένο αυτόματα.">Nutrese uses food exchange lists (starch, protein, fat, fruit, vegetable, dairy) as the foundation for meal planning, so portions stay clinically realistic and easy to adjust — the same system dietitians already use, calculated and rendered for you automatically.</span></p>
+            </details>
+            <details>
+              <summary><span class="i18n" data-en="What are the Recipes for?" data-gr="Σε τι χρησιμεύουν οι Συνταγές;">What are the Recipes for?</span></summary>
+              <p><span class="i18n" data-en="The Recipes library has starter recipes with full nutrition breakdowns, calculated from real ingredient data — not fixed numbers. You can also build and save your own recipes for reuse across clients." data-gr="Η βιβλιοθήκη Συνταγών περιλαμβάνει αρχικές συνταγές με πλήρη διατροφική ανάλυση, υπολογισμένη από πραγματικά δεδομένα συστατικών — όχι σταθερούς αριθμούς. Μπορείτε επίσης να δημιουργήσετε και να αποθηκεύσετε τις δικές σας συνταγές για επαναχρησιμοποίηση σε πελάτες.">The Recipes library has starter recipes with full nutrition breakdowns, calculated from real ingredient data — not fixed numbers. You can also build and save your own recipes for reuse across clients.</span></p>
+            </details>
+          </div>
+        </div>
+
+        <div class="help-category">
+          <div class="help-category-label"><span class="i18n" data-en="Reports" data-gr="Αναφορές">Reports</span></div>
+          <div class="help-faq">
+            <details>
+              <summary><span class="i18n" data-en="How do I generate a client report?" data-gr="Πώς δημιουργώ αναφορά πελάτη;">How do I generate a client report?</span></summary>
+              <p><span class="i18n" data-en="From a client's plan, use the report options to generate a One Day or 7-Day client-facing report. Set your own logo once under Account so it appears automatically on every report." data-gr="Από το πλάνο ενός πελάτη, χρησιμοποιήστε τις επιλογές αναφοράς για να δημιουργήσετε αναφορά Μίας Ημέρας ή 7 Ημερών για τον πελάτη. Ορίστε το λογότυπό σας μία φορά στον Λογαριασμό ώστε να εμφανίζεται αυτόματα σε κάθε αναφορά.">From a client's plan, use the report options to generate a One Day or 7-Day client-facing report. Set your own logo once under Account so it appears automatically on every report.</span></p>
+            </details>
+            <details>
+              <summary><span class="i18n" data-en="How do I share or export a report?" data-gr="Πώς μοιράζομαι ή εξάγω μια αναφορά;">How do I share or export a report?</span></summary>
+              <p><span class="i18n" data-en="Reports are designed to print or export directly from the browser — no separate document has to be rebuilt by hand for each client." data-gr="Οι αναφορές είναι σχεδιασμένες για άμεση εκτύπωση ή εξαγωγή από τον browser — δεν χρειάζεται να ξαναφτιάξετε χειροκίνητα ξεχωριστό έγγραφο για κάθε πελάτη.">Reports are designed to print or export directly from the browser — no separate document has to be rebuilt by hand for each client.</span></p>
+            </details>
+          </div>
+        </div>
+
+        <div class="help-category">
+          <div class="help-category-label"><span class="i18n" data-en="Account &amp; Settings" data-gr="Λογαριασμός &amp; Ρυθμίσεις">Account &amp; Settings</span></div>
+          <div class="help-faq">
+            <details>
+              <summary><span class="i18n" data-en="Where do I manage my profile and report logo?" data-gr="Πού διαχειρίζομαι το προφίλ και το λογότυπο αναφορών μου;">Where do I manage my profile and report logo?</span></summary>
+              <p><span class="i18n" data-en="Your account details and report branding (logo) live under Account / Subscription in the sidebar." data-gr="Τα στοιχεία λογαριασμού και η επωνυμία αναφορών (λογότυπο) βρίσκονται στον Λογαριασμό / Συνδρομή στο πλαϊνό μενού.">Your account details and report branding (logo) live under Account / Subscription in the sidebar.</span></p>
+            </details>
+            <details>
+              <summary><span class="i18n" data-en="How do I switch between light and dark mode?" data-gr="Πώς εναλλάσσω μεταξύ φωτεινής και σκοτεινής λειτουργίας;">How do I switch between light and dark mode?</span></summary>
+              <p><span class="i18n" data-en="Use the sun/moon icon in the top-right corner to switch at any time. Your choice is remembered for next time." data-gr="Χρησιμοποιήστε το εικονίδιο ήλιου/φεγγαριού πάνω δεξιά για εναλλαγή ανά πάσα στιγμή. Η επιλογή σας θυμάται για την επόμενη φορά.">Use the sun/moon icon in the top-right corner to switch at any time. Your choice is remembered for next time.</span></p>
+            </details>
+            <details>
+              <summary><span class="i18n" data-en="Who do I contact about billing or my subscription?" data-gr="Ποιον επικοινωνώ για χρεώσεις ή τη συνδρομή μου;">Who do I contact about billing or my subscription?</span></summary>
+              <p><span class="i18n" data-en="Manage your monthly or yearly subscription from Account / Subscription. For billing issues, use the billing portal link there; for anything else, use Report a problem below." data-gr="Διαχειριστείτε τη μηνιαία ή ετήσια συνδρομή σας από τον Λογαριασμό / Συνδρομή. Για θέματα χρεώσεων, χρησιμοποιήστε τον σύνδεσμο της πύλης χρεώσεων εκεί· για οτιδήποτε άλλο, χρησιμοποιήστε την Αναφορά προβλήματος παρακάτω.">Manage your monthly or yearly subscription from Account / Subscription. For billing issues, use the billing portal link there; for anything else, use Report a problem below.</span></p>
+            </details>
+          </div>
+        </div>
+
+        <div style="margin-top:30px;padding-top:24px;border-top:1px solid var(--border);display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+          <div>
+            <div style="font-weight:600;font-size:14px;color:var(--text-primary)"><span class="i18n" data-en="Still stuck?" data-gr="Χρειάζεστε ακόμη βοήθεια;">Still stuck?</span></div>
+            <div class="field-note" style="margin-top:2px"><span class="i18n" data-en="Report a problem and we'll follow up directly." data-gr="Αναφέρετε ένα πρόβλημα και θα επικοινωνήσουμε απευθείας.">Report a problem and we'll follow up directly.</span></div>
+          </div>
+          <button class="btn primary" style="margin-left:auto" onclick="openFeedbackModal()"><i class="ti ti-message-report" aria-hidden="true"></i> <span class="i18n" data-en="Report a problem" data-gr="Αναφορά προβλήματος">Report a problem</span></button>
+        </div>
       </div>
     </div>
   </div>
@@ -5716,7 +5945,9 @@ const MARKETING_PAGES = {
   product: {title:'Product - Nutrese', description:'Explore the Nutrese clinical nutrition workspace for profiles, notes, planning, appointments and reports.', path:'/#product'},
   'nutrition-planning': {title:'Nutrition Planning - Nutrese', description:'Exchange-based planning support that keeps the dietitian in control.', path:'/#nutrition-planning'},
   pricing: {title:'Pricing - Nutrese', description:'Simple professional Nutrese pricing with monthly and yearly subscription options.', path:'/#pricing'},
-  security: {title:'Security & Privacy - Nutrese', description:'How Nutrese approaches authenticated access, account controls and privacy contact paths.', path:'/#security'}
+  security: {title:'Security & Privacy - Nutrese', description:'How Nutrese approaches authenticated access, account controls and privacy contact paths.', path:'/#security'},
+  privacy: {title:'Privacy Policy - Nutrese', description:'How Nutrese handles account and client information for professional users.', path:'/#privacy'},
+  terms: {title:'Terms of Service - Nutrese', description:'Terms covering use of the Nutrese platform by registered professional users.', path:'/#terms'}
 };
 function marketingRouteFromHash(){
   const raw=(window.location.hash || '').replace(/^#\/?/, '').split('?')[0].trim();
@@ -5761,6 +5992,7 @@ function showMarketingSite(pageKey){
   const site=document.getElementById('marketing-site');
   if(!site || currentUser || isPasswordRecoveryFlow) return;
   applyMarketingTheme();
+  showCookieNoticeIfNeeded();
   const route=pageKey || marketingRouteFromHash() || 'home';
   hideAppShell();
   hideAuthScreen();
@@ -5808,6 +6040,23 @@ function toggleMarketingTheme(){
   document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
   try { localStorage.setItem('nutrese-mk-theme', isDark ? 'light' : 'dark'); } catch(e) {}
   if (typeof updateThemeButton === 'function') updateThemeButton();
+}
+// GDPR cookie notice — necessary cookies only (session/theme/language
+// preferences), no tracking or advertising cookies exist in this product,
+// so the notice is a simple one-time acknowledgement rather than a
+// multi-category consent manager. Own localStorage key, entirely separate
+// from theme/language state.
+function showCookieNoticeIfNeeded(){
+  const banner = document.getElementById('mk-cookie-banner');
+  if(!banner) return;
+  let accepted = null;
+  try { accepted = localStorage.getItem('nutrese-cookie-consent'); } catch(e) {}
+  banner.classList.toggle('show', accepted !== 'accepted');
+}
+function acceptCookieNotice(){
+  try { localStorage.setItem('nutrese-cookie-consent', 'accepted'); } catch(e) {}
+  const banner = document.getElementById('mk-cookie-banner');
+  if(banner) banner.classList.remove('show');
 }
 function bindMarketingSite(){
   const menu=document.getElementById('mk-menu-btn');
