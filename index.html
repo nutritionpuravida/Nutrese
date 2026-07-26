@@ -4645,7 +4645,7 @@ RECIPES.LUN_LOUVI_TUNA = buildRecipe({
 
 // 33. Arakas (braised peas) with feta — vegetarian
 RECIPES.LUN_ARAKAS_FETA = buildRecipe({
-  recipe_id: 'LUN_ARAKAS_FETA', name: { en: 'Braised peas with feta', gr: 'Αρακάς λαδερός με φέτα' },
+  recipe_id: 'LUN_ARAKAS_FETA', name: { en: 'Peas with potato, tomato sauce & feta', gr: 'Αρακάς με πατάτα, σάλτσα ντομάτας & φέτα' },
   yield_servings: 1,
   ingredients: [
     { food_id: 'peas_cooked', grams: 200, state: 'cooked' },
@@ -4682,7 +4682,7 @@ RECIPES.LUN_TRACHANAS_HALLOUMI = buildRecipe({
 
 // 36. Braised peas (vegan) — legacy protein:0; peas anchor the (modest) protein
 RECIPES.LUN_PEAS_LADERO = buildRecipe({
-  recipe_id: 'LUN_PEAS_LADERO', name: { en: 'Braised peas (vegan)', gr: 'Αρακάς λαδερός' },
+  recipe_id: 'LUN_PEAS_LADERO', name: { en: 'Peas with potato and tomato sauce', gr: 'Αρακάς με πατάτα και σάλτσα ντομάτας' },
   yield_servings: 1,
   ingredients: [
     { food_id: 'peas_cooked', grams: 250, state: 'cooked' }, // ~13.5g plant protein
@@ -6927,8 +6927,8 @@ Object.assign(MEALS, {
   LUN_LENTIL_SOUP: (ex,p) => 'Φακές σούπα (1 φλ. μαγειρεμένες φακές + 1 κ.γ. ελαιόλαδο) – σαλάτα (2 φλ.)',
   LUN_CHICKPEAS_SALAD: (ex,p) => 'Ρεβίθια (1 φλ. ρεβίθια + 1 κ.γ. ελαιόλαδο + ντομάτα) – σαλάτα (2 φλ.)',
   LUN_SPINACH_RICE: (ex,p) => 'Σπανακόρυζο (1 φλ. + 1 κ.γ. ελαιόλαδο) + 30g τυρί light – σαλάτα (2 φλ.)',
-  LUN_PEAS_LADERO: (ex,p) => 'Αρακάς λαδερός (1 φλ. αρακάς + ½ φλ. πατάτες + ¼ φλ. σάλτσα ντομάτας + 2 κ.γ. ελαιόλαδο + άνηθος) – σαλάτα (2 φλ.)',
-  LUN_ARAKAS_FETA: (ex,p) => 'Αρακάς λαδερός με φέτα (1 φλ. αρακάς + ½ φλ. πατάτες + ¼ φλ. σάλτσα ντομάτας + 2 κ.γ. ελαιόλαδο + άνηθος) + 30g φέτα – σαλάτα (1.5 φλ.)',
+  LUN_PEAS_LADERO: (ex,p) => 'Αρακάς με πατάτα και σάλτσα ντομάτας (1 φλ. αρακάς + 1 μέτρια πατάτα (~150g) + ¼ φλ. σάλτσα ντομάτας + 2 κ.γ. ελαιόλαδο + άνηθος) – σαλάτα (2 φλ.)',
+  LUN_ARAKAS_FETA: (ex,p) => 'Αρακάς με πατάτα, σάλτσα ντομάτας & φέτα (1 φλ. αρακάς + 1 μέτρια πατάτα (~150g) + ¼ φλ. σάλτσα ντομάτας + 2 κ.γ. ελαιόλαδο + άνηθος) + 30g φέτα – σαλάτα (1.5 φλ.)',
   LUN_ARAKAS_PORK: (ex,p,audience) => 'Αρακάς με χοιρινό' + mealSuffix(ex,p,'αρακάς + σαλάτα',null,'πατάτα','χοιρινό',audience),
   LUN_GRILLED_FISH_RICE: (ex,p) => 'Ψητό ψάρι (140g τσιπούρα ή λαβράκι) + ½ φλ. ρύζι + 2 κ.γ. ελαιόλαδο – σαλάτα (2 φλ.)',
   DIN_CHICKEN_QUINOA: (ex,p,audience) => `Κοτόπουλο + κινόα (120g ${audience==='patient'?'':'μαγειρεμένο '}κοτόπουλο + ½ φλ. κινόα μαγειρεμένη + 2 κ.γ. ελαιόλαδο) – σαλάτα (2 φλ.)`,
@@ -6963,8 +6963,8 @@ Object.assign(MEALS_EN, {
   LUN_LENTIL_SOUP: (ex,p) => 'Lentil soup (1 cup cooked lentils + 1 tsp olive oil) - salad (2 cups)',
   LUN_CHICKPEAS_SALAD: (ex,p) => 'Chickpeas (1 cup chickpeas + 1 tsp olive oil + tomato) - salad (2 cups)',
   LUN_SPINACH_RICE: (ex,p) => 'Spinach rice (1 cup + 1 tsp olive oil) + 30g light cheese - salad (2 cups)',
-  LUN_PEAS_LADERO: (ex,p) => 'Braised peas (1 cup peas + ½ cup potatoes + ¼ cup tomato sauce + 2 tsp olive oil + dill) - salad (2 cups)',
-  LUN_ARAKAS_FETA: (ex,p) => 'Braised peas with feta (1 cup peas + ½ cup potatoes + ¼ cup tomato sauce + 2 tsp olive oil + dill) + 30g feta - salad (1.5 cups)',
+  LUN_PEAS_LADERO: (ex,p) => 'Peas with potato and tomato sauce (1 cup peas + 1 medium potato (~150g) + ¼ cup tomato sauce + 2 tsp olive oil + dill) - salad (2 cups)',
+  LUN_ARAKAS_FETA: (ex,p) => 'Peas with potato, tomato sauce & feta (1 cup peas + 1 medium potato (~150g) + ¼ cup tomato sauce + 2 tsp olive oil + dill) + 30g feta - salad (1.5 cups)',
   LUN_ARAKAS_PORK: (ex,p,audience) => 'Braised peas with lean pork' + mealSuffixEn(ex,p,'peas + salad',null,'potato','pork',audience),
   LUN_GRILLED_FISH_RICE: (ex,p) => 'Grilled fish (140g sea bream or sea bass) + ½ cup rice + 2 tsp olive oil - salad (2 cups)',
   DIN_CHICKEN_QUINOA: (ex,p,audience) => `Chicken + quinoa (120g ${audience==='patient'?'':'cooked '}chicken + ½ cup cooked quinoa + 2 tsp olive oil) - salad (2 cups)`,
@@ -8455,8 +8455,8 @@ const LUNCH_OPTIONS = [
   {v:'LUN_LENTIL_SOUP', l:'Φακές σούπα 🌱', en:'Lentil soup 🌱'},
   {v:'LUN_CHICKPEAS_SALAD', l:'Ρεβίθια + σαλάτα 🌱', en:'Chickpeas + salad 🌱'},
   {v:'LUN_SPINACH_RICE', l:'Σπανακόρυζο + τυρί light', en:'Spinach rice + light cheese'},
-  {v:'LUN_PEAS_LADERO', l:'Αρακάς λαδερός 🌱', en:'Braised peas (vegan) 🌱'},
-  {v:'LUN_ARAKAS_FETA', l:'Αρακάς με φέτα', en:'Braised peas with feta'},
+  {v:'LUN_PEAS_LADERO', l:'Αρακάς με πατάτα 🌱', en:'Peas with potato 🌱'},
+  {v:'LUN_ARAKAS_FETA', l:'Αρακάς με πατάτα & φέτα', en:'Peas with potato & feta'},
   {v:'LUN_ARAKAS_PORK', l:'Αρακάς με χοιρινό', en:'Braised peas with lean pork'},
   {v:'LUN_GRILLED_FISH_RICE', l:'Ψητό ψάρι + ρύζι', en:'Grilled fish + rice'},
 ];
@@ -10148,6 +10148,15 @@ function calcExchanges(){
     proteinCapped: proteinNeeded > caps.proteinDailyMax,
     fatCapped: fatNeeded > caps.fatDailyMax,
   };
+  // FIX: previously, fruit/dairy snack suggestions only populated after the
+  // dietitian visited Exchange System and clicked Apply, or edited an
+  // exchange field directly. A dietitian going straight from Client Profile
+  // to One Day Plan got a plan with unpopulated snack slots — exchanges
+  // that were correctly calculated as available never made it into any
+  // meal, with no warning distinguishing this from a genuine clinical cap.
+  // calcExchanges() already runs on every profile change (via calcAll()),
+  // so this keeps snack population reliably in sync with zero extra steps.
+  autoPopulateSnacksFromExchanges();
 }
 
 const EX_ROW_GRID = 'minmax(200px,1fr) 90px 100px';
@@ -10583,6 +10592,9 @@ function buildOneDayPlan(){
   if(!gapOk && displayedGap<0){
     const starchNeeded=Math.round(Math.abs(displayedGap)/81);
     const fatNeeded=Math.round(Math.abs(displayedGap)/45);
+    const lunFixed = typeof isMigratedMeal==='function' && isMigratedMeal(lun);
+    const dinFixed = typeof isMigratedMeal==='function' && isMigratedMeal(din);
+    const fixedSlotNames = [lunFixed?'Lunch':null, dinFixed?'Dinner':null].filter(Boolean);
     gapAdvice+=`<div style="margin-top:8px;padding:8px 12px;background:var(--amber-bg);border-radius:6px;font-size:12px;color:var(--amber-text)">
       <i class="ti ti-bulb" aria-hidden="true"></i> <strong>How to close this gap:</strong> Go to Exchange System and manually increase:
       <ul style="margin:4px 0 0 16px;line-height:1.8">
@@ -10591,6 +10603,7 @@ function buildOneDayPlan(){
         <li>OR review the Exchange System servings; nuts replace one fat exchange rather than adding extra kcal.</li>
       </ul>
       Use the <strong>↻ button</strong> in Exchange System to unlock manual override per category, then click "<i class="ti ti-refresh" aria-hidden="true"></i> Apply to Meal Plans".
+      ${fixedSlotNames.length ? `<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(180,120,20,.25)"><i class="ti ti-alert-triangle" aria-hidden="true"></i> <strong>${fixedSlotNames.join(' and ')} ${fixedSlotNames.length>1?'use':'uses'} a fixed recipe</strong> and will not change size when you adjust Exchange System servings. To close this gap, either pick a different ${fixedSlotNames.join('/').toLowerCase()} meal from the dropdown, or add the extra exchanges to Breakfast/Snacks instead.</div>` : ''}
     </div>`;
   } else if(!gapOk && displayedGap>0){
     gapAdvice+=`<div style="margin-top:8px;padding:8px 12px;background:var(--amber-bg);border-radius:6px;font-size:12px;color:var(--amber-text)">
@@ -14685,6 +14698,44 @@ const NUTRESE_RECIPE_TEMPLATES = [
       {name:{en:'Walnuts, chopped',gr:'Καρύδια, ψιλοκομμένα'}, grams:50, kcal100:654, carbs100:13.7, protein100:15.2, fat100:65.2},
       {name:{en:'Extra virgin olive oil',gr:'Εξαιρετικό παρθένο ελαιόλαδο'}, grams:40, kcal100:884, carbs100:0, protein100:0, fat100:100}
     ]
+  },
+  {
+    id:'yogurt_granola_berry_bowl', servings:1, imageKey:'yogurtgranola',
+    name:{en:'Greek yogurt bowl with granola & berries', gr:'Μπολ γιαουρτιού με granola & μούρα'},
+    summary:{en:'A protein-rich breakfast or snack — Greek yogurt, crunchy granola, fresh berries and a few walnuts, balanced and ready in minutes.', gr:'Πρωινό ή σνακ πλούσιο σε πρωτεΐνη — γιαούρτι, τραγανό granola, φρέσκα μούρα και λίγα καρύδια, ισορροπημένο και έτοιμο σε λίγα λεπτά.'},
+    instructions:{en:'Spoon the yogurt into a bowl. Top with granola, mixed berries and walnuts just before serving so the granola stays crunchy.', gr:'Βάλτε το γιαούρτι σε μπολ. Προσθέστε το granola, τα μούρα και τα καρύδια λίγο πριν το σερβίρισμα ώστε το granola να παραμείνει τραγανό.'},
+    ingredients:[
+      {name:{en:'Greek yogurt 2%',gr:'Γιαούρτι 2%'}, grams:200, kcal100:59, carbs100:3.6, protein100:10.2, fat100:0.4},
+      {name:{en:'Granola',gr:'Granola'}, grams:30, kcal100:471, carbs100:64.0, protein100:10.0, fat100:20.0},
+      {name:{en:'Mixed berries',gr:'Ανάμεικτα μούρα'}, grams:100, kcal100:50, carbs100:12.0, protein100:1.0, fat100:0.3},
+      {name:{en:'Walnuts, chopped',gr:'Καρύδια, ψιλοκομμένα'}, grams:10, kcal100:654, carbs100:13.7, protein100:15.2, fat100:65.2}
+    ]
+  },
+  {
+    id:'salmon_quinoa_spinach_bowl', servings:1, imageKey:'salmonquinoa',
+    name:{en:'Salmon & quinoa bowl with spinach and walnuts', gr:'Μπολ σολομού με κινόα, σπανάκι & καρύδια'},
+    summary:{en:'A Mediterranean-style, high-protein lunch built around omega-3-rich salmon and walnuts, with quinoa and spinach for slow-release carbohydrate and folate.', gr:'Μεσογειακό γεύμα υψηλής πρωτεΐνης με σολομό και καρύδια πλούσια σε ωμέγα-3, κινόα και σπανάκι για υδατάνθρακα αργής αποδέσμευσης και φολικό οξύ.'},
+    instructions:{en:'Serve flaked cooked salmon over quinoa and spinach. Add cherry tomatoes, walnuts and a drizzle of olive oil.', gr:'Σερβίρετε τον μαγειρεμένο σολομό σε κομμάτια πάνω από την κινόα και το σπανάκι. Προσθέστε ντοματίνια, καρύδια και ελαιόλαδο.'},
+    ingredients:[
+      {name:{en:'Cooked salmon',gr:'Μαγειρεμένος σολομός'}, grams:150, kcal100:206, carbs100:0, protein100:22.1, fat100:12.4},
+      {name:{en:'Cooked quinoa',gr:'Μαγειρεμένη κινόα'}, grams:100, kcal100:120, carbs100:21.3, protein100:4.4, fat100:1.9},
+      {name:{en:'Baby spinach',gr:'Baby σπανάκι'}, grams:60, kcal100:23, carbs100:3.6, protein100:2.9, fat100:0.4},
+      {name:{en:'Cherry tomatoes',gr:'Ντοματίνια'}, grams:80, kcal100:18, carbs100:3.9, protein100:0.9, fat100:0.2},
+      {name:{en:'Walnuts, chopped',gr:'Καρύδια, ψιλοκομμένα'}, grams:15, kcal100:654, carbs100:13.7, protein100:15.2, fat100:65.2},
+      {name:{en:'Extra virgin olive oil',gr:'Εξαιρετικό παρθένο ελαιόλαδο'}, grams:10, kcal100:884, carbs100:0, protein100:0, fat100:100}
+    ]
+  },
+  {
+    id:'chicken_sweet_potato_broccoli', servings:1, imageKey:'chickenbroccoli',
+    name:{en:'Chicken, baked sweet potato & broccoli plate', gr:'Πιάτο κοτόπουλου με ψητή γλυκοπατάτα & μπρόκολο'},
+    summary:{en:'A balanced dinner plate — lean protein, a fibre-rich complex carbohydrate and steamed vegetables, in realistic household portions.', gr:'Ισορροπημένο βραδινό πιάτο — άπαχη πρωτεΐνη, σύνθετος υδατάνθρακας πλούσιος σε φυτικές ίνες και ατμοβρασμένα λαχανικά, σε ρεαλιστικές οικιακές μερίδες.'},
+    instructions:{en:'Grill or bake the chicken breast. Serve with baked sweet potato and steamed broccoli, finished with olive oil.', gr:'Ψήστε το στήθος κοτόπουλου στη σχάρα ή στον φούρνο. Σερβίρετε με ψητή γλυκοπατάτα και ατμοβρασμένο μπρόκολο, με λίγο ελαιόλαδο.'},
+    ingredients:[
+      {name:{en:'Chicken breast, cooked',gr:'Στήθος κοτόπουλου, μαγειρεμένο'}, grams:150, kcal100:165, carbs100:0, protein100:31.0, fat100:3.6},
+      {name:{en:'Baked sweet potato',gr:'Ψητή γλυκοπατάτα'}, grams:200, kcal100:90, carbs100:20.7, protein100:2.0, fat100:0.2},
+      {name:{en:'Steamed broccoli',gr:'Ατμοβρασμένο μπρόκολο'}, grams:150, kcal100:35, carbs100:7.2, protein100:2.4, fat100:0.4},
+      {name:{en:'Extra virgin olive oil',gr:'Εξαιρετικό παρθένο ελαιόλαδο'}, grams:10, kcal100:884, carbs100:0, protein100:0, fat100:100}
+    ]
   }
 ];
 function localizeRecipeTemplateIngredient(ing){
@@ -14706,7 +14757,10 @@ function recipeTemplatePhotoUrl(key){
     smoothie:'https://images.unsplash.com/photo-1645783916385-1c99860a2a42?auto=format&fit=crop&w=960&q=80',
     beansalad:'https://images.unsplash.com/photo-1662743086910-38419bbf7f34?auto=format&fit=crop&w=960&q=80',
     codtraybake:'https://images.unsplash.com/photo-1644784643137-b9073dd262f6?auto=format&fit=crop&w=960&q=80',
-    bananabread:'https://images.unsplash.com/photo-1675712841671-cbcbe2c84103?auto=format&fit=crop&w=960&q=80'
+    bananabread:'https://images.unsplash.com/photo-1675712841671-cbcbe2c84103?auto=format&fit=crop&w=960&q=80',
+    yogurtgranola:'https://images.unsplash.com/photo-1725883691833-97103ecd582a?auto=format&fit=crop&w=960&q=80',
+    salmonquinoa:'https://images.unsplash.com/photo-1615865417491-9941019fbc00?auto=format&fit=crop&w=960&q=80',
+    chickenbroccoli:'https://images.unsplash.com/photo-1633030175953-ac5a41b7353c?auto=format&fit=crop&w=960&q=80'
   };
   return photos[key] || recipeTemplateFallbackImage(key);
 }
@@ -14723,7 +14777,10 @@ function recipeTemplateFallbackImage(key){
     smoothie:{bg:'#FFF0F5',accent:'#C2447A',soft:'#FBD6E4',food:'#8C3E75',food2:'#F5A623'},
     beansalad:{bg:'#F5FBF2',accent:'#5E8C4A',soft:'#DFF0D4',food:'#B5702F',food2:'#D94A2F'},
     codtraybake:{bg:'#F0FAFF',accent:'#177A8A',soft:'#CFEFF4',food:'#E8E0C8',food2:'#5E8C4A'},
-    bananabread:{bg:'#FFF8EF',accent:'#B5702F',soft:'#F1DFC0',food:'#D9A24B',food2:'#8C5A2B'}
+    bananabread:{bg:'#FFF8EF',accent:'#B5702F',soft:'#F1DFC0',food:'#D9A24B',food2:'#8C5A2B'},
+    yogurtgranola:{bg:'#FFFBF4',accent:'#C98A3E',soft:'#F3E5CE',food:'#FFFFFF',food2:'#8C4A6B'},
+    salmonquinoa:{bg:'#FFF4F0',accent:'#D9714E',soft:'#F7DCD1',food:'#5E8C4A',food2:'#177A8A'},
+    chickenbroccoli:{bg:'#F3FAF0',accent:'#5E8C4A',soft:'#DDEED2',food:'#D9A24B',food2:'#3D6B2E'}
   }[key]||{bg:'#F3FAF5',accent:'#0F6E56',soft:'#CDEDE2',food:'#ffffff',food2:'#9FE1CB'};
   const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-label="Recipe image">
     <defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop stop-color="${palette.bg}"/><stop offset="1" stop-color="${palette.soft}"/></linearGradient></defs>
