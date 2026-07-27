@@ -518,6 +518,14 @@ i.ti-circle-x { color: var(--red-text); }
 .feedback-card-title { font-size: 16px; font-weight: 800; color: var(--text-primary); line-height:1.3; }
 .feedback-card-sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
 .feedback-close { border: 1px solid var(--border); background: var(--bg-page); color: var(--text-secondary); border-radius: 6px; cursor: pointer; padding: 4px 8px; font-weight: 800; }
+.save-confirm-summary { background: var(--bg-page); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-bottom: 14px; font-size: 13px; }
+.save-confirm-row { display: flex; justify-content: space-between; gap: 12px; padding: 5px 0; color: var(--text-secondary); }
+.save-confirm-row strong { color: var(--text-primary); font-weight: 600; }
+.save-confirm-row + .save-confirm-row { border-top: 1px solid var(--border); }
+.save-confirm-macro-row { display: flex; gap: 14px; margin-top: 4px; font-size: 12px; color: var(--text-secondary); }
+.save-confirm-macro-row b { color: var(--text-primary); }
+#save-confirm-status.success { color: var(--teal-700); }
+#save-confirm-status.error { color: var(--red-text); }
 .feedback-card-body { padding: 16px 18px 18px; }
 .feedback-card textarea { width:100%; min-height:140px; resize:vertical; border:1px solid var(--border-strong); border-radius:8px; background:var(--bg-input); color:var(--text-primary); padding:10px 12px; line-height:1.45; }
 .feedback-actions { display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap; margin-top:12px; }
@@ -2032,7 +2040,7 @@ table th,
            pending changes. -->
       <div class="no-print save-state-slot" id="save-state-slot">
         <span class="autosave-status" id="autosave-status"></span>
-        <button class="btn btn-save-inline" onclick="saveCurrentClient()" id="topbar-save-action" style="display:none"><i class="ti ti-device-floppy" aria-hidden="true"></i> <span class="i18n" data-en="Save Changes" data-gr="Αποθήκευση Αλλαγών">Save Changes</span></button>
+        <button class="btn btn-save-inline" onclick="openSaveConfirmModal()" id="topbar-save-action" style="display:none"><i class="ti ti-device-floppy" aria-hidden="true"></i> <span class="i18n" data-en="Save Changes" data-gr="Αποθήκευση Αλλαγών">Save Changes</span></button>
       </div>
       <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn" title="Toggle dark mode"><i class="ti ti-moon" aria-hidden="true"></i> Dark</button>
       <button class="btn" onclick="toggleLanguage()" id="lang-btn" title="Switch language">GR</button>
@@ -2421,7 +2429,7 @@ table th,
           <div class="contextual-save-copy">
             <span class="i18n" data-en="Profile changes are kept as a local draft. Save to update this client's record." data-gr="Οι αλλαγές προφίλ κρατούνται ως τοπικό πρόχειρο. Αποθηκεύστε για ενημέρωση της καρτέλας.">Profile changes are kept as a local draft. Save to update this client's record.</span>
           </div>
-          <button class="btn primary" onclick="saveCurrentClient()"><i class="ti ti-device-floppy" aria-hidden="true"></i> <span class="i18n" data-en="Save Changes" data-gr="Αποθήκευση Αλλαγών">Save Changes</span></button>
+          <button class="btn primary" onclick="openSaveConfirmModal()"><i class="ti ti-device-floppy" aria-hidden="true"></i> <span class="i18n" data-en="Save Changes" data-gr="Αποθήκευση Αλλαγών">Save Changes</span></button>
         </div>
       </div>
     </div>
@@ -3034,6 +3042,26 @@ table th,
   </div>
   </div>
 </div>
+</div>
+
+<div class="feedback-modal no-print" id="save-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="save-confirm-title">
+  <div class="feedback-card" style="width:min(440px,100%)">
+    <div class="feedback-card-header">
+      <div>
+        <div class="feedback-card-title" id="save-confirm-title"><i class="ti ti-device-floppy" aria-hidden="true"></i> <span class="i18n" data-en="Save Client Profile?" data-gr="Αποθήκευση Προφίλ Πελάτη;">Save Client Profile?</span></div>
+        <div class="feedback-card-sub"><span class="i18n" data-en="You're about to save this client's profile, calorie targets, macro settings, meal plan preferences, and follow-up records." data-gr="Πρόκειται να αποθηκεύσετε το προφίλ, τους στόχους θερμίδων, τις ρυθμίσεις μακροθρεπτικών, τις προτιμήσεις πλάνου γευμάτων και τα αρχεία παρακολούθησης αυτού του πελάτη.">You're about to save this client's profile, calorie targets, macro settings, meal plan preferences, and follow-up records.</span></div>
+      </div>
+      <button class="feedback-close" onclick="closeSaveConfirmModal()" aria-label="Close" id="save-confirm-close-btn">×</button>
+    </div>
+    <div class="feedback-card-body">
+      <div class="save-confirm-summary" id="save-confirm-summary"></div>
+      <div class="feedback-actions">
+        <button class="btn" onclick="closeSaveConfirmModal()" id="save-confirm-cancel-btn"><span class="i18n" data-en="Cancel" data-gr="Ακύρωση">Cancel</span></button>
+        <button class="btn primary" id="save-confirm-btn" onclick="confirmSaveClient()"><i class="ti ti-device-floppy" aria-hidden="true"></i> <span class="i18n" data-en="Save Client" data-gr="Αποθήκευση Πελάτη">Save Client</span></button>
+      </div>
+      <div class="feedback-status" id="save-confirm-status"></div>
+    </div>
+  </div>
 </div>
 
 <div class="feedback-modal no-print" id="feedback-modal" role="dialog" aria-modal="true" aria-labelledby="feedback-title">
@@ -6888,6 +6916,40 @@ function getDairyDistribution(breakfastKey=(S.mealSel && S.mealSel.breakfast) ||
   return dist;
 }
 
+// ── FAT-EXCHANGE COMPENSATION RULE (dynamic templates only) ──────────────
+// mealSuffix()/mealSuffixEn() calculate olive oil from the client's
+// allocated `p.fat` exchanges and add it on top of whatever protein this
+// template names. For most proteins that's correct — chicken, pork loin,
+// tuna, and white fish are all close to the ~3-4g fat/100g "lean protein"
+// baseline the whole exchange system assumes, so no adjustment is needed.
+//
+// But a few named proteins carry substantially more embedded fat than that
+// baseline (confirmed against FOOD_DATABASE fat100 values):
+//   - Salmon:          ~12.4g fat/100g
+//   - Bifteki/burger:  ~12.5g fat/100g
+//   - Halloumi:        ~25.0g fat/100g (already compensated, do not change)
+// For these, adding the FULL oil-exchange amount on top double-counts fat
+// against the client's actual daily target. The fix is the same in every
+// case: reduce the `p.fat` passed into mealSuffix by the embedded-fat
+// exchange-equivalent (roughly embedded_grams / 5, rounded) BEFORE the oil
+// calculation runs — e.g. `{...p, fat:Math.max(0,Number(p?.fat||0)-2)}`.
+// `Math.max(0, ...)` guarantees this never goes negative even if a client
+// has very few fat exchanges allocated to begin with.
+//
+// This ONLY applies to dynamic (mealSuffix-based) templates, where oil is
+// actually calculated from remaining fat exchanges. Fixed-composition
+// meals (eggs, feta dishes, anthotyro dishes, etc.) hardcode their entire
+// composition as one fixed string — there's no separate "add oil from
+// exchanges" step to compensate, so this pattern does not apply to them.
+// Whether those fixed recipes were originally formulated with their own
+// embedded fat correctly in mind is a separate recipe-review question, not
+// a compensation-formula one.
+//
+// Foods reviewed and confirmed NOT needing compensation: chicken, pork
+// loin, tuna (canned, drained), and generic/white fish — all close to or
+// below the lean-protein baseline already assumed. Beef mince (~8g/100g)
+// sits in between — a smaller, real effect, intentionally left uncompensated
+// for now pending review of its clinical impact.
 const MEALS = {
   BRK_TOAST:       (ex,p) => `Τοστ (2 φέτες ψωμί ολικής) – 1 φέτα τυρί light + αγγούρι / ντοματίνια`,
   BRK_TOAST_TURKEY:(ex,p) => `Τοστ (2 φέτες ψωμί ολικής) – 1 φέτα τυρί light + 1 φέτα γαλοπούλα + αγγούρι`,
@@ -6906,14 +6968,14 @@ const MEALS = {
   LUN_FASOLAKIA_PORK: (ex,p,audience) => 'Φασολάκια + χοιρινό' + mealSuffix(ex,p,'φασολάκια + σαλάτα',null,'πατάτα','χοιρινό',false,audience),
   LUN_TUNA_POTATO:    (ex,p) => 'Τόνος + πατάτα (100g τόνο + 1 μεγάλη πατάτα (~200g) + 4 κ.γ. ελαιόλαδο) – σαλάτα (2 φλ.)',
   LUN_PASTA_MINCE:    (ex,p,audience) => 'Μακαρόνια + κιμάς' + mealSuffix(ex,p,'σαλάτα',null,'ζυμαρικά','κιμά',false,audience),
-  LUN_BIFTEKI_BULGUR: (ex,p,audience) => 'Μπιφτέκι + πλιγούρι' + mealSuffix(ex,p,'σαλάτα',null,'πλιγούρι','μπιφτέκι',false,audience),
+  LUN_BIFTEKI_BULGUR: (ex,p,audience) => 'Μπιφτέκι + πλιγούρι' + mealSuffix(ex,{...p,fat:Math.max(0,Number(p?.fat||0)-2)},'σαλάτα',null,'πλιγούρι','μπιφτέκι',false,audience),
   DIN_CHICKEN_RICE:   (ex,p,audience) => 'Κοτόπουλο + ρύζι' + mealSuffix(ex,p,'σαλάτα',null,'ρύζι','κοτόπουλο',false,audience),
   DIN_FISH_POTATO:    (ex,p,audience) => `Ψάρι + πατάτα (140g ${audience==='patient'?'':'μαγειρεμένο '}ψάρι + 1 μέτρια πατάτα (~150g) + 3 κ.γ. ελαιόλαδο) – σαλάτα (2 φλ.)`,
   DIN_OMELETTE:       (ex,p) => 'Ομελέτα (3 αυγά) + 1 φέτα ψωμί + 3 κ.γ. ελαιόλαδο – βραστά λαχανικά (2 φλ.) + 30g γαλοπούλα light',
   DIN_TUNA_POTATO:    (ex,p,audience) => 'Τόνος + πατάτα' + mealSuffix(ex,p,'σαλάτα',null,'πατάτα','τόνο',true,audience),
   DIN_PASTA_MINCE:    (ex,p,audience) => 'Μακαρόνια + κιμάς' + mealSuffix(ex,p,'σαλάτα',null,'ζυμαρικά','κιμά',false,audience),
   DIN_SOUVLAKI_PITA:  (ex,p) => 'Σουβλάκι κοτόπουλο (140g) + μικρή κυπριακή πίτα – σαλάτα (3 φλ.) + 3 κ.γ. ελαιόλαδο',
-  DIN_BIFTEKI_BULGUR: (ex,p,audience) => 'Μπιφτέκι + πλιγούρι' + mealSuffix(ex,p,'σαλάτα',null,'πλιγούρι','μπιφτέκι',false,audience),
+  DIN_BIFTEKI_BULGUR: (ex,p,audience) => 'Μπιφτέκι + πλιγούρι' + mealSuffix(ex,{...p,fat:Math.max(0,Number(p?.fat||0)-2)},'σαλάτα',null,'πλιγούρι','μπιφτέκι',false,audience),
   LUN_LENTILS_RICE:   (ex,p,audience) => 'Φακές με ρύζι' + mealSuffix(ex,p,'σαλάτα', n=>`${n} μερίδ${n>1?'ες':'α'} φακές (½ φλ. μαγειρεμένες ανά μερίδα)`, 'ρύζι',null,false,audience),
   LUN_CHICKPEA_STEW:  (ex,p) => 'Ρεβίθια με ψωμί ολικής – σαλάτα (2 φλ.)',
   LUN_TOFU_RICE:      (ex,p,audience) => 'Τόφου σαλτέ με λαχανικά + ρύζι' + mealSuffix(ex,p,'σαλάτα', n=>`${n*30}g τόφου σφιχτό`, 'ρύζι',null,false,audience),
@@ -6944,14 +7006,14 @@ const MEALS_EN = {
   LUN_FASOLAKIA_PORK: (ex,p,audience) => 'Green beans + pork' + mealSuffixEn(ex,p,'green beans + salad',null,'potato','pork',false,audience),
   LUN_TUNA_POTATO:    (ex,p) => 'Tuna + potato (100g tuna + 1 large potato (~200g) + 4 tsp olive oil) - salad (2 cups)',
   LUN_PASTA_MINCE:    (ex,p,audience) => 'Pasta + mince' + mealSuffixEn(ex,p,'salad',null,'pasta','mince',false,audience),
-  LUN_BIFTEKI_BULGUR: (ex,p,audience) => 'Burger + bulgur' + mealSuffixEn(ex,p,'salad',null,'bulgur','burger',false,audience),
+  LUN_BIFTEKI_BULGUR: (ex,p,audience) => 'Burger + bulgur' + mealSuffixEn(ex,{...p,fat:Math.max(0,Number(p?.fat||0)-2)},'salad',null,'bulgur','burger',false,audience),
   DIN_CHICKEN_RICE:   (ex,p,audience) => 'Chicken + rice' + mealSuffixEn(ex,p,'salad',null,'rice','chicken',false,audience),
   DIN_FISH_POTATO:    (ex,p,audience) => `Fish + potato (140g ${audience==='patient'?'':'cooked '}fish + 1 medium potato (~150g) + 3 tsp olive oil) - salad (2 cups)`,
   DIN_OMELETTE:       (ex,p) => 'Omelette (3 eggs) + 1 slice bread + 3 tsp olive oil - boiled vegetables (2 cups) + 30g light turkey',
   DIN_TUNA_POTATO:    (ex,p,audience) => 'Tuna + potato' + mealSuffixEn(ex,p,'salad',null,'potato','tuna',true,audience),
   DIN_PASTA_MINCE:    (ex,p,audience) => 'Pasta + mince' + mealSuffixEn(ex,p,'salad',null,'pasta','mince',false,audience),
   DIN_SOUVLAKI_PITA:  (ex,p) => 'Chicken souvlaki (140g) + small Cypriot pita - salad (3 cups) + 3 tsp olive oil',
-  DIN_BIFTEKI_BULGUR: (ex,p,audience) => 'Burger + bulgur' + mealSuffixEn(ex,p,'salad',null,'bulgur','burger',false,audience),
+  DIN_BIFTEKI_BULGUR: (ex,p,audience) => 'Burger + bulgur' + mealSuffixEn(ex,{...p,fat:Math.max(0,Number(p?.fat||0)-2)},'salad',null,'bulgur','burger',false,audience),
   LUN_LENTILS_RICE:   (ex,p,audience) => 'Lentils with rice' + mealSuffixEn(ex,p,'salad', n=>`${n} lentil serving${n>1?'s':''} (1/2 cup cooked per serving)`, 'rice',null,false,audience),
   LUN_CHICKPEA_STEW:  (ex,p) => 'Chickpeas with wholegrain bread - salad (2 cups)',
   LUN_TOFU_RICE:      (ex,p,audience) => 'Tofu stir-fry with vegetables + rice' + mealSuffixEn(ex,p,'salad', n=>`${n*30}g firm tofu`, 'rice',null,false,audience),
@@ -6969,8 +7031,8 @@ Object.assign(MEALS, {
   DIN_CHICKEN_POTATO: (ex,p,audience) => 'Κοτόπουλο + πατάτα' + mealSuffix(ex,p,'σαλάτα',null,'πατάτα','κοτόπουλο',false,audience),
   LUN_FASOLAKIA_CHICKEN: (ex,p,audience) => 'Φασολάκια + κοτόπουλο' + mealSuffix(ex,p,'φασολάκια + σαλάτα',null,'πατάτα','κοτόπουλο',false,audience),
   DIN_FASOLAKIA_CHICKEN: (ex,p,audience) => 'Φασολάκια + κοτόπουλο' + mealSuffix(ex,p,'φασολάκια + σαλάτα',null,'πατάτα','κοτόπουλο',false,audience),
-  LUN_SALMON_POTATO: (ex,p,audience) => 'Σολομός + πατάτα' + mealSuffix(ex,p,'σαλάτα',null,'πατάτα','σολομό',true,audience),
-  DIN_SALMON_POTATO: (ex,p,audience) => 'Σολομός + πατάτα' + mealSuffix(ex,p,'σαλάτα',null,'πατάτα','σολομό',true,audience),
+  LUN_SALMON_POTATO: (ex,p,audience) => 'Σολομός + πατάτα' + mealSuffix(ex,{...p,fat:Math.max(0,Number(p?.fat||0)-2)},'σαλάτα',null,'πατάτα','σολομό',true,audience),
+  DIN_SALMON_POTATO: (ex,p,audience) => 'Σολομός + πατάτα' + mealSuffix(ex,{...p,fat:Math.max(0,Number(p?.fat||0)-2)},'σαλάτα',null,'πατάτα','σολομό',true,audience),
   LUN_BAKED_FISH_VEG: (ex,p,audience) => 'Ψάρι στο φούρνο' + mealSuffix(ex,p,'βραστά λαχανικά',null,'ρύζι','ψάρι',true,audience),
   DIN_BAKED_FISH_VEG: (ex,p,audience) => 'Ψάρι στο φούρνο' + mealSuffix(ex,p,'βραστά λαχανικά',null,'ρύζι','ψάρι',true,audience),
   LUN_TUNA_RICE: (ex,p,audience) => 'Τόνος + ρύζι' + mealSuffix(ex,p,'σαλάτα',null,'ρύζι','τόνο',true,audience),
@@ -7005,8 +7067,8 @@ Object.assign(MEALS_EN, {
   DIN_CHICKEN_POTATO: (ex,p,audience) => 'Chicken + potato' + mealSuffixEn(ex,p,'salad',null,'potato','chicken',false,audience),
   LUN_FASOLAKIA_CHICKEN: (ex,p,audience) => 'Green beans + chicken' + mealSuffixEn(ex,p,'green beans + salad',null,'potato','chicken',false,audience),
   DIN_FASOLAKIA_CHICKEN: (ex,p,audience) => 'Green beans + chicken' + mealSuffixEn(ex,p,'green beans + salad',null,'potato','chicken',false,audience),
-  LUN_SALMON_POTATO: (ex,p,audience) => 'Salmon + potato' + mealSuffixEn(ex,p,'salad',null,'potato','salmon',true,audience),
-  DIN_SALMON_POTATO: (ex,p,audience) => 'Salmon + potato' + mealSuffixEn(ex,p,'salad',null,'potato','salmon',true,audience),
+  LUN_SALMON_POTATO: (ex,p,audience) => 'Salmon + potato' + mealSuffixEn(ex,{...p,fat:Math.max(0,Number(p?.fat||0)-2)},'salad',null,'potato','salmon',true,audience),
+  DIN_SALMON_POTATO: (ex,p,audience) => 'Salmon + potato' + mealSuffixEn(ex,{...p,fat:Math.max(0,Number(p?.fat||0)-2)},'salad',null,'potato','salmon',true,audience),
   LUN_BAKED_FISH_VEG: (ex,p,audience) => 'Baked fish' + mealSuffixEn(ex,p,'boiled vegetables',null,'rice','fish',true,audience),
   DIN_BAKED_FISH_VEG: (ex,p,audience) => 'Baked fish' + mealSuffixEn(ex,p,'boiled vegetables',null,'rice','fish',true,audience),
   LUN_TUNA_RICE: (ex,p,audience) => 'Tuna + rice' + mealSuffixEn(ex,p,'salad',null,'rice','tuna',true,audience),
@@ -10727,6 +10789,21 @@ function buildOneDayPlan(){
   // removed — it's now structurally impossible for that to happen, since
   // fruit/dairy servings assigned to a slot are ALWAYS included automatically
   // (see buildSlotSnack()), independent of which extras checkboxes are ticked.
+  // Recipe-identity integrity check: some dishes are named after a specific
+  // ingredient (currently just Grilled Halloumi + Pasta) that only renders
+  // when protein exchanges are actually allocated to that slot. Rather than
+  // silently forcing a portion or silently renaming the dish, this surfaces
+  // a clear, dietitian-facing warning BEFORE the plan reaches a patient —
+  // matching the recipe-selection integrity rule: the dietitian decides
+  // whether to pick a different meal or adjust exchanges, nothing is hidden.
+  const RECIPE_REQUIRES_PROTEIN_TO_RENDER = new Set(['LUN_HALLOUMI_PASTA']);
+  [['lun', lun, portions.lunch, 'Lunch'], ['din', din, portions.dinner, 'Dinner']].forEach(([slotKey, key, slotPortions, slotLabel])=>{
+    if(RECIPE_REQUIRES_PROTEIN_TO_RENDER.has(key) && Number(slotPortions?.prot||0) <= 0){
+      gapAdvice+=`<div style="margin-top:8px;padding:8px 12px;background:var(--amber-bg);border-radius:6px;font-size:12px;color:var(--amber-text)">
+        <i class="ti ti-alert-triangle" aria-hidden="true"></i> <strong>Recipe identity warning:</strong> ${slotLabel} is set to a dish named for its halloumi, but 0 protein exchanges are currently allocated to this slot — halloumi will not appear in the printed plan, even though the dish name implies it will. Select a different ${slotLabel.toLowerCase()} option, or increase protein exchanges for this slot in Exchange System, before sharing this plan with the client.
+      </div>`;
+    }
+  });
   if(day.warnings&&day.warnings.length){
     gapAdvice+=`<div style="margin-top:8px;padding:8px 12px;background:var(--amber-bg);border-radius:6px;font-size:12px;color:var(--amber-text)">
       <i class="ti ti-alert-triangle" aria-hidden="true"></i> <strong>Exchange allocation warning:</strong> ${day.warnings.map(safeHtml).join(' · ')}
@@ -16296,6 +16373,60 @@ async function newClient(){
 
 // Saves (or updates) the current client into the cloud (Supabase),
 // scoped to the signed-in user via Row Level Security
+function openSaveConfirmModal(){
+  const modal=document.getElementById('save-confirm-modal');
+  if(!modal) return;
+  const isGr=window.appLang==='gr';
+  const name=(v('p-name')||'').trim() || (isGr?'(χωρίς όνομα ακόμη)':'(no name yet)');
+  const ref=S.activeClientRef || (isGr?'θα οριστεί κατά την αποθήκευση':'assigned on save');
+  const goal=v('p-goal')||'—';
+  const goalLabelMapLocal=(typeof DROPDOWN_TRANSLATIONS!=='undefined' && DROPDOWN_TRANSLATIONS['p-goal']) || {};
+  const goalDisplay = isGr ? (goalLabelMapLocal[goal]||goal) : goal;
+  const kcal = S.goalKcal ? Math.round(S.goalKcal) : null;
+  const carbPct=S.carbPct, protPct=S.protPct, fatPct=S.fatPct;
+  const summaryEl=document.getElementById('save-confirm-summary');
+  if(summaryEl){
+    summaryEl.innerHTML=`
+      <div class="save-confirm-row"><span>${isGr?'Πελάτης':'Client'}</span><strong>${safeHtml(name)}</strong></div>
+      <div class="save-confirm-row"><span>${isGr?'Κωδικός πελάτη':'Client reference'}</span><strong>${safeHtml(String(ref))}</strong></div>
+      <div class="save-confirm-row"><span>${isGr?'Στόχος':'Goal'}</span><strong>${safeHtml(goalDisplay)}</strong></div>
+      <div class="save-confirm-row"><span>${isGr?'Στόχος θερμίδων':'Target Calories'}</span><strong>${kcal?kcal+' kcal':'—'}</strong></div>
+      ${(carbPct!=null)?`<div class="save-confirm-macro-row"><span>${isGr?'Υδατ.':'Carbs'} <b>${carbPct}%</b></span><span>${isGr?'Πρωτ.':'Protein'} <b>${protPct}%</b></span><span>${isGr?'Λίπος':'Fat'} <b>${fatPct}%</b></span></div>`:''}
+    `;
+  }
+  const statusEl=document.getElementById('save-confirm-status');
+  if(statusEl){ statusEl.className='feedback-status'; statusEl.textContent=''; }
+  const saveBtn=document.getElementById('save-confirm-btn'), cancelBtn=document.getElementById('save-confirm-cancel-btn');
+  if(saveBtn){ saveBtn.disabled=false; saveBtn.innerHTML='<i class="ti ti-device-floppy" aria-hidden="true"></i> '+(isGr?'Αποθήκευση Πελάτη':'Save Client'); }
+  if(cancelBtn) cancelBtn.disabled=false;
+  modal.classList.add('open');
+}
+function closeSaveConfirmModal(){
+  const modal=document.getElementById('save-confirm-modal');
+  if(modal) modal.classList.remove('open');
+}
+async function confirmSaveClient(){
+  const isGr=window.appLang==='gr';
+  const saveBtn=document.getElementById('save-confirm-btn'), cancelBtn=document.getElementById('save-confirm-cancel-btn');
+  const statusEl=document.getElementById('save-confirm-status');
+  if(saveBtn){ saveBtn.disabled=true; saveBtn.innerHTML='<i class="ti ti-loader" aria-hidden="true"></i> '+(isGr?'Αποθήκευση...':'Saving...'); }
+  if(cancelBtn) cancelBtn.disabled=true;
+  if(statusEl){ statusEl.className='feedback-status'; statusEl.textContent=''; }
+  let ok=false;
+  try{
+    ok = await saveCurrentClient({silent:true});
+  }catch(e){
+    ok=false;
+  }
+  if(ok){
+    if(statusEl){ statusEl.className='feedback-status success'; statusEl.innerHTML='<i class="ti ti-circle-check" aria-hidden="true"></i> '+(isGr?'Ο πελάτης αποθηκεύτηκε επιτυχώς.':'Client saved successfully.'); }
+    setTimeout(closeSaveConfirmModal, 1400);
+  } else {
+    if(statusEl){ statusEl.className='feedback-status error'; statusEl.innerHTML='<i class="ti ti-alert-triangle" aria-hidden="true"></i> '+(isGr?'Η αποθήκευση απέτυχε. Δοκιμάστε ξανά.':'Save failed. Please try again.'); }
+    if(saveBtn){ saveBtn.disabled=false; saveBtn.innerHTML='<i class="ti ti-device-floppy" aria-hidden="true"></i> '+(isGr?'Αποθήκευση Πελάτη':'Save Client'); }
+    if(cancelBtn) cancelBtn.disabled=false;
+  }
+}
 async function saveCurrentClient(options={}){
   const silent=!!options.silent;
   const gbtn=document.getElementById('topbar-save-action');
