@@ -605,6 +605,28 @@ i.ti-circle-x { color: var(--red-text); }
 #page-dashboard .dashboard-empty-title { font-size: 18px; font-weight: 800; color: var(--text-primary); }
 #page-dashboard .dashboard-empty-copy { max-width: 420px; font-size: 13px; line-height: 1.55; color: var(--text-secondary); }
 #page-dashboard .dashboard-empty-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 4px; }
+#page-dashboard .dashboard-welcome { max-width: 640px; margin: 40px auto; text-align: center; }
+#page-dashboard .dashboard-welcome-icon { width: 56px; height: 56px; border-radius: 16px; background: var(--teal-50); color: var(--teal-700); display: flex; align-items: center; justify-content: center; font-size: 26px; margin: 0 auto 18px; }
+#page-dashboard .dashboard-welcome-title { font-size: 22px; font-weight: 700; letter-spacing: -.01em; color: var(--text-primary); margin-bottom: 10px; }
+#page-dashboard .dashboard-welcome-copy { font-size: 14px; line-height: 1.6; color: var(--text-secondary); max-width: 460px; margin: 0 auto 30px; }
+#page-dashboard .dashboard-onboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; text-align: left; }
+#page-dashboard .dashboard-onboard-item {
+  display: flex; align-items: center; gap: 12px; padding: 16px 16px;
+  border: 1px solid var(--border); border-radius: 14px; background: var(--bg-surface);
+  cursor: pointer; transition: transform .2s cubic-bezier(.16,.84,.44,1), box-shadow .2s cubic-bezier(.16,.84,.44,1), border-color .2s ease;
+  box-shadow: 0 1px 2px rgba(45,42,34,.04), 0 8px 20px rgba(45,42,34,.05);
+}
+#page-dashboard .dashboard-onboard-item:hover { transform: translateY(-2px); box-shadow: 0 2px 6px rgba(16,24,20,.06), 0 22px 44px rgba(16,24,20,.09); border-color: rgba(15,132,89,.22); }
+#page-dashboard .dashboard-onboard-icon { width: 36px; height: 36px; border-radius: 10px; background: var(--teal-50); color: var(--teal-700); display: flex; align-items: center; justify-content: center; font-size: 17px; flex: none; }
+#page-dashboard .dashboard-onboard-text { flex: 1; min-width: 0; }
+#page-dashboard .dashboard-onboard-title { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+#page-dashboard .dashboard-onboard-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; line-height: 1.4; }
+#page-dashboard .dashboard-onboard-item > i:last-child { color: var(--text-muted); flex: none; }
+@media (max-width: 640px) { #page-dashboard .dashboard-onboard-grid { grid-template-columns: 1fr; } }
+[data-theme="dark"] #page-dashboard .dashboard-welcome-icon,
+[data-theme="dark"] #page-dashboard .dashboard-onboard-icon { background: rgba(78,205,196,.14); color: var(--teal-300); }
+[data-theme="dark"] #page-dashboard .dashboard-onboard-item { box-shadow: none; }
+[data-theme="dark"] #page-dashboard .dashboard-onboard-item:hover { box-shadow: 0 2px 6px rgba(0,0,0,.35), 0 22px 44px rgba(0,0,0,.4); border-color: rgba(51,195,148,.3); }
 #page-dashboard .dashboard-first-steps { margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--border); max-width: 360px; text-align: left; }
 #page-dashboard .dashboard-first-steps-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 10px; text-align: center; }
 #page-dashboard .dashboard-first-steps ol { margin: 0; padding-left: 20px; color: var(--text-secondary); font-size: 13px; line-height: 1.9; }
@@ -2045,25 +2067,48 @@ table th,
     </div>
 
     <div id="dash-no-client-prompt" style="display:none">
-      <div class="dashboard-empty-state">
-        <div class="dashboard-empty-icon"><i class="ti ti-user-plus" aria-hidden="true"></i></div>
-        <div class="dashboard-empty-title"><span class="i18n" data-en="No client selected" data-gr="Δεν έχει επιλεγεί πελάτης">No client selected</span></div>
-        <div class="dashboard-empty-copy"><span class="i18n" data-en="Start by opening an existing client or creating a new one. Once a profile is complete, Nutrese will show goal calories, safety checks, appointments and plan shortcuts here." data-gr="Ξεκινήστε ανοίγοντας έναν υπάρχοντα πελάτη ή δημιουργώντας νέο. Μόλις συμπληρωθεί το προφίλ, το Nutrese θα εμφανίζει εδώ στόχο θερμίδων, ελέγχους ασφαλείας, ραντεβού και συντομεύσεις πλάνου.">Start by opening an existing client or creating a new one. Once a profile is complete, Nutrese will show goal calories, safety checks, appointments and plan shortcuts here.</span></div>
-        <div class="dashboard-empty-actions">
-          <button class="btn primary" onclick="nav('clients')"><i class="ti ti-users" aria-hidden="true"></i> <span class="i18n" data-en="Go to My Clients" data-gr="Οι Πελάτες μου">Go to My Clients</span></button>
-          <button class="btn" onclick="nav('clients');newClient()"><i class="ti ti-user-plus" aria-hidden="true"></i> <span class="i18n" data-en="New client" data-gr="Νέος πελάτης">New client</span></button>
-        </div>
-        <div class="dashboard-first-steps">
-          <div class="dashboard-first-steps-label"><span class="i18n" data-en="First steps" data-gr="Πρώτα βήματα">First steps</span></div>
-          <ol>
-            <li><span class="i18n" data-en="Add your first client" data-gr="Προσθέστε τον πρώτο σας πελάτη">Add your first client</span></li>
-            <li><span class="i18n" data-en="Build a nutrition plan around their exchange targets" data-gr="Δημιουργήστε ένα διατροφικό πλάνο γύρω από τους στόχους ισοδυνάμων">Build a nutrition plan around their exchange targets</span></li>
-            <li><span class="i18n" data-en="Generate a report to share with them" data-gr="Δημιουργήστε μια αναφορά για να μοιραστείτε μαζί τους">Generate a report to share with them</span></li>
-          </ol>
-          <div class="field-note" style="margin-top:8px"><span class="i18n" data-en="Need more detail?" data-gr="Χρειάζεστε περισσότερες λεπτομέρειες;">Need more detail?</span> <a href="#" onclick="nav('help');return false;"><span class="i18n" data-en="Visit the Help Center" data-gr="Επισκεφθείτε το Κέντρο Βοήθειας">Visit the Help Center</span></a></div>
+      <div class="dashboard-welcome">
+        <div class="dashboard-welcome-icon"><i class="ti ti-plant-2" aria-hidden="true"></i></div>
+        <div class="dashboard-welcome-title"><span class="i18n" data-en="Welcome to Nutrese 👋" data-gr="Καλώς ήρθατε στο Nutrese 👋">Welcome to Nutrese 👋</span></div>
+        <div class="dashboard-welcome-copy"><span class="i18n" data-en="Your clinical nutrition workspace is ready — exchange-based planning, calculated goals, and client-ready reports, all in one place." data-gr="Ο κλινικός σας χώρος διατροφής είναι έτοιμος — σχεδιασμός με ισοδύναμα, υπολογισμένοι στόχοι και αναφορές έτοιμες για πελάτες, όλα σε ένα σημείο.">Your clinical nutrition workspace is ready — exchange-based planning, calculated goals, and client-ready reports, all in one place.</span></div>
+
+        <div class="dashboard-onboard-grid">
+          <div class="dashboard-onboard-item" onclick="nav('clients');newClient()">
+            <div class="dashboard-onboard-icon"><i class="ti ti-user-plus" aria-hidden="true"></i></div>
+            <div class="dashboard-onboard-text">
+              <div class="dashboard-onboard-title"><span class="i18n" data-en="Create your first client" data-gr="Δημιουργήστε τον πρώτο πελάτη">Create your first client</span></div>
+              <div class="dashboard-onboard-sub"><span class="i18n" data-en="Add a profile and Nutrese calculates their goals automatically." data-gr="Προσθέστε ένα προφίλ και το Nutrese υπολογίζει αυτόματα τους στόχους.">Add a profile and Nutrese calculates their goals automatically.</span></div>
+            </div>
+            <i class="ti ti-chevron-right" aria-hidden="true"></i>
+          </div>
+          <div class="dashboard-onboard-item" onclick="nav('appointments')">
+            <div class="dashboard-onboard-icon"><i class="ti ti-calendar-plus" aria-hidden="true"></i></div>
+            <div class="dashboard-onboard-text">
+              <div class="dashboard-onboard-title"><span class="i18n" data-en="Schedule your first appointment" data-gr="Προγραμματίστε το πρώτο ραντεβού">Schedule your first appointment</span></div>
+              <div class="dashboard-onboard-sub"><span class="i18n" data-en="Keep client visits organized in one calendar." data-gr="Οργανώστε τις επισκέψεις πελατών σε ένα ημερολόγιο.">Keep client visits organized in one calendar.</span></div>
+            </div>
+            <i class="ti ti-chevron-right" aria-hidden="true"></i>
+          </div>
+          <div class="dashboard-onboard-item" onclick="nav('clients')">
+            <div class="dashboard-onboard-icon"><i class="ti ti-clipboard-list" aria-hidden="true"></i></div>
+            <div class="dashboard-onboard-text">
+              <div class="dashboard-onboard-title"><span class="i18n" data-en="Build your first meal plan" data-gr="Δημιουργήστε το πρώτο διατροφικό πλάνο">Build your first meal plan</span></div>
+              <div class="dashboard-onboard-sub"><span class="i18n" data-en="Exchange-based plans, generated automatically from their targets." data-gr="Πλάνα με ισοδύναμα, αυτόματα από τους στόχους τους.">Exchange-based plans, generated automatically from their targets.</span></div>
+            </div>
+            <i class="ti ti-chevron-right" aria-hidden="true"></i>
+          </div>
+          <div class="dashboard-onboard-item" onclick="nav('help')">
+            <div class="dashboard-onboard-icon"><i class="ti ti-lifebuoy" aria-hidden="true"></i></div>
+            <div class="dashboard-onboard-text">
+              <div class="dashboard-onboard-title"><span class="i18n" data-en="Help Center" data-gr="Κέντρο Βοήθειας">Help Center</span></div>
+              <div class="dashboard-onboard-sub"><span class="i18n" data-en="Browse guides, FAQs and step-by-step tutorials." data-gr="Περιηγηθείτε σε οδηγούς, συχνές ερωτήσεις και βήμα προς βήμα οδηγίες.">Browse guides, FAQs and step-by-step tutorials.</span></div>
+            </div>
+            <i class="ti ti-chevron-right" aria-hidden="true"></i>
+          </div>
         </div>
       </div>
     </div>
+
 
     <div id="dash-client-section">
       <div class="dash-snapshot">
@@ -2255,6 +2300,15 @@ table th,
             </select>
           </div>
         </div>
+        <div class="form-grid three">
+          <div class="form-field"><label><span class="i18n" data-en="BMR/TDEE Equation" data-gr="Εξίσωση BMR/TDEE">BMR/TDEE Equation</span></label>
+            <select id="p-bmr-equation" onchange="calcAll()">
+              <option value="mifflin" selected>Mifflin-St Jeor</option>
+              <option value="harris">Harris-Benedict</option>
+              <option value="schofield">Schofield</option>
+            </select>
+          </div>
+        </div>
         <div class="section-label"><span class="i18n" data-en="Measurements" data-gr="Μετρήσεις">Measurements</span></div>
         <div class="form-grid three">
           <div class="form-field"><label><span class="i18n" data-en="Height (cm)" data-gr="Ύψος (εκ)">Height (cm)</span></label><input type="number" id="p-height" placeholder="170" oninput="calcAll()"></div>
@@ -2341,7 +2395,7 @@ table th,
         <div class="metrics-grid">
           <div class="metric"><div class="m-label">BMI</div><div class="m-value" id="r-bmi">—</div><div class="m-sub" id="r-bmi-cat">—</div></div>
           <div class="metric"><div class="m-label"><span class="i18n" data-en="Ideal Body Weight" data-gr="Ιδανικό Σωματικό Βάρος">Ideal Body Weight</span></div><div class="m-value" id="r-ibw">—</div><div class="m-sub" id="r-ibw-sub"><span class="i18n" data-en="Devine formula" data-gr="Τύπος Devine">Devine formula</span></div></div>
-          <div class="metric"><div class="m-label">BMR</div><div class="m-value" id="r-bmr">—</div><div class="m-sub"><span class="i18n" data-en="kcal/day" data-gr="kcal/ημέρα">kcal/day</span></div></div>
+          <div class="metric"><div class="m-label">BMR</div><div class="m-value" id="r-bmr">—</div><div class="m-sub" id="r-bmr-sub"><span class="i18n" data-en="kcal/day" data-gr="kcal/ημέρα">kcal/day</span></div></div>
           <div class="metric"><div class="m-label">TDEE</div><div class="m-value" id="r-tdee">—</div><div class="m-sub"><span class="i18n" data-en="kcal/day" data-gr="kcal/ημέρα">kcal/day</span></div></div>
           <div class="metric"><div class="m-label"><span class="i18n" data-en="Goal Calories" data-gr="Στόχος Θερμίδων">Goal Calories</span></div><div class="m-value" id="r-goal-kcal">—</div><div class="m-sub" id="r-goal-sub"><span class="i18n" data-en="kcal/day" data-gr="kcal/ημέρα">kcal/day</span></div></div>
         </div>
@@ -4537,7 +4591,7 @@ RECIPES.LUN_AVGOLEMONO_SOUP = buildRecipe({
 
 // 25. Chickpea stew + bread (vegan) — chickpeas are the protein anchor
 RECIPES.LUN_CHICKPEA_STEW = buildRecipe({
-  recipe_id: 'LUN_CHICKPEA_STEW', name: { en: 'Chickpea stew with bread', gr: 'Ρεβίθια γιαχνί με ψωμί' },
+  recipe_id: 'LUN_CHICKPEA_STEW', name: { en: 'Chickpeas with bread', gr: 'Ρεβίθια με ψωμί' },
   yield_servings: 1,
   ingredients: [
     { food_id: 'chickpeas_cooked', grams: 200, state: 'cooked' }, // ~17.8g protein — the anchor
@@ -4766,7 +4820,7 @@ RECIPES.DIN_BEAN_PASTA = buildRecipe({
 
 // 42. Braised peas with pork — legacy had protein:0 despite "with pork"; pork now explicit anchor
 RECIPES.LUN_ARAKAS_PORK = buildRecipe({
-  recipe_id: 'LUN_ARAKAS_PORK', name: { en: 'Braised peas with pork', gr: 'Αρακάς με χοιρινό' },
+  recipe_id: 'LUN_ARAKAS_PORK', name: { en: 'Peas with pork', gr: 'Αρακάς με χοιρινό' },
   yield_servings: 1,
   ingredients: [
     { food_id: 'pork_loin_cooked', grams: 90, state: 'cooked' }, // ~23.4g protein — the anchor
@@ -5038,7 +5092,7 @@ RECIPES.DIN_TOFU_STIRFRY = buildRecipe({
 
 // 64. Chickpea stew (DINNER) — mirrors LUN_CHICKPEA_STEW
 RECIPES.DIN_CHICKPEA_STEW = buildRecipe({
-  recipe_id: 'DIN_CHICKPEA_STEW', name: { en: 'Chickpea stew with bread (dinner)', gr: 'Ρεβίθια γιαχνί με ψωμί (βραδινό)' },
+  recipe_id: 'DIN_CHICKPEA_STEW', name: { en: 'Chickpeas with bread (dinner)', gr: 'Ρεβίθια με ψωμί (βραδινό)' },
   yield_servings: 1,
   ingredients: [
     { food_id: 'chickpeas_cooked', grams: 200, state: 'cooked' },
@@ -6834,35 +6888,35 @@ const MEALS = {
   BRK_EGGS_TOAST:  (ex,p) => `Τοστ (2 φέτες ψωμί ολικής) – 1 αυγό + 1 φέτα τυρί light`,
   BRK_CEREAL:      (ex,p) => `Βρώμη (5 κ.σ. / ~40g) – 1 φλ. γάλα 1,5%`,
   BRK_OATS_VEGAN:  (ex,p) => `Βρώμη (5 κ.σ. / ~40g) – 1 φλ. εμπλουτισμένο φυτικό γάλα (αμύγδαλο/σόγια)`,
-  BRK_TAHINI_BANANA: (ex,p) => `Ψωμί ολικής (2 φέτες / ~60g) + ταχίνι (1.5 κ.σ. / ~20g) + μπανάνα`,
+  BRK_TAHINI_BANANA: (ex,p) => `Ψωμί ολικής (2 φέτες / ~60g) + ταχίνι (1½ κ.σ. / ~20g) + μπανάνα`,
   BRK_SOY_YOGURT_WALNUTS: (ex,p) => `Γιαούρτι σόγιας (~170g) + καρύδια (4) + φρούτο`,
   BRK_BOILED_EGGS_2:(ex,p) => `Αυγά βραστά (2 αυγά) + 1 φέτα ψωμί ολικής + αγγούρι/ντοματίνια`,
   BRK_RUSKS_ANTHOTYRO:(ex,p) => `Παξιμάδια (2) + ανθότυρο (~40g) + ντοματίνια`,
   BRK_YOGURT_HONEY_WALNUTS:(ex,p) => `Γιαούρτι 2% (~170g) + μέλι (1 κ.γ.) + καρύδια (4) + φρούτο`,
-  LUN_CHICKEN_RICE:   (ex,p,audience) => 'Κοτόπουλο + ρύζι' + mealSuffix(ex,p,'σαλάτα',null,'ρύζι',audience),
+  LUN_CHICKEN_RICE:   (ex,p,audience) => 'Κοτόπουλο + ρύζι' + mealSuffix(ex,p,'σαλάτα',null,'ρύζι','κοτόπουλο',false,audience),
   LUN_FISH_POTATO:    (ex,p,audience) => 'Ψάρι + πατάτα' + mealSuffix(ex,p,'σαλάτα',null,'πατάτα','ψάρι',true,audience),
   LUN_LOUVI_TUNA:     (ex,p,audience) => 'Λουβί + τόνος' + mealSuffix(ex,p,'σαλάτα / χόρτα',null,'λουβί','τόνο',true,audience),
-  LUN_FASOLAKIA_PORK: (ex,p,audience) => 'Φασολάκια + χοιρινό' + mealSuffix(ex,p,'φασολάκια + σαλάτα',null,'πατάτα','χοιρινό',audience),
+  LUN_FASOLAKIA_PORK: (ex,p,audience) => 'Φασολάκια + χοιρινό' + mealSuffix(ex,p,'φασολάκια + σαλάτα',null,'πατάτα','χοιρινό',false,audience),
   LUN_TUNA_POTATO:    (ex,p) => 'Τόνος + πατάτα (100g τόνο + 1 μεγάλη πατάτα (~200g) + 4 κ.γ. ελαιόλαδο) – σαλάτα (2 φλ.)',
-  LUN_PASTA_MINCE:    (ex,p,audience) => 'Μακαρόνια + κιμάς' + mealSuffix(ex,p,'σαλάτα',null,'ζυμαρικά','κιμά',audience),
-  LUN_BIFTEKI_BULGUR: (ex,p,audience) => 'Μπιφτέκι + πλιγούρι' + mealSuffix(ex,p,'σαλάτα',null,'πλιγούρι','μπιφτέκι',audience),
-  DIN_CHICKEN_RICE:   (ex,p,audience) => 'Κοτόπουλο + ρύζι' + mealSuffix(ex,p,'σαλάτα',null,'ρύζι',audience),
+  LUN_PASTA_MINCE:    (ex,p,audience) => 'Μακαρόνια + κιμάς' + mealSuffix(ex,p,'σαλάτα',null,'ζυμαρικά','κιμά',false,audience),
+  LUN_BIFTEKI_BULGUR: (ex,p,audience) => 'Μπιφτέκι + πλιγούρι' + mealSuffix(ex,p,'σαλάτα',null,'πλιγούρι','μπιφτέκι',false,audience),
+  DIN_CHICKEN_RICE:   (ex,p,audience) => 'Κοτόπουλο + ρύζι' + mealSuffix(ex,p,'σαλάτα',null,'ρύζι','κοτόπουλο',false,audience),
   DIN_FISH_POTATO:    (ex,p,audience) => `Ψάρι + πατάτα (140g ${audience==='patient'?'':'μαγειρεμένο '}ψάρι + 1 μέτρια πατάτα (~150g) + 3 κ.γ. ελαιόλαδο) – σαλάτα (2 φλ.)`,
   DIN_OMELETTE:       (ex,p) => 'Ομελέτα (3 αυγά) + 1 φέτα ψωμί + 3 κ.γ. ελαιόλαδο – βραστά λαχανικά (2 φλ.) + 30g γαλοπούλα light',
   DIN_TUNA_POTATO:    (ex,p,audience) => 'Τόνος + πατάτα' + mealSuffix(ex,p,'σαλάτα',null,'πατάτα','τόνο',true,audience),
-  DIN_PASTA_MINCE:    (ex,p,audience) => 'Μακαρόνια + κιμάς' + mealSuffix(ex,p,'σαλάτα',null,'ζυμαρικά','κιμά',audience),
+  DIN_PASTA_MINCE:    (ex,p,audience) => 'Μακαρόνια + κιμάς' + mealSuffix(ex,p,'σαλάτα',null,'ζυμαρικά','κιμά',false,audience),
   DIN_SOUVLAKI_PITA:  (ex,p) => 'Σουβλάκι κοτόπουλο (140g) + μικρή κυπριακή πίτα – σαλάτα (3 φλ.) + 3 κ.γ. ελαιόλαδο',
-  DIN_BIFTEKI_BULGUR: (ex,p,audience) => 'Μπιφτέκι + πλιγούρι' + mealSuffix(ex,p,'σαλάτα',null,'πλιγούρι','μπιφτέκι',audience),
-  LUN_LENTILS_RICE:   (ex,p,audience) => 'Φακές γιαχνί + ρύζι' + mealSuffix(ex,p,'σαλάτα', n=>`${n} μερίδ${n>1?'ες':'α'} φακές (½ φλ. μαγειρεμένες ανά μερίδα)`, 'ρύζι',audience),
-  LUN_CHICKPEA_STEW:  (ex,p) => 'Ρεβίθια γιαχνί + ψωμί ολικής – σαλάτα (2 φλ.)',
-  LUN_TOFU_RICE:      (ex,p,audience) => 'Τόφου σαλτέ με λαχανικά + ρύζι' + mealSuffix(ex,p,'σαλάτα', n=>`${n*30}g τόφου σφιχτό`, 'ρύζι',audience),
-  LUN_HALLOUMI_PASTA: (ex,p,audience) => 'Χαλούμι ψητό + ζυμαρικά' + mealSuffix(ex,p,'σαλάτα', n=>`${n*30}g χαλούμι ψητό`, 'ζυμαρικά',audience),
+  DIN_BIFTEKI_BULGUR: (ex,p,audience) => 'Μπιφτέκι + πλιγούρι' + mealSuffix(ex,p,'σαλάτα',null,'πλιγούρι','μπιφτέκι',false,audience),
+  LUN_LENTILS_RICE:   (ex,p,audience) => 'Φακές με ρύζι' + mealSuffix(ex,p,'σαλάτα', n=>`${n} μερίδ${n>1?'ες':'α'} φακές (½ φλ. μαγειρεμένες ανά μερίδα)`, 'ρύζι',null,false,audience),
+  LUN_CHICKPEA_STEW:  (ex,p) => 'Ρεβίθια με ψωμί ολικής – σαλάτα (2 φλ.)',
+  LUN_TOFU_RICE:      (ex,p,audience) => 'Τόφου σαλτέ με λαχανικά + ρύζι' + mealSuffix(ex,p,'σαλάτα', n=>`${n*30}g τόφου σφιχτό`, 'ρύζι',null,false,audience),
+  LUN_HALLOUMI_PASTA: (ex,p,audience) => 'Χαλούμι ψητό + ζυμαρικά' + mealSuffix(ex,p,'σαλάτα', n=>`${n*30}g χαλούμι ψητό`, 'ζυμαρικά',null,false,audience),
   LUN_BEAN_SALAD:     (ex,p) => 'Φασόλια σαλάτα + ελαιόλαδο + ψωμί ολικής – σαλάτα (2 φλ.)',
-  DIN_LENTILS_RICE:   (ex,p,audience) => 'Φακές γιαχνί + ρύζι' + mealSuffix(ex,p,'σαλάτα', n=>`${n} μερίδ${n>1?'ες':'α'} φακές (½ φλ. μαγειρεμένες ανά μερίδα)`, 'ρύζι',audience),
-  DIN_TOFU_STIRFRY:   (ex,p,audience) => 'Τόφου stir-fry με λαχανικά + ρύζι' + mealSuffix(ex,p,'σαλάτα', n=>`${n*30}g τόφου σφιχτό`, 'ρύζι',audience),
-  DIN_CHICKPEA_STEW:  (ex,p) => 'Ρεβίθια γιαχνί + ψωμί ολικής – σαλάτα (2 φλ.)',
+  DIN_LENTILS_RICE:   (ex,p,audience) => 'Φακές με ρύζι' + mealSuffix(ex,p,'σαλάτα', n=>`${n} μερίδ${n>1?'ες':'α'} φακές (½ φλ. μαγειρεμένες ανά μερίδα)`, 'ρύζι',null,false,audience),
+  DIN_TOFU_STIRFRY:   (ex,p,audience) => 'Τόφου stir-fry με λαχανικά + ρύζι' + mealSuffix(ex,p,'σαλάτα', n=>`${n*30}g τόφου σφιχτό`, 'ρύζι',null,false,audience),
+  DIN_CHICKPEA_STEW:  (ex,p) => 'Ρεβίθια με ψωμί ολικής – σαλάτα (2 φλ.)',
   DIN_HALLOUMI_SALAD: (ex,p) => 'Χαλούμι ψητό + σαλάτα μεγάλη (3 φλ.) + ψωμί ολικής',
-  DIN_BEAN_PASTA:     (ex,p,audience) => 'Φασόλια + ζυμαρικά' + mealSuffix(ex,p,'σαλάτα', n=>`${n} μερίδ${n>1?'ες':'α'} φασόλια (½ φλ. μαγειρεμένα ανά μερίδα)`, 'ζυμαρικά',audience),
+  DIN_BEAN_PASTA:     (ex,p,audience) => 'Φασόλια + ζυμαρικά' + mealSuffix(ex,p,'σαλάτα', n=>`${n} μερίδ${n>1?'ες':'α'} φασόλια (½ φλ. μαγειρεμένα ανά μερίδα)`, 'ζυμαρικά',null,false,audience),
 };
 
 const MEALS_EN = {
@@ -6872,64 +6926,64 @@ const MEALS_EN = {
   BRK_EGGS_TOAST:  (ex,p) => `Toast (2 slices wholegrain bread) - 1 egg + 1 slice light cheese`,
   BRK_CEREAL:      (ex,p) => `Oats (5 tbsp / ~40g) - 1 cup 1.5% milk`,
   BRK_OATS_VEGAN:  (ex,p) => `Oats (5 tbsp / ~40g) - 1 cup fortified plant milk (almond/soy)`,
-  BRK_TAHINI_BANANA: (ex,p) => `Wholegrain toast (2 slices / ~60g) + tahini (1.5 tbsp / ~20g) + banana`,
+  BRK_TAHINI_BANANA: (ex,p) => `Wholegrain toast (2 slices / ~60g) + tahini (1½ tbsp / ~20g) + banana`,
   BRK_SOY_YOGURT_WALNUTS: (ex,p) => `Soy yogurt (~170g) + walnuts (4) + fruit`,
   BRK_BOILED_EGGS_2:(ex,p) => `Boiled eggs (2 eggs) + 1 slice wholegrain bread + cucumber/cherry tomatoes`,
   BRK_RUSKS_ANTHOTYRO:(ex,p) => `Rusks (2) + ricotta cheese (~40g) + cherry tomatoes`,
   BRK_YOGURT_HONEY_WALNUTS:(ex,p) => `Greek yogurt 2% (~170g) + honey (1 tsp) + walnuts (4) + fruit`,
-  LUN_CHICKEN_RICE:   (ex,p,audience) => 'Chicken + rice' + mealSuffixEn(ex,p,'salad',null,'rice',audience),
+  LUN_CHICKEN_RICE:   (ex,p,audience) => 'Chicken + rice' + mealSuffixEn(ex,p,'salad',null,'rice','chicken',false,audience),
   LUN_FISH_POTATO:    (ex,p,audience) => 'Fish + potato' + mealSuffixEn(ex,p,'salad',null,'potato','fish',true,audience),
   LUN_LOUVI_TUNA:     (ex,p,audience) => 'Black-eyed beans + tuna' + mealSuffixEn(ex,p,'salad / greens',null,'black-eyed beans','tuna',true,audience),
-  LUN_FASOLAKIA_PORK: (ex,p,audience) => 'Green beans + pork' + mealSuffixEn(ex,p,'green beans + salad',null,'potato','pork',audience),
+  LUN_FASOLAKIA_PORK: (ex,p,audience) => 'Green beans + pork' + mealSuffixEn(ex,p,'green beans + salad',null,'potato','pork',false,audience),
   LUN_TUNA_POTATO:    (ex,p) => 'Tuna + potato (100g tuna + 1 large potato (~200g) + 4 tsp olive oil) - salad (2 cups)',
-  LUN_PASTA_MINCE:    (ex,p,audience) => 'Pasta + mince' + mealSuffixEn(ex,p,'salad',null,'pasta','mince',audience),
-  LUN_BIFTEKI_BULGUR: (ex,p,audience) => 'Burger + bulgur' + mealSuffixEn(ex,p,'salad',null,'bulgur','burger',audience),
-  DIN_CHICKEN_RICE:   (ex,p,audience) => 'Chicken + rice' + mealSuffixEn(ex,p,'salad',null,'rice',audience),
+  LUN_PASTA_MINCE:    (ex,p,audience) => 'Pasta + mince' + mealSuffixEn(ex,p,'salad',null,'pasta','mince',false,audience),
+  LUN_BIFTEKI_BULGUR: (ex,p,audience) => 'Burger + bulgur' + mealSuffixEn(ex,p,'salad',null,'bulgur','burger',false,audience),
+  DIN_CHICKEN_RICE:   (ex,p,audience) => 'Chicken + rice' + mealSuffixEn(ex,p,'salad',null,'rice','chicken',false,audience),
   DIN_FISH_POTATO:    (ex,p,audience) => `Fish + potato (140g ${audience==='patient'?'':'cooked '}fish + 1 medium potato (~150g) + 3 tsp olive oil) - salad (2 cups)`,
   DIN_OMELETTE:       (ex,p) => 'Omelette (3 eggs) + 1 slice bread + 3 tsp olive oil - boiled vegetables (2 cups) + 30g light turkey',
   DIN_TUNA_POTATO:    (ex,p,audience) => 'Tuna + potato' + mealSuffixEn(ex,p,'salad',null,'potato','tuna',true,audience),
-  DIN_PASTA_MINCE:    (ex,p,audience) => 'Pasta + mince' + mealSuffixEn(ex,p,'salad',null,'pasta','mince',audience),
+  DIN_PASTA_MINCE:    (ex,p,audience) => 'Pasta + mince' + mealSuffixEn(ex,p,'salad',null,'pasta','mince',false,audience),
   DIN_SOUVLAKI_PITA:  (ex,p) => 'Chicken souvlaki (140g) + small Cypriot pita - salad (3 cups) + 3 tsp olive oil',
-  DIN_BIFTEKI_BULGUR: (ex,p,audience) => 'Burger + bulgur' + mealSuffixEn(ex,p,'salad',null,'bulgur','burger',audience),
-  LUN_LENTILS_RICE:   (ex,p,audience) => 'Lentil stew + rice' + mealSuffixEn(ex,p,'salad', n=>`${n} lentil serving${n>1?'s':''} (1/2 cup cooked per serving)`, 'rice',audience),
-  LUN_CHICKPEA_STEW:  (ex,p) => 'Chickpea stew + wholegrain bread - salad (2 cups)',
-  LUN_TOFU_RICE:      (ex,p,audience) => 'Tofu stir-fry with vegetables + rice' + mealSuffixEn(ex,p,'salad', n=>`${n*30}g firm tofu`, 'rice',audience),
-  LUN_HALLOUMI_PASTA: (ex,p,audience) => 'Grilled halloumi + pasta' + mealSuffixEn(ex,p,'salad', n=>`${n*30}g grilled halloumi`, 'pasta',audience),
+  DIN_BIFTEKI_BULGUR: (ex,p,audience) => 'Burger + bulgur' + mealSuffixEn(ex,p,'salad',null,'bulgur','burger',false,audience),
+  LUN_LENTILS_RICE:   (ex,p,audience) => 'Lentils with rice' + mealSuffixEn(ex,p,'salad', n=>`${n} lentil serving${n>1?'s':''} (1/2 cup cooked per serving)`, 'rice',null,false,audience),
+  LUN_CHICKPEA_STEW:  (ex,p) => 'Chickpeas with wholegrain bread - salad (2 cups)',
+  LUN_TOFU_RICE:      (ex,p,audience) => 'Tofu stir-fry with vegetables + rice' + mealSuffixEn(ex,p,'salad', n=>`${n*30}g firm tofu`, 'rice',null,false,audience),
+  LUN_HALLOUMI_PASTA: (ex,p,audience) => 'Grilled halloumi + pasta' + mealSuffixEn(ex,p,'salad', n=>`${n*30}g grilled halloumi`, 'pasta',null,false,audience),
   LUN_BEAN_SALAD:     (ex,p) => 'Bean salad + olive oil + wholegrain bread - salad (2 cups)',
-  DIN_LENTILS_RICE:   (ex,p,audience) => 'Lentil stew + rice' + mealSuffixEn(ex,p,'salad', n=>`${n} lentil serving${n>1?'s':''} (1/2 cup cooked per serving)`, 'rice',audience),
-  DIN_TOFU_STIRFRY:   (ex,p,audience) => 'Tofu stir-fry with vegetables + rice' + mealSuffixEn(ex,p,'salad', n=>`${n*30}g firm tofu`, 'rice',audience),
-  DIN_CHICKPEA_STEW:  (ex,p) => 'Chickpea stew + wholegrain bread - salad (2 cups)',
+  DIN_LENTILS_RICE:   (ex,p,audience) => 'Lentils with rice' + mealSuffixEn(ex,p,'salad', n=>`${n} lentil serving${n>1?'s':''} (1/2 cup cooked per serving)`, 'rice',null,false,audience),
+  DIN_TOFU_STIRFRY:   (ex,p,audience) => 'Tofu stir-fry with vegetables + rice' + mealSuffixEn(ex,p,'salad', n=>`${n*30}g firm tofu`, 'rice',null,false,audience),
+  DIN_CHICKPEA_STEW:  (ex,p) => 'Chickpeas with wholegrain bread - salad (2 cups)',
   DIN_HALLOUMI_SALAD: (ex,p) => 'Grilled halloumi + large salad (3 cups) + wholegrain bread',
-  DIN_BEAN_PASTA:     (ex,p,audience) => 'Beans + pasta' + mealSuffixEn(ex,p,'salad', n=>`${n} bean serving${n>1?'s':''} (1/2 cup cooked per serving)`, 'pasta',audience),
+  DIN_BEAN_PASTA:     (ex,p,audience) => 'Beans + pasta' + mealSuffixEn(ex,p,'salad', n=>`${n} bean serving${n>1?'s':''} (1/2 cup cooked per serving)`, 'pasta',null,false,audience),
 };
 
 Object.assign(MEALS, {
   LUN_CHICKEN_POTATO: (ex,p,audience) => `Κοτόπουλο + πατάτα (90g ${audience==='patient'?'':'μαγειρεμένο '}κοτόπουλο + 1 μεγάλη πατάτα (~200g) + 4 κ.γ. ελαιόλαδο) – σαλάτα (2 φλ.)`,
-  DIN_CHICKEN_POTATO: (ex,p,audience) => 'Κοτόπουλο + πατάτα' + mealSuffix(ex,p,'σαλάτα',null,'πατάτα','κοτόπουλο',audience),
-  LUN_FASOLAKIA_CHICKEN: (ex,p,audience) => 'Φασολάκια + κοτόπουλο' + mealSuffix(ex,p,'φασολάκια + σαλάτα',null,'πατάτα','κοτόπουλο',audience),
-  DIN_FASOLAKIA_CHICKEN: (ex,p,audience) => 'Φασολάκια + κοτόπουλο' + mealSuffix(ex,p,'φασολάκια + σαλάτα',null,'πατάτα','κοτόπουλο',audience),
+  DIN_CHICKEN_POTATO: (ex,p,audience) => 'Κοτόπουλο + πατάτα' + mealSuffix(ex,p,'σαλάτα',null,'πατάτα','κοτόπουλο',false,audience),
+  LUN_FASOLAKIA_CHICKEN: (ex,p,audience) => 'Φασολάκια + κοτόπουλο' + mealSuffix(ex,p,'φασολάκια + σαλάτα',null,'πατάτα','κοτόπουλο',false,audience),
+  DIN_FASOLAKIA_CHICKEN: (ex,p,audience) => 'Φασολάκια + κοτόπουλο' + mealSuffix(ex,p,'φασολάκια + σαλάτα',null,'πατάτα','κοτόπουλο',false,audience),
   LUN_SALMON_POTATO: (ex,p,audience) => 'Σολομός + πατάτα' + mealSuffix(ex,p,'σαλάτα',null,'πατάτα','σολομό',true,audience),
   DIN_SALMON_POTATO: (ex,p,audience) => 'Σολομός + πατάτα' + mealSuffix(ex,p,'σαλάτα',null,'πατάτα','σολομό',true,audience),
   LUN_BAKED_FISH_VEG: (ex,p,audience) => 'Ψάρι στο φούρνο' + mealSuffix(ex,p,'βραστά λαχανικά',null,'ρύζι','ψάρι',true,audience),
   DIN_BAKED_FISH_VEG: (ex,p,audience) => 'Ψάρι στο φούρνο' + mealSuffix(ex,p,'βραστά λαχανικά',null,'ρύζι','ψάρι',true,audience),
   LUN_TUNA_RICE: (ex,p,audience) => 'Τόνος + ρύζι' + mealSuffix(ex,p,'σαλάτα',null,'ρύζι','τόνο',true,audience),
   DIN_TUNA_RICE: (ex,p,audience) => 'Τόνος + ρύζι' + mealSuffix(ex,p,'σαλάτα',null,'ρύζι','τόνο',true,audience),
-  LUN_HALLOUMI_POTATO: (ex,p,audience) => 'Χαλούμι ψητό + πατάτα' + mealSuffix(ex,{...p,fat:Math.max(0,Number(p?.fat||0)-2)},'σαλάτα',null,'πατάτα','χαλούμι',audience),
-  DIN_HALLOUMI_POTATO: (ex,p,audience) => 'Χαλούμι ψητό + πατάτα' + mealSuffix(ex,{...p,fat:Math.max(0,Number(p?.fat||0)-2)},'σαλάτα',null,'πατάτα','χαλούμι',audience),
-  LUN_AVGOLEMONO_SOUP: (ex,p,audience) => 'Αυγολέμονο σούπα' + mealSuffix(ex,p,'λαχανικά σούπας',null,'ρύζι','κοτόπουλο',audience),
-  DIN_AVGOLEMONO_SOUP: (ex,p,audience) => 'Αυγολέμονο σούπα' + mealSuffix(ex,p,'λαχανικά σούπας',null,'ρύζι','κοτόπουλο',audience),
+  LUN_HALLOUMI_POTATO: (ex,p,audience) => 'Χαλούμι ψητό + πατάτα' + mealSuffix(ex,{...p,fat:Math.max(0,Number(p?.fat||0)-2)},'σαλάτα',null,'πατάτα','χαλούμι',false,audience),
+  DIN_HALLOUMI_POTATO: (ex,p,audience) => 'Χαλούμι ψητό + πατάτα' + mealSuffix(ex,{...p,fat:Math.max(0,Number(p?.fat||0)-2)},'σαλάτα',null,'πατάτα','χαλούμι',false,audience),
+  LUN_AVGOLEMONO_SOUP: (ex,p,audience) => 'Αυγολέμονο σούπα' + mealSuffix(ex,p,'λαχανικά σούπας',null,'ρύζι','κοτόπουλο',false,audience),
+  DIN_AVGOLEMONO_SOUP: (ex,p,audience) => 'Αυγολέμονο σούπα' + mealSuffix(ex,p,'λαχανικά σούπας',null,'ρύζι','κοτόπουλο',false,audience),
   LUN_TRACHANAS_HALLOUMI: (ex,p,audience) => 'Τραχανάς σούπα + χαλούμι' + mealSuffix(ex,{...p,fat:Math.max(0,Number(p?.fat||0)-2)},'λαχανικά',n=>'45g χαλούμι','τραχανά',audience),
   DIN_TRACHANAS_HALLOUMI: (ex,p,audience) => 'Τραχανάς σούπα + χαλούμι' + mealSuffix(ex,{...p,fat:Math.max(0,Number(p?.fat||0)-2)},'λαχανικά',n=>'45g χαλούμι','τραχανά',audience),
-  LUN_VEG_SOUP_CHICKEN: (ex,p,audience) => 'Χορτόσουπα με κοτόπουλο' + mealSuffix(ex,p,'χορτόσουπα',null,'ρύζι','κοτόπουλο',audience),
-  DIN_VEG_SOUP_CHICKEN: (ex,p,audience) => 'Χορτόσουπα με κοτόπουλο' + mealSuffix(ex,p,'χορτόσουπα',null,'ρύζι','κοτόπουλο',audience),
+  LUN_VEG_SOUP_CHICKEN: (ex,p,audience) => 'Χορτόσουπα με κοτόπουλο' + mealSuffix(ex,p,'χορτόσουπα',null,'ρύζι','κοτόπουλο',false,audience),
+  DIN_VEG_SOUP_CHICKEN: (ex,p,audience) => 'Χορτόσουπα με κοτόπουλο' + mealSuffix(ex,p,'χορτόσουπα',null,'ρύζι','κοτόπουλο',false,audience),
   LUN_CHICKEN_QUINOA: (ex,p,audience) => `Κοτόπουλο + κινόα (120g ${audience==='patient'?'':'μαγειρεμένο '}κοτόπουλο + ½ φλ. κινόα μαγειρεμένη + 2 κ.γ. ελαιόλαδο) – σαλάτα (2 φλ.)`,
   LUN_SALMON_QUINOA: (ex,p,audience) => `Σολομός + κινόα (140g ${audience==='patient'?'':'μαγειρεμένο '}σολομό + ½ φλ. κινόα μαγειρεμένη + 2 κ.γ. ελαιόλαδο) – σαλάτα (2 φλ.)`,
   LUN_LENTIL_SOUP: (ex,p) => 'Φακές σούπα (1 φλ. μαγειρεμένες φακές + 1 κ.γ. ελαιόλαδο) – σαλάτα (2 φλ.)',
   LUN_CHICKPEAS_SALAD: (ex,p) => 'Ρεβίθια (1 φλ. ρεβίθια + 1 κ.γ. ελαιόλαδο + ντομάτα) – σαλάτα (2 φλ.)',
   LUN_SPINACH_RICE: (ex,p) => 'Σπανακόρυζο (1 φλ. + 1 κ.γ. ελαιόλαδο) + 30g τυρί light – σαλάτα (2 φλ.)',
   LUN_PEAS_LADERO: (ex,p) => 'Αρακάς με πατάτα και σάλτσα ντομάτας (1 φλ. αρακάς + 1 μέτρια πατάτα (~150g) + ¼ φλ. σάλτσα ντομάτας + 2 κ.γ. ελαιόλαδο + άνηθος) – σαλάτα (2 φλ.)',
-  LUN_ARAKAS_FETA: (ex,p) => 'Αρακάς με πατάτα, σάλτσα ντομάτας & φέτα (1 φλ. αρακάς + 1 μέτρια πατάτα (~150g) + ¼ φλ. σάλτσα ντομάτας + 2 κ.γ. ελαιόλαδο + άνηθος) + 30g φέτα – σαλάτα (1.5 φλ.)',
-  LUN_ARAKAS_PORK: (ex,p,audience) => 'Αρακάς με χοιρινό' + mealSuffix(ex,p,'αρακάς + σαλάτα',null,'πατάτα','χοιρινό',audience),
+  LUN_ARAKAS_FETA: (ex,p) => 'Αρακάς με πατάτα, σάλτσα ντομάτας & φέτα (1 φλ. αρακάς + 1 μέτρια πατάτα (~150g) + ¼ φλ. σάλτσα ντομάτας + 2 κ.γ. ελαιόλαδο + άνηθος) + 30g φέτα – σαλάτα (1½ φλ.)',
+  LUN_ARAKAS_PORK: (ex,p,audience) => 'Αρακάς με χοιρινό' + mealSuffix(ex,p,'αρακάς + σαλάτα',null,'πατάτα','χοιρινό',false,audience),
   LUN_GRILLED_FISH_RICE: (ex,p) => 'Ψητό ψάρι (140g τσιπούρα ή λαβράκι) + ½ φλ. ρύζι + 2 κ.γ. ελαιόλαδο – σαλάτα (2 φλ.)',
   DIN_CHICKEN_QUINOA: (ex,p,audience) => `Κοτόπουλο + κινόα (120g ${audience==='patient'?'':'μαγειρεμένο '}κοτόπουλο + ½ φλ. κινόα μαγειρεμένη + 2 κ.γ. ελαιόλαδο) – σαλάτα (2 φλ.)`,
   DIN_GEMISTA_LIGHT: (ex,p) => 'Γεμιστά light (120g κιμάς κοτόπουλο + ⅔ φλ. ρύζι + 1 κ.γ. ελαιόλαδο) – σαλάτα (2 φλ.)',
@@ -6941,31 +6995,31 @@ Object.assign(MEALS, {
 
 Object.assign(MEALS_EN, {
   LUN_CHICKEN_POTATO: (ex,p,audience) => `Chicken + potato (90g ${audience==='patient'?'':'cooked '}chicken + 1 large potato (~200g) + 4 tsp olive oil) - salad (2 cups)`,
-  DIN_CHICKEN_POTATO: (ex,p,audience) => 'Chicken + potato' + mealSuffixEn(ex,p,'salad',null,'potato','chicken',audience),
-  LUN_FASOLAKIA_CHICKEN: (ex,p,audience) => 'Green beans + chicken' + mealSuffixEn(ex,p,'green beans + salad',null,'potato','chicken',audience),
-  DIN_FASOLAKIA_CHICKEN: (ex,p,audience) => 'Green beans + chicken' + mealSuffixEn(ex,p,'green beans + salad',null,'potato','chicken',audience),
+  DIN_CHICKEN_POTATO: (ex,p,audience) => 'Chicken + potato' + mealSuffixEn(ex,p,'salad',null,'potato','chicken',false,audience),
+  LUN_FASOLAKIA_CHICKEN: (ex,p,audience) => 'Green beans + chicken' + mealSuffixEn(ex,p,'green beans + salad',null,'potato','chicken',false,audience),
+  DIN_FASOLAKIA_CHICKEN: (ex,p,audience) => 'Green beans + chicken' + mealSuffixEn(ex,p,'green beans + salad',null,'potato','chicken',false,audience),
   LUN_SALMON_POTATO: (ex,p,audience) => 'Salmon + potato' + mealSuffixEn(ex,p,'salad',null,'potato','salmon',true,audience),
   DIN_SALMON_POTATO: (ex,p,audience) => 'Salmon + potato' + mealSuffixEn(ex,p,'salad',null,'potato','salmon',true,audience),
   LUN_BAKED_FISH_VEG: (ex,p,audience) => 'Baked fish' + mealSuffixEn(ex,p,'boiled vegetables',null,'rice','fish',true,audience),
   DIN_BAKED_FISH_VEG: (ex,p,audience) => 'Baked fish' + mealSuffixEn(ex,p,'boiled vegetables',null,'rice','fish',true,audience),
   LUN_TUNA_RICE: (ex,p,audience) => 'Tuna + rice' + mealSuffixEn(ex,p,'salad',null,'rice','tuna',true,audience),
   DIN_TUNA_RICE: (ex,p,audience) => 'Tuna + rice' + mealSuffixEn(ex,p,'salad',null,'rice','tuna',true,audience),
-  LUN_HALLOUMI_POTATO: (ex,p,audience) => 'Grilled halloumi + potato' + mealSuffixEn(ex,{...p,fat:Math.max(0,Number(p?.fat||0)-2)},'salad',null,'potato','halloumi',audience),
-  DIN_HALLOUMI_POTATO: (ex,p,audience) => 'Grilled halloumi + potato' + mealSuffixEn(ex,{...p,fat:Math.max(0,Number(p?.fat||0)-2)},'salad',null,'potato','halloumi',audience),
-  LUN_AVGOLEMONO_SOUP: (ex,p,audience) => 'Avgolemono soup' + mealSuffixEn(ex,p,'soup vegetables',null,'rice','chicken',audience),
-  DIN_AVGOLEMONO_SOUP: (ex,p,audience) => 'Avgolemono soup' + mealSuffixEn(ex,p,'soup vegetables',null,'rice','chicken',audience),
+  LUN_HALLOUMI_POTATO: (ex,p,audience) => 'Grilled halloumi + potato' + mealSuffixEn(ex,{...p,fat:Math.max(0,Number(p?.fat||0)-2)},'salad',null,'potato','halloumi',false,audience),
+  DIN_HALLOUMI_POTATO: (ex,p,audience) => 'Grilled halloumi + potato' + mealSuffixEn(ex,{...p,fat:Math.max(0,Number(p?.fat||0)-2)},'salad',null,'potato','halloumi',false,audience),
+  LUN_AVGOLEMONO_SOUP: (ex,p,audience) => 'Avgolemono soup' + mealSuffixEn(ex,p,'soup vegetables',null,'rice','chicken',false,audience),
+  DIN_AVGOLEMONO_SOUP: (ex,p,audience) => 'Avgolemono soup' + mealSuffixEn(ex,p,'soup vegetables',null,'rice','chicken',false,audience),
   LUN_TRACHANAS_HALLOUMI: (ex,p,audience) => 'Trachanas soup + halloumi' + mealSuffixEn(ex,{...p,fat:Math.max(0,Number(p?.fat||0)-2)},'vegetables',n=>'45g halloumi','trachanas',audience),
   DIN_TRACHANAS_HALLOUMI: (ex,p,audience) => 'Trachanas soup + halloumi' + mealSuffixEn(ex,{...p,fat:Math.max(0,Number(p?.fat||0)-2)},'vegetables',n=>'45g halloumi','trachanas',audience),
-  LUN_VEG_SOUP_CHICKEN: (ex,p,audience) => 'Vegetable soup with chicken' + mealSuffixEn(ex,p,'vegetable soup',null,'rice','chicken',audience),
-  DIN_VEG_SOUP_CHICKEN: (ex,p,audience) => 'Vegetable soup with chicken' + mealSuffixEn(ex,p,'vegetable soup',null,'rice','chicken',audience),
+  LUN_VEG_SOUP_CHICKEN: (ex,p,audience) => 'Vegetable soup with chicken' + mealSuffixEn(ex,p,'vegetable soup',null,'rice','chicken',false,audience),
+  DIN_VEG_SOUP_CHICKEN: (ex,p,audience) => 'Vegetable soup with chicken' + mealSuffixEn(ex,p,'vegetable soup',null,'rice','chicken',false,audience),
   LUN_CHICKEN_QUINOA: (ex,p,audience) => `Chicken + quinoa (120g ${audience==='patient'?'':'cooked '}chicken + ½ cup cooked quinoa + 2 tsp olive oil) - salad (2 cups)`,
   LUN_SALMON_QUINOA: (ex,p,audience) => `Salmon + quinoa (140g ${audience==='patient'?'':'cooked '}salmon + ½ cup cooked quinoa + 2 tsp olive oil) - salad (2 cups)`,
   LUN_LENTIL_SOUP: (ex,p) => 'Lentil soup (1 cup cooked lentils + 1 tsp olive oil) - salad (2 cups)',
   LUN_CHICKPEAS_SALAD: (ex,p) => 'Chickpeas (1 cup chickpeas + 1 tsp olive oil + tomato) - salad (2 cups)',
   LUN_SPINACH_RICE: (ex,p) => 'Spinach rice (1 cup + 1 tsp olive oil) + 30g light cheese - salad (2 cups)',
   LUN_PEAS_LADERO: (ex,p) => 'Peas with potato and tomato sauce (1 cup peas + 1 medium potato (~150g) + ¼ cup tomato sauce + 2 tsp olive oil + dill) - salad (2 cups)',
-  LUN_ARAKAS_FETA: (ex,p) => 'Peas with potato, tomato sauce & feta (1 cup peas + 1 medium potato (~150g) + ¼ cup tomato sauce + 2 tsp olive oil + dill) + 30g feta - salad (1.5 cups)',
-  LUN_ARAKAS_PORK: (ex,p,audience) => 'Braised peas with lean pork' + mealSuffixEn(ex,p,'peas + salad',null,'potato','pork',audience),
+  LUN_ARAKAS_FETA: (ex,p) => 'Peas with potato, tomato sauce & feta (1 cup peas + 1 medium potato (~150g) + ¼ cup tomato sauce + 2 tsp olive oil + dill) + 30g feta - salad (1½ cups)',
+  LUN_ARAKAS_PORK: (ex,p,audience) => 'Peas with pork' + mealSuffixEn(ex,p,'peas + salad',null,'potato','pork',false,audience),
   LUN_GRILLED_FISH_RICE: (ex,p) => 'Grilled fish (140g sea bream or sea bass) + ½ cup rice + 2 tsp olive oil - salad (2 cups)',
   DIN_CHICKEN_QUINOA: (ex,p,audience) => `Chicken + quinoa (120g ${audience==='patient'?'':'cooked '}chicken + ½ cup cooked quinoa + 2 tsp olive oil) - salad (2 cups)`,
   DIN_GEMISTA_LIGHT: (ex,p) => 'Stuffed vegetables light (120g chicken mince + ⅔ cup rice + 1 tsp olive oil) - salad (2 cups)',
@@ -7210,7 +7264,7 @@ const MEAL_EXCHANGES = {
 // plan. These meals must NOT receive dynamic portions, same as breakfast.
 const FIXED_COMPOSITION_MEALS = new Set([
   'DIN_OMELETTE', 'DIN_SOUVLAKI_PITA', 'DIN_FISH_POTATO', 'LUN_TUNA_POTATO',
-  'LUN_CHICKPEA_STEW', 'LUN_BEAN_SALAD',
+  'LUN_CHICKPEA_STEW', 'LUN_BEAN_SALAD', 'LUN_CHICKEN_POTATO',
   'DIN_CHICKPEA_STEW', 'DIN_HALLOUMI_SALAD',
   'LUN_CHICKEN_QUINOA', 'LUN_SALMON_QUINOA', 'LUN_LENTIL_SOUP',
   'LUN_CHICKPEAS_SALAD', 'LUN_SPINACH_RICE', 'LUN_PEAS_LADERO', 'LUN_ARAKAS_FETA',
@@ -8446,7 +8500,7 @@ const LUNCH_OPTIONS = [
   {v:'LUN_PASTA_MINCE',    l:'Μακαρόνια + κιμάς', en:'Pasta + mince'},
   {v:'LUN_BIFTEKI_BULGUR', l:'Μπιφτέκι + πλιγούρι', en:'Burger + bulgur'},
   {v:'LUN_LENTILS_RICE',   l:'Φακές + ρύζι 🌱', en:'Lentils + rice 🌱'},
-  {v:'LUN_CHICKPEA_STEW',  l:'Ρεβίθια γιαχνί + ψωμί 🌱', en:'Chickpea stew + bread 🌱'},
+  {v:'LUN_CHICKPEA_STEW',  l:'Ρεβίθια + ψωμί 🌱', en:'Chickpeas + bread 🌱'},
   {v:'LUN_TOFU_RICE',      l:'Τόφου σαλτέ + ρύζι 🌱', en:'Tofu stir-fry + rice 🌱'},
   {v:'LUN_HALLOUMI_PASTA', l:'Χαλούμι ψητό + ζυμαρικά 🥚', en:'Grilled halloumi + pasta 🥚'},
   {v:'LUN_BEAN_SALAD',     l:'Φασόλια σαλάτα + ψωμί 🌱', en:'Bean salad + bread 🌱'},
@@ -8457,7 +8511,7 @@ const LUNCH_OPTIONS = [
   {v:'LUN_SPINACH_RICE', l:'Σπανακόρυζο + τυρί light', en:'Spinach rice + light cheese'},
   {v:'LUN_PEAS_LADERO', l:'Αρακάς με πατάτα 🌱', en:'Peas with potato 🌱'},
   {v:'LUN_ARAKAS_FETA', l:'Αρακάς με πατάτα & φέτα', en:'Peas with potato & feta'},
-  {v:'LUN_ARAKAS_PORK', l:'Αρακάς με χοιρινό', en:'Braised peas with lean pork'},
+  {v:'LUN_ARAKAS_PORK', l:'Αρακάς με χοιρινό', en:'Peas with pork'},
   {v:'LUN_GRILLED_FISH_RICE', l:'Ψητό ψάρι + ρύζι', en:'Grilled fish + rice'},
 ];
 const DINNER_OPTIONS = [
@@ -8479,7 +8533,7 @@ const DINNER_OPTIONS = [
   {v:'DIN_BIFTEKI_BULGUR', l:'Μπιφτέκι + πλιγούρι', en:'Burger + bulgur'},
   {v:'DIN_LENTILS_RICE',   l:'Φακές + ρύζι 🌱', en:'Lentils + rice 🌱'},
   {v:'DIN_TOFU_STIRFRY',   l:'Τόφου stir-fry + ρύζι 🌱', en:'Tofu stir-fry + rice 🌱'},
-  {v:'DIN_CHICKPEA_STEW',  l:'Ρεβίθια γιαχνί + ψωμί 🌱', en:'Chickpea stew + bread 🌱'},
+  {v:'DIN_CHICKPEA_STEW',  l:'Ρεβίθια + ψωμί 🌱', en:'Chickpeas + bread 🌱'},
   {v:'DIN_HALLOUMI_SALAD', l:'Χαλούμι ψητό + σαλάτα 🥚', en:'Grilled halloumi + salad 🥚'},
   {v:'DIN_BEAN_PASTA',     l:'Φασόλια + ζυμαρικά 🌱', en:'Beans + pasta 🌱'},
   {v:'DIN_CHICKEN_QUINOA', l:'Κοτόπουλο + κινόα', en:'Chicken + quinoa'},
@@ -8705,7 +8759,13 @@ function refreshSnackExtrasLabels(){
 function getSnackExtras(elId){
   const el=document.getElementById(elId);
   if(!el) return [];
-  return Array.from(el.querySelectorAll('input[type=checkbox]:checked')).map(cb=>cb.value);
+  const checked=Array.from(el.querySelectorAll('input[type=checkbox]:checked')).map(cb=>cb.value);
+  // A combo option already fully accounts for its own fruit/dairy — if one
+  // is checked alongside a plain fruit/dairy pick (e.g. left over from an
+  // earlier auto-suggestion that wasn't cleared), the combo wins so the
+  // exchange total never silently double-counts.
+  const hasCombo=checked.some(v=>Object.prototype.hasOwnProperty.call(SNACK_COMBO_EXCHANGES, v));
+  return hasCombo ? checked.filter(v=>!['fruit','driedfruit','milk','yogurt','nofruit'].includes(v)) : checked;
 }
 function getOneDaySnackExtras(elId, stateKey){
   const fromDom=getSnackExtras(elId);
@@ -8800,13 +8860,22 @@ function autoSnackExtrasForPlan(plan){
     const current=Array.isArray(p[cfg.key]) ? p[cfg.key] : [];
     p[cfg.key]=current.filter(v=>!['fruit','driedfruit','milk','yogurt','nofruit'].includes(v));
   });
+  // FIX: a slot holding a "combo" choice (e.g. fruit + rice cakes + tahini +
+  // nuts) already fully accounts for its own fruit/starch/protein/fat —
+  // stacking an additional plain fruit/dairy suggestion on top silently
+  // double-counted exchanges and produced illogical, unintended snack
+  // combinations. Combo slots are now left untouched by auto-population.
+  const hasComboIn=(cfg)=>{
+    const current=Array.isArray(p[cfg.key]) ? p[cfg.key] : [];
+    return current.some(v=>Object.prototype.hasOwnProperty.call(SNACK_COMBO_EXCHANGES, v));
+  };
   fruitSlots.forEach((cfg,i)=>{
     const current=Array.isArray(original[cfg.key]) ? original[cfg.key] : [];
-    if(i<fruitSlotCount) p[cfg.key].push(current.includes('driedfruit') ? 'driedfruit' : 'fruit');
+    if(i<fruitSlotCount && !hasComboIn(cfg)) p[cfg.key].push(current.includes('driedfruit') ? 'driedfruit' : 'fruit');
   });
   dairySlots.forEach((cfg,i)=>{
     const current=Array.isArray(original[cfg.key]) ? original[cfg.key] : [];
-    if(i<dairySlotCount) p[cfg.key].push(current.includes('yogurt') ? 'yogurt' : 'milk');
+    if(i<dairySlotCount && !hasComboIn(cfg)) p[cfg.key].push(current.includes('yogurt') ? 'yogurt' : 'milk');
   });
   // Keep both naming styles alive: 1-Day uses breakfast/lunch/dinner +
   // snack1Extras, while 7-Day uses brk/lun/din + snk1Extras.
@@ -9932,6 +10001,37 @@ function renderExpectedProgress(goal, tdee, goalKcal){
     </div>`;
 }
 
+// Multi-equation BMR calculator. Mifflin-St Jeor remains the clinical
+// default (most validated for general adult populations); Harris-Benedict
+// (revised 1984 coefficients) and Schofield (WHO/FAO/UNU 1985, weight- and
+// age-band-based) are offered as selectable alternatives. Returns null if
+// required inputs are missing.
+// Single source of truth for equation display names — reused everywhere
+// the selected calorie equation needs to be shown (BMR sub-label, printed
+// reports, client profile, etc.) so it's never out of sync between them.
+const BMR_EQUATION_LABELS = {mifflin:'Mifflin-St Jeor', harris:'Harris-Benedict', schofield:'Schofield'};
+function calcBMR(equation, sex, age, h, w){
+  if(!age || !h || !w) return null;
+  if(equation === 'harris'){
+    return sex==='M'
+      ? 88.362 + 13.397*w + 4.799*h - 5.677*age
+      : 447.593 + 9.247*w + 3.098*h - 4.330*age;
+  }
+  if(equation === 'schofield'){
+    // WHO/FAO/UNU 1985 weight-based equations, banded by age.
+    if(sex==='M'){
+      if(age < 30) return 15.057*w + 692.2;
+      if(age < 60) return 11.472*w + 873.1;
+      return 11.711*w + 587.7;
+    } else {
+      if(age < 30) return 14.818*w + 486.6;
+      if(age < 60) return 8.126*w + 845.6;
+      return 9.082*w + 658.5;
+    }
+  }
+  // Mifflin-St Jeor (default)
+  return sex==='M' ? 10*w+6.25*h-5*age+5 : 10*w+6.25*h-5*age-161;
+}
 function calcAll() {
   const age=parseFloat(v('p-age'))||null, sex=v('p-sex'), h=parseFloat(v('p-height'))||null;
   const w=parseFloat(v('p-weight'))||null, act=parseFloat(v('p-activity'))||1.55;
@@ -10018,7 +10118,7 @@ function calcAll() {
     S.bmiCat=bmiCat;
   }
   if(age&&h&&w){
-    bmr=sex==='M'?10*w+6.25*h-5*age+5:10*w+6.25*h-5*age-161;
+    bmr=calcBMR(v('p-bmr-equation')||'mifflin', sex, age, h, w);
     S.bmr=bmr; tdee=bmr*act; S.tdee=tdee;
     // Pregnancy: additional energy needs per trimester (ACOG/DGA), added on
     // top of any other adjustment — caloric restriction is not recommended
@@ -10066,6 +10166,12 @@ function calcAll() {
   setEl('r-bmi',bmi?bmi.toFixed(1):'—'); setEl('r-bmi-cat',bmiCat||'—');
   setEl('profile-bmi-scale', bmi ? bmiVisualScaleHtml(bmi,isGrBmi) : '');
   setEl('r-bmr',bmr?Math.round(bmr):'—'); setEl('r-tdee',tdee?Math.round(tdee):'—');
+  const bmrSubEl=document.getElementById('r-bmr-sub');
+  if(bmrSubEl){
+    const eq=v('p-bmr-equation')||'mifflin';
+    const isGrBmrSub = window.appLang==='gr';
+    bmrSubEl.textContent = bmr ? `${isGrBmrSub?'kcal/ημέρα':'kcal/day'} · ${BMR_EQUATION_LABELS[eq]||eq}` : (isGrBmrSub?'kcal/ημέρα':'kcal/day');
+  }
   setEl('r-goal-kcal',goalKcal?Math.round(goalKcal):'—');
   renderExpectedProgress(goal, tdee, goalKcal);
   const bmiEl=document.getElementById('r-bmi');
@@ -10592,8 +10698,9 @@ function buildOneDayPlan(){
   if(!gapOk && displayedGap<0){
     const starchNeeded=Math.round(Math.abs(displayedGap)/81);
     const fatNeeded=Math.round(Math.abs(displayedGap)/45);
-    const lunFixed = typeof isMigratedMeal==='function' && isMigratedMeal(lun);
-    const dinFixed = typeof isMigratedMeal==='function' && isMigratedMeal(din);
+    const isFixedMeal=(key)=> (typeof isMigratedMeal==='function' && isMigratedMeal(key)) || (typeof mealCatalogIsFixedComposition==='function' && mealCatalogIsFixedComposition(key));
+    const lunFixed = isFixedMeal(lun);
+    const dinFixed = isFixedMeal(din);
     const fixedSlotNames = [lunFixed?'Lunch':null, dinFixed?'Dinner':null].filter(Boolean);
     gapAdvice+=`<div style="margin-top:8px;padding:8px 12px;background:var(--amber-bg);border-radius:6px;font-size:12px;color:var(--amber-text)">
       <i class="ti ti-bulb" aria-hidden="true"></i> <strong>How to close this gap:</strong> Go to Exchange System and manually increase:
@@ -13273,6 +13380,7 @@ function buildReport(){
         <div><strong>${S.name||'—'}</strong></div>
         <div>${today}</div>
         <div>${goalLabel}: ${S.goalKcal?Math.round(S.goalKcal)+' '+dayUnit:'—'}</div>
+        <div style="font-size:11px;color:var(--text-muted)">${isEn?'Energy Equation':'Εξίσωση Ενέργειας'}: ${BMR_EQUATION_LABELS[v('p-bmr-equation')||'mifflin']}</div>
       </div>
       </div>
     </div>
@@ -15694,7 +15802,7 @@ function renderDashboardAppointments(){
 //  CLIENT SAVE / LOAD / PERSISTENCE
 // ═══════════════════════════════════════════
 const SAVE_FIELD_IDS = [
-  'p-id','p-name','p-date','p-age','p-sex','p-activity','p-height','p-weight','p-cal-adj','p-goal','p-meat','p-dairy','p-diet','p-trimester',
+  'p-id','p-name','p-date','p-age','p-sex','p-activity','p-height','p-weight','p-cal-adj','p-goal','p-meat','p-dairy','p-diet','p-trimester','p-bmr-equation',
   'bc-bf','bc-water','bc-fatmass','bc-ffm','bc-muscle','bc-metage','bc-visceral','bc-physique','bc-bone',
   'bc-fold-triceps','bc-fold-biceps','bc-fold-subscapular','bc-fold-suprailiac','bc-fold-abdominal','bc-fold-thigh','bc-fold-calf','bc-fold-notes',
   'm-carb','m-protein',
@@ -15889,6 +15997,24 @@ function isClientEditingContext(){
 //   • Editing context, pending    -> "Unsaved changes" + compact Save Changes
 // The slot has a fixed min-width, so none of these transitions move the
 // theme/language controls.
+// Reusable relative-date formatter: "today at 14:35" / "yesterday at 18:10"
+// / "12 Jul 2026 · 09:42" for anything older. Shared by any saved-content
+// timestamp in the app, not just the topbar status.
+function formatRelativeSaveTime(date, isGr){
+  if(!date) return '';
+  const now = new Date();
+  const d = date instanceof Date ? date : new Date(date);
+  const locale = isGr ? 'el-GR' : 'en-GB';
+  let timeStr = '';
+  try { timeStr = new Intl.DateTimeFormat(locale, { hour:'2-digit', minute:'2-digit', hour12:false }).format(d); } catch(e) { return ''; }
+  const isSameDay = (a,b) => a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
+  const yesterday = new Date(now); yesterday.setDate(now.getDate()-1);
+  if(isSameDay(d, now)) return isGr ? `σήμερα στις ${timeStr}` : `today at ${timeStr}`;
+  if(isSameDay(d, yesterday)) return isGr ? `χθες στις ${timeStr}` : `yesterday at ${timeStr}`;
+  let dateStr = '';
+  try { dateStr = new Intl.DateTimeFormat(locale, { day:'numeric', month:'short', year:'numeric' }).format(d); } catch(e) { return timeStr; }
+  return `${dateStr} · ${timeStr}`;
+}
 function updateSaveStatusUI(){
   const btn=document.getElementById('topbar-save-action');
   const status=document.getElementById('autosave-status');
@@ -15901,6 +16027,7 @@ function updateSaveStatusUI(){
     btn.style.display='none';
     status.className='autosave-status';
     status.textContent='';
+    S._pendingSaveTimestamp=true; // next client will need a fresh stamp
     return;
   }
   if(S_isDirty){
@@ -15909,9 +16036,18 @@ function updateSaveStatusUI(){
     // The ACTION only appears where the change can be committed.
     btn.style.display = editing ? '' : 'none';
     btn.title = isGr ? 'Αποθήκευση αλλαγών σε αυτόν τον πελάτη' : 'Save changes to this client';
+    S._pendingSaveTimestamp=true; // mark: the next clean state is a genuine new save
   } else {
+    // Only stamp a fresh time on an actual dirty->clean transition (a real
+    // save just completed), not on every unrelated re-render while already
+    // clean — otherwise the displayed time would drift forward for no reason.
+    if(S._pendingSaveTimestamp || !S.lastSavedAt){
+      S.lastSavedAt = new Date();
+      S._pendingSaveTimestamp=false;
+    }
+    const relTime = formatRelativeSaveTime(S.lastSavedAt, isGr);
     status.className='autosave-status saved';
-    status.textContent = isGr ? 'Αποθηκεύτηκε' : 'Saved';
+    status.textContent = relTime ? (isGr ? `Αποθηκεύτηκε ${relTime}` : `Saved ${relTime}`) : (isGr ? 'Αποθηκεύτηκε' : 'Saved');
     btn.style.display='none';
   }
 }
