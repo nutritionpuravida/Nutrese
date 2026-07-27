@@ -2315,6 +2315,13 @@ table th,
           <div class="form-field"><label><span class="i18n" data-en="Weight (kg)" data-gr="Βάρος (κιλά)">Weight (kg)</span></label><input type="number" id="p-weight" placeholder="70" step="0.1" oninput="onWeightInput()"><div class="field-note suggested" id="weight-suggestion-note"></div></div>
           <div class="form-field"><label><span class="i18n" data-en="Calorie Adjustment (kcal)" data-gr="Προσαρμογή Θερμίδων (kcal)">Calorie Adjustment (kcal)</span></label><input type="number" id="p-cal-adj" placeholder="Auto (0)" step="50" inputmode="decimal" oninput="calcAll()" onblur="calcAll()">
             <div class="field-note" id="cal-adj-note" style="margin-top:4px"></div>
+            <div id="cal-adj-mismatch-warning" style="display:none;margin-top:8px;padding:8px 12px;background:var(--amber-bg);border-radius:6px;font-size:12px;color:var(--amber-text);line-height:1.5">
+              <div id="cal-adj-mismatch-text"></div>
+              <div style="display:flex;gap:8px;margin-top:8px">
+                <button type="button" class="btn" style="padding:4px 10px;font-size:11px" onclick="keepManualCalAdj()"><span class="i18n" data-en="Keep Manual" data-gr="Διατήρηση Χειροκίνητης">Keep Manual</span></button>
+                <button type="button" class="btn primary" style="padding:4px 10px;font-size:11px" onclick="applyRecommendedCalAdj()"><span class="i18n" data-en="Apply Recommended" data-gr="Εφαρμογή Προτεινόμενης">Apply Recommended</span></button>
+              </div>
+            </div>
           </div>
         </div>
         <div class="section-label"><span class="i18n" data-en="Clinical Information" data-gr="Κλινικές Πληροφορίες">Clinical Information</span></div>
@@ -10158,6 +10165,24 @@ function calcAll() {
               ? `Προτεινόμενο (επεξεργάσιμο): ${autoAdj>0?'+':''}${autoAdj} kcal για «${goal}». Επεξεργαστείτε τον αριθμό παραπάνω για διαφορετική προσαρμογή.`
               : `Suggested (editable): ${autoAdj>0?'+':''}${autoAdj} kcal for "${goal}". Edit the number above for a different adjustment.`);
       }
+      // Actionable mismatch warning — only for a genuine manual/goal
+      // mismatch (never overrides silently; the dietitian decides). A
+      // dismissal ("Keep Manual") is remembered for this exact goal+value
+      // combination so it doesn't re-nag until something actually changes.
+      const warnEl=document.getElementById('cal-adj-mismatch-warning');
+      const warnTextEl=document.getElementById('cal-adj-mismatch-text');
+      const mismatchNow = !isPregnant && calAdjIsManual && calAdj!==autoAdj;
+      const dismissedThisState = S.calAdjWarningDismissed && S.calAdjWarningDismissed.goal===goal && S.calAdjWarningDismissed.calAdj===calAdj;
+      if(warnEl && warnTextEl){
+        if(mismatchNow && !dismissedThisState){
+          warnTextEl.innerHTML = isGrCal
+            ? `<i class="ti ti-alert-triangle" aria-hidden="true"></i> Ενεργή χειροκίνητη προσαρμογή θερμίδων. Προτεινόμενη προσαρμογή για «${goal}»: ${autoAdj>0?'+':''}${autoAdj} kcal. Ενημέρωση;`
+            : `<i class="ti ti-alert-triangle" aria-hidden="true"></i> Manual calorie adjustment active. Recommended adjustment for ${goal}: ${autoAdj>0?'+':''}${autoAdj} kcal. Update?`;
+          warnEl.style.display='';
+        } else {
+          warnEl.style.display='none';
+        }
+      }
     }
   } else {
     const noteEl=document.getElementById('cal-adj-note');
@@ -10186,6 +10211,24 @@ function calcAll() {
   if(sidebarAvatarEl) sidebarAvatarEl.innerHTML = name ? clientAvatarHtml(S.clientPhoto, name, 34) : '';
 
   calcMacros(); calcExchanges(); updateDashMetrics(); renderEngine(); calcBodyComp();
+}
+// Dismiss the manual/goal mismatch warning without touching the value —
+// respects the dietitian's deliberate choice. Remembers exactly which
+// goal+value combination was dismissed so the warning correctly reappears
+// if either changes again (never silently suppressed forever).
+function keepManualCalAdj(){
+  S.calAdjWarningDismissed = { goal: v('p-goal'), calAdj: parseFloat(v('p-cal-adj'))||0 };
+  calcAll();
+}
+// Replace the manual override with the current goal's recommended
+// adjustment, and correctly re-mark the field as auto (not manual) so it
+// resumes tracking future goal changes automatically.
+function applyRecommendedCalAdj(){
+  const el=document.getElementById('p-cal-adj');
+  if(!el) return;
+  el.value = S.calAdjAutoValue ?? 0;
+  S.calAdjWarningDismissed = null;
+  calcAll();
 }
 
 function calcMacros(){
@@ -10617,7 +10660,9 @@ function onBodyCompManualInput(field){
 }
 function saveBodyComp(){
   S.tracking.unshift({date:new Date().toLocaleDateString('el-GR'),weight:S.weight,bf:v('bc-bf'),muscle:v('bc-muscle'),visceral:v('bc-visceral'),notes:'Body comp entry'});
-  alert(window.appLang==='gr' ? 'Οι μετρήσεις αποθηκεύτηκαν! Δείτε στην Παρακολούθηση Προόδου.' : 'Measurements saved! View in Progress Tracking.');
+  S_isDirty=true;
+  if(typeof updateSaveStatusUI==='function') updateSaveStatusUI();
+  alert(window.appLang==='gr' ? 'Οι μετρήσεις προστέθηκαν στην Παρακολούθηση Προόδου. Πατήστε «Αποθήκευση Πελάτη» για μόνιμη αποθήκευση.' : 'Measurements added to Progress Tracking. Press "Save Client" to store them permanently.');
 }
 
 function buildOneDayPlan(){
@@ -13667,6 +13712,8 @@ async function updatePracticeOverview(){
 
 function addTracking(){
   S.tracking.unshift({date:v('t-date')||new Date().toLocaleDateString('el-GR'),weight:v('t-weight'),bf:v('t-bf'),muscle:v('t-muscle'),visceral:v('t-visceral'),notes:v('t-notes')});
+  S_isDirty=true;
+  if(typeof updateSaveStatusUI==='function') updateSaveStatusUI();
   renderTracking();
 }
 function renderTracking(){
