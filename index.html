@@ -13680,7 +13680,7 @@ function renderTracking(){
   const th = isGr
     ? ['Ημερομηνία','Βάρος (κιλά)','Ποσοστό Λίπους %','Μυϊκή Μάζα (κιλά)','Σπλαχνικό','Σημειώσεις','']
     : ['Date','Weight (kg)','Body Fat %','Muscle (kg)','Visceral','Notes',''];
-  el.innerHTML=`<table><thead><tr><th>${th[0]}</th><th>${th[1]}</th><th>${th[2]}</th><th>${th[3]}</th><th>${th[4]}</th><th>${th[5]}</th><th>${th[6]}</th><th>${th[7]}</th></tr></thead><tbody>`+
+  el.innerHTML=`<table><thead><tr><th>${th[0]}</th><th>${th[1]}</th><th>${th[2]}</th><th>${th[3]}</th><th>${th[4]}</th><th>${th[5]}</th><th>${th[6]}</th></tr></thead><tbody>`+
     S.tracking.map((e,i)=>`<tr><td>${e.date}</td><td>${e.weight||'—'}</td><td>${e.bf||'—'}</td><td>${e.muscle||'—'}</td><td>${e.visceral||'—'}</td><td style="font-size:12px">${e.notes||'—'}</td><td><button class="btn" style="padding:3px 8px;font-size:11px" onclick="S.tracking.splice(${i},1);renderTracking()"><i class="ti ti-x" aria-hidden="true"></i></button></td></tr>`).join('')+
     '</tbody></table>';
   renderTrackingChart();
