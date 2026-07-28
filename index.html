@@ -733,6 +733,14 @@ i.ti-circle-x { color: var(--red-text); }
 #page-dashboard .dash-snapshot-name { font-weight:700; font-size:20px; letter-spacing:-.01em; color:var(--text-primary); }
 #page-dashboard .dash-snapshot-sub { font-size:13px; color:var(--text-secondary); margin-top:2px; }
 #page-dashboard .dash-snapshot-values { display:flex; gap:36px; flex-wrap:wrap; }
+/* Body Composition: Current Status row — same visual language as the
+   Dashboard snapshot (large value, small uppercase label) for consistency
+   across the app, not a new pattern invented just for this page. */
+#page-bodycomp .bc-status-row { display:flex; gap:36px; flex-wrap:wrap; margin-bottom:4px; }
+#page-bodycomp .bc-status-row .m-label { font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.04em; }
+#page-bodycomp .bc-status-row .m-value { font-size:22px; font-weight:700; letter-spacing:-.01em; color:var(--text-primary); margin-top:3px; }
+#page-bodycomp .bc-status-row .m-sub { font-size:12px; color:var(--text-secondary); margin-top:2px; }
+#page-bodycomp .dash-status-card { padding:14px 16px; }
 #page-dashboard .dash-snapshot-values .m-label { font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.04em; }
 /* Smaller than the patient name — supporting context, not competing for
    attention with patient identity. */
@@ -740,6 +748,15 @@ i.ti-circle-x { color: var(--red-text); }
 #page-dashboard .dash-snapshot-values .m-value.warn { color: var(--amber-text); }
 #page-dashboard .dash-snapshot-values .m-value.err { color: var(--red-text); }
 #page-dashboard .dash-snapshot-values .m-sub { font-size:12px; font-weight:400; color:var(--text-secondary); }
+/* Nutrition overview: same merged card as the primary metrics above, but
+   visually secondary — smaller values, separated by a hairline rather than
+   its own bordered box. "One unified section," not two stacked cards. */
+#page-dashboard .dash-snapshot-macros { display:flex; gap:32px; flex-wrap:wrap; margin-top:18px; padding-top:16px; border-top:0.5px solid var(--border); }
+#page-dashboard .dash-snapshot-macros .m-label { font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.04em; }
+#page-dashboard .dash-snapshot-macros .m-value { font-weight:600; margin-top:3px; color:var(--text-secondary); }
+/* Clinical Status: single line by default — calm confirmation or a count
+   needing review, not five repeated green badges. Click to expand. */
+#page-dashboard .dash-status-summary { display:flex; align-items:center; gap:10px; cursor:pointer; }
 /* Clinical Review: one landscape card, two internal sections divided by a
    hairline — not two separate cards. */
 #page-dashboard .dash-card { padding:20px 24px; margin-bottom:16px; }
@@ -1182,20 +1199,50 @@ html[data-theme="dark"] .week-summary-table td:last-child {
 #report-body .report-week-table tbody tr:nth-child(odd) td { background:var(--bg-surface); }
 #report-body .report-week-table tbody tr:nth-child(even) td { background:var(--teal-50); }
 #report-body .report-week-table tbody tr:last-child td { background:var(--teal-50); font-weight:700; border-top:2px solid var(--teal-600); }
-/* ─── MOBILE REPORT (screen only) ───
-   On narrow screens the 7-day table would otherwise compress its columns
-   into unreadable text (table-layout:fixed + width:100% with no minimum).
-   Here we let the existing .report-week-section wrapper scroll horizontally
-   and give the table a readable minimum width, so the user swipes sideways
-   instead. Strictly @media screen + mobile: never affects desktop (which
-   already fits) or print/PDF (governed by @media print / #nutriflow-print-only). */
-@media screen and (max-width: 760px) {
-  #report-body .report-week-section { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  #report-body .report-week-table { min-width: 720px; }
-  /* subtle affordance that the table scrolls */
-  #report-body .report-week-section::-webkit-scrollbar { height: 8px; }
-  #report-body .report-week-section::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 8px; }
+/* ─── MOBILE/TABLET REPORT (screen only) ───
+   Previously this let the wide table scroll horizontally — exactly the
+   "fight the layout" pattern we want to avoid. Instead, transform the
+   table into stacked day cards: each day becomes one card, each meal slot
+   shows its own label (from data-label, set in JS) directly above its
+   text, so Breakfast → Snack → Lunch → Snack → Dinner reads top-to-bottom
+   without any sideways scrolling. Strictly @media screen + narrow width:
+   never affects desktop (which already fits the full table) or print/PDF
+   (governed separately by @media print / #nutriflow-print-only). */
+@media screen and (max-width: 900px) {
+  #report-body .report-week-table,
+  #report-body .report-week-table tbody,
+  #report-body .report-week-table tr,
+  #report-body .report-week-table td { display: block; width: 100% !important; }
+  #report-body .report-week-table thead { display: none; } /* labels now come from each cell's own data-label */
+  #report-body .report-week-table { border: none; }
+  #report-body .report-week-table tbody tr {
+    margin-bottom: 16px; border: 1px solid var(--border); border-radius: 14px; overflow: hidden;
+    background: var(--bg-surface) !important;
+  }
+  #report-body .report-week-table tbody tr:last-child {
+    border: none; background: transparent !important; margin-bottom: 0;
+  }
+  #report-body .report-week-table td {
+    padding: 11px 15px !important; border: none !important; border-bottom: 0.5px solid var(--border) !important;
+    text-align: left !important; white-space: normal !important;
+  }
+  #report-body .report-week-table td:last-of-type { border-bottom: none !important; }
+  #report-body .report-week-table td[data-label]:not([data-label="Day"]):not([data-label="Ημέρα"])::before {
+    content: attr(data-label); display: block; font-size: 10.5px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .05em; color: var(--teal-700); margin-bottom: 3px;
+  }
+  /* Day name becomes the card's header — distinct, immediately scannable */
+  #report-body .report-week-table td[data-label="Day"],
+  #report-body .report-week-table td[data-label="Ημέρα"] {
+    background: var(--teal-600) !important; color: #fff !important; font-size: 15px; font-weight: 700;
+    padding: 13px 15px !important; border-bottom: none !important;
+  }
+  /* kcal total: quiet footer line within the card, not a competing metric */
+  #report-body .report-week-table td[data-label="kcal"] {
+    background: var(--teal-50) !important; font-weight: 700; text-align: left !important;
+  }
 }
+
 /* ─── PRINT ─── */
 @media print {
   /* Default: portrait A4 for client report (clean, readable handout) */
@@ -2146,30 +2193,26 @@ table th,
             <div class="m-sub"><span class="i18n" data-en="Enter in Body Comp" data-gr="Εισάγετε στη Σύσταση Σώματος">Enter in Body Comp</span></div>
           </div>
         </div>
+        <div class="dash-snapshot-macros" id="dash-snapshot-macros"></div>
       </div>
 
-      <div class="dash-card">
-        <div class="dash-review-row">
-          <div>
-            <div class="dash-insight-label"><span class="i18n" data-en="Nutrition targets" data-gr="Στόχοι Θρεπτικών">Nutrition targets</span> <span class="card-action" onclick="nav('macros')"><span class="i18n" data-en="Edit →" data-gr="Επεξεργασία →">Edit →</span></span></div>
-            <div id="dash-macros"></div>
-          </div>
-          <div class="dash-review-divider"></div>
-          <div>
-            <div class="dash-insight-label"><span class="i18n" data-en="Safety checks" data-gr="Έλεγχοι ασφαλείας">Safety checks</span></div>
-            <div id="dash-engine-checks"><div style="color:var(--text-muted);font-size:13px"><span class="i18n" data-en="Fill client profile to run checks" data-gr="Συμπληρώστε το προφίλ πελάτη για έλεγχο">Fill client profile to run checks</span></div></div>
-          </div>
+      <div class="dash-card dash-status-card">
+        <div class="dash-status-summary" id="dash-status-summary" onclick="toggleDashClinicalStatus()">
+          <span id="dash-status-line" style="flex:1"><span style="color:var(--text-muted);font-size:13px"><span class="i18n" data-en="Fill client profile to run checks" data-gr="Συμπληρώστε το προφίλ πελάτη για έλεγχο">Fill client profile to run checks</span></span></span>
+          <i class="ti ti-chevron-down" id="dash-status-chevron" aria-hidden="true" style="color:var(--text-muted);transition:transform .2s ease"></i>
         </div>
+        <div id="dash-engine-checks" style="display:none;margin-top:10px;padding-top:10px;border-top:0.5px solid var(--border)"></div>
       </div>
 
       <div class="dash-card dash-activity-card">
-        <div class="dash-insight-label"><span class="i18n" data-en="Today's appointments" data-gr="Σημερινά ραντεβού">Today's appointments</span> <span class="card-action" onclick="nav('appointments')"><span class="i18n" data-en="Calendar →" data-gr="Ημερολόγιο →">Calendar →</span></span></div>
+        <div class="dash-insight-label"><span class="i18n" data-en="Today" data-gr="Σήμερα">Today</span> <span class="card-action" onclick="nav('appointments')"><span class="i18n" data-en="Calendar →" data-gr="Ημερολόγιο →">Calendar →</span></span></div>
         <div id="dash-appointments"><div style="color:var(--text-muted);font-size:13px"><span class="i18n" data-en="No appointments today." data-gr="Κανένα ραντεβού σήμερα.">No appointments today.</span></div></div>
         <div id="dash-quick-actions" style="display:none">
           <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn" onclick="nav('appointments');openAppointmentForm(todayISO())"><i class="ti ti-calendar-plus" aria-hidden="true"></i> <span class="i18n" data-en="New appointment" data-gr="Νέο ραντεβού">New appointment</span></button>
             <button class="btn" onclick="nav('clients');newClient()"><i class="ti ti-user-plus" aria-hidden="true"></i> <span class="i18n" data-en="New client" data-gr="Νέος πελάτης">New client</span></button>
-            <button class="btn" onclick="S.sevenDayView='week';nav('sevenday')"><i class="ti ti-calendar-week" aria-hidden="true"></i> <span class="i18n" data-en="View weekly plan" data-gr="Προβολή εβδομαδιαίου πλάνου">View weekly plan</span></button>
+            <button class="btn" onclick="nav('appointments');openAppointmentForm(todayISO())"><i class="ti ti-calendar-plus" aria-hidden="true"></i> <span class="i18n" data-en="New appointment" data-gr="Νέο ραντεβού">New appointment</span></button>
+            <button class="btn" onclick="S.sevenDayView='week';nav('sevenday')"><i class="ti ti-calendar-week" aria-hidden="true"></i> <span class="i18n" data-en="Weekly plan" data-gr="Εβδομαδιαίο πλάνο">Weekly plan</span></button>
+            <button class="btn" onclick="nav('report')"><i class="ti ti-file-report" aria-hidden="true"></i> <span class="i18n" data-en="Reports" data-gr="Αναφορές">Reports</span></button>
           </div>
         </div>
       </div>
@@ -2435,6 +2478,34 @@ table th,
     <div class="card">
       <div class="card-header"><span class="card-title"><i class="ti ti-scale" aria-hidden="true"></i> <span class="i18n" data-en="Body Composition" data-gr="Σύσταση Σώματος">Body Composition</span></span></div>
       <div class="card-body">
+        <!-- 1. CURRENT STATUS — the 5-second read -->
+        <div class="bc-status-row">
+          <div>
+            <div class="m-label"><span class="i18n" data-en="Weight" data-gr="Βάρος">Weight</span></div>
+            <div class="m-value" id="bc-status-weight">—</div>
+          </div>
+          <div>
+            <div class="m-label">BMI</div>
+            <div class="m-value" id="bc-status-bmi">—</div>
+            <div class="m-sub" id="bc-status-bmi-cat">—</div>
+          </div>
+          <div>
+            <div class="m-label"><span class="i18n" data-en="Body Fat %" data-gr="Ποσοστό Λίπους %">Body Fat %</span></div>
+            <div class="m-value" id="bc-status-bf">—</div>
+            <div class="m-sub" id="bc-status-bf-note">—</div>
+          </div>
+          <div>
+            <div class="m-label"><span class="i18n" data-en="Muscle Mass" data-gr="Μυϊκή Μάζα">Muscle Mass</span></div>
+            <div class="m-value" id="bc-status-muscle">—</div>
+          </div>
+        </div>
+        <div id="bc-status-bmi-scale"></div>
+
+        <!-- 2. PROGRESS TRENDS — pulled forward from Tracking, same underlying data -->
+        <div class="section-label" style="margin-top:20px"><span class="i18n" data-en="Progress Trends" data-gr="Τάσεις Προόδου">Progress Trends</span> <span class="card-action" onclick="nav('tracking')"><span class="i18n" data-en="Full history →" data-gr="Πλήρες ιστορικό →">Full history →</span></span></div>
+        <div id="bc-trend-charts"></div>
+
+        <div class="section-label" style="margin-top:20px"><span class="i18n" data-en="Log New Measurements" data-gr="Καταγραφή Νέων Μετρήσεων">Log New Measurements</span></div>
         <div class="alert info"><i class="ti ti-info-circle" aria-hidden="true"></i> <span class="i18n" data-en="Enter Tanita or other device values. Fat mass auto-calculates from Weight × Body Fat % if left blank." data-gr="Εισάγετε τιμές από Tanita ή άλλη συσκευή. Η μάζα λίπους υπολογίζεται αυτόματα από Βάρος × Ποσοστό Λίπους % αν αφεθεί κενό.">Enter Tanita or other device values. Fat mass auto-calculates from Weight × Body Fat % if left blank.</span></div>
         <div class="form-grid three">
           <div class="form-field"><label><i class="ti ti-scale" aria-hidden="true"></i> <span class="i18n" data-en="Body Fat %" data-gr="Ποσοστό Λίπους %">Body Fat %</span></label><input type="number" id="bc-bf" class="i18n-ph" data-en-ph="Men: 10–20%, Women: 18–28%" data-gr-ph="Άνδρες: 10–20%, Γυναίκες: 18–28%" placeholder="Men: 10–20%, Women: 18–28%" step="0.1" oninput="calcBodyComp()"><div class="field-note" id="bc-bf-note"></div></div>
@@ -2447,22 +2518,40 @@ table th,
           <div class="form-field"><label><i class="ti ti-run" aria-hidden="true"></i> <span class="i18n" data-en="Physique Rating (1–9)" data-gr="Βαθμολογία Σωματότυπου (1–9)">Physique Rating (1–9)</span></label><input type="number" id="bc-physique" class="i18n-ph" data-en-ph="Tanita 1–9" data-gr-ph="Tanita 1–9" placeholder="Tanita 1–9" min="1" max="9"></div>
           <div class="form-field"><label><i class="ti ti-bone" aria-hidden="true"></i> <span class="i18n" data-en="Bone Mass (kg)" data-gr="Οστική Μάζα (κιλά)">Bone Mass (kg)</span></label><input type="number" id="bc-bone" class="i18n-ph" data-en-ph="Tanita/device value" data-gr-ph="Τιμή Tanita/συσκευής" placeholder="Tanita/device value" step="0.1" oninput="calcBodyComp()"></div>
         </div>
-        <div class="section-label"><span class="i18n" data-en="Auto Interpretation" data-gr="Αυτόματη Ερμηνεία">Auto Interpretation</span></div>
-        <div id="bc-interpretation"></div>
-        <div class="section-label"><span class="i18n" data-en="Recommended Targets" data-gr="Προτεινόμενοι Στόχοι">Recommended Targets</span></div>
-        <div id="bc-targets"></div>
-        <div id="bc-fold-summary" style="margin-top:12px"></div>
-        <div class="section-label"><span class="i18n" data-en="Skinfold / Body-Site Measurements" data-gr="Μετρήσεις Δερματοπτυχών / Σημείων Σώματος">Skinfold / Body-Site Measurements</span></div>
-        <div class="field-note" style="margin-bottom:10px"><span class="i18n" data-en="Optional caliper measurements in mm for clinical follow-up. No formula is applied automatically." data-gr="Προαιρετικές μετρήσεις με δερματοπτυχόμετρο σε mm για κλινική παρακολούθηση. Δεν εφαρμόζεται αυτόματα φόρμουλα.">Optional caliper measurements in mm for clinical follow-up. No formula is applied automatically.</span></div>
-        <div class="form-grid four">
-          <div class="form-field"><label><span class="i18n" data-en="Triceps skinfold (mm)" data-gr="Πτυχή τρικεφάλου (mm)">Triceps skinfold (mm)</span></label><input type="number" id="bc-fold-triceps" step="0.1" min="0" placeholder="—" oninput="calcBodyComp()"></div>
-          <div class="form-field"><label><span class="i18n" data-en="Biceps skinfold (mm)" data-gr="Πτυχή δικεφάλου (mm)">Biceps skinfold (mm)</span></label><input type="number" id="bc-fold-biceps" step="0.1" min="0" placeholder="—" oninput="calcBodyComp()"></div>
-          <div class="form-field"><label><span class="i18n" data-en="Subscapular skinfold (mm)" data-gr="Υποπλάτια πτυχή (mm)">Subscapular skinfold (mm)</span></label><input type="number" id="bc-fold-subscapular" step="0.1" min="0" placeholder="—" oninput="calcBodyComp()"></div>
-          <div class="form-field"><label><span class="i18n" data-en="Suprailiac skinfold (mm)" data-gr="Υπερλαγόνια πτυχή (mm)">Suprailiac skinfold (mm)</span></label><input type="number" id="bc-fold-suprailiac" step="0.1" min="0" placeholder="—" oninput="calcBodyComp()"></div>
-          <div class="form-field"><label><span class="i18n" data-en="Abdominal skinfold (mm)" data-gr="Κοιλιακή πτυχή (mm)">Abdominal skinfold (mm)</span></label><input type="number" id="bc-fold-abdominal" step="0.1" min="0" placeholder="—" oninput="calcBodyComp()"></div>
-          <div class="form-field"><label><span class="i18n" data-en="Thigh skinfold (mm)" data-gr="Πτυχή μηρού (mm)">Thigh skinfold (mm)</span></label><input type="number" id="bc-fold-thigh" step="0.1" min="0" placeholder="—" oninput="calcBodyComp()"></div>
-          <div class="form-field"><label><span class="i18n" data-en="Calf skinfold (mm)" data-gr="Πτυχή γάμπας (mm)">Calf skinfold (mm)</span></label><input type="number" id="bc-fold-calf" step="0.1" min="0" placeholder="—" oninput="calcBodyComp()"></div>
-          <div class="form-field"><label><span class="i18n" data-en="Skinfold notes" data-gr="Σημειώσεις δερματοπτυχών">Skinfold notes</span></label><input type="text" id="bc-fold-notes" class="i18n-ph" data-en-ph="Protocol / side / notes" data-gr-ph="Πρωτόκολλο / πλευρά / σημειώσεις" placeholder="Protocol / side / notes" oninput="calcBodyComp()"></div>
+
+        <!-- 3. DETAILED MEASUREMENTS — collapsed by default, same data, less visual weight -->
+        <div class="dash-card dash-status-card" style="margin-top:18px">
+          <div class="dash-status-summary" onclick="toggleBcSection('bc-detail-section', this)">
+            <span style="flex:1;font-size:13px;font-weight:600;color:var(--text-secondary)"><span class="i18n" data-en="Detailed Measurements" data-gr="Αναλυτικές Μετρήσεις">Detailed Measurements</span></span>
+            <i class="ti ti-chevron-down" aria-hidden="true" style="color:var(--text-muted)"></i>
+          </div>
+          <div id="bc-detail-section" style="display:none;margin-top:12px;padding-top:12px;border-top:0.5px solid var(--border)">
+            <div id="bc-interpretation"></div>
+            <div class="section-label" style="margin-top:14px"><span class="i18n" data-en="Recommended Targets" data-gr="Προτεινόμενοι Στόχοι">Recommended Targets</span></div>
+            <div id="bc-targets"></div>
+            <div id="bc-fold-summary" style="margin-top:12px"></div>
+          </div>
+        </div>
+
+        <!-- 4. SKINFOLDS — collapsed by default, separate from core vitals -->
+        <div class="dash-card dash-status-card" style="margin-top:12px">
+          <div class="dash-status-summary" onclick="toggleBcSection('bc-skinfold-section', this)">
+            <span style="flex:1;font-size:13px;font-weight:600;color:var(--text-secondary)"><span class="i18n" data-en="Skinfold / Body-Site Measurements" data-gr="Μετρήσεις Δερματοπτυχών / Σημείων Σώματος">Skinfold / Body-Site Measurements</span></span>
+            <i class="ti ti-chevron-down" aria-hidden="true" style="color:var(--text-muted)"></i>
+          </div>
+          <div id="bc-skinfold-section" style="display:none;margin-top:12px;padding-top:12px;border-top:0.5px solid var(--border)">
+            <div class="field-note" style="margin-bottom:10px"><span class="i18n" data-en="Optional caliper measurements in mm for clinical follow-up. No formula is applied automatically." data-gr="Προαιρετικές μετρήσεις με δερματοπτυχόμετρο σε mm για κλινική παρακολούθηση. Δεν εφαρμόζεται αυτόματα φόρμουλα.">Optional caliper measurements in mm for clinical follow-up. No formula is applied automatically.</span></div>
+            <div class="form-grid four">
+              <div class="form-field"><label><span class="i18n" data-en="Triceps skinfold (mm)" data-gr="Πτυχή τρικεφάλου (mm)">Triceps skinfold (mm)</span></label><input type="number" id="bc-fold-triceps" step="0.1" min="0" placeholder="—" oninput="calcBodyComp()"></div>
+              <div class="form-field"><label><span class="i18n" data-en="Biceps skinfold (mm)" data-gr="Πτυχή δικεφάλου (mm)">Biceps skinfold (mm)</span></label><input type="number" id="bc-fold-biceps" step="0.1" min="0" placeholder="—" oninput="calcBodyComp()"></div>
+              <div class="form-field"><label><span class="i18n" data-en="Subscapular skinfold (mm)" data-gr="Υποπλάτια πτυχή (mm)">Subscapular skinfold (mm)</span></label><input type="number" id="bc-fold-subscapular" step="0.1" min="0" placeholder="—" oninput="calcBodyComp()"></div>
+              <div class="form-field"><label><span class="i18n" data-en="Suprailiac skinfold (mm)" data-gr="Υπερλαγόνια πτυχή (mm)">Suprailiac skinfold (mm)</span></label><input type="number" id="bc-fold-suprailiac" step="0.1" min="0" placeholder="—" oninput="calcBodyComp()"></div>
+              <div class="form-field"><label><span class="i18n" data-en="Abdominal skinfold (mm)" data-gr="Κοιλιακή πτυχή (mm)">Abdominal skinfold (mm)</span></label><input type="number" id="bc-fold-abdominal" step="0.1" min="0" placeholder="—" oninput="calcBodyComp()"></div>
+              <div class="form-field"><label><span class="i18n" data-en="Thigh skinfold (mm)" data-gr="Πτυχή μηρού (mm)">Thigh skinfold (mm)</span></label><input type="number" id="bc-fold-thigh" step="0.1" min="0" placeholder="—" oninput="calcBodyComp()"></div>
+              <div class="form-field"><label><span class="i18n" data-en="Calf skinfold (mm)" data-gr="Πτυχή γάμπας (mm)">Calf skinfold (mm)</span></label><input type="number" id="bc-fold-calf" step="0.1" min="0" placeholder="—" oninput="calcBodyComp()"></div>
+              <div class="form-field"><label><span class="i18n" data-en="Skinfold notes" data-gr="Σημειώσεις δερματοπτυχών">Skinfold notes</span></label><input type="text" id="bc-fold-notes" class="i18n-ph" data-en-ph="Protocol / side / notes" data-gr-ph="Πρωτόκολλο / πλευρά / σημειώσεις" placeholder="Protocol / side / notes" oninput="calcBodyComp()"></div>
+            </div>
+          </div>
         </div>
 
         <div style="margin-top:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
@@ -2472,6 +2561,7 @@ table th,
       </div>
     </div>
   </div>
+
 
   <!-- MACROS -->
   <div class="page" id="page-macros">
@@ -8081,7 +8171,7 @@ function printReportOneDayPortrait(){
   S.reportOptions={oneDay:false,sevenDay:true,includeBlood:oldOptions.includeBlood!==false,includeEquivalents:oldOptions.includeEquivalents===true,days:[0]};
   nav('report');
   buildReport();
-  const day=document.querySelector('#report-body .report-day-section');
+  const day=document.querySelector('#report-body .report-week-section');
   const html=day ? `<div class="client-report">${day.outerHTML}</div>` : '<div>1-Day plan content not found.</div>';
   S.reportOptions=oldOptions;
   buildReport();
@@ -10566,10 +10656,24 @@ function renderExchangeChecks(){
   const gapData=S.exGap||{};
   const caps=S.effCaps||CAPS;
   const isGrChk = window.appLang!=='en';
-  const rows=[[isGrChk?'Θερμίδες (kcal)':'Calories (kcal)',goal,totalKcal,50],[isGrChk?'Υδατάνθρακες (g)':'Carbs (g)',S.carbG,totalCHO,10],[isGrChk?'Πρωτεΐνη (g)':'Protein (g)',S.protG,totalPRO,10],[isGrChk?'Λίπος (g)':'Fat (g)',S.fatG,totalFAT,5]];
+  // Status/severity now comes from evaluatePlanQuality() — the single
+  // shared source of truth (see its governance comment). This was
+  // previously a second, independent implementation using flat absolute
+  // tolerances (±50 kcal, ±10g carb, ±10g protein, ±5g fat) — the exact
+  // same false-positive-prone pattern already found and replaced in the
+  // main Plan Quality system. The per-metric diagnostic text below (which
+  // explains the PRACTICAL reason — starch/protein/fat exchange caps — and
+  // gives specific action guidance) is preserved completely unchanged;
+  // only the ok/not-ok determination itself is now unified.
+  const pq = evaluatePlanQuality(
+    {kcal:goal, carb:S.carbG, prot:S.protG, fat:S.fatG},
+    {kcal:totalKcal, carb:totalCHO, prot:totalPRO, fat:totalFAT}
+  );
+  const pctTol = (tgt) => tgt > 0 ? Math.round(tgt * 0.05) : 0;
+  const rows=[[isGrChk?'Θερμίδες (kcal)':'Calories (kcal)',goal,totalKcal,pctTol(goal)],[isGrChk?'Υδατάνθρακες (g)':'Carbs (g)',S.carbG,totalCHO,pctTol(S.carbG)],[isGrChk?'Πρωτεΐνη (g)':'Protein (g)',S.protG,totalPRO,pctTol(S.protG)],[isGrChk?'Λίπος (g)':'Fat (g)',S.fatG,totalFAT,pctTol(S.fatG)]];
   let chk=isGrChk?'<table><thead><tr><th>Δείκτης</th><th>Στόχος</th><th>Πλάνο</th><th>Διαφορά</th><th>Κατάσταση</th><th>Γρήγορη διόρθωση</th></tr></thead><tbody>':'<table><thead><tr><th>Metric</th><th>Target</th><th>Plan</th><th>Diff</th><th>Status</th><th>Quick fix</th></tr></thead><tbody>';
   rows.forEach(([label,tgt,plan,tol],i)=>{
-    const diff=Math.round(plan-tgt); const ok=Math.abs(diff)<=tol;
+    const diff=Math.round(plan-tgt); const ok=pq.metrics[i].level==='ok';
     let fix='—';
     if(!ok){
       if(i===0){ // Calories
@@ -10586,7 +10690,7 @@ function renderExchangeChecks(){
       }
       if(i===2){ // Protein
         if(diff<0) fix=gapData.proteinCapped
-          ? (isGrChk?`Η πρωτεΐνη έχει όριο ${caps.proteinDailyMax} μερίδες/ημέρα (λόγω πάθησης) — χρειάζονται ${Math.round(Math.abs(diff)/7)} επιπλέον μερίδες πρωτεΐνης`:`Protein capped at ${caps.proteinDailyMax} ex/day (condition limit) — need ${Math.round(Math.abs(diff)/7)} more protein ex`)
+          ? (isGrChk?`Η πρωτεΐνη έχει όριο ${caps.proteinDailyMax} μερίδες/ημέρα (λόγω πάθησης) — χρειάζονται ${Math.round(Math.abs(diff)/7)} επιπλέον μερίδες πρωτεΐνης`:`Protein is below target because current exchange limits allow only ${caps.proteinDailyMax} protein servings/day (condition limit) — need ${Math.round(Math.abs(diff)/7)} more protein ex, or review the target`)
           : (isGrChk?`Προσθέστε ${Math.round(Math.abs(diff)/7)} μερίδα(-ες) πρωτεΐνης (~${Math.round(Math.abs(diff)/7)*30}g επιπλέον κρέας/ψάρι)`:`Add ${Math.round(Math.abs(diff)/7)} protein exchange(s) (~${Math.round(Math.abs(diff)/7)*30}g more meat/fish)`);
         else fix=isGrChk?`Σκεφτείτε μείωση πρωτεΐνης κατά ${Math.round(Math.abs(diff)/7)} μερίδα(-ες), ή αποδεχτείτε +${Math.abs(diff)}g αν οι μερίδες παραμένουν ρεαλιστικές`:`Consider reducing protein by ${Math.round(Math.abs(diff)/7)} exchange(s), or accept +${Math.abs(diff)}g if portions remain realistic`;
       }
@@ -10695,6 +10799,18 @@ function calcBodyComp(){
   setEl('bc-targets',`<div class="form-grid"><div class="metric"><div class="m-label">${targetLabel}</div><div class="m-value" style="font-size:20px">${targetWt}</div></div><div class="metric"><div class="m-label">${isGr?'Στόχος ΔΜΣ (μακροπρόθεσμα)':'Target BMI (long-term)'}</div><div class="m-value" style="font-size:20px">22–27</div><div class="m-sub">${isGr?'Κλινική ζώνη αναφοράς':'Clinical reference zone'}</div></div></div>${bmiVisualScaleHtml(S.bmi,isGr)}`);
   renderFoldMeasurementSummary(folds, isGr);
   setEl('d-bf',bf?bf.toFixed(1)+'%':'—');
+  // Current Status hero (new) — same underlying values as above, just
+  // surfaced prominently instead of buried in the flat field grid.
+  setEl('bc-status-weight', w?w.toFixed(1)+' kg':'—');
+  setEl('bc-status-bmi', S.bmi?S.bmi.toFixed(1):'—');
+  setEl('bc-status-bmi-cat', S.bmiCat||'—');
+  setEl('bc-status-bf', bf!=null?bf.toFixed(1)+'%':'—');
+  const bfNoteEl=document.getElementById('bc-bf-note');
+  setEl('bc-status-bf-note', bfNoteEl ? bfNoteEl.innerHTML : '—');
+  setEl('bc-status-muscle', muscle!=null?muscle.toFixed(1)+' kg':'—');
+  const bmiScaleEl=document.getElementById('bc-status-bmi-scale');
+  if(bmiScaleEl) bmiScaleEl.innerHTML = S.bmi ? bmiVisualScaleHtml(S.bmi, isGrBc) : '';
+  if(typeof renderBodyCompTrendCharts==='function') renderBodyCompTrendCharts();
 }
 
 function bmiVisualScaleHtml(bmi, isGr=false){
@@ -10967,136 +11083,6 @@ function calcDayTotalsForPlan(dayPlan, lang='GR', dayIndex=0){
           exchangeDiff:allocation.exchangeDiff, warnings, snackReplacementLog:allocation.snackReplacementLog||[]};
   traceDecision('calcDayTotalsForPlan','return',{dayIndex, lang, dayPlan, result});
   return result;
-}
-
-function buildSevenDay(){
-  traceDecision('buildSevenDay','entry',{definition:'buildSevenDay#1', mealLanguage:S.mealLanguage, sevenDayView:S.sevenDayView});
-  updateMealLanguageButtons();
-  const lang=S.mealLanguage||'GR';
-  if(!S.weekPlans) S.weekPlans = WEEK_PLANS.map(p=>({...p}));
-  const diet = v('p-diet')||'Omnivore';
-  const filteredBrk = filteredMealOptions(BREAKFAST_OPTIONS,diet);
-  const filteredLun = filteredMealOptions(LUNCH_OPTIONS,diet);
-  const filteredDin = filteredMealOptions(DINNER_OPTIONS,diet);
-  enforceWeekPlanDietCompatibility(diet);
-  // If a day's currently-assigned meal is incompatible with the selected
-  // diet (e.g. chicken while Vegetarian is selected), swap it to the first
-  // available diet-appropriate option — never silently leave an
-  // incompatible meal showing.
-  S.weekPlans.forEach((p,di)=>{
-    // Cycle through available diet-appropriate options by day index, so
-    // each day gets variety instead of every incompatible day collapsing
-    // onto the same single replacement meal.
-    if(!filteredBrk.find(o=>o.v===p.brk) && filteredBrk.length) p.brk=filteredBrk[di % filteredBrk.length].v;
-    if(!filteredLun.find(o=>o.v===p.lun) && filteredLun.length) p.lun=filteredLun[di % filteredLun.length].v;
-    if(!filteredDin.find(o=>o.v===p.din) && filteredDin.length) p.din=filteredDin[di % filteredDin.length].v;
-    // Backfill extras arrays for clients/plans saved before per-day multi-select existed
-    if(!p.snk1Extras) p.snk1Extras=[];
-    if(!p.snk2Extras) p.snk2Extras=[];
-    if(!p.sleepExtras) p.sleepExtras=[];
-  });
-  const ex=S.ex;
-  const sel=(key,di,opts,cur)=>`<select style="width:100%;font-size:11px;padding:3px 5px;border:1px solid var(--border);border-radius:4px;background:var(--bg-page);color:var(--text-secondary);margin-bottom:5px" onchange="handleWeekMealSelect(${di},'${key}',this)">${mealOptionsHtml(opts,cur)}</select>`;
-  // Compact checkbox-extras group for a snack slot on a given day
-  const extrasGroup=(slotKey,di,checked)=>`<div class="snack-extras-group" style="display:flex;flex-direction:column;gap:2px;margin-bottom:5px">${SNACK_EXTRAS.filter(e=>snackExtraAllowedForSlot(e, slotKey)).map(e=>{
-    const noteText=checked.includes(e.v) ? snackReplacementNote(e.v, lang) : '';
-    const note=noteText ? `<div style="color:var(--teal-700);font-size:9px;font-weight:700;margin-left:18px">${noteText}</div>` : '';
-    return `<div style="display:flex;flex-direction:column"><label title="${safeHtml(e.tip||'')}" style="display:flex;align-items:center;gap:4px;font-size:10px;cursor:pointer;white-space:nowrap"><input type="checkbox" data-group="${e.group||''}" style="width:auto;transform:scale(0.85)" ${checked.includes(e.v)?'checked':''} onchange="toggleWeekPlanExtra(${di},'${slotKey}','${e.v}',this.checked)"> ${snackExtraLabel(e, lang)}</label>${note}</div>`;
-  }).join('')}</div>`;
-
-  let html='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr>';
-  html+=`<th style="background:var(--teal-600);color:#fff;padding:8px;min-width:90px">${lang==='EN'?'Meal':'Γεύμα'}</th>`;
-  S.weekPlans.forEach((p,di)=>{
-    const dt=calcDayTotalsForPlan(p, lang, di);
-    const exM=S.exMeta, exx=S.ex;
-    const gapOk = (exM && exx) ? evaluatePlanQuality(
-      {kcal:dt.target, carb:S.carbG, prot:S.protG, fat:S.fatG},
-      {kcal:dt.totalKcal, carb:exx.fruit*exM.fruit.cho+exx.veg*exM.veg.cho+exx.dairy*exM.dairy.cho+exx.starch*exM.starch.cho,
-       prot:exx.veg*exM.veg.pro+exx.dairy*exM.dairy.pro+exx.starch*exM.starch.pro+exx.protein*exM.protein.pro,
-       fat:exx.dairy*exM.dairy.fat+exx.starch*exM.starch.fat+exx.protein*exM.protein.fat+exx.fat*exM.fat.fat}
-    ).overall==='ok' : Math.abs(dt.gap)<=100;
-    const dayLabel=weekDayLabel(p, di, lang);
-    html+=`<th style="background:var(--teal-600);color:#fff;padding:8px;min-width:190px;text-align:center">
-      ${dayLabel}<div style="font-size:10px;font-weight:400;margin-top:2px;color:${gapOk?'#E8F5E9':'#FFD580'}">${dt.totalKcal} kcal ${gapOk?'<i class="ti ti-circle-check" aria-hidden="true"></i>':dt.gap>0?'▲':'▼'}</div>
-      <button type="button" class="btn seven-day-expand-btn" data-day-index="${di}" style="margin-top:5px;padding:3px 7px;font-size:10px;background:rgba(255,255,255,.14);color:#fff;border-color:rgba(255,255,255,.35)">${lang==='EN'?'Expand':'Άνοιγμα'}</button>
-    </th>`;
-  });
-  html+='</tr></thead><tbody>';
-
-  const rows=[
-    {key:'brk',  label:lang==='EN'?'🌅 Breakfast':'🌅 Πρωινό'},
-    {key:'snk1', label:lang==='EN'?'🍎 Snack 1':'🍎 Σνακ 1'},
-    {key:'lun',  label:lang==='EN'?'🍽️ Lunch':'🍽️ Μεσημεριανό'},
-    {key:'snk2', label:lang==='EN'?'🍊 Snack 2':'🍊 Σνακ 2'},
-    {key:'din',  label:lang==='EN'?'🌙 Dinner':'🌙 Βραδινό'},
-    {key:'sleep',label:lang==='EN'?'😴 Before sleep':'😴 Πριν ύπνο'},
-    {key:'kcal', label:lang==='EN'?'<i class="ti ti-chart-bar" aria-hidden="true"></i> Total kcal':'<i class="ti ti-chart-bar" aria-hidden="true"></i> Σύνολο kcal'},
-  ];
-
-  rows.forEach((row,ri)=>{
-    html+=`<tr style="background:${ri%2===0?'var(--bg-surface)':'var(--bg-page)'}">`;
-    html+=`<td style="padding:8px;font-weight:700;color:var(--text-secondary);font-size:11px;border:1px solid var(--border)">${row.label}</td>`;
-    S.weekPlans.forEach((p,di)=>{
-      const dt=calcDayTotalsForPlan(p, lang, di);
-      const exM2=S.exMeta, exx2=S.ex;
-      const dayPq2 = (exM2 && exx2) ? evaluatePlanQuality(
-        {kcal:dt.target, carb:S.carbG, prot:S.protG, fat:S.fatG},
-        {kcal:dt.totalKcal, carb:exx2.fruit*exM2.fruit.cho+exx2.veg*exM2.veg.cho+exx2.dairy*exM2.dairy.cho+exx2.starch*exM2.starch.cho,
-         prot:exx2.veg*exM2.veg.pro+exx2.dairy*exM2.dairy.pro+exx2.starch*exM2.starch.pro+exx2.protein*exM2.protein.pro,
-         fat:exx2.dairy*exM2.dairy.fat+exx2.starch*exM2.starch.fat+exx2.protein*exM2.protein.fat+exx2.fat*exM2.fat.fat}
-      ) : {overall: Math.abs(dt.gap)<=100?'ok':Math.abs(dt.gap)<=200?'warn':'err'};
-      const gapOk=dayPq2.overall==='ok';
-      let cell='';
-      if(row.key==='brk'){
-        cell=sel('brk',di,filteredBrk,p.brk)+`<div style="color:var(--text-primary);font-size:12px;font-weight:600;line-height:1.4">${mealText(p.brk,null,lang)}${renderExtraFoodsForSlot('brk', di)}</div><div style="font-size:11px;color:var(--teal-600);margin-top:2px">${dt.brkKcal} kcal</div>`;
-      } else if(row.key==='snk1'){
-        cell=extrasGroup('snk1Extras',di,p.snk1Extras)+`<div style="color:var(--text-primary);font-size:12px;font-weight:600;line-height:1.4">${dt.snk1Text}${renderExtraFoodsForSlot('snk1', di)}</div><div style="font-size:11px;color:var(--teal-600);margin-top:2px">${dt.snk1Kcal} kcal</div>`;
-      } else if(row.key==='lun'){
-        cell=sel('lun',di,filteredLun,p.lun)+`<div style="color:var(--text-primary);font-size:12px;font-weight:600;line-height:1.4">${mealTextWithOilBalance(p.lun,dt.portions.lunch,lang,dt.oilBalance?.lun||0)}${renderExtraFoodsForSlot('lun', di)}</div><div style="font-size:11px;color:var(--teal-600);margin-top:2px">${dt.lunKcal} kcal</div>`;
-      } else if(row.key==='snk2'){
-        cell=extrasGroup('snk2Extras',di,p.snk2Extras)+`<div style="color:var(--text-primary);font-size:12px;font-weight:600;line-height:1.4">${dt.snk2Text}${renderExtraFoodsForSlot('snk2', di)}</div><div style="font-size:11px;color:var(--teal-600);margin-top:2px">${dt.snk2Kcal} kcal</div>`;
-      } else if(row.key==='din'){
-        cell=sel('din',di,filteredDin,p.din)+`<div style="color:var(--text-primary);font-size:12px;font-weight:600;line-height:1.4">${mealTextWithOilBalance(p.din,dt.portions.dinner,lang,dt.oilBalance?.din||0)}${renderExtraFoodsForSlot('din', di)}</div><div style="font-size:11px;color:var(--teal-600);margin-top:2px">${dt.dinKcal} kcal</div>`;
-      } else if(row.key==='sleep'){
-        cell=extrasGroup('sleepExtras',di,p.sleepExtras)+`<div style="color:var(--text-primary);font-size:12px;font-weight:600;line-height:1.4">${dt.slpText}${renderExtraFoodsForSlot('sleep', di)}</div><div style="font-size:11px;color:var(--teal-600);margin-top:2px">${dt.slpKcal} kcal</div>`;
-      } else if(row.key==='kcal'){
-        cell=`<div style="font-weight:700;font-size:12px">${dt.totalKcal} kcal</div>
-          <div style="font-size:10px;color:var(--text-muted)">Target: ${dt.target}</div>
-          <div style="font-size:10px;color:var(--text-muted)">Exchange: ${dt.exchangeTotalKcal}</div>
-          <div style="font-size:10px;color:${dayPq2.overall==='ok'?'var(--teal-600)':dayPq2.overall==='warn'?'var(--warn)':'var(--err)'}">${dt.gap>0?'+':''}${dt.gap} ${gapOk?'<i class="ti ti-circle-check" aria-hidden="true"></i>':'<i class="ti ti-alert-triangle" aria-hidden="true"></i>'}</div>
-          ${Math.abs(dt.exchangeGap||0)>5?`<div style="font-size:10px;color:var(--err);margin-top:2px">Exchange gap: ${dt.exchangeGap>0?'+':''}${dt.exchangeGap} kcal</div>`:''}
-          ${dt.warnings&&dt.warnings.length?`<div style="font-size:9px;color:var(--warn);margin-top:3px">${dt.warnings.map(safeHtml).join(' · ')}</div>`:''}`;
-      }
-      html+=`<td style="padding:6px;border:1px solid var(--border);color:var(--text-primary);vertical-align:top">${cell}</td>`;
-    });
-    html+='</tr>';
-  });
-
-  html+='</tbody></table></div>';
-  if(expandedSevenDayIndex!==null && S.weekPlans[expandedSevenDayIndex]){
-    const p=S.weekPlans[expandedSevenDayIndex];
-    const dt=calcDayTotalsForPlan(p, lang, expandedSevenDayIndex);
-    const dayLabel=weekDayLabel(p, expandedSevenDayIndex, lang);
-    const detailRows=[
-      [lang==='EN'?'Breakfast':'Πρωινό', mealText(p.brk,null,lang), dt.brkKcal],
-      [lang==='EN'?'Snack 1':'Σνακ 1', dt.snk1Text, dt.snk1Kcal],
-      [lang==='EN'?'Lunch':'Μεσημεριανό', mealTextWithOilBalance(p.lun,dt.portions.lunch,lang,dt.oilBalance?.lun||0), dt.lunKcal],
-      [lang==='EN'?'Snack 2':'Σνακ 2', dt.snk2Text, dt.snk2Kcal],
-      [lang==='EN'?'Dinner':'Βραδινό', mealTextWithOilBalance(p.din,dt.portions.dinner,lang,dt.oilBalance?.din||0), dt.dinKcal],
-      [lang==='EN'?'Before sleep':'Πριν τον ύπνο', dt.slpText, dt.slpKcal],
-    ];
-    html+=`<div class="card" style="margin-top:14px;border-color:var(--teal-100)">
-      <div class="card-header"><span class="card-title">${lang==='EN'?'Expanded day':'Αναλυτική ημέρα'} — ${dayLabel}</span><span class="card-action seven-day-expand-btn" data-day-index="">${lang==='EN'?'Close':'Κλείσιμο'}</span></div>
-      <div class="card-body">
-        ${detailRows.map(([label,text,kcal])=>`<div class="meal-row"><div class="meal-time">${label}<div style="font-size:11px;color:var(--text-muted)">${kcal} kcal</div></div><div class="meal-desc" style="font-size:14px;line-height:1.5">${text}</div></div>`).join('')}
-        <div style="margin-top:10px;font-weight:800;color:${Math.abs(dt.gap)<=100?'var(--teal-600)':'var(--amber-text)'}">${lang==='EN'?'Daily total':'Σύνολο ημέρας'}: ${dt.totalKcal} kcal · ${lang==='EN'?'Target':'Στόχος'}: ${dt.target} · ${dt.gap>0?'+':''}${dt.gap}</div>
-        <div style="margin-top:4px;font-size:12px;color:${Math.abs(dt.exchangeGap||0)<=5?'var(--teal-600)':'var(--err)'}">Exchange System: ${dt.exchangeTotalKcal} kcal · Gap: ${(dt.exchangeGap||0)>0?'+':''}${dt.exchangeGap||0} kcal</div>
-      </div>
-    </div>`;
-  }
-  html+=`<div class="field-note" style="margin-top:8px">Each day shows kcal per meal and daily total vs target. <i class="ti ti-circle-check" aria-hidden="true"></i> = within ±100 kcal. Fruit/dairy snack choices draw from the Exchange System totals. Change any meal dropdown or snack checkbox and kcal updates live, per day.</div>`;
-  setEl('sevenday-body',html);
-  bindSevenDayExpandButtons();
 }
 
 function setExpandedSevenDay(dayIndex){
@@ -13671,15 +13657,16 @@ function buildReport(){
         const ok=Math.abs(dt.gap)<=100;
         const dayLabel=singleReportDay ? '' : (fullWeekReport ? weekDayLabel(p, dayIndex, lang) : (isEn?`Day ${ordinal+1}`:`Ημέρα ${ordinal+1}`));
         const rowHeightStyle=fullWeekReport?'height:23mm;':'';
+        const dLabel=isEn?'Day':'Ημέρα', brkLabel=isEn?'Breakfast':'Πρωινό', snk1Label=isEn?'Snack 1':'Σνακ 1', lunLabel=isEn?'Lunch':'Μεσημεριανό', snk2Label=isEn?'Snack 2':'Σνακ 2', dinLabel=isEn?'Dinner':'Βραδινό', sleepLabel=isEn?'Before sleep':'Πριν ύπνο';
         return `<tr style="${rowHeightStyle}background:${rowIndex%2===0?'var(--bg-surface)':'var(--teal-50)'};border-bottom:1px solid var(--border)">
-          <td style="padding:4px;font-weight:700;word-wrap:break-word">${dayLabel}</td>
-          <td style="padding:4px;word-wrap:break-word">${reportSevenDaySlotText(p,dt,'brk',lang,dayIndex,reportExtraOpts)}</td>
-          <td style="padding:4px;word-wrap:break-word">${reportSevenDaySlotText(p,dt,'snk1',lang,dayIndex,reportExtraOpts)}</td>
-          <td style="padding:4px;word-wrap:break-word">${reportSevenDaySlotText(p,dt,'lun',lang,dayIndex,reportExtraOpts)}</td>
-          <td style="padding:4px;word-wrap:break-word">${reportSevenDaySlotText(p,dt,'snk2',lang,dayIndex,reportExtraOpts)}</td>
-          <td style="padding:4px;word-wrap:break-word">${reportSevenDaySlotText(p,dt,'din',lang,dayIndex,reportExtraOpts)}</td>
-          ${showBeforeSleepColumn ? `<td style="padding:4px;word-wrap:break-word">${reportSevenDaySlotText(p,dt,'sleep',lang,dayIndex,reportExtraOpts)}</td>` : ''}
-          <td style="padding:4px;text-align:right;font-weight:700;white-space:nowrap;color:${ok?'var(--teal-600)':'var(--amber-text)'}">${dt.totalKcal}</td>
+          <td data-label="${dLabel}" style="padding:4px;font-weight:700;word-wrap:break-word">${dayLabel}</td>
+          <td data-label="${brkLabel}" style="padding:4px;word-wrap:break-word">${reportSevenDaySlotText(p,dt,'brk',lang,dayIndex,reportExtraOpts)}</td>
+          <td data-label="${snk1Label}" style="padding:4px;word-wrap:break-word">${reportSevenDaySlotText(p,dt,'snk1',lang,dayIndex,reportExtraOpts)}</td>
+          <td data-label="${lunLabel}" style="padding:4px;word-wrap:break-word">${reportSevenDaySlotText(p,dt,'lun',lang,dayIndex,reportExtraOpts)}</td>
+          <td data-label="${snk2Label}" style="padding:4px;word-wrap:break-word">${reportSevenDaySlotText(p,dt,'snk2',lang,dayIndex,reportExtraOpts)}</td>
+          <td data-label="${dinLabel}" style="padding:4px;word-wrap:break-word">${reportSevenDaySlotText(p,dt,'din',lang,dayIndex,reportExtraOpts)}</td>
+          ${showBeforeSleepColumn ? `<td data-label="${sleepLabel}" style="padding:4px;word-wrap:break-word">${reportSevenDaySlotText(p,dt,'sleep',lang,dayIndex,reportExtraOpts)}</td>` : ''}
+          <td data-label="kcal" style="padding:4px;text-align:right;font-weight:700;white-space:nowrap;color:${ok?'var(--teal-600)':'var(--amber-text)'}">${dt.totalKcal}</td>
         </tr>`;
       }).join('')}
       <tr style="${fullWeekReport?'height:10mm;':''}background:var(--teal-50);font-weight:700;border-top:2px solid var(--teal-600)">
@@ -13824,6 +13811,30 @@ if (anyCapped) {
   if(badge){badge.textContent=hasErr?'!':(hasWarn||anyCapped)?'?':'✓'; badge.className='nav-badge '+((hasErr||hasWarn||anyCapped)?'':'ok');}
 }
 
+// Lets the dietitian manually expand/collapse the Clinical Status detail.
+// Once they've explicitly toggled it, we stop auto-managing the expanded
+// state on every re-render (S.dashStatusUserToggled), so their choice
+// sticks rather than snapping back open/closed under them.
+function toggleDashClinicalStatus(){
+  const detailEl=document.getElementById('dash-engine-checks');
+  const chevEl=document.getElementById('dash-status-chevron');
+  if(!detailEl) return;
+  const nowOpen = detailEl.style.display==='none';
+  detailEl.style.display = nowOpen ? 'block' : 'none';
+  if(chevEl) chevEl.style.transform = nowOpen ? 'rotate(180deg)' : '';
+  S.dashStatusUserToggled = true;
+}
+// Generic collapsible-section toggle for Body Composition (Detailed
+// Measurements, Skinfolds) — same pattern as the Dashboard's Clinical
+// Status, reused rather than duplicated.
+function toggleBcSection(sectionId, headerEl){
+  const el=document.getElementById(sectionId);
+  if(!el) return;
+  const chevEl=headerEl?.querySelector('.ti-chevron-down, .ti-chevron-up');
+  const nowOpen = el.style.display==='none';
+  el.style.display = nowOpen ? 'block' : 'none';
+  if(chevEl){ chevEl.classList.toggle('ti-chevron-down', !nowOpen); chevEl.classList.toggle('ti-chevron-up', nowOpen); }
+}
 function updateDashMetrics(){
   const clientSection=document.getElementById('dash-client-section');
   const noClientPrompt=document.getElementById('dash-no-client-prompt');
@@ -13873,11 +13884,27 @@ function updateDashMetrics(){
     <span style="flex:1;color:var(--text-primary)">${c.label}</span>
     <span style="padding:2px 9px;border-radius:999px;background:${c.ok?'var(--green-bg)':'var(--red-bg)'};color:${c.ok?'var(--green-800)':'var(--red-600)'};font-size:11px;font-weight:600">${c.status}</span>
   </div>`).join('');
-  const dashM=document.getElementById('dash-macros');
-  if(dashM) dashM.innerHTML=(isGr?['🌾 Υδατάνθρακες','🥩 Πρωτεΐνη','🫒 Λίπος']:['🌾 Carbohydrates','🥩 Protein','🫒 Fat']).map((label,i)=>{
-    const pct=[S.carbPct,S.protPct,S.fatPct][i]; const col=['var(--teal-400)','#5DCAA5','var(--teal-100)'][i];
-    return `<div class="macro-bar"><div class="macro-bar-top"><span>${label}</span><strong>${pct}%</strong></div><div class="macro-track"><div class="macro-fill" style="width:${Math.min(pct,100)}%;background:${col}"></div></div></div>`;
-  }).join('')+`<div style="font-size:11px;color:var(--gray-500);margin-top:8px">${isGr?'Στόχος':'Goal'}: ${S.goalKcal?Math.round(S.goalKcal):' — '} kcal/${isGr?'ημέρα':'day'}</div>`;
+  const failCount=chks.filter(c=>!c.ok).length;
+  const statusLineEl=document.getElementById('dash-status-line');
+  if(statusLineEl){
+    statusLineEl.innerHTML = failCount===0
+      ? `<span style="color:var(--teal-700);font-weight:600;font-size:13px"><i class="ti ti-circle-check" aria-hidden="true"></i> ${isGr?'Όλοι οι κλινικοί έλεγχοι ολοκληρώθηκαν':'All clinical checks passed'}</span>`
+      : `<span style="color:var(--amber-text);font-weight:600;font-size:13px"><i class="ti ti-alert-triangle" aria-hidden="true"></i> ${failCount===1?(isGr?'1 στοιχείο χρειάζεται επανεξέταση':'1 item requires review'):(isGr?`${failCount} στοιχεία χρειάζονται επανεξέταση`:`${failCount} items require review`)}</span>`;
+  }
+  // Auto-expand when something needs attention, stay collapsed when all
+  // clear — the dietitian shouldn't have to click to discover a problem,
+  // but shouldn't see 5 redundant green confirmations on a healthy client.
+  if(!S.dashStatusUserToggled){
+    const detailEl=document.getElementById('dash-engine-checks');
+    const chevEl=document.getElementById('dash-status-chevron');
+    if(detailEl) detailEl.style.display = failCount>0 ? 'block' : 'none';
+    if(chevEl) chevEl.style.transform = failCount>0 ? 'rotate(180deg)' : '';
+  }
+  const dashM=document.getElementById('dash-snapshot-macros');
+  if(dashM) dashM.innerHTML=(isGr?['Υδατάνθρακες','Πρωτεΐνη','Λίπος']:['Carbohydrates','Protein','Fat']).map((label,i)=>{
+    const pct=[S.carbPct,S.protPct,S.fatPct][i];
+    return `<div><div class="m-label">${label}</div><div class="m-value" style="font-size:16px">${pct}%</div></div>`;
+  }).join('');
   const alerts=[];
   if(incomplete) alerts.push(isGr?'Λείπουν: '+missingProfile.join(', ')+'. Συμπληρώστε το Προφίλ Πελάτη για να ξεκλειδώσετε τα πλάνα.':'Missing: '+missingProfile.join(', ')+'. Complete Client Profile to unlock plans.');
   if(lowKcal) alerts.push(isGr?'<i class="ti ti-alert-triangle" aria-hidden="true"></i> Πολύ χαμηλός στόχος θερμίδων ('+Math.round(S.goalKcal)+' kcal) — χρειάζεται κλινική επανεξέταση.':'<i class="ti ti-alert-triangle" aria-hidden="true"></i> Goal calories very low ('+Math.round(S.goalKcal)+' kcal) — clinical review needed.');
@@ -13971,6 +13998,31 @@ function drawLineChart(data, color, unit){
   </svg>`;
 }
 
+// Body Composition's Progress Trends — same underlying S.tracking data as
+// the Tracking page, but surfaced directly on Body Composition (per
+// request) and extended to include Muscle Mass, which the Tracking page's
+// own chart does not currently show.
+function renderBodyCompTrendCharts(){
+  const el=document.getElementById('bc-trend-charts'); if(!el) return;
+  const isGr = window.appLang!=='en';
+  const chrono=(S.tracking||[]).slice().reverse();
+  const weightData=chrono.map(e=>({date:e.date, value:e.weight}));
+  const bfData=chrono.map(e=>({date:e.date, value:e.bf}));
+  const muscleData=chrono.map(e=>({date:e.date, value:e.muscle}));
+  const weightSvg=drawLineChart(weightData,'#0F6E56','kg');
+  const bfSvg=drawLineChart(bfData,'#E67700','%');
+  const muscleSvg=drawLineChart(muscleData,'#2563EB','kg');
+  if(!weightSvg && !bfSvg && !muscleSvg){
+    el.innerHTML=`<div style="color:var(--text-muted);text-align:center;padding:16px;font-size:13px">${isGr?'Καταγράψτε τουλάχιστον 2 επισκέψεις για να δείτε γραφήματα προόδου.':'Log at least 2 visits to see progress charts.'}</div>`;
+    return;
+  }
+  let html='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px">';
+  if(weightSvg) html+=`<div class="card" style="margin:0"><div class="card-header"><span class="card-title" style="font-size:13px"><i class="ti ti-scale" aria-hidden="true"></i> ${isGr?'Βάρος (κιλά)':'Weight (kg)'}</span></div><div class="card-body">${weightSvg}</div></div>`;
+  if(bfSvg) html+=`<div class="card" style="margin:0"><div class="card-header"><span class="card-title" style="font-size:13px"><i class="ti ti-chart-bar" aria-hidden="true"></i> ${isGr?'Ποσοστό Λίπους %':'Body Fat %'}</span></div><div class="card-body">${bfSvg}</div></div>`;
+  if(muscleSvg) html+=`<div class="card" style="margin:0"><div class="card-header"><span class="card-title" style="font-size:13px"><i class="ti ti-barbell" aria-hidden="true"></i> ${isGr?'Μυϊκή Μάζα (κιλά)':'Muscle Mass (kg)'}</span></div><div class="card-body">${muscleSvg}</div></div>`;
+  html+='</div>';
+  el.innerHTML=html;
+}
 function renderTrackingChart(){
   const el=document.getElementById('tracking-chart'); if(!el) return;
   const isGr = window.appLang!=='en';
@@ -16099,6 +16151,7 @@ function applyState(state){
   setActiveClientIdentity(state.clientId || state.activeClientId || null, state.clientRef || state.activeClientRef || state.fields?.['p-id'] || '');
   S.weightSuggestionLocked=state.weightSuggestionLocked!==undefined ? !!state.weightSuggestionLocked : !!(state.fields&&state.fields['p-weight']);
   S.lastCalAdjGoal=undefined;
+  S.dashStatusUserToggled=false;
   S.bcManual={fatmass:false,ffm:false,muscle:false,...(state.bcManual||{})};
   if(state.fields&&state.fields['bc-fatmass']&&state.bcManual===undefined) S.bcManual.fatmass=true;
   if(state.fields&&state.fields['bc-muscle']&&state.bcManual===undefined) S.bcManual.muscle=true;
@@ -16165,6 +16218,7 @@ function resetForm(){
   setActiveClientIdentity(null, '');
   S.clientPhoto='';
   S.lastCalAdjGoal = undefined;
+  S.dashStatusUserToggled = false;
   S.weightSuggestionLocked = false;
   S.bcManual = {fatmass:false,ffm:false,muscle:false};
   resetMacroExplanation();
