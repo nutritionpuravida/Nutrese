@@ -10384,7 +10384,43 @@ function calcAll() {
       if(tri==='2') pregAdj=340;
       else if(tri==='3') pregAdj=450;
     }
-    goalKcal=tdee+calAdj+pregAdj; S.goalKcal=goalKcal;
+    // ── CALORIE SAFETY FLOOR ──────────────────────────────────────────────
+    // A large deficit applied to a low-BMR client (small frame, older age,
+    // sedentary) can otherwise produce a clinically unsafe target (as low
+    // as ~590-660 kcal, confirmed during QA). This is a hard floor on the
+    // FINAL calculated target — it does not touch BMR, TDEE, or the
+    // adjustment value itself, only the resulting goalKcal.
+    //
+    // THRESHOLD: 1200 kcal — chosen to exactly match the pre-existing
+    // evaluatePlanQuality() "low-target" root-cause threshold, so the two
+    // mechanisms never disagree with each other.
+    //
+    // WHERE APPLIED: only to the non-pregnant path, immediately after the
+    // raw goalKcal calculation, before anything downstream (macros,
+    // exchanges, meal generation) ever sees the value. Pregnancy already
+    // has its own, stricter clinical rule (no caloric restriction at all,
+    // handled separately above) and is never lower than this floor in
+    // practice, so it's excluded here to avoid overlapping logic.
+    //
+    // OVERRIDES: this is a hard floor, not a soft warning — by design, per
+    // "the generated target should never fall below the minimum," a
+    // dietitian's manual calorie-adjustment CAN still push the raw
+    // calculation below 1200, but the floor still applies to what
+    // actually reaches goalKcal. The raw, pre-floor value is preserved in
+    // S.rawGoalKcalBeforeFloor and surfaced in the UI note below — nothing
+    // is silently hidden, the dietitian can always see both numbers and
+    // adjust Goal/Activity/Adjustment if a different clinical picture is
+    // intended. There is currently no "medically supervised VLCD" override
+    // path; if that's ever needed clinically, it should be a deliberate,
+    // separate decision — not an accidental side effect of a large manual
+    // deficit.
+    const CALORIE_SAFETY_FLOOR = 1200;
+    const rawGoalKcal = tdee + calAdj + pregAdj;
+    const floorApplied = !isPregnant && rawGoalKcal < CALORIE_SAFETY_FLOOR;
+    goalKcal = floorApplied ? CALORIE_SAFETY_FLOOR : rawGoalKcal;
+    S.goalKcal=goalKcal;
+    S.calorieFloorApplied = floorApplied;
+    S.rawGoalKcalBeforeFloor = rawGoalKcal;
     S.isPregnant=isPregnant;
     // Any negative adjustment during pregnancy is clinically noteworthy —
     // the auto-suggestion for pregnancy is always >=0, so a negative value
@@ -10401,6 +10437,11 @@ function calcAll() {
         noteEl.innerHTML = isGrCal
           ? `Προεπιλογή για «${goal}»: ${autoAdj>0?'+':''}${autoAdj} kcal. Επεξεργαστείτε τον αριθμό παραπάνω αν χρειάζεται.`
           : `Default for "${goal}": ${autoAdj>0?'+':''}${autoAdj} kcal. Edit the number above if needed.`;
+        if(floorApplied){
+          noteEl.innerHTML += isGrCal
+            ? `<div style="margin-top:6px;color:var(--amber-text)"><i class="ti ti-shield-check" aria-hidden="true"></i> Ο υπολογισμός (TDEE + προσαρμογή) θα έδινε ${Math.round(rawGoalKcal)} kcal — αυξήθηκε στο ελάχιστο όριο ασφαλείας των ${CALORIE_SAFETY_FLOOR} kcal. Επανεξετάστε Στόχο/Δραστηριότητα/Προσαρμογή αν προβλέπεται κλινικά χαμηλότερος στόχος.</div>`
+            : `<div style="margin-top:6px;color:var(--amber-text)"><i class="ti ti-shield-check" aria-hidden="true"></i> The calculation (TDEE + adjustment) would produce ${Math.round(rawGoalKcal)} kcal — raised to the ${CALORIE_SAFETY_FLOOR} kcal minimum safety floor. Review Goal/Activity/Adjustment if a clinically lower target is specifically intended.</div>`;
+        }
       }
     }
   } else {
@@ -12472,7 +12513,12 @@ function evaluatePlanQuality(targets, actual){
   if(overall!=='ok'){
     const kcalBelowTarget = actual.kcal < targets.kcal;
     const exchangeCapped = !!(S.exGap && (S.exGap.starchCapped || S.exGap.proteinCapped || S.exGap.fatCapped));
-    if(targets.kcal>0 && targets.kcal<1200){
+    if(S.calorieFloorApplied){
+      rootCause = 'calorie-floor-applied';
+    } else if(targets.kcal>0 && targets.kcal<1200){
+      // Defensive fallback only — with the floor in place, S.goalKcal
+      // itself can no longer be below 1200, so this should not normally
+      // trigger. Kept in case a caller ever passes an unfloored target.
       rootCause = 'low-target';
     } else if(kcalBelowTarget && exchangeCapped){
       rootCause = 'exchange-cap';
@@ -12485,6 +12531,12 @@ function planQualityRootCauseMessage(rootCause, isGr){
     return isGr
       ? 'Τα τρέχοντα όρια του συστήματος ισοδυνάμων δεν επιτρέπουν πλήρη επίτευξη αυτού του στόχου θερμίδων διατηρώντας ρεαλιστικές μερίδες τροφίμων.'
       : 'Current exchange-system limits cannot fully achieve this calorie target while maintaining realistic food portions.';
+  }
+  if(rootCause==='calorie-floor-applied'){
+    const raw = Math.round(S.rawGoalKcalBeforeFloor||0);
+    return isGr
+      ? `Ο υπολογισμός (TDEE + προσαρμογή) θα έδινε ${raw} kcal — ο στόχος αυξήθηκε στο ελάχιστο όριο ασφαλείας. Αυτό αφορά τον υπολογισμό του στόχου, όχι την ποιότητα του πλάνου.`
+      : `The calculation (TDEE + adjustment) would produce ${raw} kcal — the target was raised to the minimum safety floor. This reflects the target calculation, not the generated plan.`;
   }
   if(rootCause==='low-target'){
     return isGr
