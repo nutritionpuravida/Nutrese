@@ -740,7 +740,25 @@ i.ti-circle-x { color: var(--red-text); }
 #page-bodycomp .bc-status-row .m-label { font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.04em; }
 #page-bodycomp .bc-status-row .m-value { font-size:22px; font-weight:700; letter-spacing:-.01em; color:var(--text-primary); margin-top:3px; }
 #page-bodycomp .bc-status-row .m-sub { font-size:12px; color:var(--text-secondary); margin-top:2px; }
+/* Progress Trends — compact summary tiles, not full analytics cards.
+   Explicit breakpoints (not auto-fit) guarantee a clean 3-across layout
+   from tablet width up, with no uneven 2+1 wrapping, and a single,
+   short column on mobile rather than three tall stacked charts. */
+#page-bodycomp .bc-trend-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+#page-bodycomp .bc-trend-card { border:1px solid var(--border); border-radius:12px; padding:10px 12px 6px; background:var(--bg-surface); }
+#page-bodycomp .bc-trend-card-title { font-size:12px; font-weight:600; color:var(--text-secondary); margin-bottom:4px; }
+@media (max-width: 700px) {
+  #page-bodycomp .bc-trend-grid { grid-template-columns:1fr; }
+}
 #page-bodycomp .dash-status-card { padding:14px 16px; }
+/* Macro Targets hero — calorie number leads, macro breakdown reads as a
+   secondary row beside it, same "5-second read" pattern as Dashboard and
+   Body Composition. */
+#page-macros .macro-hero-row { display:flex; gap:32px; flex-wrap:wrap; align-items:flex-start; }
+#page-macros .macro-hero-kcal .m-label { font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.04em; }
+#page-macros .macro-hero-kcal .m-value { font-size:32px; font-weight:700; letter-spacing:-.01em; color:var(--text-primary); margin-top:2px; }
+#page-macros .macro-hero-macros { flex:1; min-width:260px; }
+#page-macros .dash-status-card { padding:14px 16px; }
 #page-dashboard .dash-snapshot-values .m-label { font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.04em; }
 /* Smaller than the patient name — supporting context, not competing for
    attention with patient identity. */
@@ -2565,57 +2583,74 @@ table th,
 
   <!-- MACROS -->
   <div class="page" id="page-macros">
-    <div class="two-col">
-      <div class="card">
-        <div class="card-header"><span class="card-title"><i class="ti ti-target" aria-hidden="true"></i> <span class="i18n" data-en="Macro Targets" data-gr="Στόχοι Μακροθρεπτικών">Macro Targets</span></span></div>
-        <div class="card-body">
-          <div class="alert info" style="margin-bottom:14px"><i class="ti ti-info-circle" aria-hidden="true"></i> <span class="i18n" data-en="Goal calories linked from Client Profile. Enter Carbs % and Protein % — Fat % completes automatically to 100%." data-gr="Οι θερμίδες στόχου συνδέονται από το Προφίλ Πελάτη. Εισάγετε Υδατάνθρακες % και Πρωτεΐνη % — το Λίπος % συμπληρώνεται αυτόματα στο 100%.">Goal calories linked from Client Profile. Enter Carbs % and Protein % — Fat % completes automatically to 100%.</span></div>
-          <div class="form-grid three" style="margin-bottom:16px">
-            <div class="form-field"><label><span class="i18n" data-en="Carbs %" data-gr="Υδατάνθρακες %">Carbs %</span> 🌾</label><input type="number" id="m-carb" value="45" min="0" max="100" oninput="onMacroManualInput()"></div>
-            <div class="form-field"><label><span class="i18n" data-en="Protein %" data-gr="Πρωτεΐνη %">Protein %</span> 🥩</label><input type="number" id="m-protein" value="20" min="0" max="100" oninput="onMacroManualInput()"></div>
-            <div class="form-field"><label><span class="i18n" data-en="Fat % (auto)" data-gr="Λίπος % (αυτόματο)">Fat % (auto)</span> 🫒</label><input type="number" id="m-fat" value="35" min="0" max="100" readonly style="background:var(--bg-page);cursor:not-allowed"></div>
+    <div class="card">
+      <div class="card-header"><span class="card-title"><i class="ti ti-target" aria-hidden="true"></i> <span class="i18n" data-en="Nutrition Targets" data-gr="Στόχοι Διατροφής">Nutrition Targets</span></span></div>
+      <div class="card-body">
+        <!-- 1. NUTRITION TARGETS — the 5-second clinical overview -->
+        <div class="macro-hero-row">
+          <div class="macro-hero-kcal">
+            <div class="m-label"><span class="i18n" data-en="Calories" data-gr="Θερμίδες">Calories</span></div>
+            <div class="m-value" id="macro-hero-kcal-value">—</div>
           </div>
-          <div class="field-note" style="margin:-10px 0 14px"><span class="i18n" data-en="Fat % is calculated automatically so the three always total 100%. To set a specific Fat %, adjust Carbs % and Protein % accordingly." data-gr="Το Λίπος % υπολογίζεται αυτόματα ώστε το άθροισμα να είναι πάντα 100%. Για συγκεκριμένο Λίπος %, προσαρμόστε ανάλογα τους Υδατάνθρακες % και την Πρωτεΐνη %.">Fat % is calculated automatically so the three always total 100%. To set a specific Fat %, adjust Carbs % and Protein % accordingly.</span></div>
-          <div id="macro-check-row" style="margin-bottom:12px"></div>
-          <div id="macro-bars"></div>
-          <div style="margin-top:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-            <button class="btn" onclick="applyConditionMacros()"><span class="i18n" data-en="Apply suggested for selected condition" data-gr="Εφαρμογή προτεινόμενων για την επιλεγμένη πάθηση">Apply suggested for selected condition</span></button>
-            <span id="apply-condition-macros-note" style="font-size:12px;font-weight:700;color:var(--teal-700)"></span>
-            <button class="btn primary" onclick="saveMacroTargets()"><i class="ti ti-device-floppy" aria-hidden="true"></i> <span class="i18n" data-en="Save Macro Targets" data-gr="Αποθήκευση Στόχων">Save Macro Targets</span></button>
-            <span style="font-size:12px;color:var(--text-muted)">← <span class="i18n" data-en="fills the % fields above based on selected conditions" data-gr="συμπληρώνει τα % παραπάνω βάσει των επιλεγμένων παθήσεων">fills the % fields above based on selected conditions</span></span>
-            <span id="macro-save-note" style="font-size:12px;color:var(--text-muted)"></span>
+          <div class="macro-hero-macros" id="macro-bars"></div>
+        </div>
+        <div class="field-note" style="margin:10px 0 14px"><span class="i18n" data-en="Goal calories linked from Client Profile. Enter Carbs % and Protein % below — Fat % completes automatically to 100%." data-gr="Οι θερμίδες στόχου συνδέονται από το Προφίλ Πελάτη. Εισάγετε Υδατάνθρακες % και Πρωτεΐνη % παρακάτω — το Λίπος % συμπληρώνεται αυτόματα στο 100%.">Goal calories linked from Client Profile. Enter Carbs % and Protein % below — Fat % completes automatically to 100%.</span></div>
+        <div class="form-grid three" style="margin-bottom:8px">
+          <div class="form-field"><label><span class="i18n" data-en="Carbs %" data-gr="Υδατάνθρακες %">Carbs %</span></label><input type="number" id="m-carb" value="45" min="0" max="100" oninput="onMacroManualInput()"></div>
+          <div class="form-field"><label><span class="i18n" data-en="Protein %" data-gr="Πρωτεΐνη %">Protein %</span></label><input type="number" id="m-protein" value="20" min="0" max="100" oninput="onMacroManualInput()"></div>
+          <div class="form-field"><label><span class="i18n" data-en="Fat % (auto)" data-gr="Λίπος % (αυτόματο)">Fat % (auto)</span></label><input type="number" id="m-fat" value="35" min="0" max="100" readonly style="background:var(--bg-page);cursor:not-allowed"></div>
+        </div>
+        <div id="macro-check-row" style="margin-bottom:4px"></div>
+        <div style="margin-top:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <button class="btn" onclick="applyConditionMacros()"><span class="i18n" data-en="Apply suggested for selected condition" data-gr="Εφαρμογή προτεινόμενων για την επιλεγμένη πάθηση">Apply suggested for selected condition</span></button>
+          <span id="apply-condition-macros-note" style="font-size:12px;font-weight:700;color:var(--teal-700)"></span>
+          <button class="btn primary" onclick="saveMacroTargets()"><i class="ti ti-device-floppy" aria-hidden="true"></i> <span class="i18n" data-en="Save Macro Targets" data-gr="Αποθήκευση Στόχων">Save Macro Targets</span></button>
+          <span id="macro-save-note" style="font-size:12px;color:var(--text-muted)"></span>
+        </div>
+        <div id="macro-explanation" style="display:none;margin-top:10px;padding:10px;background:var(--teal-50);border-radius:8px;font-size:12px;line-height:1.6"></div>
+      </div>
+    </div>
+
+    <!-- 2. EXCHANGE PLAN -->
+    <div class="card" style="margin-top:16px">
+      <div class="card-header"><span class="card-title"><i class="ti ti-refresh" aria-hidden="true"></i> <span class="i18n" data-en="Exchange Plan" data-gr="Πλάνο Ισοδυνάμων">Exchange Plan</span></span></div>
+      <div class="card-body">
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
+          <button class="btn" onclick="applySuggestedExchangeServings()">✨ <span class="i18n" data-en="Suggested servings" data-gr="Προτεινόμενες μερίδες">Suggested servings</span></button>
+          <button class="btn" onclick="generateAiSevenDayPlan()">✨ <span class="i18n" data-en="Generate AI Plan" data-gr="Δημιουργία Πλάνου με AI">Generate AI Plan</span></button>
+          <button class="btn primary" onclick="refreshExchangePlansNow()"><i class="ti ti-refresh" aria-hidden="true"></i> <span class="i18n" data-en="Apply to Meal Plans" data-gr="Εφαρμογή στα Πλάνα Γευμάτων">Apply to Meal Plans</span></button>
+        </div>
+        <div id="exchange-rows"></div>
+        <div class="field-note" style="margin-top:10px"><span class="i18n" data-en="Click Apply to Meal Plans after changing servings to push updates into the 7-Day plan and Report." data-gr="Πατήστε Εφαρμογή στα Πλάνα Γευμάτων μετά την αλλαγή μερίδων για ενημέρωση του Πλάνου 7 Ημερών και της Αναφοράς.">Click Apply to Meal Plans after changing servings to push updates into the 7-Day plan and Report.</span></div>
+
+        <!-- 3. PLAN MATCH CHECK — collapsed by default -->
+        <div class="dash-card dash-status-card" style="margin-top:18px">
+          <div class="dash-status-summary" id="macro-match-summary" onclick="S.macroMatchUserToggled=true; toggleBcSection('exchange-check-wrap', this)">
+            <span id="macro-match-status-line" style="flex:1"><span style="color:var(--text-muted);font-size:13px"><span class="i18n" data-en="Plan Match Check" data-gr="Έλεγχος Ταιριάσματος Πλάνου">Plan Match Check</span></span></span>
+            <i class="ti ti-chevron-down" aria-hidden="true" style="color:var(--text-muted)"></i>
           </div>
-          <div id="macro-explanation" style="display:none;margin-top:10px;padding:10px;background:var(--teal-50);border-radius:8px;font-size:12px;line-height:1.6"></div>
+          <div id="exchange-check-wrap" style="display:none;margin-top:12px;padding-top:12px;border-top:0.5px solid var(--border)">
+            <div id="exchange-check"></div>
+          </div>
         </div>
       </div>
-      <div class="card">
-        <div class="card-header"><span class="card-title"><i class="ti ti-chart-bar" aria-hidden="true"></i> <span class="i18n" data-en="Clinical Macro Suggestions" data-gr="Κλινικές Προτάσεις Μακροθρεπτικών">Clinical Macro Suggestions</span></span></div>
-        <div class="card-body">
-                    <div class="macro-suggestions-tools">
+    </div>
+
+    <!-- 4. CLINICAL MACRO SUGGESTIONS — secondary/advanced, collapsed by default -->
+    <div class="card" style="margin-top:16px">
+      <div class="card-body">
+        <div class="dash-status-summary" onclick="toggleBcSection('macro-suggestions-section', this)">
+          <span style="flex:1;font-size:13px;font-weight:600;color:var(--text-secondary)"><i class="ti ti-chart-bar" aria-hidden="true"></i> <span class="i18n" data-en="Clinical Macro Suggestions" data-gr="Κλινικές Προτάσεις Μακροθρεπτικών">Clinical Macro Suggestions</span></span>
+          <i class="ti ti-chevron-down" aria-hidden="true" style="color:var(--text-muted)"></i>
+        </div>
+        <div id="macro-suggestions-section" style="display:none;margin-top:14px;padding-top:14px;border-top:0.5px solid var(--border)">
+          <div class="macro-suggestions-tools">
             <div class="field-note"><span class="i18n" data-en="Use these as starting points. Search for another condition when needed." data-gr="Χρησιμοποιήστε τα ως σημεία εκκίνησης. Αναζητήστε άλλη πάθηση όταν χρειάζεται.">Use these as starting points. Search for another condition when needed.</span></div>
             <div class="macro-suggestion-search-wrap"><i class="ti ti-search" aria-hidden="true"></i><input id="macro-suggestion-search" type="search" oninput="renderClinicalMacroSuggestions()" placeholder="Search condition" aria-label="Search macro suggestions"></div>
           </div><table><thead><tr><th><span class="i18n" data-en="Condition" data-gr="Πάθηση">Condition</span></th><th><span class="i18n" data-en="Carb" data-gr="Υδατ.">Carb</span></th><th><span class="i18n" data-en="Prot" data-gr="Πρωτ.">Prot</span></th><th><span class="i18n" data-en="Fat" data-gr="Λίπος">Fat</span></th></tr></thead><tbody id="clinical-macro-suggestions-body"></tbody></table>
           <div id="clinical-macro-suggestions-note" class="field-note" style="margin-top:8px"></div>
         </div>
       </div>
-    </div>
-    <div style="margin-top:16px">
-    <div class="card">
-      <div class="card-header"><span class="card-title"><i class="ti ti-refresh" aria-hidden="true"></i> <span class="i18n" data-en="Exchange System" data-gr="Σύστημα Ισοδυνάμων">Exchange System</span></span></div>
-      <div class="card-body">
-        <div class="alert info"><i class="ti ti-info-circle" aria-hidden="true"></i> <span class="i18n" data-en="Enter Fruit, Vegetables, Dairy servings. Starch, Protein, Fat auto-calculate from remaining macros. Uses condition-aware clinical caps." data-gr="Εισάγετε μερίδες Φρούτου, Λαχανικών, Γαλακτοκομικών. Άμυλο, Πρωτεΐνη, Λίπος υπολογίζονται αυτόματα από τα υπόλοιπα μακροθρεπτικά. Χρησιμοποιεί κλινικά όρια ανά πάθηση.">Enter Fruit, Vegetables, Dairy servings. Starch, Protein, Fat auto-calculate from remaining macros. Uses condition-aware clinical caps.</span></div>
-        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
-          <button class="btn" onclick="applySuggestedExchangeServings()">✨ <span class="i18n" data-en="Suggested servings" data-gr="Προτεινόμενες μερίδες">Suggested servings</span></button>
-          <button class="btn" onclick="generateAiSevenDayPlan()">✨ <span class="i18n" data-en="Generate AI Plan" data-gr="Δημιουργία Πλάνου με AI">Generate AI Plan</span></button>
-          <button class="btn primary" onclick="refreshExchangePlansNow()"><i class="ti ti-refresh" aria-hidden="true"></i> <span class="i18n" data-en="Apply to Meal Plans" data-gr="Εφαρμογή στα Πλάνα Γευμάτων">Apply to Meal Plans</span></button>
-        </div>
-        <div style="margin-bottom:8px"><span style="font-size:12px;color:var(--text-muted)"><span class="i18n" data-en="Click Apply to Meal Plans after changing servings to push updates into the 7-Day plan and Report" data-gr="Πατήστε Εφαρμογή στα Πλάνα Γευμάτων μετά την αλλαγή μερίδων για ενημέρωση του Πλάνου 7 Ημερών και της Αναφοράς">Click Apply to Meal Plans after changing servings to push updates into the 7-Day plan and Report</span></span></div>
-        <div id="exchange-rows"></div>
-        <div class="section-label"><span class="i18n" data-en="Macro Match Check" data-gr="Έλεγχος Ταιριάσματος Μακροθρεπτικών">Macro Match Check</span></div>
-        <div id="exchange-check"></div>
-      </div>
-    </div>
-
     </div>
   </div>
 
@@ -10413,6 +10448,7 @@ function calcMacros(){
   const isGrM = window.appLang==='gr';
   const checkEl=document.getElementById('macro-check-row');
   if(checkEl) checkEl.innerHTML=`<div class="alert ${ok?'ok':'err'}">${ok?'<i class="ti ti-circle-check" aria-hidden="true"></i>':'<i class="ti ti-circle-x" aria-hidden="true"></i>'} ${isGrM?'Σύνολο':'Total'}: ${total}% ${kcal?`(${Math.round(kcal).toLocaleString()} kcal)`:''} — ${ok?(isGrM?'OK: το άθροισμα είναι 100%':'OK: adds up to 100%'):(isGrM?'Πρέπει να είναι 100%':'Must equal 100%')}</div>`;
+  setEl('macro-hero-kcal-value', kcal ? Math.round(kcal).toLocaleString() : '—');
   const barsEl=document.getElementById('macro-bars');
   if(barsEl) barsEl.innerHTML=(isGrM?['🌾 Υδατάνθρακες','🥩 Πρωτεΐνη','🫒 Λίπος']:['🌾 Carbohydrates','🥩 Protein','🫒 Fat']).map((label,i)=>{
     const pct=[c,p,f][i]; const col=['var(--teal-400)','#5DCAA5','var(--teal-100)'][i];
@@ -10710,6 +10746,21 @@ function renderExchangeChecks(){
       : `<tr><td colspan="6"><div class="alert info" style="margin:6px 0 0">High Cholesterol note: olive-oil fat quality matters. Current fat cap allows up to <strong>${caps.fatDailyMax} tsp</strong> (~${Math.round(fatCapKcal)} kcal from fat exchanges). If calories are still low, consider increasing starch or lean-protein servings rather than forcing extra fat.</div></td></tr>`;
   }
   setEl('exchange-check',chk+'</tbody></table>');
+  S._lastPqOverall = pq.overall; // consumed by the Plan Match Check summary line
+  const failCount = pq.metrics.filter(m=>m.level!=='ok').length;
+  const isGrSum = window.appLang!=='en';
+  const summaryLineEl=document.getElementById('macro-match-status-line');
+  if(summaryLineEl){
+    summaryLineEl.innerHTML = failCount===0
+      ? `<span style="color:var(--teal-700);font-weight:600;font-size:13px"><i class="ti ti-circle-check" aria-hidden="true"></i> ${isGrSum?'Το πλάνο ταιριάζει με τους στόχους':'Plan matches targets'}</span>`
+      : `<span style="color:var(--amber-text);font-weight:600;font-size:13px"><i class="ti ti-alert-triangle" aria-hidden="true"></i> ${failCount===1?(isGrSum?'1 στοιχείο χρειάζεται προσαρμογή':'1 item needs adjustment'):(isGrSum?`${failCount} στοιχεία χρειάζονται προσαρμογή`:`${failCount} items need adjustment`)}</span>`;
+  }
+  if(!S.macroMatchUserToggled){
+    const wrapEl=document.getElementById('exchange-check-wrap');
+    const chevEl=document.querySelector('#macro-match-summary .ti-chevron-down, #macro-match-summary .ti-chevron-up');
+    if(wrapEl) wrapEl.style.display = failCount>0 ? 'block' : 'none';
+    if(chevEl){ chevEl.classList.toggle('ti-chevron-down', failCount===0); chevEl.classList.toggle('ti-chevron-up', failCount>0); }
+  }
 }
 
 function calcBodyComp(){
@@ -13973,7 +14024,7 @@ function drawLineChart(data, color, unit){
   const pts = data.map((d,i)=>({i, date:d.date, value: d.value===''||d.value==null ? null : parseFloat(d.value)}))
                   .filter(d=>d.value!=null && !isNaN(d.value));
   if(pts.length<2) return null;
-  const W=400, H=160, padL=42, padR=12, padT=14, padB=26;
+  const W=400, H=100, padL=38, padR=10, padT=10, padB=20;
   const vals=pts.map(d=>d.value);
   let minV=Math.min(...vals), maxV=Math.max(...vals);
   if(minV===maxV){ minV-=1; maxV+=1; } // avoid zero range
@@ -13983,13 +14034,12 @@ function drawLineChart(data, color, unit){
   const x=i=> n===1 ? (padL+(W-padL-padR)/2) : padL + (W-padL-padR)*(i/(n-1));
   const y=val=> H-padB - (H-padT-padB)*((val-minV)/range);
   const linePoints=pts.map((d,i)=>`${x(i).toFixed(1)},${y(d.value).toFixed(1)}`).join(' ');
-  const dots=pts.map((d,i)=>`<circle cx="${x(i).toFixed(1)}" cy="${y(d.value).toFixed(1)}" r="3" fill="${color}"/>`).join('');
-  // gridlines + y-axis labels (min/mid/max)
-  const midV=(minV+maxV)/2;
-  const gridY=[maxV,midV,minV].map(val=>`<line x1="${padL}" y1="${y(val).toFixed(1)}" x2="${W-padR}" y2="${y(val).toFixed(1)}" stroke="var(--border)" stroke-width="1" stroke-dasharray="3,3"/><text x="${padL-6}" y="${(y(val)+3).toFixed(1)}" font-size="10" fill="var(--text-muted)" text-anchor="end">${val.toFixed(1)}</text>`).join('');
+  const dots=pts.map((d,i)=>`<circle cx="${x(i).toFixed(1)}" cy="${y(d.value).toFixed(1)}" r="2.5" fill="${color}"/>`).join('');
+  // gridlines + y-axis labels (min/max only — a mid-line adds clutter at this compact size)
+  const gridY=[maxV,minV].map(val=>`<line x1="${padL}" y1="${y(val).toFixed(1)}" x2="${W-padR}" y2="${y(val).toFixed(1)}" stroke="var(--border)" stroke-width="1" stroke-dasharray="3,3"/><text x="${padL-5}" y="${(y(val)+3).toFixed(1)}" font-size="9" fill="var(--text-muted)" text-anchor="end">${val.toFixed(1)}</text>`).join('');
   // x-axis labels: first and last date
   const firstDate=pts[0].date, lastDate=pts[pts.length-1].date;
-  const xLabels=`<text x="${padL}" y="${H-6}" font-size="10" fill="var(--text-muted)" text-anchor="start">${firstDate}</text><text x="${W-padR}" y="${H-6}" font-size="10" fill="var(--text-muted)" text-anchor="end">${lastDate}</text>`;
+  const xLabels=`<text x="${padL}" y="${H-5}" font-size="9" fill="var(--text-muted)" text-anchor="start">${firstDate}</text><text x="${W-padR}" y="${H-5}" font-size="9" fill="var(--text-muted)" text-anchor="end">${lastDate}</text>`;
   return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block">
     ${gridY}
     <polyline points="${linePoints}" fill="none" stroke="${color}" stroke-width="2.5"/>
@@ -14016,10 +14066,10 @@ function renderBodyCompTrendCharts(){
     el.innerHTML=`<div style="color:var(--text-muted);text-align:center;padding:16px;font-size:13px">${isGr?'Καταγράψτε τουλάχιστον 2 επισκέψεις για να δείτε γραφήματα προόδου.':'Log at least 2 visits to see progress charts.'}</div>`;
     return;
   }
-  let html='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px">';
-  if(weightSvg) html+=`<div class="card" style="margin:0"><div class="card-header"><span class="card-title" style="font-size:13px"><i class="ti ti-scale" aria-hidden="true"></i> ${isGr?'Βάρος (κιλά)':'Weight (kg)'}</span></div><div class="card-body">${weightSvg}</div></div>`;
-  if(bfSvg) html+=`<div class="card" style="margin:0"><div class="card-header"><span class="card-title" style="font-size:13px"><i class="ti ti-chart-bar" aria-hidden="true"></i> ${isGr?'Ποσοστό Λίπους %':'Body Fat %'}</span></div><div class="card-body">${bfSvg}</div></div>`;
-  if(muscleSvg) html+=`<div class="card" style="margin:0"><div class="card-header"><span class="card-title" style="font-size:13px"><i class="ti ti-barbell" aria-hidden="true"></i> ${isGr?'Μυϊκή Μάζα (κιλά)':'Muscle Mass (kg)'}</span></div><div class="card-body">${muscleSvg}</div></div>`;
+  let html='<div class="bc-trend-grid">';
+  if(weightSvg) html+=`<div class="bc-trend-card"><div class="bc-trend-card-title"><i class="ti ti-scale" aria-hidden="true"></i> ${isGr?'Βάρος (κιλά)':'Weight (kg)'}</div>${weightSvg}</div>`;
+  if(bfSvg) html+=`<div class="bc-trend-card"><div class="bc-trend-card-title"><i class="ti ti-chart-bar" aria-hidden="true"></i> ${isGr?'Ποσοστό Λίπους %':'Body Fat %'}</div>${bfSvg}</div>`;
+  if(muscleSvg) html+=`<div class="bc-trend-card"><div class="bc-trend-card-title"><i class="ti ti-barbell" aria-hidden="true"></i> ${isGr?'Μυϊκή Μάζα (κιλά)':'Muscle Mass (kg)'}</div>${muscleSvg}</div>`;
   html+='</div>';
   el.innerHTML=html;
 }
