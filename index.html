@@ -518,6 +518,8 @@ i.ti-circle-x { color: var(--red-text); }
 .feedback-card-title { font-size: 16px; font-weight: 800; color: var(--text-primary); line-height:1.3; }
 .feedback-card-sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
 .feedback-close { border: 1px solid var(--border); background: var(--bg-page); color: var(--text-secondary); border-radius: 6px; cursor: pointer; padding: 4px 8px; font-weight: 800; }
+.btn.danger { background: var(--red-text); border-color: var(--red-text); color: #fff; }
+.btn.danger:hover { filter: brightness(0.92); }
 .save-confirm-summary { background: var(--bg-page); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-bottom: 14px; font-size: 13px; }
 .save-confirm-row { display: flex; justify-content: space-between; gap: 12px; padding: 5px 0; color: var(--text-secondary); }
 .save-confirm-row strong { color: var(--text-primary); font-weight: 600; }
@@ -2323,13 +2325,6 @@ table th,
           <div class="form-field"><label><span class="i18n" data-en="Weight (kg)" data-gr="Βάρος (κιλά)">Weight (kg)</span></label><input type="number" id="p-weight" placeholder="70" step="0.1" oninput="onWeightInput()"><div class="field-note suggested" id="weight-suggestion-note"></div></div>
           <div class="form-field"><label><span class="i18n" data-en="Calorie Adjustment (kcal)" data-gr="Προσαρμογή Θερμίδων (kcal)">Calorie Adjustment (kcal)</span></label><input type="number" id="p-cal-adj" placeholder="Auto (0)" step="50" inputmode="decimal" oninput="calcAll()" onblur="calcAll()">
             <div class="field-note" id="cal-adj-note" style="margin-top:4px"></div>
-            <div id="cal-adj-mismatch-warning" style="display:none;margin-top:8px;padding:8px 12px;background:var(--amber-bg);border-radius:6px;font-size:12px;color:var(--amber-text);line-height:1.5">
-              <div id="cal-adj-mismatch-text"></div>
-              <div style="display:flex;gap:8px;margin-top:8px">
-                <button type="button" class="btn" style="padding:4px 10px;font-size:11px" onclick="keepManualCalAdj()"><span class="i18n" data-en="Keep Manual" data-gr="Διατήρηση Χειροκίνητης">Keep Manual</span></button>
-                <button type="button" class="btn primary" style="padding:4px 10px;font-size:11px" onclick="applyRecommendedCalAdj()"><span class="i18n" data-en="Apply Recommended" data-gr="Εφαρμογή Προτεινόμενης">Apply Recommended</span></button>
-              </div>
-            </div>
           </div>
         </div>
         <div class="section-label"><span class="i18n" data-en="Clinical Information" data-gr="Κλινικές Πληροφορίες">Clinical Information</span></div>
@@ -3060,6 +3055,43 @@ table th,
         <button class="btn primary" id="save-confirm-btn" onclick="confirmSaveClient()"><i class="ti ti-device-floppy" aria-hidden="true"></i> <span class="i18n" data-en="Save Client" data-gr="Αποθήκευση Πελάτη">Save Client</span></button>
       </div>
       <div class="feedback-status" id="save-confirm-status"></div>
+    </div>
+  </div>
+</div>
+
+<div class="feedback-modal no-print" id="unsaved-changes-modal" role="dialog" aria-modal="true" aria-labelledby="unsaved-changes-title">
+  <div class="feedback-card" style="width:min(420px,100%)">
+    <div class="feedback-card-header">
+      <div>
+        <div class="feedback-card-title" id="unsaved-changes-title"><i class="ti ti-alert-triangle" aria-hidden="true"></i> <span class="i18n" data-en="You have unsaved changes" data-gr="Έχετε μη αποθηκευμένες αλλαγές">You have unsaved changes</span></div>
+        <div class="feedback-card-sub" id="unsaved-changes-message"><span class="i18n" data-en="Your recent changes to this client haven't been saved yet." data-gr="Οι πρόσφατες αλλαγές σε αυτόν τον πελάτη δεν έχουν αποθηκευτεί ακόμη.">Your recent changes to this client haven't been saved yet.</span></div>
+      </div>
+      <button class="feedback-close" onclick="resolveUnsavedChangesModal('cancel')" aria-label="Close">×</button>
+    </div>
+    <div class="feedback-card-body">
+      <div class="feedback-actions" style="flex-direction:column;align-items:stretch;gap:8px">
+        <button class="btn primary" onclick="resolveUnsavedChangesModal('save')" id="unsaved-save-btn"><i class="ti ti-device-floppy" aria-hidden="true"></i> <span class="i18n" data-en="Save & Continue" data-gr="Αποθήκευση & Συνέχεια">Save & Continue</span></button>
+        <button class="btn" onclick="resolveUnsavedChangesModal('discard')"><span class="i18n" data-en="Continue Without Saving" data-gr="Συνέχεια Χωρίς Αποθήκευση">Continue Without Saving</span></button>
+        <button class="btn" onclick="resolveUnsavedChangesModal('cancel')" style="color:var(--text-muted)"><span class="i18n" data-en="Cancel" data-gr="Ακύρωση">Cancel</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="feedback-modal no-print" id="confirm-action-modal" role="dialog" aria-modal="true" aria-labelledby="confirm-action-title">
+  <div class="feedback-card" style="width:min(420px,100%)">
+    <div class="feedback-card-header">
+      <div>
+        <div class="feedback-card-title" id="confirm-action-title"></div>
+        <div class="feedback-card-sub" id="confirm-action-message"></div>
+      </div>
+      <button class="feedback-close" onclick="resolveConfirmActionModal(false)" aria-label="Close">×</button>
+    </div>
+    <div class="feedback-card-body">
+      <div class="feedback-actions">
+        <button class="btn" onclick="resolveConfirmActionModal(false)"><span class="i18n" data-en="Cancel" data-gr="Ακύρωση">Cancel</span></button>
+        <button class="btn primary" onclick="resolveConfirmActionModal(true)" id="confirm-action-btn"></button>
+      </div>
     </div>
   </div>
 </div>
@@ -5996,7 +6028,9 @@ async function completePasswordReset(){
 }
 async function handleSignOut(){
   console.log('[Nutrese auth] handleSignOut called');
-  if(!confirm('Sign out?')) return;
+  const isGr=window.appLang==='gr';
+  const ok = await confirmAction({title: isGr?'Αποσύνδεση;':'Sign out?', message: isGr?'Θα χρειαστεί να συνδεθείτε ξανά για πρόσβαση στους πελάτες σας.':'You will need to sign in again to access your clients.', confirmLabel: isGr?'Αποσύνδεση':'Sign Out'});
+  if(!ok) return;
   isIntentionalNavigation = true;
   intentionalSignOut = true;
   console.log('[Nutrese auth] Sign out requested');
@@ -6916,40 +6950,62 @@ function getDairyDistribution(breakfastKey=(S.mealSel && S.mealSel.breakfast) ||
   return dist;
 }
 
-// ── FAT-EXCHANGE COMPENSATION RULE (dynamic templates only) ──────────────
-// mealSuffix()/mealSuffixEn() calculate olive oil from the client's
-// allocated `p.fat` exchanges and add it on top of whatever protein this
-// template names. For most proteins that's correct — chicken, pork loin,
-// tuna, and white fish are all close to the ~3-4g fat/100g "lean protein"
-// baseline the whole exchange system assumes, so no adjustment is needed.
+// ═══════════════════════════════════════════════════════════════════════
+// FAT-EXCHANGE COMPENSATION RULE (dynamic templates only) — READ BEFORE
+// ADDING OR MODIFYING ANY DYNAMIC PROTEIN TEMPLATE.
 //
-// But a few named proteins carry substantially more embedded fat than that
-// baseline (confirmed against FOOD_DATABASE fat100 values):
-//   - Salmon:          ~12.4g fat/100g
-//   - Bifteki/burger:  ~12.5g fat/100g
-//   - Halloumi:        ~25.0g fat/100g (already compensated, do not change)
-// For these, adding the FULL oil-exchange amount on top double-counts fat
-// against the client's actual daily target. The fix is the same in every
-// case: reduce the `p.fat` passed into mealSuffix by the embedded-fat
-// exchange-equivalent (roughly embedded_grams / 5, rounded) BEFORE the oil
-// calculation runs — e.g. `{...p, fat:Math.max(0,Number(p?.fat||0)-2)}`.
+// WHY THIS EXISTS:
+// mealSuffix()/mealSuffixEn() calculate olive oil from the client's
+// allocated `p.fat` exchanges and add it ON TOP of whatever protein the
+// template names. For lean proteins that's correct. But a few named
+// proteins carry substantially more embedded fat than the ~3-4g/100g
+// "lean protein" baseline the whole exchange system assumes — for those,
+// adding the FULL oil-exchange amount on top of the protein's own fat
+// double-counts fat against the client's actual daily target.
+//
+// WHICH FOODS CURRENTLY USE COMPENSATION (confirmed against FOOD_DATABASE
+// fat100 values, -2 fat exchanges applied to `p.fat` before the oil
+// calculation runs, e.g. `{...p, fat:Math.max(0,Number(p?.fat||0)-2)}`):
+//   - Salmon:          ~12.4g fat/100g  → -2 exchanges (LUN/DIN_SALMON_POTATO)
+//   - Bifteki/burger:  ~12.5g fat/100g  → -2 exchanges (LUN/DIN_BIFTEKI_BULGUR)
+//   - Halloumi:        ~25.0g fat/100g  → -2 exchanges (LUN/DIN_HALLOUMI_POTATO,
+//                       LUN/DIN_TRACHANAS_HALLOUMI) — this is the ORIGINAL,
+//                       longest-standing compensation; treat its value as
+//                       settled unless explicitly revisited.
 // `Math.max(0, ...)` guarantees this never goes negative even if a client
 // has very few fat exchanges allocated to begin with.
 //
-// This ONLY applies to dynamic (mealSuffix-based) templates, where oil is
-// actually calculated from remaining fat exchanges. Fixed-composition
-// meals (eggs, feta dishes, anthotyro dishes, etc.) hardcode their entire
-// composition as one fixed string — there's no separate "add oil from
-// exchanges" step to compensate, so this pattern does not apply to them.
-// Whether those fixed recipes were originally formulated with their own
-// embedded fat correctly in mind is a separate recipe-review question, not
-// a compensation-formula one.
+// WHY BEEF MINCE AND TOFU ARE INTENTIONALLY *NOT* COMPENSATED (yet):
+// Beef mince (~8.0g/100g) and tofu (~8.7g/100g) are genuinely elevated
+// above the lean baseline — this was found and confirmed during audit, not
+// overlooked. But the effect is meaningfully smaller than the ~12-25g/100g
+// cases above, and the deliberate clinical decision was to hold off rather
+// than compensate every food that's merely "somewhat above lean" — that
+// risks over-correcting foods where the real-world impact is marginal.
+// Revisit only with explicit clinical sign-off, not as a mechanical
+// extension of the salmon/bifteki/halloumi pattern.
+//
+// GOVERNANCE — ANY FUTURE HIGHER-FAT DYNAMIC PROTEIN TEMPLATE:
+// Do not add compensation to a new template just because its named protein
+// "seems fatty." Check its actual FOOD_DATABASE fat100 value, compare
+// against the lean baseline and the mince/tofu borderline case above, and
+// get clinical review before deciding whether it warrants the same -2
+// (or a different) adjustment. Compensation should stay a small, reviewed
+// exception list — not something applied by default or by pattern-matching.
+//
+// SCOPE: this ONLY applies to dynamic (mealSuffix-based) templates, where
+// oil is actually calculated from remaining fat exchanges. Fixed-
+// composition meals (eggs, feta dishes, anthotyro dishes, etc.) hardcode
+// their entire composition as one fixed string — there's no separate "add
+// oil from exchanges" step to compensate, so this pattern does not apply
+// to them. Whether those fixed recipes were originally formulated with
+// their own embedded fat correctly in mind is a separate recipe-review
+// question, not a compensation-formula one.
 //
 // Foods reviewed and confirmed NOT needing compensation: chicken, pork
-// loin, tuna (canned, drained), and generic/white fish — all close to or
-// below the lean-protein baseline already assumed. Beef mince (~8g/100g)
-// sits in between — a smaller, real effect, intentionally left uncompensated
-// for now pending review of its clinical impact.
+// loin, tuna (canned, drained), generic/white fish, lentils, chickpeas,
+// and other beans — all close to or below the lean-protein baseline.
+// ═══════════════════════════════════════════════════════════════════════
 const MEALS = {
   BRK_TOAST:       (ex,p) => `Τοστ (2 φέτες ψωμί ολικής) – 1 φέτα τυρί light + αγγούρι / ντοματίνια`,
   BRK_TOAST_TURKEY:(ex,p) => `Τοστ (2 φέτες ψωμί ολικής) – 1 φέτα τυρί light + 1 φέτα γαλοπούλα + αγγούρι`,
@@ -7041,8 +7097,8 @@ Object.assign(MEALS, {
   DIN_HALLOUMI_POTATO: (ex,p,audience) => 'Χαλούμι ψητό + πατάτα' + mealSuffix(ex,{...p,fat:Math.max(0,Number(p?.fat||0)-2)},'σαλάτα',null,'πατάτα','χαλούμι',false,audience),
   LUN_AVGOLEMONO_SOUP: (ex,p,audience) => 'Αυγολέμονο σούπα' + mealSuffix(ex,p,'λαχανικά σούπας',null,'ρύζι','κοτόπουλο',false,audience),
   DIN_AVGOLEMONO_SOUP: (ex,p,audience) => 'Αυγολέμονο σούπα' + mealSuffix(ex,p,'λαχανικά σούπας',null,'ρύζι','κοτόπουλο',false,audience),
-  LUN_TRACHANAS_HALLOUMI: (ex,p,audience) => 'Τραχανάς σούπα + χαλούμι' + mealSuffix(ex,{...p,fat:Math.max(0,Number(p?.fat||0)-2)},'λαχανικά',n=>'45g χαλούμι','τραχανά',audience),
-  DIN_TRACHANAS_HALLOUMI: (ex,p,audience) => 'Τραχανάς σούπα + χαλούμι' + mealSuffix(ex,{...p,fat:Math.max(0,Number(p?.fat||0)-2)},'λαχανικά',n=>'45g χαλούμι','τραχανά',audience),
+  LUN_TRACHANAS_HALLOUMI: (ex,p,audience) => 'Τραχανάς σούπα + χαλούμι' + mealSuffix(ex,{...p,fat:Math.max(0,Number(p?.fat||0)-2)},'λαχανικά',n=>'45g χαλούμι','τραχανά',null,false,audience),
+  DIN_TRACHANAS_HALLOUMI: (ex,p,audience) => 'Τραχανάς σούπα + χαλούμι' + mealSuffix(ex,{...p,fat:Math.max(0,Number(p?.fat||0)-2)},'λαχανικά',n=>'45g χαλούμι','τραχανά',null,false,audience),
   LUN_VEG_SOUP_CHICKEN: (ex,p,audience) => 'Χορτόσουπα με κοτόπουλο' + mealSuffix(ex,p,'χορτόσουπα',null,'ρύζι','κοτόπουλο',false,audience),
   DIN_VEG_SOUP_CHICKEN: (ex,p,audience) => 'Χορτόσουπα με κοτόπουλο' + mealSuffix(ex,p,'χορτόσουπα',null,'ρύζι','κοτόπουλο',false,audience),
   LUN_CHICKEN_QUINOA: (ex,p,audience) => `Κοτόπουλο + κινόα (120g ${audience==='patient'?'':'μαγειρεμένο '}κοτόπουλο + ½ φλ. κινόα μαγειρεμένη + 2 κ.γ. ελαιόλαδο) – σαλάτα (2 φλ.)`,
@@ -7077,8 +7133,8 @@ Object.assign(MEALS_EN, {
   DIN_HALLOUMI_POTATO: (ex,p,audience) => 'Grilled halloumi + potato' + mealSuffixEn(ex,{...p,fat:Math.max(0,Number(p?.fat||0)-2)},'salad',null,'potato','halloumi',false,audience),
   LUN_AVGOLEMONO_SOUP: (ex,p,audience) => 'Avgolemono soup' + mealSuffixEn(ex,p,'soup vegetables',null,'rice','chicken',false,audience),
   DIN_AVGOLEMONO_SOUP: (ex,p,audience) => 'Avgolemono soup' + mealSuffixEn(ex,p,'soup vegetables',null,'rice','chicken',false,audience),
-  LUN_TRACHANAS_HALLOUMI: (ex,p,audience) => 'Trachanas soup + halloumi' + mealSuffixEn(ex,{...p,fat:Math.max(0,Number(p?.fat||0)-2)},'vegetables',n=>'45g halloumi','trachanas',audience),
-  DIN_TRACHANAS_HALLOUMI: (ex,p,audience) => 'Trachanas soup + halloumi' + mealSuffixEn(ex,{...p,fat:Math.max(0,Number(p?.fat||0)-2)},'vegetables',n=>'45g halloumi','trachanas',audience),
+  LUN_TRACHANAS_HALLOUMI: (ex,p,audience) => 'Trachanas soup + halloumi' + mealSuffixEn(ex,{...p,fat:Math.max(0,Number(p?.fat||0)-2)},'vegetables',n=>'45g halloumi','trachanas',null,false,audience),
+  DIN_TRACHANAS_HALLOUMI: (ex,p,audience) => 'Trachanas soup + halloumi' + mealSuffixEn(ex,{...p,fat:Math.max(0,Number(p?.fat||0)-2)},'vegetables',n=>'45g halloumi','trachanas',null,false,audience),
   LUN_VEG_SOUP_CHICKEN: (ex,p,audience) => 'Vegetable soup with chicken' + mealSuffixEn(ex,p,'vegetable soup',null,'rice','chicken',false,audience),
   DIN_VEG_SOUP_CHICKEN: (ex,p,audience) => 'Vegetable soup with chicken' + mealSuffixEn(ex,p,'vegetable soup',null,'rice','chicken',false,audience),
   LUN_CHICKEN_QUINOA: (ex,p,audience) => `Chicken + quinoa (120g ${audience==='patient'?'':'cooked '}chicken + ½ cup cooked quinoa + 2 tsp olive oil) - salad (2 cups)`,
@@ -10129,17 +10185,22 @@ function calcAll() {
     else if(goal==='Weight Gain'||goal==='Muscle Gain') autoAdj=300;
   }
   const calAdjEl=document.getElementById('p-cal-adj');
-  const calAdjFieldRaw=v('p-cal-adj');
-  const profileComplete = !!(age && h && w);
   const calAdjFocused = document.activeElement===calAdjEl;
-  const isUntouched = calAdjFieldRaw==='' || parseFloat(calAdjFieldRaw)===S.calAdjAutoValue;
-  if(profileComplete && isUntouched && calAdjEl && !calAdjFocused){
-    calAdjEl.value = autoAdj;
-    S.calAdjAutoValue = autoAdj;
+  // Simple, reliable rule: the field auto-updates to the new goal's
+  // recommendation ONLY at the moment Goal actually changes during this
+  // session — overwriting whatever was there, manual or not. Between goal
+  // changes it's left completely alone, so the dietitian's edits persist
+  // through any other field change. On first load (S.lastCalAdjGoal
+  // undefined — fresh session or a just-loaded client), the current goal
+  // is recorded as the baseline WITHOUT touching the field, so a restored
+  // manual value is never disturbed just by opening/reloading a client.
+  if(S.lastCalAdjGoal===undefined){
+    S.lastCalAdjGoal = goal;
+  } else if(goal!==S.lastCalAdjGoal){
+    if(calAdjEl && !calAdjFocused) calAdjEl.value = autoAdj;
+    S.lastCalAdjGoal = goal;
   }
-  if(!profileComplete) S.calAdjAutoValue = undefined;
   const calAdj=parseFloat(v('p-cal-adj'))||0;
-  const calAdjIsManual = profileComplete && !isUntouched;
 
   Object.assign(S,{age,sex,height:h,weight:w,activity:act,conditions,condition:conditions[0]||'General',goal,meatType,dairyType,calAdj,name});
 
@@ -10198,52 +10259,23 @@ function calcAll() {
       if(tri==='2') pregAdj=340;
       else if(tri==='3') pregAdj=450;
     }
-    // FIX (2026-06): the field is now always auto-filled with the suggested
-    // adjustment (see top of this function), so calAdj IS the effective
-    // value whether auto or manual — no more "fall back to autoAdj if
-    // calAdj is 0" branching. That fallback was a latent bug: it meant a
-    // clinician who deliberately typed 0 (e.g. "no deficit despite Weight
-    // Loss goal") would have been silently overridden back to -500.
     goalKcal=tdee+calAdj+pregAdj; S.goalKcal=goalKcal;
     S.isPregnant=isPregnant;
-    S.pregnancyManualDeficit = isPregnant && calAdjIsManual && calAdj<0; // flagged in Engine Control
+    // Any negative adjustment during pregnancy is clinically noteworthy —
+    // the auto-suggestion for pregnancy is always >=0, so a negative value
+    // here only ever comes from a deliberate dietitian entry.
+    S.pregnancyManualDeficit = isPregnant && calAdj<0; // flagged in Engine Control
     const noteEl=document.getElementById('cal-adj-note');
     const isGrCal = window.appLang==='gr';
     if(noteEl){
       if(isPregnant){
-        noteEl.innerHTML = calAdjIsManual
-          ? (isGrCal
-              ? `Χειροκίνητη προσαρμογή: ${calAdj>0?'+':''}${calAdj} kcal + ${pregAdj} kcal (τρίμηνο εγκυμοσύνης ${v('p-trimester')||'1'})${calAdj<0?' — <i class="ti ti-alert-triangle" aria-hidden="true"></i> πρόκειται για θερμιδικό έλλειμμα κατά την εγκυμοσύνη· οι οδηγίες ACOG/DGA το αποθαρρύνουν εκτός αν ενδείκνυται ιατρικά':''}.`
-              : `Manual override: ${calAdj>0?'+':''}${calAdj} kcal + ${pregAdj} kcal (pregnancy trimester ${v('p-trimester')||'1'})${calAdj<0?' — <i class="ti ti-alert-triangle" aria-hidden="true"></i> this is a caloric deficit during pregnancy; ACOG/DGA guidance recommends against this unless specifically medically indicated':''}.`)
-          : (isGrCal
-              ? `Προτεινόμενο (επεξεργάσιμο): +0 kcal βασική προσαρμογή (ACOG/DGA: καμία θερμιδική περιοριστική ή στοχευμένη αύξηση κατά την εγκυμοσύνη) + ${pregAdj} kcal (τρίμηνο εγκυμοσύνης ${v('p-trimester')||'1'}). Ο στόχος «${goal}» δεν εφαρμόζεται σκόπιμα ως έλλειμμα/πλεόνασμα κατά την εγκυμοσύνη. Επεξεργαστείτε τον αριθμό παραπάνω μόνο αν ενδείκνυται ιατρικά έλλειμμα/πλεόνασμα.`
-              : `Suggested (editable): +0 kcal base adjustment (ACOG/DGA: no caloric restriction or goal-driven surplus during pregnancy) + ${pregAdj} kcal (pregnancy trimester ${v('p-trimester')||'1'}). Goal "${goal}" is intentionally NOT applied as a deficit/surplus while pregnant. Edit the number above only if a deficit/surplus is specifically medically indicated.`);
+        noteEl.innerHTML = isGrCal
+          ? `Βασική προσαρμογή: +0 kcal (ACOG/DGA: καμία θερμιδική περιοριστική ή στοχευμένη αύξηση κατά την εγκυμοσύνη) + ${pregAdj} kcal (τρίμηνο εγκυμοσύνης ${v('p-trimester')||'1'}).${calAdj<0?' <i class="ti ti-alert-triangle" aria-hidden="true"></i> Ο τρέχων αριθμός αντιστοιχεί σε θερμιδικό έλλειμμα κατά την εγκυμοσύνη· αυτό αποθαρρύνεται εκτός αν ενδείκνυται ιατρικά.':' Επεξεργαστείτε τον αριθμό παραπάνω μόνο αν ενδείκνυται ιατρικά έλλειμμα/πλεόνασμα.'}`
+          : `Base adjustment: +0 kcal (ACOG/DGA: no caloric restriction or goal-driven surplus during pregnancy) + ${pregAdj} kcal (pregnancy trimester ${v('p-trimester')||'1'}).${calAdj<0?' <i class="ti ti-alert-triangle" aria-hidden="true"></i> The current value reflects a caloric deficit during pregnancy — this is discouraged unless specifically medically indicated.':' Edit the number above only if a deficit/surplus is specifically medically indicated.'}`;
       } else {
-        noteEl.innerHTML = calAdjIsManual
-          ? (isGrCal
-              ? `Χειροκίνητη προσαρμογή: ${calAdj>0?'+':''}${calAdj} kcal (προτεινόμενο θα ήταν ${autoAdj>0?'+':''}${autoAdj} για «${goal}»)`
-              : `Manual override: ${calAdj>0?'+':''}${calAdj} kcal (suggested would be ${autoAdj>0?'+':''}${autoAdj} for "${goal}")`)
-          : (isGrCal
-              ? `Προτεινόμενο (επεξεργάσιμο): ${autoAdj>0?'+':''}${autoAdj} kcal για «${goal}». Επεξεργαστείτε τον αριθμό παραπάνω για διαφορετική προσαρμογή.`
-              : `Suggested (editable): ${autoAdj>0?'+':''}${autoAdj} kcal for "${goal}". Edit the number above for a different adjustment.`);
-      }
-      // Actionable mismatch warning — only for a genuine manual/goal
-      // mismatch (never overrides silently; the dietitian decides). A
-      // dismissal ("Keep Manual") is remembered for this exact goal+value
-      // combination so it doesn't re-nag until something actually changes.
-      const warnEl=document.getElementById('cal-adj-mismatch-warning');
-      const warnTextEl=document.getElementById('cal-adj-mismatch-text');
-      const mismatchNow = !isPregnant && calAdjIsManual && calAdj!==autoAdj;
-      const dismissedThisState = S.calAdjWarningDismissed && S.calAdjWarningDismissed.goal===goal && S.calAdjWarningDismissed.calAdj===calAdj;
-      if(warnEl && warnTextEl){
-        if(mismatchNow && !dismissedThisState){
-          warnTextEl.innerHTML = isGrCal
-            ? `<i class="ti ti-alert-triangle" aria-hidden="true"></i> Ενεργή χειροκίνητη προσαρμογή θερμίδων. Προτεινόμενη προσαρμογή για «${goal}»: ${autoAdj>0?'+':''}${autoAdj} kcal. Ενημέρωση;`
-            : `<i class="ti ti-alert-triangle" aria-hidden="true"></i> Manual calorie adjustment active. Recommended adjustment for ${goal}: ${autoAdj>0?'+':''}${autoAdj} kcal. Update?`;
-          warnEl.style.display='';
-        } else {
-          warnEl.style.display='none';
-        }
+        noteEl.innerHTML = isGrCal
+          ? `Προεπιλογή για «${goal}»: ${autoAdj>0?'+':''}${autoAdj} kcal. Επεξεργαστείτε τον αριθμό παραπάνω αν χρειάζεται.`
+          : `Default for "${goal}": ${autoAdj>0?'+':''}${autoAdj} kcal. Edit the number above if needed.`;
       }
     }
   } else {
@@ -10273,24 +10305,6 @@ function calcAll() {
   if(sidebarAvatarEl) sidebarAvatarEl.innerHTML = name ? clientAvatarHtml(S.clientPhoto, name, 34) : '';
 
   calcMacros(); calcExchanges(); updateDashMetrics(); renderEngine(); calcBodyComp();
-}
-// Dismiss the manual/goal mismatch warning without touching the value —
-// respects the dietitian's deliberate choice. Remembers exactly which
-// goal+value combination was dismissed so the warning correctly reappears
-// if either changes again (never silently suppressed forever).
-function keepManualCalAdj(){
-  S.calAdjWarningDismissed = { goal: v('p-goal'), calAdj: parseFloat(v('p-cal-adj'))||0 };
-  calcAll();
-}
-// Replace the manual override with the current goal's recommended
-// adjustment, and correctly re-mark the field as auto (not manual) so it
-// resumes tracking future goal changes automatically.
-function applyRecommendedCalAdj(){
-  const el=document.getElementById('p-cal-adj');
-  if(!el) return;
-  el.value = S.calAdjAutoValue ?? 0;
-  S.calAdjWarningDismissed = null;
-  calcAll();
 }
 
 function calcMacros(){
@@ -10775,9 +10789,27 @@ function buildOneDayPlan(){
       <div class="meal-desc">${m.text}${renderExtraFoodsForSlot(m.slot, null)}<br><span class="meal-tag">${lang==='EN'?'EN':'GR'}</span></div>
     </div>`).join('');
   const gapAbs=Math.abs(displayedGap);
-  const gapOk=gapAbs<=100;
-  const gapColor=gapOk?'var(--teal-600)':gapAbs<=200?'var(--warn)':'var(--err)';
-  const gapBadge=gapOk?'ok':gapAbs<=200?'warn':'err';
+  const exM=S.exMeta, exx=S.ex;
+  let gapOk, gapColor, gapBadge, pqRootCauseMsg=null;
+  if(exM && exx){
+    const oneDayTotalCHO = exx.fruit*exM.fruit.cho + exx.veg*exM.veg.cho + exx.dairy*exM.dairy.cho + exx.starch*exM.starch.cho;
+    const oneDayTotalPRO = exx.veg*exM.veg.pro + exx.dairy*exM.dairy.pro + exx.starch*exM.starch.pro + exx.protein*exM.protein.pro;
+    const oneDayTotalFAT = exx.dairy*exM.dairy.fat + exx.starch*exM.starch.fat + exx.protein*exM.protein.fat + exx.fat*exM.fat.fat;
+    const pq = evaluatePlanQuality(
+      {kcal:day.target, carb:S.carbG, prot:S.protG, fat:S.fatG},
+      {kcal:displayedTotalKcal, carb:oneDayTotalCHO, prot:oneDayTotalPRO, fat:oneDayTotalFAT}
+    );
+    gapOk=pq.overall==='ok';
+    gapColor=pq.overall==='ok'?'var(--teal-600)':pq.overall==='warn'?'var(--warn)':'var(--err)';
+    gapBadge=pq.overall;
+    pqRootCauseMsg = planQualityRootCauseMessage(pq.rootCause, lang!=='EN');
+  } else {
+    // Fallback if exchange state isn't ready yet — same simple kcal-only
+    // check as before, rather than crashing on a null reference.
+    gapOk=gapAbs<=100;
+    gapColor=gapOk?'var(--teal-600)':gapAbs<=200?'var(--warn)':'var(--err)';
+    gapBadge=gapOk?'ok':gapAbs<=200?'warn':'err';
+  }
   let gapAdvice='';
   const snackMoves=snackExchangeMoveDetails(S.mealSel, lang);
   if(snackMoves.length){
@@ -10817,7 +10849,11 @@ function buildOneDayPlan(){
       ${explained?`Extras/add-ons explain ${explained} kcal. `:''}${Math.abs(unexplained)>5?`Unexplained difference: ${unexplained>0?'+':''}${unexplained} kcal — review exchange allocation before giving this plan to a client.`:'No hidden exchange loss detected.'}
     </div>`;
   }
-  if(!gapOk && displayedGap<0){
+  if(!gapOk && pqRootCauseMsg){
+    gapAdvice+=`<div style="margin-top:8px;padding:8px 12px;background:var(--amber-bg);border-radius:6px;font-size:12px;color:var(--amber-text)">
+      <i class="ti ti-info-circle" aria-hidden="true"></i> ${pqRootCauseMsg}
+    </div>`;
+  } else if(!gapOk && displayedGap<0){
     const starchNeeded=Math.round(Math.abs(displayedGap)/81);
     const fatNeeded=Math.round(Math.abs(displayedGap)/45);
     const isFixedMeal=(key)=> (typeof isMigratedMeal==='function' && isMigratedMeal(key)) || (typeof mealCatalogIsFixedComposition==='function' && mealCatalogIsFixedComposition(key));
@@ -10972,7 +11008,13 @@ function buildSevenDay(){
   html+=`<th style="background:var(--teal-600);color:#fff;padding:8px;min-width:90px">${lang==='EN'?'Meal':'Γεύμα'}</th>`;
   S.weekPlans.forEach((p,di)=>{
     const dt=calcDayTotalsForPlan(p, lang, di);
-    const gapOk=Math.abs(dt.gap)<=100;
+    const exM=S.exMeta, exx=S.ex;
+    const gapOk = (exM && exx) ? evaluatePlanQuality(
+      {kcal:dt.target, carb:S.carbG, prot:S.protG, fat:S.fatG},
+      {kcal:dt.totalKcal, carb:exx.fruit*exM.fruit.cho+exx.veg*exM.veg.cho+exx.dairy*exM.dairy.cho+exx.starch*exM.starch.cho,
+       prot:exx.veg*exM.veg.pro+exx.dairy*exM.dairy.pro+exx.starch*exM.starch.pro+exx.protein*exM.protein.pro,
+       fat:exx.dairy*exM.dairy.fat+exx.starch*exM.starch.fat+exx.protein*exM.protein.fat+exx.fat*exM.fat.fat}
+    ).overall==='ok' : Math.abs(dt.gap)<=100;
     const dayLabel=weekDayLabel(p, di, lang);
     html+=`<th style="background:var(--teal-600);color:#fff;padding:8px;min-width:190px;text-align:center">
       ${dayLabel}<div style="font-size:10px;font-weight:400;margin-top:2px;color:${gapOk?'#E8F5E9':'#FFD580'}">${dt.totalKcal} kcal ${gapOk?'<i class="ti ti-circle-check" aria-hidden="true"></i>':dt.gap>0?'▲':'▼'}</div>
@@ -10996,7 +11038,14 @@ function buildSevenDay(){
     html+=`<td style="padding:8px;font-weight:700;color:var(--text-secondary);font-size:11px;border:1px solid var(--border)">${row.label}</td>`;
     S.weekPlans.forEach((p,di)=>{
       const dt=calcDayTotalsForPlan(p, lang, di);
-      const gapOk=Math.abs(dt.gap)<=100;
+      const exM2=S.exMeta, exx2=S.ex;
+      const dayPq2 = (exM2 && exx2) ? evaluatePlanQuality(
+        {kcal:dt.target, carb:S.carbG, prot:S.protG, fat:S.fatG},
+        {kcal:dt.totalKcal, carb:exx2.fruit*exM2.fruit.cho+exx2.veg*exM2.veg.cho+exx2.dairy*exM2.dairy.cho+exx2.starch*exM2.starch.cho,
+         prot:exx2.veg*exM2.veg.pro+exx2.dairy*exM2.dairy.pro+exx2.starch*exM2.starch.pro+exx2.protein*exM2.protein.pro,
+         fat:exx2.dairy*exM2.dairy.fat+exx2.starch*exM2.starch.fat+exx2.protein*exM2.protein.fat+exx2.fat*exM2.fat.fat}
+      ) : {overall: Math.abs(dt.gap)<=100?'ok':Math.abs(dt.gap)<=200?'warn':'err'};
+      const gapOk=dayPq2.overall==='ok';
       let cell='';
       if(row.key==='brk'){
         cell=sel('brk',di,filteredBrk,p.brk)+`<div style="color:var(--text-primary);font-size:12px;font-weight:600;line-height:1.4">${mealText(p.brk,null,lang)}${renderExtraFoodsForSlot('brk', di)}</div><div style="font-size:11px;color:var(--teal-600);margin-top:2px">${dt.brkKcal} kcal</div>`;
@@ -11014,7 +11063,7 @@ function buildSevenDay(){
         cell=`<div style="font-weight:700;font-size:12px">${dt.totalKcal} kcal</div>
           <div style="font-size:10px;color:var(--text-muted)">Target: ${dt.target}</div>
           <div style="font-size:10px;color:var(--text-muted)">Exchange: ${dt.exchangeTotalKcal}</div>
-          <div style="font-size:10px;color:${gapOk?'var(--teal-600)':Math.abs(dt.gap)<=200?'var(--warn)':'var(--err)'}">${dt.gap>0?'+':''}${dt.gap} ${gapOk?'<i class="ti ti-circle-check" aria-hidden="true"></i>':'<i class="ti ti-alert-triangle" aria-hidden="true"></i>'}</div>
+          <div style="font-size:10px;color:${dayPq2.overall==='ok'?'var(--teal-600)':dayPq2.overall==='warn'?'var(--warn)':'var(--err)'}">${dt.gap>0?'+':''}${dt.gap} ${gapOk?'<i class="ti ti-circle-check" aria-hidden="true"></i>':'<i class="ti ti-alert-triangle" aria-hidden="true"></i>'}</div>
           ${Math.abs(dt.exchangeGap||0)>5?`<div style="font-size:10px;color:var(--err);margin-top:2px">Exchange gap: ${dt.exchangeGap>0?'+':''}${dt.exchangeGap} kcal</div>`:''}
           ${dt.warnings&&dt.warnings.length?`<div style="font-size:9px;color:var(--warn);margin-top:3px">${dt.warnings.map(safeHtml).join(' · ')}</div>`:''}`;
       }
@@ -12328,6 +12377,85 @@ function applyRebalanceWeek(){
   if(el) el.innerHTML=`<div class="alert ${stillOff?'warn':'ok'}"><i class="ti ${stillOff?'ti-alert-triangle':'ti-circle-check'}" aria-hidden="true"></i> ${isGr?`Εφαρμόστηκε — ενημερώθηκαν ${dayCount} ημέρα${dayCount===1?'':'ες'}.`:`Applied — updated ${dayCount} day${dayCount===1?'':'s'}.`} ${resultLine}</div>`;
   if(!stillOff) setTimeout(()=>{ if(el && el.innerHTML.includes('ti-circle-check')) el.innerHTML=''; }, 4000);
 }
+// ═══════════════════════════════════════════════════════════════════════
+// ⚠ MANDATORY SINGLE SOURCE OF TRUTH FOR PLAN QUALITY — READ BEFORE ADDING
+// ANY NEW PLAN QUALITY DISPLAY ANYWHERE IN THE APP.
+//
+// This is the ONLY function permitted to decide plan-quality levels
+// (ok/warn/err) or perform root-cause detection. Every current caller (the
+// 7-Day summary card, the 7-Day per-day column headers, the One Day Plan
+// reconciliation panel) uses it — and every FUTURE screen must too:
+//   - Dashboard
+//   - Client Report / printed or exported plans
+//   - Manual Meal Plan Builder
+//   - AI Plan Builder
+//   - any other export or summary view added later
+// Do NOT write a new percentage/threshold calculation, a new tolerance
+// constant, or a parallel "is this plan good enough" check anywhere else.
+// Call evaluatePlanQuality() and render its result. If the calibration or
+// root-cause logic ever needs to change, it must only need to change here
+// — that is the entire point of this function existing.
+// ═══════════════════════════════════════════════════════════════════════
+// targets/actual: {kcal, carb, prot, fat} — actual should always be the
+// REAL generated meal-plan totals (calcDayTotals/calcDayTotalsForPlan),
+// not the exchange system's own abstract total — the exchange system can
+// diverge from what a patient actually receives (unallocated exchanges,
+// migrated-meal quirks), and checking the abstract total instead of the
+// real one would risk hiding exactly the kind of engine limitation this
+// function is meant to surface honestly.
+//
+// Percentage-based tolerance: ±5% = on target, ±5-10% = slightly outside
+// range, >10% = needs review. Root-cause detection separates two specific
+// situations from a genuine plan-quality problem:
+//   - 'exchange-cap': the shortfall is because the exchange system's daily
+//     portion caps can't deliver this much food at realistic serving
+//     sizes — not a badly-built plan, a structural ceiling.
+//   - 'low-target': the TARGET itself is below a widely-used clinical
+//     floor (1200 kcal), independent of how well the plan matches it —
+//     a target-generation issue, not a plan-quality one.
+function evaluatePlanQuality(targets, actual){
+  const pctTol = (tgt) => tgt > 0 ? tgt * 0.05 : Infinity;
+  const metricDefs = [
+    {key:'calories', tgt:targets.kcal, val:actual.kcal},
+    {key:'carbs',     tgt:targets.carb, val:actual.carb},
+    {key:'protein',   tgt:targets.prot, val:actual.prot},
+    {key:'fat',       tgt:targets.fat,  val:actual.fat},
+  ];
+  const metrics = metricDefs.map(m => {
+    const tol = pctTol(m.tgt);
+    const diff = Math.abs(m.val - m.tgt);
+    const level = diff<=tol ? 'ok' : diff<=tol*2 ? 'warn' : 'err';
+    return {...m, level};
+  });
+  const anyErr = metrics.some(m=>m.level==='err');
+  const anyWarn = metrics.some(m=>m.level==='warn');
+  const overall = anyErr ? 'err' : anyWarn ? 'warn' : 'ok';
+
+  let rootCause = null;
+  if(overall!=='ok'){
+    const kcalBelowTarget = actual.kcal < targets.kcal;
+    const exchangeCapped = !!(S.exGap && (S.exGap.starchCapped || S.exGap.proteinCapped || S.exGap.fatCapped));
+    if(targets.kcal>0 && targets.kcal<1200){
+      rootCause = 'low-target';
+    } else if(kcalBelowTarget && exchangeCapped){
+      rootCause = 'exchange-cap';
+    }
+  }
+  return {metrics, overall, rootCause};
+}
+function planQualityRootCauseMessage(rootCause, isGr){
+  if(rootCause==='exchange-cap'){
+    return isGr
+      ? 'Τα τρέχοντα όρια του συστήματος ισοδυνάμων δεν επιτρέπουν πλήρη επίτευξη αυτού του στόχου θερμίδων διατηρώντας ρεαλιστικές μερίδες τροφίμων.'
+      : 'Current exchange-system limits cannot fully achieve this calorie target while maintaining realistic food portions.';
+  }
+  if(rootCause==='low-target'){
+    return isGr
+      ? 'Ο υπολογισμένος στόχος θερμίδων είναι ασυνήθιστα χαμηλός — αυτό αφορά τον υπολογισμό του στόχου, όχι την ποιότητα του πλάνου. Επανεξετάστε την προσαρμογή θερμίδων στο Προφίλ Πελάτη.'
+      : 'The calculated calorie target is unusually low — this reflects the target calculation, not the generated plan. Review the calorie adjustment in Client Profile.';
+  }
+  return null;
+}
 function renderPlanQualitySummary(){
   const el=document.getElementById('plan-quality-summary'); if(!el) return;
   if(!S.ex || !S.exMeta){ el.innerHTML=''; return; }
@@ -12337,39 +12465,39 @@ function renderPlanQualitySummary(){
     return;
   }
   const ex=S.ex, m=S.exMeta;
-  const totalKcal = ex.fruit*m.fruit.kcal + ex.veg*m.veg.kcal + ex.dairy*m.dairy.kcal + ex.starch*m.starch.kcal + ex.protein*m.protein.kcal + ex.fat*m.fat.kcal;
+  // Real generated-plan kcal (week average), not the abstract exchange
+  // total — the exchange system can diverge from what the plan actually
+  // delivers, and checking the real number is what keeps this function
+  // honest rather than potentially hiding an engine limitation.
+  let actualKcal = ex.fruit*m.fruit.kcal + ex.veg*m.veg.kcal + ex.dairy*m.dairy.kcal + ex.starch*m.starch.kcal + ex.protein*m.protein.kcal + ex.fat*m.fat.kcal;
+  if(S.weekPlans && S.weekPlans.length){
+    const dayTotals = S.weekPlans.map((day,i)=>calcDayTotalsForPlan(day, S.mealLanguage||'GR', i).totalKcal);
+    actualKcal = dayTotals.reduce((a,b)=>a+b,0)/dayTotals.length;
+  }
   const totalCHO  = ex.fruit*m.fruit.cho + ex.veg*m.veg.cho + ex.dairy*m.dairy.cho + ex.starch*m.starch.cho;
   const totalPRO  = ex.veg*m.veg.pro + ex.dairy*m.dairy.pro + ex.starch*m.starch.pro + ex.protein*m.protein.pro;
   const totalFAT  = ex.dairy*m.dairy.fat + ex.starch*m.starch.fat + ex.protein*m.protein.fat + ex.fat*m.fat.fat;
-  const goal=S.goalKcal||0;
-  const metrics=[
-    [isGr?'Θερμίδες':'Calories', goal, totalKcal, 50],
-    [isGr?'Υδατάνθρακες':'Carbs', S.carbG, totalCHO, 10],
-    [isGr?'Πρωτεΐνη':'Protein', S.protG, totalPRO, 10],
-    [isGr?'Λίπος':'Fat', S.fatG, totalFAT, 5],
-  ];
-  const scored=metrics.map(([label,tgt,plan,tol])=>{
-    const diff=Math.abs(plan-tgt);
-    const level = diff<=tol ? 'ok' : diff<=tol*2 ? 'warn' : 'err';
-    return {label,level};
-  });
-  const anyErr=scored.some(s=>s.level==='err');
-  const anyWarn=scored.some(s=>s.level==='warn');
-  const overall = anyErr ? 'err' : anyWarn ? 'warn' : 'ok';
+
+  const {metrics, overall, rootCause} = evaluatePlanQuality(
+    {kcal:S.goalKcal, carb:S.carbG, prot:S.protG, fat:S.fatG},
+    {kcal:actualKcal, carb:totalCHO, prot:totalPRO, fat:totalFAT}
+  );
+  const metricLabel = {calories:isGr?'Θερμίδες':'Calories', carbs:isGr?'Υδατάνθρακες':'Carbs', protein:isGr?'Πρωτεΐνη':'Protein', fat:isGr?'Λίπος':'Fat'};
   const overallText = {
-    ok: isGr?'Ισχυρό αρχικό πλάνο':'Strong starting plan',
-    warn: isGr?'Καλό πλάνο — μικρές προσαρμογές προτείνονται':'Good plan — minor adjustments suggested',
-    err: isGr?'Χρειάζεται επανεξέταση πριν την κοινοποίηση':'Needs review before sharing with client',
+    ok: isGr?'Εντός στόχου':'On target',
+    warn: isGr?'Ελαφρώς εκτός εύρους στόχου':'Slightly outside target range',
+    err: isGr?'Χρειάζεται επανεξέταση':'Needs review',
   }[overall];
   const iconFor = level => level==='ok' ? '<i class="ti ti-circle-check" aria-hidden="true"></i>' : level==='warn' ? '<i class="ti ti-alert-triangle" aria-hidden="true"></i>' : '<i class="ti ti-circle-x" aria-hidden="true"></i>';
   const textFor = (label,level) => {
     if(level==='ok') return isGr?`${label}: εντός στόχου`:`${label}: On target`;
-    if(level==='warn') return isGr?`${label}: ελαφρώς εκτός στόχου`:`${label}: Slightly off target`;
-    return isGr?`${label}: σημαντική απόκλιση`:`${label}: Significantly off target`;
+    if(level==='warn') return isGr?`${label}: ελαφρώς εκτός εύρους`:`${label}: Slightly outside target range`;
+    return isGr?`${label}: χρειάζεται επανεξέταση`:`${label}: Needs review`;
   };
+  const rootCauseMsg = planQualityRootCauseMessage(rootCause, isGr);
   const detailRows=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px 16px;font-size:13px;margin-top:10px">
-        ${scored.map(s=>`<div style="display:flex;align-items:center;gap:6px">${iconFor(s.level)} <span>${textFor(s.label,s.level)}</span></div>`).join('')}
-      </div>`;
+        ${metrics.map(s=>`<div style="display:flex;align-items:center;gap:6px">${iconFor(s.level)} <span>${textFor(metricLabel[s.key],s.level)}</span></div>`).join('')}
+      </div>${rootCauseMsg?`<div style="margin-top:10px;padding:8px 12px;background:var(--amber-bg);border-radius:6px;font-size:12px;color:var(--amber-text)"><i class="ti ti-info-circle" aria-hidden="true"></i> ${rootCauseMsg}</div>`:''}`;
   const autoDefault = overall!=='ok';
   const expandDefault = S.planQualityUserOverride!==undefined ? S.planQualityUserOverride : autoDefault;
   el.innerHTML=`<div class="card" style="margin:0;border:1px solid var(--border)">
@@ -12564,11 +12692,11 @@ function renderMicronutrientCoverage(){
   const dayNamesEn=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
   const dayNamesGr=['Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο','Κυριακή'];
   const signalText=(type,value)=>{
-    const muted='<span style="color:var(--text-muted)">'+(isGr?'Δεν εντοπίστηκε':'Not detected')+'</span>';
+    const muted='<span style="color:var(--text-muted)">'+(isGr?'Δεν εντοπίστηκε σημαντική πηγή':'No significant source identified')+'</span>';
     const map={
-      iron:{redMeat:isGr?'Κόκκινο κρέας':'Red meat',legume:isGr?'Όσπρια':'Legumes',fish:isGr?'Ψάρι':'Fish'},
-      vitaminD:{fattyFish:isGr?'Σολομός / λιπαρό ψάρι':'Salmon / fatty fish',egg:isGr?'Αυγό (πιθανή πηγή)':'Egg (possible source)'},
-      magnesium:{legume:isGr?'Όσπρια':'Legumes',nuts:isGr?'Ξηροί καρποί':'Nuts'}
+      iron:{redMeat:isGr?'Κόκκινο κρέας (πιθανή πηγή)':'Red meat (possible source)',legume:isGr?'Όσπρια (πιθανή πηγή)':'Legumes (possible source)',fish:isGr?'Ψάρι (πιθανή πηγή)':'Fish (possible source)'},
+      vitaminD:{fattyFish:isGr?'Σολομός / λιπαρό ψάρι (πιθανή πηγή)':'Salmon / fatty fish (possible source)',egg:isGr?'Αυγό (πιθανή πηγή)':'Egg (possible source)'},
+      magnesium:{legume:isGr?'Όσπρια (πιθανή πηγή)':'Legumes (possible source)',nuts:isGr?'Ξηροί καρποί (πιθανή πηγή)':'Nuts (possible source)'}
     };
     return (map[type]&&map[type][value]) ? `<span style="font-weight:700;color:var(--text-primary)">${map[type][value]}</span>` : muted;
   };
@@ -12608,6 +12736,7 @@ function renderMicronutrientCoverage(){
     <div class="card-header"><span class="card-title"><i class="ti ti-apple" aria-hidden="true"></i> ${isGr?'Κάλυψη Μικροθρεπτικών (Αυτή η Εβδομάδα)':'Micronutrient Coverage (This Week)'}</span></div>
     <div class="card-body">
       <div class="field-note" style="margin-bottom:2px">${isGr?'Πληροφοριακή επισκόπηση για εσάς — δεν εμφανίζεται στην τυπωμένη αναφορά πελάτη.':'Informational overview for your reference — not included in the printed client report.'}</div>
+      <div class="field-note" style="margin-bottom:2px;font-style:italic">${isGr?'Εκτίμηση βάσει σύνθεσης ομάδων τροφίμων και προτύπων γευμάτων. Υποστηρίζει την κλινική κρίση και δεν αντικαθιστά εργαστηριακή αξιολόγηση ή πλήρη ανάλυση θρεπτικών συστατικών.':'Estimated from food-group composition and meal patterns. Supports clinical judgement and does not replace laboratory assessment or a full nutrient analysis.'}</div>
       <div style="font-size:14px;color:var(--text-primary);margin-top:8px;line-height:1.5">${summaryLine}</div>
       ${suggestionRows}
       ${dayByDayTable}
@@ -14371,9 +14500,10 @@ function downloadClientDocument(id){
     console.error('Could not download client document',err);
   }
 }
-function deleteClientDocument(id){
+async function deleteClientDocument(id){
   const isGr=window.appLang==='gr';
-  if(!confirm(isGr?'Διαγραφή αυτού του εγγράφου;':'Delete this document?')) return;
+  const ok = await confirmAction({title: isGr?'Διαγραφή εγγράφου;':'Delete document?', message: isGr?'Αυτή η ενέργεια δεν μπορεί να αναιρεθεί.':'This action cannot be undone.', confirmLabel: isGr?'Διαγραφή':'Delete', danger:true});
+  if(!ok) return;
   S.clientDocuments=(Array.isArray(S.clientDocuments)?S.clientDocuments:[]).filter(d=>String(d.id)!==String(id));
   persistClientDocumentsLocal();
   renderClientDocuments(); persistClientDocumentsNow('delete');
@@ -15307,7 +15437,9 @@ async function saveRecipe(){
   alert(savedToCloud ? `Recipe ${action}.` : `Recipe ${action} locally.`);
 }
 async function deleteRecipe(id){
-  if(!confirm('Delete this recipe?')) return;
+  const isGr=window.appLang==='gr';
+  const ok = await confirmAction({title: isGr?'Διαγραφή συνταγής;':'Delete recipe?', message: isGr?'Αυτή η ενέργεια δεν μπορεί να αναιρεθεί.':'This action cannot be undone.', confirmLabel: isGr?'Διαγραφή':'Delete', danger:true});
+  if(!ok) return;
   if(currentUser && !String(id).startsWith('recipe_')) await supabaseClient.from('recipes').delete().eq('id',id);
   S.recipes=(S.recipes||[]).filter(r=>r.id!==id);
   persistRecipesLocal();
@@ -15898,7 +16030,9 @@ async function saveAppointmentFromForm(){
 async function deleteAppointment(id){
   const appt=(S.appointments||[]).find(a=>String(a.id)===String(id));
   if(!appt) return;
-  if(!confirm('Delete this appointment?')) return;
+  const isGr=window.appLang==='gr';
+  const ok = await confirmAction({title: isGr?'Διαγραφή ραντεβού;':'Delete appointment?', message: isGr?'Αυτή η ενέργεια δεν μπορεί να αναιρεθεί.':'This action cannot be undone.', confirmLabel: isGr?'Διαγραφή':'Delete', danger:true});
+  if(!ok) return;
   if(currentUser && !String(id).startsWith('appt_')) await supabaseClient.from('appointments').delete().eq('id',id).eq('user_id',currentUser.id);
   await syncAppointmentDeletionToGoogleCalendar(appt);
   S.appointments=(S.appointments||[]).filter(a=>String(a.id)!==String(id));
@@ -15949,7 +16083,7 @@ return {
     weekPlans:S.weekPlans, savedWeeklyPlan:S.savedWeeklyPlan, customMeals:S.customMeals, mealLanguage:S.mealLanguage, reportOptions:S.reportOptions,
     currentTemplate:S.currentTemplate||null,
     sevenDayView:S.sevenDayView, sevenDayActiveIndex:S.sevenDayActiveIndex, aiPlanStatus:S.aiPlanStatus,
-    weightSuggestionLocked:S.weightSuggestionLocked, calAdjAutoValue:S.calAdjAutoValue, bcManual:S.bcManual,
+    weightSuggestionLocked:S.weightSuggestionLocked, bcManual:S.bcManual,
     intake:S.intake, notes:S.notes, labValues:S.labValues, labDate:S.labDate, clientDocuments:S.clientDocuments, extraFoods:S.extraFoods, equivalentNotes:S.equivalentNotes,
     clientPhoto:S.clientPhoto,
     savedAt:new Date().toISOString()
@@ -15964,7 +16098,7 @@ function applyState(state){
   Object.entries(state.fields||{}).forEach(([id,val])=>{const el=document.getElementById(id); if(el) el.value=val;});
   setActiveClientIdentity(state.clientId || state.activeClientId || null, state.clientRef || state.activeClientRef || state.fields?.['p-id'] || '');
   S.weightSuggestionLocked=state.weightSuggestionLocked!==undefined ? !!state.weightSuggestionLocked : !!(state.fields&&state.fields['p-weight']);
-  S.calAdjAutoValue=state.calAdjAutoValue;
+  S.lastCalAdjGoal=undefined;
   S.bcManual={fatmass:false,ffm:false,muscle:false,...(state.bcManual||{})};
   if(state.fields&&state.fields['bc-fatmass']&&state.bcManual===undefined) S.bcManual.fatmass=true;
   if(state.fields&&state.fields['bc-muscle']&&state.bcManual===undefined) S.bcManual.muscle=true;
@@ -16030,7 +16164,7 @@ function applyState(state){
 function resetForm(){
   setActiveClientIdentity(null, '');
   S.clientPhoto='';
-  S.calAdjAutoValue = undefined;
+  S.lastCalAdjGoal = undefined;
   S.weightSuggestionLocked = false;
   S.bcManual = {fatmass:false,ffm:false,muscle:false};
   resetMacroExplanation();
@@ -16365,7 +16499,14 @@ function existingClientDisplayName(existingRow){
 }
 
 async function newClient(){
-  if(!confirm('Start a new client? Unsaved changes to the current client will be lost (use "Save Client" first if needed).')) return;
+  if(S_isDirty){
+    const choice = await confirmUnsavedChanges();
+    if(choice==='cancel') return;
+    if(choice==='save'){
+      const ok = await saveCurrentClient({silent:true});
+      if(!ok) return;
+    }
+  }
   resetForm();
   await ensureActiveClientIdentity();
   nav('intake');
@@ -16404,6 +16545,46 @@ function openSaveConfirmModal(){
 function closeSaveConfirmModal(){
   const modal=document.getElementById('save-confirm-modal');
   if(modal) modal.classList.remove('open');
+}
+// Reusable "unsaved changes" confirmation — replaces native confirm()
+// dialogs (which can't render HTML and were showing raw markup to
+// dietitians) with a consistent Nutrese-styled modal. Returns a Promise
+// resolving to 'save' | 'discard' | 'cancel', so any call site can simply
+// `await confirmUnsavedChanges()` instead of relying on a synchronous
+// browser dialog.
+let _unsavedChangesResolve=null;
+function confirmUnsavedChanges(){
+  const modal=document.getElementById('unsaved-changes-modal');
+  if(!modal) return Promise.resolve('discard'); // fail-safe: never block navigation if the modal is missing
+  modal.classList.add('open');
+  return new Promise(resolve => { _unsavedChangesResolve = resolve; });
+}
+function resolveUnsavedChangesModal(choice){
+  const modal=document.getElementById('unsaved-changes-modal');
+  if(modal) modal.classList.remove('open');
+  if(_unsavedChangesResolve){ _unsavedChangesResolve(choice); _unsavedChangesResolve=null; }
+}
+// Reusable confirmation modal — replaces native confirm() for destructive
+// or important actions (delete, sign out, overwrite) with a consistent
+// Nutrese-styled dialog. Returns a Promise<boolean> so any call site can
+// simply `if (await confirmAction({...})) { ... }` in place of
+// `if (confirm('...')) { ... }`.
+let _confirmActionResolve=null;
+function confirmAction({title, message, confirmLabel, danger=false}){
+  const modal=document.getElementById('confirm-action-modal');
+  if(!modal) return Promise.resolve(true); // fail-safe: never silently block the action if the modal is missing
+  document.getElementById('confirm-action-title').textContent = title;
+  document.getElementById('confirm-action-message').textContent = message;
+  const btn=document.getElementById('confirm-action-btn');
+  btn.textContent = confirmLabel || (window.appLang==='gr' ? 'Επιβεβαίωση' : 'Confirm');
+  btn.className = danger ? 'btn danger' : 'btn primary';
+  modal.classList.add('open');
+  return new Promise(resolve => { _confirmActionResolve = resolve; });
+}
+function resolveConfirmActionModal(choice){
+  const modal=document.getElementById('confirm-action-modal');
+  if(modal) modal.classList.remove('open');
+  if(_confirmActionResolve){ _confirmActionResolve(choice); _confirmActionResolve=null; }
 }
 async function confirmSaveClient(){
   const isGr=window.appLang==='gr';
@@ -16463,13 +16644,13 @@ async function saveCurrentClient(options={}){
   const existingLocal=loadLocalClients().find(c=>String(c.id)===String(identity.id));
   if(existingLocal && shouldWarnRiskyClientOverwrite(state, existingLocal)){
     const existingName=existingClientDisplayName(existingLocal);
-    const ok=confirm(`<i class="ti ti-alert-triangle" aria-hidden="true"></i> This will overwrite the existing client "${existingName}" with blank/incomplete data. Their saved profile, body composition, exchanges, and meal plans may be lost. Continue?`);
+    const ok = await confirmAction({title:'Overwrite existing client?', message:`This will overwrite the existing client "${existingName}" with blank/incomplete data. Their saved profile, body composition, exchanges, and meal plans may be lost.`, confirmLabel:'Continue', danger:true});
     if(!ok) return;
   }
   if(!currentUser){
     upsertLocalClient(localRow);
     S_isDirty=false;
-    if(!silent) alert('<i class="ti ti-circle-check" aria-hidden="true"></i> Client saved locally: '+name+'\n\nFind it anytime under "My Clients".');
+    if(!silent) alert('Client saved locally: '+name+'\n\nFind it anytime under "My Clients".');
     await renderClientList();
     refreshConditionVisualState();
     finishBtn(true);
@@ -16487,7 +16668,7 @@ async function saveCurrentClient(options={}){
     if(existing){
       if(!existingLocal && shouldWarnRiskyClientOverwrite(state, existing)){
         const existingName=existingClientDisplayName(existing);
-        const ok=confirm(`<i class="ti ti-alert-triangle" aria-hidden="true"></i> This will overwrite the existing client "${existingName}" with blank/incomplete data. Their saved profile, body composition, exchanges, and meal plans may be lost. Continue?`);
+        const ok = await confirmAction({title:'Overwrite existing client?', message:`This will overwrite the existing client "${existingName}" with blank/incomplete data. Their saved profile, body composition, exchanges, and meal plans may be lost.`, confirmLabel:'Continue', danger:true});
         if(!ok) return;
       }
     }
@@ -16500,11 +16681,11 @@ async function saveCurrentClient(options={}){
     console.error('[Nutrese clients] Supabase save failed', error);
     upsertLocalClient(localRow);
     S_isDirty=false;
-    if(!silent) alert('<i class="ti ti-circle-check" aria-hidden="true"></i> Client saved locally: '+name+'\n\nSupabase clients table is unavailable or not configured yet: '+(error.message||error));
+    if(!silent) alert('Client saved locally: '+name+'\n\nSupabase clients table is unavailable or not configured yet: '+(error.message||error));
   } else {
     if(savedRemote) upsertLocalClient({...savedRemote, localOnly:false});
     S_isDirty=false; // changes are now safely in the cloud
-    if(!silent) alert('<i class="ti ti-circle-check" aria-hidden="true"></i> Client saved: '+name+'\n\nFind it anytime under "My Clients" in the sidebar.');
+    if(!silent) alert('Client saved: '+name+'\n\nFind it anytime under "My Clients" in the sidebar.');
   }
   await renderClientList();
   refreshConditionVisualState();
@@ -16515,9 +16696,14 @@ async function saveCurrentClient(options={}){
 async function loadClientById(rowId){
   // Warn before switching, so in-progress edits to the current client
   // aren't silently lost — same protection newClient() already has.
-  const currentName = v('p-name');
-  if(currentName && currentName.trim()!==''){
-    if(!confirm(`Switch to a different client?\n\nAny unsaved changes to "${currentName}" will be lost. Click "<i class="ti ti-device-floppy" aria-hidden="true"></i> Save Client" first if you want to keep them.`)) return;
+  if(S_isDirty){
+    const choice = await confirmUnsavedChanges();
+    if(choice==='cancel') return;
+    if(choice==='save'){
+      const ok = await saveCurrentClient({silent:true});
+      if(!ok) return; // don't switch clients if the save itself failed
+    }
+    // 'discard' or a successful 'save' both fall through to load below
   }
   let data=null;
   const localFallback=()=>loadLocalClients().find(c=>String(c.id)===String(rowId) || String(c.client_ref)===String(rowId));
@@ -16543,7 +16729,9 @@ async function loadClientById(rowId){
 }
 
 async function deleteClientById(rowId){
-  if(!confirm('Delete this client permanently? This cannot be undone.')) return;
+  const isGr=window.appLang==='gr';
+  const ok = await confirmAction({title: isGr?'Οριστική διαγραφή πελάτη;':'Delete client permanently?', message: isGr?'Αυτή η ενέργεια δεν μπορεί να αναιρεθεί. Το προφίλ, οι στόχοι, τα πλάνα γευμάτων και το ιστορικό παρακολούθησης θα διαγραφούν οριστικά.':'This cannot be undone. Their profile, targets, meal plans, and follow-up history will be permanently deleted.', confirmLabel: isGr?'Διαγραφή Πελάτη':'Delete Client', danger:true});
+  if(!ok) return;
   let deletedRemote=false;
   if(currentUser && !String(rowId).startsWith('local_')){
     try{
@@ -16646,9 +16834,9 @@ function filterClientList(){
 async function exportAllClients(){
   if(!currentUser){ alert('Please sign in first.'); return; }
   const {data:clients, error} = await supabaseClient.from('clients').select('*').eq('user_id',currentUser.id);
-  if(error){ alert('<i class="ti ti-alert-triangle" aria-hidden="true"></i> Could not fetch clients: '+error.message); return; }
+  if(error){ alert('Could not fetch clients: '+error.message); return; }
   if(!clients || !clients.length){
-    alert('No saved clients to back up yet. Save at least one client first ("<i class="ti ti-device-floppy" aria-hidden="true"></i> Save Client" on Client Profile).');
+    alert('No saved clients to back up yet. Save at least one client first ("Save Client" on Client Profile).');
     return;
   }
   const backup={app:'Nutrese', version:'v1', exportedAt:new Date().toISOString(), clients:clients.map(c=>({id:c.id, client_ref:c.client_ref, name:c.name, state:c.data}))};
@@ -16674,7 +16862,7 @@ function importClientsFile(input){
       const data=JSON.parse(e.target.result);
       const imported = data.clients || (Array.isArray(data) ? data : null);
       if(!imported || !Array.isArray(imported)){
-        alert('<i class="ti ti-alert-triangle" aria-hidden="true"></i> This file doesn\'t look like a Nutrese backup.');
+        alert('This file doesn\'t look like a Nutrese backup.');
         return;
       }
       let added=0, updated=0;
@@ -16688,9 +16876,9 @@ function importClientsFile(input){
         if(existed) updated++; else added++;
       }
       renderClientList();
-      alert(`<i class="ti ti-circle-check" aria-hidden="true"></i> Restore complete.\n\nAdded: ${added}\nUpdated: ${updated}`);
+      alert(`Restore complete.\n\nAdded: ${added}\nUpdated: ${updated}`);
     }catch(err){
-      alert('<i class="ti ti-alert-triangle" aria-hidden="true"></i> Could not read this file — make sure it\'s an unmodified Nutrese backup JSON.');
+      alert('Could not read this file — make sure it\'s an unmodified Nutrese backup JSON.');
     }
     input.value='';
   };
