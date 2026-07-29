@@ -9165,6 +9165,7 @@ function autoSnackExtrasForPlan(plan){
   p.snk1Extras=p.snack1Extras;
   p.snk2Extras=p.snack2Extras;
   if(original.day) p.day=original.day;
+  if(original.manualMeals) p.manualMeals=original.manualMeals;
   return p;
 }
 
@@ -12621,14 +12622,30 @@ function renderPlanQualitySummary(){
     err: isGr?'Χρειάζεται επανεξέταση':'Needs review',
   }[overall];
   const iconFor = level => level==='ok' ? '<i class="ti ti-circle-check" aria-hidden="true"></i>' : level==='warn' ? '<i class="ti ti-alert-triangle" aria-hidden="true"></i>' : '<i class="ti ti-circle-x" aria-hidden="true"></i>';
-  const textFor = (label,level) => {
+  // Per-metric exchange-cap attribution: a shortfall in carbs/protein/fat
+  // that's explained by that specific exchange category hitting its
+  // configured daily cap is a controlled clinical limitation, not an
+  // unexplained plan defect — it should read differently from a genuine
+  // imbalance. Calories inherit "capped" if ANY of the three contributed,
+  // since calories are their aggregate. This only changes which label is
+  // shown for a metric already at 'warn'/'err' — the underlying level,
+  // thresholds, and rootCause detection are completely unchanged.
+  const capFlagFor = {
+    calories: !!(S.exGap && (S.exGap.starchCapped || S.exGap.proteinCapped || S.exGap.fatCapped)),
+    carbs: !!(S.exGap && S.exGap.starchCapped),
+    protein: !!(S.exGap && S.exGap.proteinCapped),
+    fat: !!(S.exGap && S.exGap.fatCapped),
+  };
+  const iconForMetric = (key,level) => (level!=='ok' && capFlagFor[key]) ? '<i class="ti ti-shield-check" aria-hidden="true"></i>' : iconFor(level);
+  const textFor = (metricKey,label,level) => {
     if(level==='ok') return isGr?`${label}: εντός στόχου`:`${label}: On target`;
+    if(capFlagFor[metricKey]) return isGr?`${label}: Περιορισμένο από τα όρια ισοδυνάμων`:`${label}: Constrained by exchange limits`;
     if(level==='warn') return isGr?`${label}: ελαφρώς εκτός εύρους`:`${label}: Slightly outside target range`;
     return isGr?`${label}: χρειάζεται επανεξέταση`:`${label}: Needs review`;
   };
   const rootCauseMsg = planQualityRootCauseMessage(rootCause, isGr);
   const detailRows=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px 16px;font-size:13px;margin-top:10px">
-        ${metrics.map(s=>`<div style="display:flex;align-items:center;gap:6px">${iconFor(s.level)} <span>${textFor(metricLabel[s.key],s.level)}</span></div>`).join('')}
+        ${metrics.map(s=>`<div style="display:flex;align-items:center;gap:6px${capFlagFor[s.key]&&s.level!=='ok'?';color:var(--teal-700)':''}">${iconForMetric(s.key,s.level)} <span>${textFor(s.key,metricLabel[s.key],s.level)}</span></div>`).join('')}
       </div>${rootCauseMsg?`<div style="margin-top:10px;padding:8px 12px;background:var(--amber-bg);border-radius:6px;font-size:12px;color:var(--amber-text)"><i class="ti ti-info-circle" aria-hidden="true"></i> ${rootCauseMsg}</div>`:''}`;
   const autoDefault = overall!=='ok';
   const expandDefault = S.planQualityUserOverride!==undefined ? S.planQualityUserOverride : autoDefault;
@@ -15774,8 +15791,46 @@ function rebuildMealDropdownOptions(){
 }
 function openCustomMealBuilder(context){
   S.customMealContext=context||null;
-  S.customMealDraft={recipe_id:null, ingredients:[], totals:{kcal:0,protein_g:0,carbohydrate_g:0,fat_g:0,fiber_g:0}, exchanges:{}};
-  const name=document.getElementById('custom-meal-name'); if(name) name.value='';
+  const nameEl=document.getElementById('custom-meal-name');
+  let seeded=false;
+  // Determine what's currently selected in this slot — preserved correctly
+  // at call time, since the dropdown reverts to it before this fires.
+  const currentKey = context?.type==='oneday'
+    ? S.mealSel?.[context.slot]
+    : context?.type==='week'
+      ? S.weekPlans?.[context.dayIndex]?.[context.key]
+      : null;
+  if(currentKey && !isNoMealKey(currentKey)){
+    if(isCustomMealKey(currentKey)){
+      // Already a custom meal — load its existing saved instance so
+      // editing continues where it left off, rather than starting over.
+      const existing=getCustomMealByKey(currentKey);
+      if(existing?.instance){
+        S.customMealDraft=JSON.parse(JSON.stringify(existing.instance));
+        if(nameEl) nameEl.value=existing.name||'';
+        seeded=true;
+      }
+      // Old-shape (pre-migration) custom meals have no .instance to seed
+      // from — falls through to the blank draft below, exactly as the
+      // approved legacy-compatibility plan intended: rebuilt fresh via
+      // this same builder, never auto-converted.
+    } else if(isMigratedMeal(currentKey)){
+      // A structured-engine recipe is currently selected — freeze it into
+      // a real, editable instance using the same function validated in
+      // Phase 1, then let the dietitian adjust it from there.
+      const frozen=window.NutreseEngine.freezeMealInstance(currentKey, {servingsUsed:1});
+      S.customMealDraft=JSON.parse(JSON.stringify(frozen));
+      if(nameEl) nameEl.value='';
+      seeded=true;
+    }
+    // A non-migrated legacy template key can't be frozen into ingredients
+    // (it's formula-driven, not a structured recipe) — falls through to
+    // the blank draft below, same as today.
+  }
+  if(!seeded){
+    S.customMealDraft={recipe_id:null, ingredients:[], totals:{kcal:0,protein_g:0,carbohydrate_g:0,fat_g:0,fiber_g:0}, exchanges:{}};
+    if(nameEl) nameEl.value='';
+  }
   setEl('custom-meal-search-status',''); setEl('custom-meal-search-results',''); setEl('custom-meal-save-status','');
   renderCustomMealDraft();
   const modal=document.getElementById('custom-meal-modal'); if(modal) modal.style.display='flex';
