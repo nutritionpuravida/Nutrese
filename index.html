@@ -743,12 +743,14 @@ i.ti-circle-x { color: var(--red-text); }
 /* Progress Trends — compact summary tiles, not full analytics cards.
    Explicit breakpoints (not auto-fit) guarantee a clean 3-across layout
    from tablet width up, with no uneven 2+1 wrapping, and a single,
-   short column on mobile rather than three tall stacked charts. */
-#page-bodycomp .bc-trend-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
-#page-bodycomp .bc-trend-card { border:1px solid var(--border); border-radius:12px; padding:10px 12px 6px; background:var(--bg-surface); }
-#page-bodycomp .bc-trend-card-title { font-size:12px; font-weight:600; color:var(--text-secondary); margin-bottom:4px; }
+   short column on mobile rather than three tall stacked charts.
+   Shared (not page-scoped) so Body Composition and Follow-up use the
+   exact same compact chart treatment — one design system, not two. */
+.trend-chart-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+.trend-chart-card { border:1px solid var(--border); border-radius:12px; padding:10px 12px 6px; background:var(--bg-surface); }
+.trend-chart-card-title { font-size:12px; font-weight:600; color:var(--text-secondary); margin-bottom:4px; }
 @media (max-width: 700px) {
-  #page-bodycomp .bc-trend-grid { grid-template-columns:1fr; }
+  .trend-chart-grid { grid-template-columns:1fr; }
 }
 #page-bodycomp .dash-status-card { padding:14px 16px; }
 /* Macro Targets hero — calorie number leads, macro breakdown reads as a
@@ -756,13 +758,13 @@ i.ti-circle-x { color: var(--red-text); }
    Body Composition. */
 #page-macros .macro-hero-row { display:flex; gap:32px; flex-wrap:wrap; align-items:flex-start; }
 #page-macros .macro-hero-kcal .m-label { font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.04em; }
-#page-macros .macro-hero-kcal .m-value { font-size:32px; font-weight:700; letter-spacing:-.01em; color:var(--text-primary); margin-top:2px; }
+#page-macros .macro-hero-kcal .m-value { font-size:22px; font-weight:700; letter-spacing:-.01em; color:var(--text-primary); margin-top:3px; }
 #page-macros .macro-hero-macros { flex:1; min-width:260px; }
 #page-macros .dash-status-card { padding:14px 16px; }
 #page-dashboard .dash-snapshot-values .m-label { font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.04em; }
 /* Smaller than the patient name — supporting context, not competing for
    attention with patient identity. */
-#page-dashboard .dash-snapshot-values .m-value { font-size:18px; font-weight:600; margin-top:3px; }
+#page-dashboard .dash-snapshot-values .m-value { font-size:22px; font-weight:700; letter-spacing:-.01em; margin-top:3px; }
 #page-dashboard .dash-snapshot-values .m-value.warn { color: var(--amber-text); }
 #page-dashboard .dash-snapshot-values .m-value.err { color: var(--red-text); }
 #page-dashboard .dash-snapshot-values .m-sub { font-size:12px; font-weight:400; color:var(--text-secondary); }
@@ -1775,7 +1777,11 @@ table th,
 #page-equivalents .equivalents-compact-table { font-size:13px!important; }
 #page-equivalents .equivalents-compact-table td:first-child { font-weight:900; color:var(--teal-700); }
 #page-macros .two-col { align-items:start; gap:18px!important; }
-#page-macros .card { border-radius:20px; box-shadow:0 18px 48px rgba(15,23,42,.06); overflow:hidden; }
+#page-macros .card { border-radius:18px; overflow:hidden; }
+#page-bodycomp .card { border-radius:18px; overflow:hidden; }
+#page-tracking .card { border-radius:18px; overflow:hidden; }
+#page-oneday .card { border-radius:18px; overflow:hidden; }
+#page-sevenday .card { border-radius:18px; overflow:hidden; }
 #page-macros .card-header { border-bottom:1px solid rgba(212,221,209,.48); background:linear-gradient(135deg,rgba(15,118,110,.045),rgba(255,255,255,.72)); }
 #page-macros .form-grid.three .form-field { padding:14px; border:1px solid rgba(212,221,209,.62); border-radius:16px; background:linear-gradient(145deg,rgba(255,255,255,.78),rgba(248,252,250,.92)); }
 #page-macros .form-grid.three .form-field label { font-size:12px!important; font-weight:900!important; letter-spacing:.04em; text-transform:uppercase; color:var(--text-muted); }
@@ -1795,7 +1801,6 @@ table th,
 #page-macros .exchange-row { border:1px solid rgba(212,221,209,.62)!important; border-radius:16px; padding:12px!important; background:rgba(255,255,255,.66); }
 #page-macros .exchange-row input { border-radius:12px!important; height:36px; font-weight:800; }
 #page-macros .exchange-kcal { justify-self:start; padding:8px 12px; border-radius:999px; background:rgba(15,118,110,.10); color:var(--teal-700); font-weight:850!important; }
-[data-theme="dark"] #page-macros .card { box-shadow:none; }
 [data-theme="dark"] #page-macros .card-header { background:linear-gradient(135deg,rgba(15,118,110,.16),rgba(255,255,255,.025)); border-bottom-color:var(--border); }
 [data-theme="dark"] #page-macros .form-grid.three .form-field,
 [data-theme="dark"] #page-macros #macro-bars .macro-bar,
@@ -2143,8 +2148,7 @@ table th,
 
     <div id="dash-no-client-prompt" style="display:none">
       <div class="dashboard-welcome">
-        <div class="dashboard-welcome-icon"><i class="ti ti-plant-2" aria-hidden="true"></i></div>
-        <div class="dashboard-welcome-title"><span class="i18n" data-en="Welcome to Nutrese 👋" data-gr="Καλώς ήρθατε στο Nutrese 👋">Welcome to Nutrese 👋</span></div>
+        <div class="dashboard-welcome-title" style="margin-top:4px"><span class="i18n" data-en="Welcome to Nutrese 👋" data-gr="Καλώς ήρθατε στο Nutrese 👋">Welcome to Nutrese 👋</span></div>
         <div class="dashboard-welcome-copy"><span class="i18n" data-en="Your clinical nutrition workspace is ready — exchange-based planning, calculated goals, and client-ready reports, all in one place." data-gr="Ο κλινικός σας χώρος διατροφής είναι έτοιμος — σχεδιασμός με ισοδύναμα, υπολογισμένοι στόχοι και αναφορές έτοιμες για πελάτες, όλα σε ένα σημείο.">Your clinical nutrition workspace is ready — exchange-based planning, calculated goals, and client-ready reports, all in one place.</span></div>
 
         <div class="dashboard-onboard-grid">
@@ -2700,8 +2704,15 @@ table th,
         </div>
         <div class="field-note" style="margin-bottom:12px"><span class="i18n" data-en="Fruit and dairy servings are assigned with the snack checkboxes and draw from the Exchange System totals. Choose fresh fruit or dried fruit, and milk or yogurt. Crackers replace 1 starch serving only. Oat biscuits and cereal bars replace 1 starch + 1 fat serving. Nuts count as 1 fat exchange and replace 1 tsp olive oil from the main meals — daily calorie total stays unchanged." data-gr="Οι μερίδες φρούτων και γαλακτοκομικών ορίζονται από τα checkbox των σνακ και αντλούνται από το Σύστημα Ισοδυνάμων. Επιλέξτε φρέσκο ή αποξηραμένο φρούτο, και γάλα ή γιαούρτι. Τα κράκερ αντικαθιστούν μόνο 1 μερίδα αμύλου. Τα μπισκότα βρώμης και οι μπάρες δημητριακών αντικαθιστούν 1 μερίδα αμύλου + 1 μερίδα λίπους. Οι ξηροί καρποί μετρούν ως 1 μερίδα λίπους και αντικαθιστούν 1 κ.γ. ελαιόλαδο από τα κύρια γεύματα — το ημερήσιο σύνολο θερμίδων μένει ίδιο.">Fruit and dairy servings are assigned with the snack checkboxes and draw from the Exchange System totals. Choose fresh fruit or dried fruit, and milk or yogurt. Crackers replace 1 starch serving only. Oat biscuits and cereal bars replace 1 starch + 1 fat serving. Nuts count as 1 fat exchange and replace 1 tsp olive oil from the main meals — daily calorie total stays unchanged.</span></div>
         <div id="oneday-plan"></div>
-        <div class="section-label"><span class="i18n" data-en="Exchange Coverage Check" data-gr="Έλεγχος Κάλυψης Ισοδυνάμων">Exchange Coverage Check</span></div>
-        <div id="oneday-check"></div>
+        <div class="dash-card dash-status-card" style="margin-top:16px">
+          <div class="dash-status-summary" id="oneday-check-summary" onclick="S.onedayCheckUserToggled=true; toggleBcSection('oneday-check-wrap', this)">
+            <span id="oneday-check-status-line" style="flex:1"><span style="color:var(--text-muted);font-size:13px"><span class="i18n" data-en="Exchange Coverage Check" data-gr="Έλεγχος Κάλυψης Ισοδυνάμων">Exchange Coverage Check</span></span></span>
+            <i class="ti ti-chevron-down" aria-hidden="true" style="color:var(--text-muted)"></i>
+          </div>
+          <div id="oneday-check-wrap" style="display:none;margin-top:12px;padding-top:12px;border-top:0.5px solid var(--border)">
+            <div id="oneday-check"></div>
+          </div>
+        </div>
         <div style="margin-top:14px;display:flex;gap:8px;">
           <button class="btn primary" onclick="printPage()"><i class="ti ti-printer" aria-hidden="true"></i> <span class="i18n" data-en="Print plan" data-gr="Εκτύπωση πλάνου">Print plan</span></button>
           <button class="btn" onclick="nav('report')"><span class="i18n" data-en="Full report →" data-gr="Πλήρης αναφορά →">Full report →</span></button>
@@ -2778,8 +2789,8 @@ table th,
     <div class="card">
       <div class="card-header"><span class="card-title"><i class="ti ti-trending-up" aria-hidden="true"></i> <span class="i18n" data-en="Progress / Body Composition History" data-gr="Πρόοδος / Ιστορικό Σύστασης Σώματος">Progress / Body Composition History</span></span></div>
       <div class="card-body">
-        <div class="alert info"><span><i class="ti ti-info-circle" aria-hidden="true"></i> <strong><span class="i18n" data-en="For follow-up visits:" data-gr="Για επισκέψεις παρακολούθησης:">For follow-up visits:</span></strong> <span class="i18n" data-en="load the client from &quot;My Clients&quot;, add a new entry below for today's visit, then click &quot;Save Client&quot; in the top bar to keep it permanently." data-gr="φορτώστε τον πελάτη από τους «Οι Πελάτες μου», προσθέστε νέα καταχώρηση παρακάτω για τη σημερινή επίσκεψη, μετά πατήστε «Αποθήκευση Πελάτη» επάνω για μόνιμη διατήρηση.">load the client from "My Clients", add a new entry below for today's visit, then click "Save Client" in the top bar to keep it permanently.</span></span></div>
-        <div class="form-grid three" style="margin-bottom:14px">
+        <div class="field-note" style="margin-bottom:10px"><i class="ti ti-info-circle" aria-hidden="true"></i> <span class="i18n" data-en="Load the client, add today's visit below, then Save Client in the top bar to keep it." data-gr="Φορτώστε τον πελάτη, προσθέστε τη σημερινή επίσκεψη παρακάτω, μετά Αποθήκευση Πελάτη επάνω για μόνιμη διατήρηση.">Load the client, add today's visit below, then Save Client in the top bar to keep it.</span></div>
+        <div class="form-grid three" style="margin-bottom:10px">
           <div class="form-field"><label><span class="i18n" data-en="Visit Date" data-gr="Ημερομηνία Επίσκεψης">Visit Date</span></label><input type="date" id="t-date"></div>
           <div class="form-field"><label><span class="i18n" data-en="Weight (kg)" data-gr="Βάρος (κιλά)">Weight (kg)</span></label><input type="number" id="t-weight" step="0.1" placeholder="—"></div>
           <div class="form-field"><label><span class="i18n" data-en="Body Fat %" data-gr="Ποσοστό Λίπους %">Body Fat %</span></label><input type="number" id="t-bf" step="0.1" placeholder="—"></div>
@@ -2788,9 +2799,9 @@ table th,
           <div class="form-field"><label><span class="i18n" data-en="Notes" data-gr="Σημειώσεις">Notes</span></label><input type="text" id="t-notes" class="i18n-ph" data-en-ph="Session notes…" data-gr-ph="Σημειώσεις συνεδρίας…" placeholder="Session notes…"></div>
         </div>
         <button class="btn primary" onclick="addTracking()">+ <span class="i18n" data-en="Log Visit" data-gr="Καταγραφή Επίσκεψης">Log Visit</span></button>
-        <div class="section-label"><span class="i18n" data-en="Progress Charts" data-gr="Πρόοδος">Progress Charts</span></div>
+        <div class="section-label" style="margin-top:16px"><span class="i18n" data-en="Progress Charts" data-gr="Πρόοδος">Progress Charts</span></div>
         <div id="tracking-chart"></div>
-        <div class="section-label"><span class="i18n" data-en="Visit History" data-gr="Ιστορικό Επισκέψεων">Visit History</span></div>
+        <div class="section-label" style="margin-top:14px"><span class="i18n" data-en="Visit History" data-gr="Ιστορικό Επισκέψεων">Visit History</span></div>
         <div id="tracking-table"></div>
       </div>
     </div>
@@ -2929,13 +2940,13 @@ table th,
         <button class="btn" onclick="closeCustomMealBuilder()" style="margin-left:auto"><i class="ti ti-x" aria-hidden="true"></i> <span class="i18n" data-en="Close" data-gr="Κλείσιμο">Close</span></button>
       </div>
       <div class="card-body">
-        <div class="alert info"><span class="i18n" data-en="Build a meal from USDA FoodData Central ingredients. Values are stored for your account and can be reused in the meal dropdowns." data-gr="Δημιουργήστε ένα γεύμα από συστατικά USDA FoodData Central. Οι τιμές αποθηκεύονται στον λογαριασμό σας και μπορούν να επαναχρησιμοποιηθούν στα αναπτυσσόμενα μενού γευμάτων.">Build a meal from USDA FoodData Central ingredients. Values are stored for your account and can be reused in the meal dropdowns.</span></div>
+        <div class="alert info"><span class="i18n" data-en="Build a meal from Nutrese's clinical food database. Values are stored for your account and can be reused in the meal dropdowns." data-gr="Δημιουργήστε ένα γεύμα από την κλινική βάση τροφίμων του Nutrese. Οι τιμές αποθηκεύονται στον λογαριασμό σας και μπορούν να επαναχρησιμοποιηθούν στα αναπτυσσόμενα μενού γευμάτων.">Build a meal from Nutrese's clinical food database. Values are stored for your account and can be reused in the meal dropdowns.</span></div>
         <div class="form-grid two">
           <div class="form-field"><label><span class="i18n" data-en="Meal name" data-gr="Όνομα γεύματος">Meal name</span></label><input type="text" id="custom-meal-name" class="i18n-ph" data-en-ph="e.g. Salmon quinoa bowl" data-gr-ph="π.χ. Μπολ σολομού με κινόα" placeholder="e.g. Salmon quinoa bowl" oninput="renderCustomMealDraft()"></div>
-          <div class="form-field"><label><span class="i18n" data-en="Ingredient search" data-gr="Αναζήτηση συστατικού">Ingredient search</span></label><input type="text" id="custom-meal-search" class="i18n-ph" data-en-ph="e.g. chicken breast, potato, oats" data-gr-ph="π.χ. στήθος κοτόπουλο, πατάτα, βρώμη" placeholder="e.g. chicken breast, potato, oats" onkeydown="if(event.key==='Enter') searchCustomMealFoods()"></div>
+          <div class="form-field"><label><span class="i18n" data-en="Ingredient search" data-gr="Αναζήτηση συστατικού">Ingredient search</span></label><input type="text" id="custom-meal-search" class="i18n-ph" data-en-ph="e.g. chicken, potato, olive oil" data-gr-ph="π.χ. κοτόπουλο, πατάτα, ελαιόλαδο" placeholder="e.g. chicken, potato, olive oil" onkeydown="if(event.key==='Enter') searchCustomMealFoods()"></div>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 12px">
-          <button class="btn" onclick="searchCustomMealFoods()"><span class="i18n" data-en="Search USDA ingredient" data-gr="Αναζήτηση συστατικού USDA">Search USDA ingredient</span></button>
+          <button class="btn" onclick="searchCustomMealFoods()"><span class="i18n" data-en="Search foods" data-gr="Αναζήτηση τροφίμων">Search foods</span></button>
           <button class="btn" onclick="clearCustomMealDraft()"><span class="i18n" data-en="Clear draft" data-gr="Επαναφορά προσχεδίου">Clear draft</span></button>
         </div>
         <div id="custom-meal-search-status" class="field-note"></div>
@@ -3185,20 +3196,23 @@ table th,
 </div>
 
 <div class="feedback-modal no-print" id="unsaved-changes-modal" role="dialog" aria-modal="true" aria-labelledby="unsaved-changes-title">
-  <div class="feedback-card" style="width:min(420px,100%)">
-    <div class="feedback-card-header">
+  <div class="feedback-card" style="width:min(360px,100%)">
+    <div class="feedback-card-header" style="padding:16px 16px 10px">
       <div>
-        <div class="feedback-card-title" id="unsaved-changes-title"><i class="ti ti-alert-triangle" aria-hidden="true"></i> <span class="i18n" data-en="You have unsaved changes" data-gr="Έχετε μη αποθηκευμένες αλλαγές">You have unsaved changes</span></div>
-        <div class="feedback-card-sub" id="unsaved-changes-message"><span class="i18n" data-en="Your recent changes to this client haven't been saved yet." data-gr="Οι πρόσφατες αλλαγές σε αυτόν τον πελάτη δεν έχουν αποθηκευτεί ακόμη.">Your recent changes to this client haven't been saved yet.</span></div>
+        <div class="feedback-card-title" id="unsaved-changes-title" style="font-size:15px"><i class="ti ti-alert-triangle" aria-hidden="true"></i> <span class="i18n" data-en="Unsaved changes" data-gr="Μη αποθηκευμένες αλλαγές">Unsaved changes</span></div>
+        <div class="feedback-card-sub" id="unsaved-changes-message" style="font-size:12.5px;margin-top:3px"><span class="i18n" data-en="Your recent changes to this client haven't been saved yet." data-gr="Οι πρόσφατες αλλαγές σε αυτόν τον πελάτη δεν έχουν αποθηκευτεί ακόμη.">Your recent changes to this client haven't been saved yet.</span></div>
       </div>
       <button class="feedback-close" onclick="resolveUnsavedChangesModal('cancel')" aria-label="Close">×</button>
     </div>
-    <div class="feedback-card-body">
-      <div class="feedback-actions" style="flex-direction:column;align-items:stretch;gap:8px">
-        <button class="btn primary" onclick="resolveUnsavedChangesModal('save')" id="unsaved-save-btn"><i class="ti ti-device-floppy" aria-hidden="true"></i> <span class="i18n" data-en="Save & Continue" data-gr="Αποθήκευση & Συνέχεια">Save & Continue</span></button>
-        <button class="btn" onclick="resolveUnsavedChangesModal('discard')"><span class="i18n" data-en="Continue Without Saving" data-gr="Συνέχεια Χωρίς Αποθήκευση">Continue Without Saving</span></button>
-        <button class="btn" onclick="resolveUnsavedChangesModal('cancel')" style="color:var(--text-muted)"><span class="i18n" data-en="Cancel" data-gr="Ακύρωση">Cancel</span></button>
+    <div class="feedback-card-body" style="padding:10px 16px 16px">
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <button class="btn primary" onclick="handleUnsavedChangesSave()" id="unsaved-save-btn" style="padding:8px"><i class="ti ti-device-floppy" aria-hidden="true"></i> <span class="i18n" data-en="Save & Continue" data-gr="Αποθήκευση & Συνέχεια">Save & Continue</span></button>
+        <div style="display:flex;gap:6px">
+          <button class="btn" onclick="resolveUnsavedChangesModal('discard')" id="unsaved-discard-btn" style="flex:1;padding:7px;font-size:12.5px"><span class="i18n" data-en="Continue Without Saving" data-gr="Συνέχεια Χωρίς Αποθήκευση">Continue Without Saving</span></button>
+          <button class="btn" onclick="resolveUnsavedChangesModal('cancel')" id="unsaved-cancel-btn" style="padding:7px 14px;font-size:12.5px;color:var(--text-muted)"><span class="i18n" data-en="Cancel" data-gr="Ακύρωση">Cancel</span></button>
+        </div>
       </div>
+      <div id="unsaved-changes-status" class="feedback-status"></div>
     </div>
   </div>
 </div>
@@ -7412,14 +7426,30 @@ function getCustomMealByKey(key){
   const id=customMealIdFromKey(key);
   return (S.customMeals||[]).find(m=>String(m.id)===String(id));
 }
+// Renders a saved custom meal's actual ingredient list via the canonical
+// NutreseEngine — same rendering quality as any migrated/template meal,
+// replacing the old behaviour which only ever showed the meal's NAME (never
+// what was actually in it). Old-shape meals (pre-migration, no `.instance`
+// field) fall back to a clearly-isolated legacy path — read-only, never
+// auto-converted, per the approved migration decision.
 function customMealText(key, lang='GR'){
   const meal=getCustomMealByKey(key);
   if(!meal) return '';
+  const engineLang = lang==='EN' ? 'en' : 'gr';
+  if(meal.instance){
+    return `${safeHtml(meal.name||'Custom meal')}: ${window.NutreseEngine.renderMealText(meal.instance, engineLang)}`;
+  }
+  // LEGACY PATH — old-shape meal (ingredients: loose array, no food_id).
+  // Kept solely so previously-saved meals remain readable; never used for
+  // anything new. Rebuilt via the new Manual Builder when a dietitian edits it.
   return `${safeHtml(meal.name||'Custom meal')} <i class="ti ti-pencil" aria-hidden="true"></i>`;
 }
 function customMealKcal(key){
   const meal=getCustomMealByKey(key);
-  return Math.round(foodNumber(meal?.nutrition?.kcal)||0);
+  if(!meal) return 0;
+  if(meal.instance) return Math.round(foodNumber(meal.instance.totals?.kcal)||0);
+  // LEGACY PATH — see customMealText() above.
+  return Math.round(foodNumber(meal.nutrition?.kcal)||0);
 }
 function effectivePortionsForKcal(mealKey, portions){
   if(isCustomMealKey(mealKey)) return null;
@@ -10955,7 +10985,7 @@ function buildOneDayPlan(){
   enforceMealSelectionDietCompatibility(v('p-diet')||S.dietType||'Omnivore');
   const brk=v('s-breakfast')||S.mealSel?.breakfast||'BRK_TOAST', lun=v('s-lunch')||S.mealSel?.lunch||'LUN_CHICKEN_RICE', din=v('s-dinner')||S.mealSel?.dinner||'DIN_FISH_POTATO';
   const snk1Extras=getOneDaySnackExtras('s-snack1','snack1Extras'), snk2Extras=getOneDaySnackExtras('s-snack2','snack2Extras'), sleepExtras=getOneDaySnackExtras('s-sleep','sleepExtras');
-  S.mealSel={breakfast:brk,lunch:lun,dinner:din,snack1Extras:snk1Extras,snack2Extras:snk2Extras,sleepExtras:sleepExtras};
+  S.mealSel={breakfast:brk,lunch:lun,dinner:din,brk,lun,din,snack1Extras:snk1Extras,snack2Extras:snk2Extras,sleepExtras:sleepExtras};
   const ex=S.ex;
   const allocation=getDayMealAllocation(S.mealSel, lang);
   const portions=allocation.portions;
@@ -11099,6 +11129,19 @@ function buildOneDayPlan(){
       <tr><td style="color:var(--text-muted)">Exchange System</td><td style="color:var(--text-muted)">${day.exchangeTotalKcal}</td><td style="color:${Math.abs(day.exchangeGap||0)<=5?'var(--teal-600)':'var(--warn)'}">${(day.exchangeGap||0)>0?'+':''}${day.exchangeGap||0}</td></tr>
       <tr><td style="color:var(--text-muted)">Target</td><td style="color:var(--text-muted)">${day.target}</td><td style="color:${gapColor}">${displayedGap>0?'+':''}${displayedGap}</td></tr>
     </tbody></table>`;
+  const isGrCheck = window.appLang!=='en';
+  const statusLineEl=document.getElementById('oneday-check-status-line');
+  if(statusLineEl){
+    statusLineEl.innerHTML = gapOk
+      ? `<span style="color:var(--teal-700);font-weight:600;font-size:13px"><i class="ti ti-circle-check" aria-hidden="true"></i> ${isGrCheck?'Το πλάνο ταιριάζει με τον στόχο':'Plan matches target'}</span>`
+      : `<span style="color:var(--amber-text);font-weight:600;font-size:13px"><i class="ti ti-alert-triangle" aria-hidden="true"></i> ${isGrCheck?'Χρειάζεται επανεξέταση':'Review needed'} (${displayedGap>0?'+':''}${displayedGap} kcal)</span>`;
+  }
+  if(!S.onedayCheckUserToggled){
+    const wrapEl=document.getElementById('oneday-check-wrap');
+    const chevEl=document.querySelector('#oneday-check-summary .ti-chevron-down, #oneday-check-summary .ti-chevron-up');
+    if(wrapEl) wrapEl.style.display = gapOk ? 'none' : 'block';
+    if(chevEl){ chevEl.classList.toggle('ti-chevron-down', gapOk); chevEl.classList.toggle('ti-chevron-up', !gapOk); }
+  }
 }
 
 // Calculates daily kcal totals for a specific day plan entry
@@ -14076,7 +14119,7 @@ function drawLineChart(data, color, unit){
   const pts = data.map((d,i)=>({i, date:d.date, value: d.value===''||d.value==null ? null : parseFloat(d.value)}))
                   .filter(d=>d.value!=null && !isNaN(d.value));
   if(pts.length<2) return null;
-  const W=400, H=100, padL=38, padR=10, padT=10, padB=20;
+  const W=400, H=122, padL=38, padR=10, padT=10, padB=22;
   const vals=pts.map(d=>d.value);
   let minV=Math.min(...vals), maxV=Math.max(...vals);
   if(minV===maxV){ minV-=1; maxV+=1; } // avoid zero range
@@ -14118,10 +14161,10 @@ function renderBodyCompTrendCharts(){
     el.innerHTML=`<div style="color:var(--text-muted);text-align:center;padding:16px;font-size:13px">${isGr?'Καταγράψτε τουλάχιστον 2 επισκέψεις για να δείτε γραφήματα προόδου.':'Log at least 2 visits to see progress charts.'}</div>`;
     return;
   }
-  let html='<div class="bc-trend-grid">';
-  if(weightSvg) html+=`<div class="bc-trend-card"><div class="bc-trend-card-title"><i class="ti ti-scale" aria-hidden="true"></i> ${isGr?'Βάρος (κιλά)':'Weight (kg)'}</div>${weightSvg}</div>`;
-  if(bfSvg) html+=`<div class="bc-trend-card"><div class="bc-trend-card-title"><i class="ti ti-chart-bar" aria-hidden="true"></i> ${isGr?'Ποσοστό Λίπους %':'Body Fat %'}</div>${bfSvg}</div>`;
-  if(muscleSvg) html+=`<div class="bc-trend-card"><div class="bc-trend-card-title"><i class="ti ti-barbell" aria-hidden="true"></i> ${isGr?'Μυϊκή Μάζα (κιλά)':'Muscle Mass (kg)'}</div>${muscleSvg}</div>`;
+  let html='<div class="trend-chart-grid">';
+  if(weightSvg) html+=`<div class="trend-chart-card"><div class="trend-chart-card-title"><i class="ti ti-scale" aria-hidden="true"></i> ${isGr?'Βάρος (κιλά)':'Weight (kg)'}</div>${weightSvg}</div>`;
+  if(bfSvg) html+=`<div class="trend-chart-card"><div class="trend-chart-card-title"><i class="ti ti-chart-bar" aria-hidden="true"></i> ${isGr?'Ποσοστό Λίπους %':'Body Fat %'}</div>${bfSvg}</div>`;
+  if(muscleSvg) html+=`<div class="trend-chart-card"><div class="trend-chart-card-title"><i class="ti ti-barbell" aria-hidden="true"></i> ${isGr?'Μυϊκή Μάζα (κιλά)':'Muscle Mass (kg)'}</div>${muscleSvg}</div>`;
   html+='</div>';
   el.innerHTML=html;
 }
@@ -14138,9 +14181,9 @@ function renderTrackingChart(){
     el.innerHTML=`<div style="color:var(--text-muted);text-align:center;padding:16px;font-size:13px">${isGr?'Καταγράψτε τουλάχιστον 2 επισκέψεις με Βάρος ή Ποσοστό Λίπους % για να δείτε γραφήματα προόδου.':'Log at least 2 visits with Weight or Body Fat % to see progress charts.'}</div>`;
     return;
   }
-  let html='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px">';
-  if(weightSvg) html+=`<div class="card" style="margin:0"><div class="card-header"><span class="card-title" style="font-size:13px"><i class="ti ti-scale" aria-hidden="true"></i> ${isGr?'Βάρος (κιλά)':'Weight (kg)'}</span></div><div class="card-body">${weightSvg}</div></div>`;
-  if(bfSvg) html+=`<div class="card" style="margin:0"><div class="card-header"><span class="card-title" style="font-size:13px"><i class="ti ti-chart-bar" aria-hidden="true"></i> ${isGr?'Ποσοστό Λίπους %':'Body Fat %'}</span></div><div class="card-body">${bfSvg}</div></div>`;
+  let html='<div class="trend-chart-grid">';
+  if(weightSvg) html+=`<div class="trend-chart-card"><div class="trend-chart-card-title"><i class="ti ti-scale" aria-hidden="true"></i> ${isGr?'Βάρος (κιλά)':'Weight (kg)'}</div>${weightSvg}</div>`;
+  if(bfSvg) html+=`<div class="trend-chart-card"><div class="trend-chart-card-title"><i class="ti ti-chart-bar" aria-hidden="true"></i> ${isGr?'Ποσοστό Λίπους %':'Body Fat %'}</div>${bfSvg}</div>`;
   html+='</div>';
   el.innerHTML=html;
 }
@@ -15730,75 +15773,136 @@ function rebuildMealDropdownOptions(){
   if(din) din.innerHTML=mealOptionsHtml(filteredMealOptions(DINNER_OPTIONS,diet), din.value||S.mealSel?.dinner||'DIN_FISH_POTATO');
 }
 function openCustomMealBuilder(context){
-  S.customMealContext=context||null; S.customMealDraft=[];
+  S.customMealContext=context||null;
+  S.customMealDraft={recipe_id:null, ingredients:[], totals:{kcal:0,protein_g:0,carbohydrate_g:0,fat_g:0,fiber_g:0}, exchanges:{}};
   const name=document.getElementById('custom-meal-name'); if(name) name.value='';
   setEl('custom-meal-search-status',''); setEl('custom-meal-search-results',''); setEl('custom-meal-save-status','');
   renderCustomMealDraft();
   const modal=document.getElementById('custom-meal-modal'); if(modal) modal.style.display='flex';
 }
 function closeCustomMealBuilder(){ const modal=document.getElementById('custom-meal-modal'); if(modal) modal.style.display='none'; }
-function clearCustomMealDraft(){ S.customMealDraft=[]; const name=document.getElementById('custom-meal-name'); if(name) name.value=''; renderCustomMealDraft(); }
+function clearCustomMealDraft(){
+  S.customMealDraft={recipe_id:null, ingredients:[], totals:{kcal:0,protein_g:0,carbohydrate_g:0,fat_g:0,fiber_g:0}, exchanges:{}};
+  const name=document.getElementById('custom-meal-name'); if(name) name.value='';
+  renderCustomMealDraft();
+}
+function addCustomMealIngredient(index){
+  const f=customMealSearchResults[index]; if(!f) return;
+  const grams=foodNumber(v(`custom-meal-result-grams-${index}`))||100;
+  const isGr = window.appLang==='gr';
+  if(!S.customMealDraft || !Array.isArray(S.customMealDraft.ingredients)) S.customMealDraft={recipe_id:null, ingredients:[], totals:{kcal:0,protein_g:0,carbohydrate_g:0,fat_g:0,fiber_g:0}, exchanges:{}};
+  // Graceful duplicate handling — checked BEFORE calling the engine, since
+  // NutreseEngine.addIngredient() throws on a duplicate food_id by design.
+  // Never show that raw error to a dietitian; offer quantity editing instead.
+  const already=S.customMealDraft.ingredients.find(i=>i.food_id===f.food_id);
+  if(already){
+    setEl('custom-meal-search-status', isGr
+      ? `<i class="ti ti-info-circle" aria-hidden="true"></i> "${safeHtml(f.name?.clinical?.gr||f.food_id)}" υπάρχει ήδη σε αυτό το γεύμα (${already.grams}g). Αλλάξτε την ποσότητα παρακάτω αντί να το προσθέσετε ξανά.`
+      : `<i class="ti ti-info-circle" aria-hidden="true"></i> "${safeHtml(f.name?.clinical?.en||f.food_id)}" is already in this meal (${already.grams}g). Edit its quantity below instead of adding it again.`);
+    return;
+  }
+  S.customMealDraft=window.NutreseEngine.addIngredient(S.customMealDraft, {food_id:f.food_id, grams});
+  renderCustomMealDraft();
+}
+function updateCustomMealIngredientQty(food_id, newGrams){
+  const grams=Math.max(0, foodNumber(newGrams)||0);
+  if(!S.customMealDraft) return;
+  S.customMealDraft=window.NutreseEngine.setIngredientQuantity(S.customMealDraft, food_id, grams);
+  renderCustomMealDraft();
+}
+function removeCustomMealIngredient(food_id){
+  if(!S.customMealDraft) return;
+  S.customMealDraft=window.NutreseEngine.removeIngredient(S.customMealDraft, food_id);
+  renderCustomMealDraft();
+}
 async function searchCustomMealFoods(){
-  const query=(v('custom-meal-search')||'').trim();
-  if(!query){ setEl('custom-meal-search-status','Enter an ingredient name to search.'); return; }
-  setEl('custom-meal-search-status','Searching USDA FoodData Central...'); setEl('custom-meal-search-results','');
-  try{
-    customMealSearchResults=await fetchUSDAFoods(query);
-    renderCustomMealSearchResults();
-    setEl('custom-meal-search-status', customMealSearchResults.length ? `${customMealSearchResults.length} USDA ingredients found.` : `No USDA ingredients found for "${query}".`);
-  }catch(e){ customMealSearchResults=[]; setEl('custom-meal-search-status',`USDA search failed: ${e.message}`); }
+  const query=(v('custom-meal-search')||'').trim().toLowerCase();
+  const isGr = window.appLang==='gr';
+  if(!query){ setEl('custom-meal-search-status', isGr?'Εισάγετε όνομα τροφίμου για αναζήτηση.':'Enter a food name to search.'); return; }
+  setEl('custom-meal-search-status', isGr?'Αναζήτηση...':'Searching...');
+  setEl('custom-meal-search-results','');
+  // Phase A: search the canonical FOOD_DATABASE (via NutreseEngine), not an
+  // external API — matches the single-engine architecture. Checks the
+  // clinical name, patient name, and authored aliases in both languages.
+  const db=window.NutreseEngine.FOOD_DATABASE;
+  customMealSearchResults=Object.values(db).filter(food=>{
+    const haystack=[
+      food.name?.clinical?.en, food.name?.clinical?.gr,
+      food.name?.patient?.en, food.name?.patient?.gr,
+      ...(food.aliases||[])
+    ].filter(Boolean).join(' ').toLowerCase();
+    return haystack.includes(query);
+  }).slice(0,20);
+  renderCustomMealSearchResults();
+  const n=customMealSearchResults.length;
+  setEl('custom-meal-search-status', n
+    ? (isGr?`Βρέθηκαν ${n} τρόφιμα.`:`${n} food${n===1?'':'s'} found.`)
+    : (isGr?`Δεν βρέθηκαν τρόφιμα για "${query}". Δοκιμάστε διαφορετικό όρο.`:`No foods found for "${query}". Try a different term.`));
 }
 function renderCustomMealSearchResults(){
   const el=document.getElementById('custom-meal-search-results'); if(!el) return;
   if(!customMealSearchResults.length){ el.innerHTML=''; return; }
-  el.innerHTML=`<table><thead><tr><th>Ingredient</th><th>kcal/100g</th><th>Carb</th><th>Protein</th><th>Fat</th><th>Grams</th><th></th></tr></thead><tbody>${customMealSearchResults.slice(0,8).map((p,i)=>`<tr>
-    <td><strong>${safeHtml(p.name)}</strong><div style="font-size:11px;color:var(--text-muted)">${safeHtml(p.brand||'USDA')}</div></td>
-    <td>${formatFoodNumber(p.kcal100,'')}</td><td>${formatFoodNumber(p.carbs100,'g')}</td><td>${formatFoodNumber(p.protein100,'g')}</td><td>${formatFoodNumber(p.fat100,'g')}</td>
-    <td>${micronutrientHighlightsHtml(p,isGrFr)}</td>
-      <td><input type="number" id="custom-meal-result-grams-${i}" min="1" step="1" value="100" style="width:72px;padding:5px"></td>
-    <td><button class="btn" style="padding:4px 8px;font-size:11px" onclick="addCustomMealIngredient(${i})">Add</button></td>
+  const isGr = window.appLang==='gr';
+  el.innerHTML=`<table><thead><tr><th>${isGr?'Τρόφιμο':'Food'}</th><th>kcal/100g</th><th>${isGr?'Υδατ.':'Carb'}</th><th>${isGr?'Πρωτ.':'Protein'}</th><th>${isGr?'Λίπος':'Fat'}</th><th>${isGr?'Γραμμάρια':'Grams'}</th><th></th></tr></thead><tbody>${customMealSearchResults.map((f,i)=>`<tr>
+    <td><strong>${safeHtml(f.name?.clinical?.[isGr?'gr':'en']||f.food_id)}</strong><div style="font-size:11px;color:var(--text-muted)">${safeHtml(f.source||'')}</div></td>
+    <td>${formatFoodNumber(f.kcal100,'')}</td><td>${formatFoodNumber(f.carbs100,'g')}</td><td>${formatFoodNumber(f.protein100,'g')}</td><td>${formatFoodNumber(f.fat100,'g')}</td>
+    <td><input type="number" id="custom-meal-result-grams-${i}" min="1" step="1" value="100" style="width:72px;padding:5px"></td>
+    <td><button class="btn" style="padding:4px 8px;font-size:11px" onclick="addCustomMealIngredient(${i})">${isGr?'Προσθήκη':'Add'}</button></td>
   </tr>`).join('')}</tbody></table>`;
 }
-function addCustomMealIngredient(index){
-  const p=customMealSearchResults[index]; if(!p) return;
-  const grams=foodNumber(v(`custom-meal-result-grams-${index}`))||100;
-  if(!Array.isArray(S.customMealDraft)) S.customMealDraft=[];
-  S.customMealDraft.push({name:p.name,grams,kcal100:foodNumber(p.kcal100)||0,carbs100:foodNumber(p.carbs100)||0,protein100:foodNumber(p.protein100)||0,fat100:foodNumber(p.fat100)||0});
-  renderCustomMealDraft();
-}
-function updateCustomMealIngredient(index, field, value){ if(S.customMealDraft[index]){ S.customMealDraft[index][field]=field==='name'?value:(foodNumber(value)||0); renderCustomMealDraft(); } }
-function removeCustomMealIngredient(index){ S.customMealDraft.splice(index,1); renderCustomMealDraft(); }
 function renderCustomMealDraft(){
   const el=document.getElementById('custom-meal-draft'); if(!el) return;
-  if(!Array.isArray(S.customMealDraft)) S.customMealDraft=[];
-  const total=recipeTotals(S.customMealDraft);
-  const rows=S.customMealDraft.map((ing,i)=>{ const t=ingredientTotals(ing); return `<tr>
-    <td>${safeHtml(ing.name||'Ingredient')}</td>
-    <td><input type="number" value="${ing.grams||0}" min="0" step="1" oninput="updateCustomMealIngredient(${i},'grams',this.value)" style="width:88px;padding:5px;text-align:right"> g</td>
-    <td>${formatFoodNumber(t.kcal,'')}</td><td>${formatFoodNumber(t.carbs,'g')}</td><td>${formatFoodNumber(t.protein,'g')}</td><td>${formatFoodNumber(t.fat,'g')}</td>
-    <td><button class="btn" style="padding:4px 8px;font-size:11px" onclick="removeCustomMealIngredient(${i})">Remove</button></td>
-  </tr>`; }).join('');
-  el.innerHTML=`<table><thead><tr><th>Ingredient</th><th>g used</th><th>kcal</th><th>Carb</th><th>Protein</th><th>Fat</th><th></th></tr></thead><tbody>${rows||'<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:14px">No ingredients yet.</td></tr>'}</tbody></table>
+  const isGr = window.appLang==='gr';
+  if(!S.customMealDraft || !Array.isArray(S.customMealDraft.ingredients)){
+    S.customMealDraft={recipe_id:null, ingredients:[], totals:{kcal:0,protein_g:0,carbohydrate_g:0,fat_g:0,fiber_g:0}, exchanges:{}};
+  }
+  const inst=S.customMealDraft;
+  const eng=window.NutreseEngine;
+  const rows=inst.ingredients.map(i=>{
+    const food=eng.FOOD_DATABASE[i.food_id];
+    const hh=food ? eng.formatHouseholdMeasure(i.household||eng.getHouseholdSnapshot(food), i.grams, isGr?'gr':'en') : '';
+    return `<tr>
+      <td>${safeHtml(eng.getClinicalName(i.food_name, isGr?'gr':'en')||i.food_id)}</td>
+      <td>
+        <input type="number" value="${i.grams}" min="0" step="1" oninput="updateCustomMealIngredientQty('${i.food_id}',this.value)" style="width:80px;padding:5px;text-align:right"> g
+        ${hh?`<div style="font-size:11px;color:var(--text-muted)">${safeHtml(hh)}</div>`:''}
+      </td>
+      <td>${formatFoodNumber(i.kcal,'')}</td><td>${formatFoodNumber(i.carbohydrate_g,'g')}</td><td>${formatFoodNumber(i.protein_g,'g')}</td><td>${formatFoodNumber(i.fat_g,'g')}</td>
+      <td><button class="btn" style="padding:4px 8px;font-size:11px" onclick="removeCustomMealIngredient('${i.food_id}')">${isGr?'Αφαίρεση':'Remove'}</button></td>
+    </tr>`;
+  }).join('');
+  const t=inst.totals;
+  const ex=inst.exchanges||{};
+  const exchangeImpactHtml = Object.keys(ex).length
+    ? `<div class="metric"><span class="metric-label">${isGr?'Ισοδύναμα:':'Exchanges:'}</span> <span class="metric-value" style="font-size:13px">${Object.entries(ex).filter(([,v])=>v>0).map(([k,v])=>`${k} ${Math.round(v*10)/10}`).join(' · ')||'—'}</span></div>`
+    : '';
+  el.innerHTML=`<table><thead><tr><th>${isGr?'Τρόφιμο':'Ingredient'}</th><th>${isGr?'Ποσότητα':'Quantity'}</th><th>kcal</th><th>${isGr?'Υδατ.':'Carb'}</th><th>${isGr?'Πρωτ.':'Protein'}</th><th>${isGr?'Λίπος':'Fat'}</th><th></th></tr></thead><tbody>${rows||`<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:14px">${isGr?'Δεν υπάρχουν ακόμη συστατικά.':'No ingredients yet.'}</td></tr>`}</tbody></table>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:12px">
-      <div class="metric"><span class="metric-label">Total kcal:</span> <span class="metric-value">${Math.round(total.kcal)}</span></div>
-      <div class="metric"><span class="metric-label">Carbs:</span> <span class="metric-value">${formatFoodNumber(total.carbs,'g')}</span></div>
-      <div class="metric"><span class="metric-label">Protein:</span> <span class="metric-value">${formatFoodNumber(total.protein,'g')}</span></div>
-      <div class="metric"><span class="metric-label">Fat:</span> <span class="metric-value">${formatFoodNumber(total.fat,'g')}</span></div>
+      <div class="metric"><span class="metric-label">${isGr?'Σύνολο kcal:':'Total kcal:'}</span> <span class="metric-value">${Math.round(t.kcal)}</span></div>
+      <div class="metric"><span class="metric-label">${isGr?'Υδατάνθρακες:':'Carbs:'}</span> <span class="metric-value">${formatFoodNumber(t.carbohydrate_g,'g')}</span></div>
+      <div class="metric"><span class="metric-label">${isGr?'Πρωτεΐνη:':'Protein:'}</span> <span class="metric-value">${formatFoodNumber(t.protein_g,'g')}</span></div>
+      <div class="metric"><span class="metric-label">${isGr?'Λίπος:':'Fat:'}</span> <span class="metric-value">${formatFoodNumber(t.fat_g,'g')}</span></div>
+      ${exchangeImpactHtml}
     </div>`;
 }
 async function saveCustomMeal(){
   const name=(v('custom-meal-name')||'').trim();
-  if(!name){ alert('Enter a meal name.'); return; }
-  if(!S.customMealDraft || !S.customMealDraft.length){ alert('Add at least one ingredient.'); return; }
-  const nutrition=recipeTotals(S.customMealDraft);
-  let meal={id:'cm_'+Date.now(),name,ingredients:S.customMealDraft,nutrition,updated_at:new Date().toISOString(),localOnly:true};
+  const isGr = window.appLang==='gr';
+  if(!name){ alert(isGr?'Εισάγετε όνομα γεύματος.':'Enter a meal name.'); return; }
+  if(!S.customMealDraft || !S.customMealDraft.ingredients || !S.customMealDraft.ingredients.length){ alert(isGr?'Προσθέστε τουλάχιστον ένα συστατικό.':'Add at least one ingredient.'); return; }
+  // New canonical shape: the whole NutreseEngine instance (ingredients +
+  // totals + exchanges together), not a loose ingredient array with
+  // separately-computed nutrition. Written into the existing 'ingredients'
+  // column (JSONB — holds any structure) so no schema change is needed.
+  const instance=S.customMealDraft;
+  let meal={id:'cm_'+Date.now(), name, instance, updated_at:new Date().toISOString(), localOnly:true};
   if(currentUser){
     try{
-      const row={user_id:currentUser.id,name,ingredients:S.customMealDraft,nutrition,updated_at:new Date().toISOString()};
+      const row={user_id:currentUser.id, name, ingredients:instance, nutrition:instance.totals, updated_at:new Date().toISOString()};
       const {data,error}=await supabaseClient.from('custom_meals').insert(row).select().maybeSingle();
       if(error) throw error;
-      if(data) meal={id:data.id,name:data.name,ingredients:data.ingredients||S.customMealDraft,nutrition:data.nutrition||nutrition,updated_at:data.updated_at,localOnly:false};
-    }catch(e){ console.error('[Nutrese custom meals] save failed', e); setEl('custom-meal-save-status','Saved locally. Supabase custom_meals table may not be configured yet.'); }
+      if(data) meal={id:data.id, name:data.name, instance:data.ingredients||instance, updated_at:data.updated_at, localOnly:false};
+    }catch(e){ console.error('[Nutrese custom meals] save failed', e); setEl('custom-meal-save-status', isGr?'Αποθηκεύτηκε τοπικά. Ο πίνακας custom_meals ενδέχεται να μην έχει ρυθμιστεί ακόμη.':'Saved locally. Supabase custom_meals table may not be configured yet.'); }
   }
   S.customMeals=[meal,...(S.customMeals||[]).filter(m=>String(m.id)!==String(meal.id))];
   persistCustomMealsLocal();
@@ -15808,7 +15912,13 @@ async function saveCustomMeal(){
 function applyCustomMealSelection(key){
   const ctx=S.customMealContext;
   if(ctx?.type==='oneday'){
-    S.mealSel={...S.mealSel,[ctx.slot]:key};
+    // Keep both naming conventions in sync (breakfast/brk, lunch/lun,
+    // dinner/din) — normalizeMealPlan() checks the short form FIRST, so
+    // leaving it stale here caused a real bug: a saved custom meal would
+    // silently revert to the default template the next time the client
+    // was reloaded, because the stale short-name field won the lookup.
+    const shortKey={breakfast:'brk',lunch:'lun',dinner:'din'}[ctx.slot];
+    S.mealSel={...S.mealSel,[ctx.slot]:key,...(shortKey?{[shortKey]:key}:{})};
     rebuildMealDropdownOptions();
     const id=ctx.slot==='breakfast'?'s-breakfast':ctx.slot==='lunch'?'s-lunch':'s-dinner';
     const el=document.getElementById(id); if(el) el.value=key;
@@ -16254,6 +16364,7 @@ function applyState(state){
   S.weightSuggestionLocked=state.weightSuggestionLocked!==undefined ? !!state.weightSuggestionLocked : !!(state.fields&&state.fields['p-weight']);
   S.lastCalAdjGoal=undefined;
   S.dashStatusUserToggled=false;
+  S.onedayCheckUserToggled=false;
   S.bcManual={fatmass:false,ffm:false,muscle:false,...(state.bcManual||{})};
   if(state.fields&&state.fields['bc-fatmass']&&state.bcManual===undefined) S.bcManual.fatmass=true;
   if(state.fields&&state.fields['bc-muscle']&&state.bcManual===undefined) S.bcManual.muscle=true;
@@ -16263,6 +16374,14 @@ function applyState(state){
   // to an option not present in the (possibly stale/filtered) <select> silently
   // fails and the dropdown falls back to its first option.
   const diet = (state.fields&&state.fields['p-diet']) || 'Omnivore';
+  // S.customMeals MUST be restored before rebuilding the dropdowns below —
+  // mealOptionsHtml() only includes a CUSTOM_<id> option if that meal is
+  // already present in S.customMeals. Rebuilding the dropdown first and
+  // restoring customMeals after meant a saved custom-meal selection could
+  // never re-select on reload: the option simply didn't exist yet at the
+  // moment the <select> tried to select it, and silently fell back to the
+  // first option instead.
+  if(state.customMeals) S.customMeals=state.customMeals;
   const brkEl=document.getElementById('s-breakfast'), lunEl=document.getElementById('s-lunch'), dinEl=document.getElementById('s-dinner');
   if(brkEl) brkEl.innerHTML = mealOptionsHtml(filteredMealOptions(BREAKFAST_OPTIONS,diet), (state.fields&&state.fields['s-breakfast'])||'BRK_TOAST');
   if(lunEl) lunEl.innerHTML = mealOptionsHtml(filteredMealOptions(LUNCH_OPTIONS,diet), (state.fields&&state.fields['s-lunch'])||'LUN_CHICKEN_RICE');
@@ -16285,7 +16404,6 @@ function applyState(state){
   if(state.savedWeeklyPlan?.weekPlans) S.weekPlans=state.savedWeeklyPlan.weekPlans;
   else if(state.weekPlans) S.weekPlans=state.weekPlans;
   S.currentTemplate=state.currentTemplate||null;
-  if(state.customMeals) S.customMeals=state.customMeals;
   if(state.sevenDayView) S.sevenDayView=state.sevenDayView;
   if(state.sevenDayActiveIndex!==undefined) S.sevenDayActiveIndex=Number(state.sevenDayActiveIndex)||0;
   if(state.aiPlanStatus!==undefined) S.aiPlanStatus=state.aiPlanStatus;
@@ -16321,6 +16439,7 @@ function resetForm(){
   S.clientPhoto='';
   S.lastCalAdjGoal = undefined;
   S.dashStatusUserToggled = false;
+  S.onedayCheckUserToggled = false;
   S.weightSuggestionLocked = false;
   S.bcManual = {fatmass:false,ffm:false,muscle:false};
   resetMacroExplanation();
@@ -16658,10 +16777,8 @@ async function newClient(){
   if(S_isDirty){
     const choice = await confirmUnsavedChanges();
     if(choice==='cancel') return;
-    if(choice==='save'){
-      const ok = await saveCurrentClient({silent:true});
-      if(!ok) return;
-    }
+    // 'save' now means the modal already saved successfully before
+    // resolving — no need to save again here.
   }
   resetForm();
   await ensureActiveClientIdentity();
@@ -16712,8 +16829,35 @@ let _unsavedChangesResolve=null;
 function confirmUnsavedChanges(){
   const modal=document.getElementById('unsaved-changes-modal');
   if(!modal) return Promise.resolve('discard'); // fail-safe: never block navigation if the modal is missing
+  const statusEl=document.getElementById('unsaved-changes-status');
+  if(statusEl){ statusEl.className='feedback-status'; statusEl.textContent=''; }
+  ['unsaved-save-btn','unsaved-discard-btn','unsaved-cancel-btn'].forEach(id=>{ const b=document.getElementById(id); if(b) b.disabled=false; });
   modal.classList.add('open');
   return new Promise(resolve => { _unsavedChangesResolve = resolve; });
+}
+// "Save & Continue" now performs the save itself, with a visible loading
+// state, BEFORE resolving/closing — previously the modal closed instantly
+// on click, leaving a silent gap (up to several seconds) before the newly
+// selected client actually appeared, which read as broken/unresponsive
+// even though it eventually completed. The resolved 'save' choice now
+// means "already saved successfully" rather than "please save" — callers
+// no longer need to save it themselves.
+async function handleUnsavedChangesSave(){
+  const isGr=window.appLang==='gr';
+  const saveBtn=document.getElementById('unsaved-save-btn');
+  const statusEl=document.getElementById('unsaved-changes-status');
+  ['unsaved-save-btn','unsaved-discard-btn','unsaved-cancel-btn'].forEach(id=>{ const b=document.getElementById(id); if(b) b.disabled=true; });
+  if(saveBtn) saveBtn.innerHTML='<i class="ti ti-loader" aria-hidden="true"></i> '+(isGr?'Αποθήκευση...':'Saving...');
+  if(statusEl){ statusEl.className='feedback-status'; statusEl.textContent=''; }
+  let ok=false;
+  try{ ok = await saveCurrentClient({silent:true}); }catch(e){ ok=false; }
+  if(ok){
+    resolveUnsavedChangesModal('save');
+  } else {
+    if(statusEl){ statusEl.className='feedback-status error'; statusEl.innerHTML='<i class="ti ti-alert-triangle" aria-hidden="true"></i> '+(isGr?'Η αποθήκευση απέτυχε. Δοκιμάστε ξανά.':'Save failed. Please try again.'); }
+    ['unsaved-save-btn','unsaved-discard-btn','unsaved-cancel-btn'].forEach(id=>{ const b=document.getElementById(id); if(b) b.disabled=false; });
+    if(saveBtn) saveBtn.innerHTML='<i class="ti ti-device-floppy" aria-hidden="true"></i> '+(isGr?'Αποθήκευση & Συνέχεια':'Save & Continue');
+  }
 }
 function resolveUnsavedChangesModal(choice){
   const modal=document.getElementById('unsaved-changes-modal');
@@ -16855,10 +16999,10 @@ async function loadClientById(rowId){
   if(S_isDirty){
     const choice = await confirmUnsavedChanges();
     if(choice==='cancel') return;
-    if(choice==='save'){
-      const ok = await saveCurrentClient({silent:true});
-      if(!ok) return; // don't switch clients if the save itself failed
-    }
+    // 'save' now means the modal already saved successfully (with its own
+    // visible loading state) before resolving — it only ever resolves
+    // 'save' on genuine success, so no need to save again here, and no
+    // need to check for failure — a failure keeps the modal open instead.
     // 'discard' or a successful 'save' both fall through to load below
   }
   let data=null;
