@@ -5103,8 +5103,8 @@ RECIPES.BRK_SOY_YOGURT_WALNUTS = buildRecipe({
   yield_servings: 1,
   ingredients: [
     { food_id: 'soy_yogurt', grams: 170, state: 'n/a' },
-    { food_id: 'walnuts', grams: 15, state: 'n/a' }, // ~4 halves
-    { food_id: 'apple', grams: 120, state: 'raw' }, // fruit
+    { food_id: 'walnuts', grams: 8, state: 'n/a' }, // 4 halves = 1 fat exchange (FOOD_DATABASE convention)
+    { food_id: 'apple', grams: 60, state: 'raw' }, // represents the legacy fruit:0.5 exchange (half of apple's 120g reference size), not a mandatory apple choice
   ],
 });
 
@@ -5115,7 +5115,8 @@ RECIPES.BRK_BOILED_EGGS_2 = buildRecipe({
   ingredients: [
     { food_id: 'egg_whole_cooked', grams: 100, state: 'cooked' }, // 2 eggs
     { food_id: 'wholegrain_bread', grams: 30, state: 'n/a' }, // 1 slice
-    { food_id: 'cherry_tomatoes', grams: 60, state: 'raw' },
+    { food_id: 'cucumber_raw', grams: 30, state: 'raw' },
+    { food_id: 'cherry_tomatoes', grams: 30, state: 'raw' },
   ],
 });
 
@@ -5126,7 +5127,7 @@ RECIPES.BRK_RUSKS_ANTHOTYRO = buildRecipe({
   ingredients: [
     { food_id: 'rusk_wholegrain', grams: 40, state: 'n/a' }, // 2 rusks
     { food_id: 'ricotta_anthotyro', grams: 40, state: 'n/a' },
-    { food_id: 'cherry_tomatoes', grams: 60, state: 'raw' },
+    { food_id: 'cherry_tomatoes', grams: 50, state: 'raw' },
   ],
 });
 
@@ -5137,8 +5138,8 @@ RECIPES.BRK_YOGURT_HONEY_WALNUTS = buildRecipe({
   ingredients: [
     { food_id: 'greek_yogurt_2pct', grams: 170, state: 'n/a' },
     { food_id: 'honey', grams: 15, state: 'n/a' }, // 1 tsp
-    { food_id: 'walnuts', grams: 15, state: 'n/a' }, // ~4 halves
-    { food_id: 'apple', grams: 120, state: 'raw' }, // fruit
+    { food_id: 'walnuts', grams: 8, state: 'n/a' }, // 4 halves = 1 fat exchange (FOOD_DATABASE convention)
+    { food_id: 'apple', grams: 120, state: 'raw' }, // represents the legacy fruit:1 exchange, not a mandatory apple choice
   ],
 });
 
@@ -5901,6 +5902,18 @@ const MIGRATED_MEAL_KEYS = new Set([
   'LUN_HALLOUMI_POTATO',
   'DIN_AVGOLEMONO_SOUP',
   'DIN_PASTA_MINCE',
+  // Batch 1 — breakfasts, validated and corrected against FOOD_DATABASE
+  // conventions (see the ~2026-07 audit: walnuts standardized to 8g,
+  // fruit-exchange representation corrected, garnish quantities confirmed).
+  'BRK_TOAST_TURKEY',
+  'BRK_EGGS_TOAST',
+  'BRK_CEREAL',
+  'BRK_OATS_VEGAN',
+  'BRK_TAHINI_BANANA',
+  'BRK_SOY_YOGURT_WALNUTS',
+  'BRK_BOILED_EGGS_2',
+  'BRK_RUSKS_ANTHOTYRO',
+  'BRK_YOGURT_HONEY_WALNUTS',
 ]);
 // Single gate used everywhere the two paths diverge.
 function isMigratedMeal(key){
@@ -11043,8 +11056,13 @@ function buildOneDayPlan(){
     gapBadge=pq.overall;
     pqRootCauseMsg = planQualityRootCauseMessage(pq.rootCause, lang!=='EN');
   } else {
-    // Fallback if exchange state isn't ready yet — same simple kcal-only
-    // check as before, rather than crashing on a null reference.
+    // INTENTIONAL EXCEPTION from evaluatePlanQuality() — safe fallback ONLY.
+    // Used exclusively when S.exMeta/S.ex aren't populated yet (exchange
+    // state not ready), so this code never runs when the canonical
+    // evaluator is available — see the `if(exM && exx)` branch above, which
+    // is the actual, normal path. Do not "clean up" this flat threshold by
+    // merging it into evaluatePlanQuality() — it exists specifically to
+    // avoid crashing on a null reference before that function can run.
     gapOk=gapAbs<=100;
     gapColor=gapOk?'var(--teal-600)':gapAbs<=200?'var(--warn)':'var(--err)';
     gapBadge=gapOk?'ok':gapAbs<=200?'warn':'err';
@@ -12906,8 +12924,9 @@ function buildSevenDay(){
   const dayLabel=weekDayLabel(dayPlan, active, lang);
   const isWeek=S.sevenDayView==='week';
   const weekTheme=S.weekViewTheme==='dark'?'dark':'light';
-  const statusOk=Math.abs(dt.gap)<=100;
-  const statusColor=statusOk?'var(--teal-600)':Math.abs(dt.gap)<=200?'var(--warn)':'var(--err)';
+  const dayPq = evaluatePlanQuality({kcal:dt.target, carb:0, prot:0, fat:0}, {kcal:dt.totalKcal, carb:0, prot:0, fat:0});
+  const statusOk=dayPq.overall==='ok';
+  const statusColor=statusOk?'var(--teal-600)':dayPq.overall==='warn'?'var(--warn)':'var(--err)';
   const dayTabs=S.weekPlans.map((p,i)=>{
     const activeTab=i===active;
     return `<button class="btn ${activeTab?'primary':''}" style="padding:7px 10px;font-size:12px;min-width:58px" onclick="setSevenDayActive(${i})">${safeHtml(weekDayLabel(p,i,lang).slice(0,3))}</button>`;
@@ -12980,7 +12999,15 @@ function buildSevenDay(){
 function renderDayTargetAdvice(dt, lang='GR'){
   if(!dt || !dt.target || !dt.totalKcal) return '';
   const diff=Number(dt.gap||0);
-  if(Math.abs(diff)<=50) return '';
+  // Gate through the same canonical evaluator used everywhere else, rather
+  // than a separate flat ±50 kcal rule — a day within evaluatePlanQuality's
+  // accepted tolerance should not show "Below/Above target" simply because
+  // it exceeds an old, disconnected threshold. carb/prot/fat are passed as
+  // 0/0 (target/actual) deliberately: evaluatePlanQuality() treats a zero
+  // target as infinite tolerance, so those three metrics always resolve to
+  // 'ok' and never influence the calorie-only judgement this function needs.
+  const pq = evaluatePlanQuality({kcal:dt.target, carb:0, prot:0, fat:0}, {kcal:dt.totalKcal, carb:0, prot:0, fat:0});
+  if(pq.overall==='ok') return '';
   const isEn=lang==='EN';
   const abs=Math.abs(Math.round(diff));
   const icon=diff<0?'ti-plus':'ti-adjustments-horizontal';
@@ -13817,7 +13844,8 @@ function buildReport(){
       </tr></thead>
       <tbody>
       ${selectedReportRows.map(({plan:p,dayIndex,ordinal,dt},rowIndex)=>{
-        const ok=Math.abs(dt.gap)<=100;
+        const dayPq = evaluatePlanQuality({kcal:dt.target, carb:0, prot:0, fat:0}, {kcal:dt.totalKcal, carb:0, prot:0, fat:0});
+        const ok=dayPq.overall==='ok';
         const dayLabel=singleReportDay ? '' : (fullWeekReport ? weekDayLabel(p, dayIndex, lang) : (isEn?`Day ${ordinal+1}`:`Ημέρα ${ordinal+1}`));
         const rowHeightStyle=fullWeekReport?'height:23mm;':'';
         const dLabel=isEn?'Day':'Ημέρα', brkLabel=isEn?'Breakfast':'Πρωινό', snk1Label=isEn?'Snack 1':'Σνακ 1', lunLabel=isEn?'Lunch':'Μεσημεριανό', snk2Label=isEn?'Snack 2':'Σνακ 2', dinLabel=isEn?'Dinner':'Βραδινό', sleepLabel=isEn?'Before sleep':'Πριν ύπνο';
@@ -13877,13 +13905,12 @@ function renderEngine(){
     {label:'Goal calories', val:kcal?Math.round(kcal)+' kcal':'—', st:lowKcal?'err':kcal>800?'ok':'warn', why:'Extreme calorie targets need clinician review.'},
     {label:'Goal calories vs BMR', val:S.bmr?(kcal>=S.bmr*0.8?'OK — above 80% BMR':'<i class="ti ti-alert-triangle" aria-hidden="true"></i> Below BMR'):'—', st:!S.bmr?'neutral':kcal>=S.bmr*0.8?'ok':'err', why:'Plan below BMR may be too aggressive without medical supervision.'},
     {label:'BMI category', val:S.bmiCat||'—', st:'neutral', why:'BMI is a screening tool — review together with body composition.'},
-    {label:'Macro kcal vs exchange kcal', val:Math.abs(planKcal-kcal)<=50?'Gap ±'+Math.abs(gap)+' kcal (OK)':'Gap '+gap+' kcal', st:Math.abs(gap)<=50?'ok':'warn', why:'Exchange kcal should reconcile to goal calories (±50 kcal).'},
+    {label:'Exchange kcal vs goal kcal', val:Math.abs(planKcal-kcal)<=50?'Gap ±'+Math.abs(gap)+' kcal (OK)':'Gap '+gap+' kcal', st:Math.abs(gap)<=50?'ok':'warn', why:'Exchange kcal should reconcile to goal calories (±50 kcal). Do not fill this gap automatically with protein/fat — review target instead.'},
     {label:'Starch exchanges (cap '+caps.starchDailyMax+'/day)', val:ex.starch+' ex'+(gapData.starchCapped?' (capped)':''), st:gapData.starchCapped?'warn':'ok', why:gapData.starchCapped?`Carb target needs more than ${caps.starchDailyMax} starch exchanges/day — capped for realism${conditions.includes('Diabetes')||conditions.includes('PCOS')?' (lower cap due to Diabetes/PCOS)':''}. ~${gapData.choGap}g carbs not covered by starch alone.`:'Within realistic daily range.'},
     {label:'Protein exchanges (cap '+caps.proteinDailyMax+'/day)', val:ex.protein+' ex'+(gapData.proteinCapped?' (capped)':''), st:gapData.proteinCapped?'warn':'ok', why:gapData.proteinCapped?`Protein target needs more than ${caps.proteinDailyMax} exchanges/day (~${caps.proteinDailyMax*gramsPerEx}g cooked meat/fish) — capped at realistic portions${conditions.includes('CKD')||conditions.includes('Hemodialysis')?' (lower cap due to CKD/Hemodialysis)':''}. ~${gapData.proGap}g protein/day not covered.`:'Within realistic daily range.'},
     {label:'Fat exchanges '+(caps.fatDailyMax>=12?'(general cap '+caps.fatDailyMax+'/day)':'(condition cap '+caps.fatDailyMax+'/day)'), val:ex.fat+' ex'+(gapData.fatCapped?' (capped)':''), st:gapData.fatCapped?'warn':'ok', why:gapData.fatCapped?`Fat target needs more than ${caps.fatDailyMax} tsp oil/day equivalent — capped${conditions.includes('Dyslipidemia')||conditions.includes('CKD')||conditions.includes('Hemodialysis')?' (lower cap due to selected conditions)':''}. ~${gapData.fatGap}g fat/day not covered.`:'Within realistic daily range.'},
     {label:'Meal realism — protein cap', val:`≤${caps.proteinPerMealMax*gramsPerEx}g per main meal`, st:'ok', why:`Clinical cap for this client: ≤${caps.proteinPerMealMax} protein exchanges (≈${caps.proteinPerMealMax*gramsPerEx}g cooked meat/fish) per main meal.`},
     {label:'Meal realism — oil cap', val:`≤${caps.fatPerMealMax} tsp per main meal`, st:'ok', why:`Clinical cap for this client: ≤${caps.fatPerMealMax} tsp olive oil per main meal.`},
-    {label:'Exchange kcal gap vs target', val:gap+' kcal (plan vs target)', st:Math.abs(gap)<=100?'ok':'warn', why:'Do not fill this gap automatically with protein/fat — review target instead.'},
   ];
   if(S.isPregnant){
     checks.push({
@@ -14034,11 +14061,14 @@ function updateDashMetrics(){
   const gapData=S.exGap||{};
   const anyCapped=gapData.starchCapped||gapData.proteinCapped||gapData.fatCapped;
   const isGr = window.appLang==='gr';
+  const exReconcile=S.ex&&S.exMeta ? (S.ex.fruit*S.exMeta.fruit.kcal + S.ex.veg*S.exMeta.veg.kcal + S.ex.dairy*S.exMeta.dairy.kcal + S.ex.starch*S.exMeta.starch.kcal + S.ex.protein*S.exMeta.protein.kcal + S.ex.fat*S.exMeta.fat.kcal) : null;
+  const exReconcilePq = (exReconcile!=null && S.goalKcal) ? evaluatePlanQuality({kcal:S.goalKcal, carb:0, prot:0, fat:0}, {kcal:exReconcile, carb:0, prot:0, fat:0}) : null;
+  const exReconcileOk = !exReconcilePq || exReconcilePq.overall==='ok';
   const chks=[
     {label:isGr?'Πληρότητα προφίλ πελάτη':'Client profile completeness',ok:!incomplete,status:incomplete?(isGr?'Λείπουν στοιχεία':'Missing inputs'):(isGr?'Πλήρες':'Complete')},
     {label:isGr?'Κατανομή μακροθρεπτικών (πρέπει = 100%)':'Macro split (must = 100%)',ok:macroOk,status:macroOk?(isGr?'100% OK':'100% OK'):(isGr?'Όχι 100%':'Not 100%')},
     {label:isGr?'Στόχος θερμίδων':'Goal calories',ok:!lowKcal&&!!S.goalKcal,status:lowKcal?(isGr?'Κλινική επανεξέταση: χαμηλό':'Clinical review: low'):S.goalKcal?'OK':'—'},
-    {label:isGr?'Συμφωνία θερμίδων ισοδυνάμων':'Exchange kcal reconciliation',ok:true,status:'OK'},
+    {label:isGr?'Συμφωνία θερμίδων ισοδυνάμων':'Exchange kcal reconciliation',ok:exReconcileOk,status:exReconcileOk?'OK':(isGr?'Χρειάζεται επανεξέταση':'Needs review')},
     {label:isGr?'Ρεαλισμός πρωτεΐνης/λίπους':'Protein/fat exchange realism',ok:!anyCapped,status:anyCapped?(isGr?'Χρειάζεται προσαρμογή':'Adjustment needed'):'OK'},
   ];
   const dashEng=document.getElementById('dash-engine-checks');
