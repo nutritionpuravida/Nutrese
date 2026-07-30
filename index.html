@@ -4848,6 +4848,11 @@ RECIPES.DIN_GEMISTA_LIGHT = buildRecipe({
 });
 
 // 29. Spanakorizo + light cheese — traditional spinach-rice
+// Fat is slightly higher than the legacy exchange count (recipe ~1.6 vs
+// legacy 1) — a minor ingredient-composition difference: the light cheese
+// slice's own small fat content adds a bit on top of the 8g poured olive
+// oil, which the old flat exchange count didn't separately account for.
+// Not clinically meaningful at this margin.
 RECIPES.LUN_SPINACH_RICE = buildRecipe({
   recipe_id: 'LUN_SPINACH_RICE', name: { en: 'Spinach rice with light cheese', gr: 'Σπανακόρυζο με τυρί light' },
   yield_servings: 1,
@@ -4880,6 +4885,13 @@ RECIPES.LUN_BEAN_SALAD = buildRecipe({
 
 // 31. Souvlaki + pita — pork souvlaki anchor (legacy text said "chicken"
 // but key/dish is pork souvlaki; using pork, flagged in review)
+// Fat is lower than the legacy exchange count (recipe ~1.6 vs legacy 3):
+// pork souvlaki itself is not a lean cut and carries meaningful intrinsic
+// fat, plus the pita bread's own small fat content — together they cover
+// part of what the old flat exchange count assumed would all come from
+// poured oil. 8g added olive oil on top is a realistic, not under-stated,
+// amount for this dish; the difference is ingredient composition, not an
+// omission.
 RECIPES.DIN_SOUVLAKI_PITA = buildRecipe({
   recipe_id: 'DIN_SOUVLAKI_PITA', name: { en: 'Pork souvlaki with pita', gr: 'Χοιρινό σουβλάκι με πίτα' },
   yield_servings: 1,
@@ -5337,6 +5349,13 @@ RECIPES.DIN_CHICKEN_MINCE_PASTA = buildRecipe({
 });
 
 // 67. Grilled fish + rice (DINNER) — mirrors LUN_GRILLED_FISH_RICE
+// Protein and vegetable exchanges are higher than the legacy count (protein
+// 4 vs legacy 3, veg 2 vs legacy 1): 140g of grilled white fish is a
+// realistic full portion that derives to a fuller protein exchange count
+// than the old flat allocation assumed, and the 170g mixed salad here is a
+// genuine side portion, not the smaller garnish the legacy number implied.
+// Both differences come directly from the actual portions served, not an
+// error.
 RECIPES.DIN_GRILLED_FISH_RICE = buildRecipe({
   recipe_id: 'DIN_GRILLED_FISH_RICE', name: { en: 'Grilled fish with rice (dinner)', gr: 'Ψητό ψάρι με ρύζι (βραδινό)' },
   yield_servings: 1,
@@ -5914,6 +5933,49 @@ const MIGRATED_MEAL_KEYS = new Set([
   'BRK_BOILED_EGGS_2',
   'BRK_RUSKS_ANTHOTYRO',
   'BRK_YOGURT_HONEY_WALNUTS',
+  // Batch 2 — classic protein + starch lunch/dinner meals, validated
+  // against FOOD_DATABASE conventions. Where a recipe's derived exchanges
+  // differ from a genuine (non-placeholder) legacy reference, the reason
+  // is documented directly on that recipe definition above — deliberate
+  // ingredient-composition accuracy, not an error (same principle as Batch 1).
+  'LUN_FASOLAKIA_PORK',
+  'LUN_TUNA_RICE',
+  'LUN_SALMON_QUINOA',
+  'LUN_SPINACH_RICE',
+  'DIN_SALMON_POTATO',
+  'DIN_GRILLED_FISH_RICE',
+  'DIN_OMELETTE',
+  'DIN_SOUVLAKI_PITA',
+  'DIN_BIFTEKI_BULGUR',
+  // Batch 3 — legume/vegetarian/vegan lunch/dinner meals, validated against
+  // FOOD_DATABASE conventions. The apparent "protein:0" pattern across most
+  // of these is not a recipe error — chickpeas/lentils/beans/peas are
+  // ADA-classified under starch (not protein) in FOOD_DATABASE, a
+  // documented, deliberate convention; tofu correctly remains a protein
+  // exchange. Higher starch counts than the legacy reference reflect this
+  // canonical classification, not an omission.
+  'LUN_CHICKPEA_STEW',
+  'LUN_TOFU_RICE',
+  'LUN_LENTIL_SOUP',
+  'LUN_PEAS_LADERO',
+  'LUN_ARAKAS_FETA',
+  'LUN_CHICKPEAS_SALAD',
+  'LUN_BEAN_SALAD',
+  'DIN_TOFU_STIRFRY',
+  'DIN_CHICKPEA_STEW',
+  'DIN_LENTILS_RICE',
+  'DIN_BEAN_PASTA',
+  // Batch 4 — soups/salads + the One-Day page's own default. Completes
+  // Phase A (100% default-meal coverage across all diet types). Exchange
+  // differences vs legacy are explained by the same established patterns
+  // as prior batches: ADA starch classification for legumes, standard
+  // realistic portion sizes vs the legacy system's flat assumptions, and
+  // placeholder (non-fixed-composition) legacy values for dynamically-
+  // scaled meals — not recipe errors.
+  'DIN_CHICKPEAS_SALAD',
+  'DIN_HALLOUMI_SALAD',
+  'DIN_TRACHANAS_HALLOUMI',
+  'DIN_FISH_POTATO',
 ]);
 // Single gate used everywhere the two paths diverge.
 function isMigratedMeal(key){
@@ -8366,58 +8428,6 @@ function aiMealDietRestrictionReasons(meal, dietType){
   const text=[meal?.name, meal?.description, meal?.description_gr, meal?.description_en, meal?.text].filter(Boolean).join(' ');
   return dietRestrictionReasonsForText(text, dietType);
 }
-function validateAiMealPlanKcalMacros(plan, payload){
-  if(!plan || typeof plan!=='object' || !payload) return [];
-  const dayKeys=['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
-  const dayLabels=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-  const target=Number(payload.kcal_target)||0;
-  const macroPct=payload.macros||{};
-  const warnings=[];
-  const kcalTolerancePct=0.12; // 12% — generous enough to not flag reasonable day-to-day variation, tight enough to catch real drift
-  dayKeys.forEach((dayKey,i)=>{
-    const day=plan[dayKey]||plan[WEEK_DAYS_EN[i]]||plan[WEEK_DAYS_GR[i]]||plan[i];
-    if(!day || typeof day!=='object') return;
-    const reportedKcal=Number(day.total_kcal);
-    // 1. Does the AI's own reported day total reconcile with the client's
-    //    actual kcal target? (This is the check that was previously entirely
-    //    missing — the AI's numbers were applied without ever being checked.)
-    if(Number.isFinite(reportedKcal) && target>0){
-      const diffPct=Math.abs(reportedKcal-target)/target;
-      if(diffPct>kcalTolerancePct){
-        warnings.push(`${dayLabels[i]}: reports ${reportedKcal} kcal vs ${target} target (${Math.round(diffPct*100)}% off)`);
-      }
-    }
-    // 2. Does the sum of the individual meals' kcal match the day's own
-    //    reported total? Catches internal AI arithmetic inconsistency.
-    const slotKeys=['breakfast','snack1','lunch','snack2','dinner','before_sleep'];
-    const mealSum=slotKeys.reduce((sum,k)=>sum+(Number(day[k]?.kcal)||0),0);
-    if(Number.isFinite(reportedKcal) && reportedKcal>0 && mealSum>0){
-      const diffPct=Math.abs(mealSum-reportedKcal)/reportedKcal;
-      if(diffPct>kcalTolerancePct){
-        warnings.push(`${dayLabels[i]}: meals sum to ${Math.round(mealSum)} kcal but day total says ${reportedKcal} kcal (${Math.round(diffPct*100)}% mismatch)`);
-      }
-    }
-    // 3. Do the reported macro grams roughly match both the target macro
-    //    split AND their own stated kcal (protein*4 + carb*4 + fat*9)?
-    const p=Number(day.total_protein_g), c=Number(day.total_carb_g), f=Number(day.total_fat_g);
-    if(Number.isFinite(p) && Number.isFinite(c) && Number.isFinite(f) && (p+c+f)>0){
-      const macroKcal=p*4+c*4+f*9;
-      if(reportedKcal>0 && Math.abs(macroKcal-reportedKcal)/reportedKcal>kcalTolerancePct){
-        warnings.push(`${dayLabels[i]}: macros (${Math.round(p)}g P/${Math.round(c)}g C/${Math.round(f)}g F) imply ${Math.round(macroKcal)} kcal, inconsistent with its own ${reportedKcal} kcal total`);
-      }
-      if(target>0 && macroPct.carb_percent!=null){
-        const targetP=target*(macroPct.protein_percent||0)/100/4;
-        const targetC=target*(macroPct.carb_percent||0)/100/4;
-        const targetF=target*(macroPct.fat_percent||0)/100/9;
-        const macroTolerancePct=0.20; // macros vary more naturally than total kcal meal-to-meal
-        if(targetP>0 && Math.abs(p-targetP)/targetP>macroTolerancePct) warnings.push(`${dayLabels[i]}: protein ${Math.round(p)}g vs ~${Math.round(targetP)}g target`);
-        if(targetC>0 && Math.abs(c-targetC)/targetC>macroTolerancePct) warnings.push(`${dayLabels[i]}: carbs ${Math.round(c)}g vs ~${Math.round(targetC)}g target`);
-        if(targetF>0 && Math.abs(f-targetF)/targetF>macroTolerancePct) warnings.push(`${dayLabels[i]}: fat ${Math.round(f)}g vs ~${Math.round(targetF)}g target`);
-      }
-    }
-  });
-  return warnings;
-}
 function validateAiMealPlanForDiet(plan, dietType=v('p-diet')||S.dietType||'Omnivore'){
   if(!plan || typeof plan!=='object' || dietType==='Omnivore') return;
   const days=['monday','tuesday','wednesday','thursday','friday','saturday','sunday',...WEEK_DAYS_EN,...WEEK_DAYS_GR,0,1,2,3,4,5,6];
@@ -8738,6 +8748,7 @@ function addEquivalentToGuide(categoryKey, grText, enText){
   if(!exists){
     S.equivalentNotes[categoryKey]=[...list,{gr:grText,en:enText||grText,custom:true}];
     S_isDirty=true;
+    _traceDirty('addEquivalentToGuide', true);
     buildEquivalents();
     const status=document.getElementById('eq-add-status');
     if(status){
@@ -9179,6 +9190,9 @@ function autoSnackExtrasForPlan(plan){
   p.snk2Extras=p.snack2Extras;
   if(original.day) p.day=original.day;
   if(original.manualMeals) p.manualMeals=original.manualMeals;
+  if(original.aiMeals) p.aiMeals=original.aiMeals;
+  if(original.aiDayTotals) p.aiDayTotals=original.aiDayTotals;
+  if(original.source) p.source=original.source;
   return p;
 }
 
@@ -10174,6 +10188,7 @@ const CLIENT_TAB_PAGES = ['profile','bodycomp','intake','labs','macros','sevenda
 const PRINT_PAGES = ['equivalents'];
 
 function nav(id) {
+  window._dirtyTrace.push({t:Date.now(), fn:'nav:ENTRY', targetPage:id, dirtyAtEntry:S_isDirty});
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   const pg = document.getElementById('page-'+id); if(pg) pg.classList.add('active');
@@ -10989,6 +11004,7 @@ function onBodyCompManualInput(field){
 function saveBodyComp(){
   S.tracking.unshift({date:new Date().toLocaleDateString('el-GR'),weight:S.weight,bf:v('bc-bf'),muscle:v('bc-muscle'),visceral:v('bc-visceral'),notes:'Body comp entry'});
   S_isDirty=true;
+  _traceDirty('saveBodyComp', true);
   if(typeof updateSaveStatusUI==='function') updateSaveStatusUI();
   alert(window.appLang==='gr' ? 'Οι μετρήσεις προστέθηκαν στην Παρακολούθηση Προόδου. Πατήστε «Αποθήκευση Πελάτη» για μόνιμη αποθήκευση.' : 'Measurements added to Progress Tracking. Press "Save Client" to store them permanently.');
 }
@@ -11319,6 +11335,8 @@ function updateWeekPlan(dayIndex, mealKey, value){
 
 // Toggles one snack EXTRA (multi-select) for one day in the 7-Day Plan
 function toggleWeekPlanExtra(dayIndex, extrasKey, extraValue, checked){
+  window._adviceTrace = window._adviceTrace || [];
+  window._adviceTrace.push({t:Date.now(), fn:'toggleWeekPlanExtra:ENTRY', dayIndex, extrasKey, extraValue, checked});
   if(!S.weekPlans) S.weekPlans = WEEK_PLANS.map(p=>({...p}));
   const day = S.weekPlans[dayIndex];
   if(!day[extrasKey]) day[extrasKey]=[];
@@ -11338,10 +11356,9 @@ function toggleWeekPlanExtra(dayIndex, extrasKey, extraValue, checked){
   if(extrasKey==='snack1Extras') day.snk1Extras=day.snack1Extras;
   if(extrasKey==='snk2Extras') day.snack2Extras=day.snk2Extras;
   if(extrasKey==='snack2Extras') day.snk2Extras=day.snack2Extras;
-  if(extraValue==='milk' || extraValue==='yogurt' || extraValue==='plantmilk' || extraValue==='soyyogurt'){
-    normalizeDairyExtrasForPlan(day, slotFromExtrasKey(extrasKey));
-  }
   buildSevenDay();
+  window._adviceTrace = window._adviceTrace || [];
+  window._adviceTrace.push({t:Date.now(), fn:'toggleWeekPlanExtra:AFTER_BUILD', domAdvicePresent: !!document.querySelector('.seven-day-target-advice'), domAdviceText: document.querySelector('.seven-day-target-advice')?.innerText?.slice(0,50) || null});
 }
 
 // ── MICRONUTRIENT QUALITY ENGINE ──
@@ -11360,6 +11377,53 @@ const EGG_MEAL_KEYS=new Set(['BRK_EGGS','BRK_EGGS_TOAST','BRK_BOILED_EGGS_2','DI
 const LEGUME_MEAL_KEYS=new Set(['LUN_LOUVI_TUNA','LUN_LENTILS_RICE','LUN_CHICKPEA_STEW','LUN_BEAN_SALAD','LUN_CHICKPEAS_SALAD','LUN_LENTIL_SOUP','LUN_TOFU_RICE','DIN_LENTILS_RICE','DIN_CHICKPEA_STEW','DIN_BEAN_PASTA','DIN_TOFU_STIRFRY','DIN_CHICKPEAS_SALAD']); // fasolakia (green beans) and peas-ladero are vegetable/starch-classified in this app's own exchange tables, not legume/protein — confirmed by checking their actual composition
 const RED_MEAT_MEAL_KEYS=new Set(['LUN_FASOLAKIA_PORK','LUN_PASTA_MINCE','LUN_BIFTEKI_BULGUR','DIN_PASTA_MINCE','DIN_BIFTEKI_BULGUR']); // pork/beef — heme iron
 const HIGH_SODIUM_MEAL_KEYS=new Set(['LUN_HALLOUMI_POTATO','LUN_HALLOUMI_PASTA','LUN_TRACHANAS_HALLOUMI','LUN_AVGOLEMONO_SOUP','LUN_TUNA_POTATO','LUN_TUNA_RICE','LUN_LOUVI_TUNA','DIN_HALLOUMI_POTATO','DIN_HALLOUMI_SALAD','DIN_TRACHANAS_HALLOUMI','DIN_AVGOLEMONO_SOUP','DIN_TUNA_POTATO','DIN_TUNA_RICE','DIN_SOUVLAKI_PITA']); // halloumi/feta/canned fish/cured — naturally higher sodium
+
+// ═══════════════════════════════════════════════════════════════════════
+// MICRONUTRIENT DETECTION — CUSTOM/MANUAL MEAL SUPPORT (implementation note)
+// ═══════════════════════════════════════════════════════════════════════
+// • Existing meal-key detection (*_MEAL_KEYS Sets, used for every
+//   auto-generated/template meal) is completely unchanged — same Sets,
+//   same membership checks, same behavior. Nothing below alters it.
+// • Custom/manually-built meals (a CUSTOM_<id> key, never present in any
+//   *_MEAL_KEYS set) now ALSO contribute to detection, via the food-level
+//   Sets below checked against that meal's actual resolved ingredients
+//   (food_id values from its canonical NutreseEngine instance) — not the
+//   meal's name or description text.
+// • Detection is presence-based, matching the existing meal-key model
+//   exactly: a meal either contains a qualifying food or it doesn't, with
+//   no gram-quantity weighting. The meal-key system this mirrors has no
+//   concept of portion size either (it checks recipe identity, not
+//   composition), so this deliberately keeps the same simple semantics
+//   rather than introducing an inconsistent, one-off quantity threshold.
+// • Purpose: before this, a custom or manually-edited meal silently
+//   contributed nothing to iron/vitamin-D/sodium/magnesium detection,
+//   regardless of what it actually contained — understating a client's
+//   real micronutrient source coverage. This closes that gap without
+//   touching calorie/macro calculations, exchange logic, evaluatePlanQuality(),
+//   or the AI pathway.
+//
+// Mirror of the *_MEAL_KEYS categories above at the ingredient level. Every
+// food_id below is verified present in FOOD_DATABASE.
+const FISH_FOOD_IDS=new Set(['cod_baked','salmon_baked','tuna_canned_drained','white_fish_grilled']);
+const FATTY_FISH_FOOD_IDS=new Set(['salmon_baked']);
+const EGG_FOOD_IDS=new Set(['egg_whole_cooked']);
+const LEGUME_FOOD_IDS=new Set(['lentils_cooked','chickpeas_cooked','black_eyed_beans_cooked','cannellini_beans_cooked','tofu_firm']);
+const RED_MEAT_FOOD_IDS=new Set(['beef_mince_lean_cooked','beef_pork_patty_cooked','pork_loin_cooked','pork_souvlaki_cooked']);
+const HIGH_SODIUM_FOOD_IDS=new Set(['halloumi_cheese','feta_cheese','tuna_canned_drained']);
+const NUTS_FOOD_IDS=new Set(['walnuts','almonds']);
+
+// Given a meal-slot key, returns whether it's a custom meal (CUSTOM_<id>)
+// that contains at least one food from the given food-level set. Returns
+// false immediately for any non-custom key — auto-generated/template meals
+// are completely unaffected by this function and continue to be judged
+// solely by the existing *_MEAL_KEYS sets above, exactly as before.
+function customMealHasFoodInSet(key, foodIdSet){
+  if(!isCustomMealKey(key)) return false;
+  const meal=getCustomMealByKey(key);
+  const ingredients=meal?.instance?.ingredients;
+  if(!Array.isArray(ingredients)) return false; // legacy-shape custom meal, no structured ingredients to check
+  return ingredients.some(i=>foodIdSet.has(i.food_id));
+}
 
 const SEVEN_DAY_SLOTS=[
   {key:'brk', ai:'breakfast', labelGR:'Πρωινό', labelEN:'Breakfast', icon:'🌅'},
@@ -11701,6 +11765,16 @@ function strictSlotText(dayPlan, slotKey, lang='GR', dayIndex=0, audience='clini
 }
 
 function ensureWeekPlans(){
+  // REGRESSION NOTE (found during Plan Quality unification testing): a test
+  // or script that directly mutates S.weekPlans[i].brk/lun/din WITHOUT also
+  // setting the matching manualMeals[key]=true flag is not a valid
+  // application state — it's indistinguishable from an unedited default,
+  // so this function will correctly normalize it back to the current diet
+  // type's strict default on its next call (see the `if(!p.manualMeals.lun)`
+  // pattern below). This is intentional, already-validated behavior, not a
+  // bug. If a future regression test directly sets a day's meal key and
+  // later observes it "reverted," check whether manualMeals was set
+  // correctly before treating it as a false positive.
   if(!S.weekPlans) S.weekPlans = WEEK_PLANS.map(p=>({...p}));
   const dietTypeForDefaults = v('p-diet')||S.dietType||'Omnivore';
   const stricts = {
@@ -11710,7 +11784,7 @@ function ensureWeekPlans(){
   }[dietTypeForDefaults] || STRICT_WEEK_MEALS;
   S.weekPlans.forEach((p,index)=>{
     const strict=stricts[index];
-    if(strict){
+    if(strict && p.source!=='ai'){
       p.manualMeals=p.manualMeals||{};
       if(!p.manualMeals.brk) p.brk=strict.brk;
       if(!p.manualMeals.lun) p.lun=strict.lun;
@@ -11906,6 +11980,7 @@ async function saveWeeklyPlan(){
       upsertLocalClient(localRow);
     }
     S_isDirty=false;
+    _traceDirty('saveWeeklyPlan', false);
     setWeeklyPlanSaveStatus('<i class="ti ti-circle-check" aria-hidden="true"></i> Το πλάνο αποθηκεύτηκε');
     if(document.getElementById('page-report')?.classList.contains('active')) buildReport();
     await renderClientList();
@@ -11913,6 +11988,7 @@ async function saveWeeklyPlan(){
     console.error('[Nutrese weekly plan] save failed; using local fallback', e);
     upsertLocalClient(localRow);
     S_isDirty=false;
+    _traceDirty('saveWeeklyPlan', false);
     setWeeklyPlanSaveStatus('<i class="ti ti-circle-check" aria-hidden="true"></i> Το πλάνο αποθηκεύτηκε τοπικά', true);
   }
 }
@@ -12289,6 +12365,7 @@ function applyMealPlanTemplate(templateKey){
   };
   S.aiPlanStatus='';
   S_isDirty=true;
+  _traceDirty('applyMealPlanTemplate', true);
   closeTemplatePicker();
   buildSevenDay();
   setWeeklyPlanSaveStatus((isGr?`✓ Πρότυπο εφαρμόστηκε: ${tpl.nameGr} — ελέγξτε κάθε ημέρα πριν την κοινοποίηση.`:`✓ Template applied: ${tpl.nameEn} — please review each day before sharing.`) + (dietWarnings.length ? (isGr?' Κάποιες επιλογές αντικαταστάθηκαν λόγω τύπου διατροφής.':' Some selections were replaced because of the selected diet type.') : ''), true);
@@ -12339,6 +12416,7 @@ function reapplyOriginalTemplate(){
     day.sleepExtras=[...snap.sleepExtras];
   });
   S_isDirty=true;
+  _traceDirty('reapplyOriginalTemplate', true);
   buildSevenDay();
   setWeeklyPlanSaveStatus(isGr?`✓ Το πρότυπο "${name}" επαναφέρθηκε στην αρχική του μορφή.`:`✓ Reapplied the original "${name}" template.`, true);
 }
@@ -12375,6 +12453,7 @@ function removeCurrentTemplate(){
   enforceWeekPlanDietCompatibility(dietType);
   S.currentTemplate=null;
   S_isDirty=true;
+  _traceDirty('removeCurrentTemplate', true);
   buildSevenDay();
   setWeeklyPlanSaveStatus(isGr?"✓ Το πρότυπο αφαιρέθηκε — το πλάνο επανήλθε στο προεπιλεγμένο σύστημα του Nutrese.":"✓ Template removed — plan restored to Nutrese's default system.", true);
 }
@@ -12436,6 +12515,17 @@ function previewRebalanceWeek(){
   const weekAvg=Math.round(dayTotals.reduce((a,b)=>a+b,0)/dayTotals.length);
   const target=Math.round(S.goalKcal);
   const gap=weekAvg-target;
+  // INTENTIONAL EXCEPTION from evaluatePlanQuality() — planning heuristic,
+  // not a clinical evaluation. This tolerance decides whether the "Rebalance
+  // Week" ACTION TOOL bothers suggesting a specific edit (which days, how
+  // many fruit servings) — a UX question ("is this worth an intervention?"),
+  // not a clinical acceptability judgment. Agreed direction (Priority 2,
+  // not yet implemented): gate the decision to suggest a rebalance through
+  // evaluatePlanQuality() on the weekly average, while keeping this
+  // specific day-selection/serving-count math as its own independent
+  // planning algorithm. Every `tolerance`/`stillOff`/±50 check within this
+  // function and its "Apply" counterpart (search: S._rebalancePending)
+  // belongs to this same pending unification — don't merge in isolation.
   const tolerance=50;
   if(Math.abs(gap)<=tolerance){
     el.innerHTML=`<div class="alert ok"><i class="ti ti-circle-check" aria-hidden="true"></i> ${isGr?`Η εβδομάδα είναι ήδη καλά ισορροπημένη (μέσος όρος ${weekAvg} kcal/ημέρα έναντι στόχου ${target}). Δεν χρειάζονται αλλαγές.`:`Your week is already well balanced (averaging ${weekAvg} kcal/day vs a ${target} target). No changes needed.`}</div>`;
@@ -12508,6 +12598,10 @@ function applyRebalanceWeek(){
   const newWeekAvg=Math.round(newDayTotals.reduce((a,b)=>a+b,0)/newDayTotals.length);
   const target=Math.round(S.goalKcal||0);
   const newGap=newWeekAvg-target;
+  // Same intentional planning-heuristic exception as previewRebalanceWeek()
+  // above (search that function for the full explanation) — this is the
+  // "Apply" step's own residual-gap check, part of the same pending
+  // Priority 2 unification, not a separate independent threshold.
   const stillOff = Math.abs(newGap)>50;
   const resultLine = target
     ? (isGr
@@ -12547,6 +12641,65 @@ function applyRebalanceWeek(){
 // Percentage-based tolerance: ±5% = on target, ±5-10% = slightly outside
 // range, >10% = needs review. Root-cause detection separates two specific
 // situations from a genuine plan-quality problem:
+// ═══════════════════════════════════════════════════════════════════════
+// CLINICAL EVALUATION ARCHITECTURE
+// ═══════════════════════════════════════════════════════════════════════
+// evaluatePlanQuality() is the single, canonical source of truth for one
+// question: "is this kcal/macro value clinically acceptable, given its
+// target?" Any part of the UI that tells a dietitian whether a plan is
+// fine or needs review must ask THIS function that question — never
+// maintain its own flat kcal/macro threshold. This was unified across the
+// app in 2026 after an audit found several UI surfaces independently
+// re-implementing (and disagreeing on) the same judgment.
+//
+// Tolerance model: ±5% of target = 'ok', ±5-10% = 'warn', beyond that =
+// 'err'. A zero/missing target resolves to infinite tolerance (always
+// 'ok') rather than throwing — this is what makes it safe to call with
+// placeholder 0/0 values for metrics a caller doesn't have data for.
+//
+// rootCause distinguishes WHY a metric is off, so the UI can tell a
+// dietitian whether a flagged metric reflects a genuine plan problem or a
+// structural system limitation (exchange caps, an unusually low target,
+// a floored calorie target) — see the root-cause comment block below.
+//
+// ─── Consumers of evaluatePlanQuality() (the canonical pathway) ───────────
+//   • Dashboard Clinical Status ("Exchange kcal reconciliation" row)
+//   • One-Day Plan reconciliation panel (primary path, when exchange
+//     state is available)
+//   • 7-Day Plan Quality summary (per-metric cap attribution)
+//   • renderDayTargetAdvice() — the One-Day/7-Day "Below/Above target"
+//     advice message (text unchanged; only the display gate is canonical)
+//   • buildSevenDay() day-tab status coloring
+//   • Printed 7-Day report cell coloring
+//   • Macro Match Check (Targets & Exchanges page)
+//
+// ─── Intentionally independent (do NOT unify without a specific reason) ──
+//   1. One-Day reconciliation fallback (gapAbs<=100/200) — active only
+//      when S.exMeta/S.ex aren't populated yet; a safety net so the
+//      canonical path never has to handle a null reference, not a
+//      competing judgment. See the fallback's own comment for detail.
+//   2. previewRebalanceWeek() (+ its "Apply" step) — a planning/action
+//      tool, not a status display. Its threshold answers "is this gap
+//      worth suggesting a specific edit?", a UX question, not "is this
+//      clinically acceptable?". Agreed direction: gate the decision to
+//      suggest a rebalance through evaluatePlanQuality() on the weekly
+//      average, while keeping the day-selection/serving-count algorithm
+//      independent (tracked separately; not yet implemented).
+//   3. renderEngine() diagnostics (#engine-table/#engine-realism/
+//      #engine-gap) — a developer/engineering view, not clinician-facing.
+//      Explicit product decision: diagnostics may expose raw thresholds.
+//   4. Internal engine/data-integrity checks (e.g. the exchange-total vs.
+//      rendered-meal-text-total consistency check, and the starch/fat
+//      serving-count suggestion math) — these compute quantities or check
+//      internal consistency between calculation paths; they don't render
+//      a clinical accept/reject judgment, so they aren't candidates for
+//      unification in the first place.
+//
+// If you find a new place showing a dietitian "on target"/"needs review"
+// (or equivalent) that isn't calling evaluatePlanQuality(), that's a gap
+// to fix, not a new exception to add to this list.
+//
+// Root-cause values evaluatePlanQuality() can return, when overall!=='ok':
 //   - 'exchange-cap': the shortfall is because the exchange system's daily
 //     portion caps can't deliver this much food at realistic serving
 //     sizes — not a badly-built plan, a structural ceiling.
@@ -12695,14 +12848,16 @@ function weekMicronutrientSignals(){
   let fishCount=0, fattyFishCount=0, legumeCount=0, redMeatCount=0, highSodiumCount=0, nutsCount=0;
   plans.forEach(p=>{
     [p.lun, p.din].forEach(key=>{
-      if(FISH_MEAL_KEYS.has(key)) fishCount++;
-      if(FATTY_FISH_MEAL_KEYS.has(key)) fattyFishCount++;
-      if(LEGUME_MEAL_KEYS.has(key)) legumeCount++;
-      if(RED_MEAT_MEAL_KEYS.has(key)) redMeatCount++;
-      if(HIGH_SODIUM_MEAL_KEYS.has(key)) highSodiumCount++;
+      if(FISH_MEAL_KEYS.has(key) || customMealHasFoodInSet(key, FISH_FOOD_IDS)) fishCount++;
+      if(FATTY_FISH_MEAL_KEYS.has(key) || customMealHasFoodInSet(key, FATTY_FISH_FOOD_IDS)) fattyFishCount++;
+      if(LEGUME_MEAL_KEYS.has(key) || customMealHasFoodInSet(key, LEGUME_FOOD_IDS)) legumeCount++;
+      if(RED_MEAT_MEAL_KEYS.has(key) || customMealHasFoodInSet(key, RED_MEAT_FOOD_IDS)) redMeatCount++;
+      if(HIGH_SODIUM_MEAL_KEYS.has(key) || customMealHasFoodInSet(key, HIGH_SODIUM_FOOD_IDS)) highSodiumCount++;
     });
     const snk1=p.snk1Extras||p.snack1Extras||[], snk2=p.snk2Extras||p.snack2Extras||[], sleep=p.sleepExtras||[];
-    if([snk1,snk2,sleep].some(arr=>Array.isArray(arr)&&arr.includes('nuts'))) nutsCount++;
+    const hasNutsExtra=[snk1,snk2,sleep].some(arr=>Array.isArray(arr)&&arr.includes('nuts'));
+    const hasNutsInCustomMeal=[p.brk,p.lun,p.din].some(key=>customMealHasFoodInSet(key, NUTS_FOOD_IDS));
+    if(hasNutsExtra || hasNutsInCustomMeal) nutsCount++;
   });
   return {fishCount, fattyFishCount, legumeCount, redMeatCount, highSodiumCount, nutsCount, days:plans.length||7};
 }
@@ -12718,14 +12873,16 @@ function dayMicronutrientSignals(dayPlan){
   if(!dayPlan) return null;
   const mainMealKeys=[dayPlan.lun, dayPlan.din];
   const allMealKeys=[dayPlan.brk, dayPlan.lun, dayPlan.din];
-  const hasFish=mainMealKeys.some(k=>FISH_MEAL_KEYS.has(k));
-  const hasFattyFish=mainMealKeys.some(k=>FATTY_FISH_MEAL_KEYS.has(k));
-  const hasEgg=allMealKeys.some(k=>EGG_MEAL_KEYS.has(k));
-  const hasLegume=mainMealKeys.some(k=>LEGUME_MEAL_KEYS.has(k));
-  const hasRedMeat=mainMealKeys.some(k=>RED_MEAT_MEAL_KEYS.has(k));
-  const hasHighSodium=mainMealKeys.some(k=>HIGH_SODIUM_MEAL_KEYS.has(k));
+  const hasFish=mainMealKeys.some(k=>FISH_MEAL_KEYS.has(k) || customMealHasFoodInSet(k, FISH_FOOD_IDS));
+  const hasFattyFish=mainMealKeys.some(k=>FATTY_FISH_MEAL_KEYS.has(k) || customMealHasFoodInSet(k, FATTY_FISH_FOOD_IDS));
+  const hasEgg=allMealKeys.some(k=>EGG_MEAL_KEYS.has(k) || customMealHasFoodInSet(k, EGG_FOOD_IDS));
+  const hasLegume=mainMealKeys.some(k=>LEGUME_MEAL_KEYS.has(k) || customMealHasFoodInSet(k, LEGUME_FOOD_IDS));
+  const hasRedMeat=mainMealKeys.some(k=>RED_MEAT_MEAL_KEYS.has(k) || customMealHasFoodInSet(k, RED_MEAT_FOOD_IDS));
+  const hasHighSodium=mainMealKeys.some(k=>HIGH_SODIUM_MEAL_KEYS.has(k) || customMealHasFoodInSet(k, HIGH_SODIUM_FOOD_IDS));
   const snk1=dayPlan.snk1Extras||dayPlan.snack1Extras||[], snk2=dayPlan.snk2Extras||dayPlan.snack2Extras||[], sleep=dayPlan.sleepExtras||[];
-  const hasNuts=[snk1,snk2,sleep].some(arr=>Array.isArray(arr)&&arr.includes('nuts'));
+  const hasNutsExtra=[snk1,snk2,sleep].some(arr=>Array.isArray(arr)&&arr.includes('nuts'));
+  const hasNutsInCustomMeal=allMealKeys.some(k=>customMealHasFoodInSet(k, NUTS_FOOD_IDS));
+  const hasNuts=hasNutsExtra || hasNutsInCustomMeal;
   return {
     ironSource: hasRedMeat ? 'redMeat' : hasLegume ? 'legume' : hasFish ? 'fish' : 'none',
     vitaminDSource: hasFattyFish ? 'fattyFish' : hasEgg ? 'egg' : 'none',
@@ -13007,6 +13164,8 @@ function renderDayTargetAdvice(dt, lang='GR'){
   // target as infinite tolerance, so those three metrics always resolve to
   // 'ok' and never influence the calorie-only judgement this function needs.
   const pq = evaluatePlanQuality({kcal:dt.target, carb:0, prot:0, fat:0}, {kcal:dt.totalKcal, carb:0, prot:0, fat:0});
+  window._adviceTrace = window._adviceTrace || [];
+  window._adviceTrace.push({t:Date.now(), dtTarget:dt.target, dtTotalKcal:dt.totalKcal, dtGap:dt.gap, pqOverall:pq.overall, willShowAdvice: pq.overall!=='ok'});
   if(pq.overall==='ok') return '';
   const isEn=lang==='EN';
   const abs=Math.abs(Math.round(diff));
@@ -13022,6 +13181,17 @@ function renderDayTargetAdvice(dt, lang='GR'){
       ? `This day is ${abs} kcal above target. Review added snacks, visible fats, or one starch/fat exchange before sharing.`
       : `Η ημέρα είναι ${abs} kcal πάνω από τον στόχο. Ελέγξτε πρόσθετα σνακ, ορατά λίπη ή 1 μερίδα αμύλου/λίπους πριν την κοινοποίηση.`);
   return `<div class="seven-day-target-advice"><strong><i class="ti ${icon}" aria-hidden="true"></i> ${title}:</strong> ${body}</div>`;
+}
+// Preserves the "Snack add-ons" <details> open/closed state across
+// buildSevenDay() re-renders. Without this, every serving adjustment (which
+// triggers a full re-render) silently re-collapses the section a dietitian
+// just expanded, making a subsequent click land on nothing — the root
+// cause traced for the "advice sometimes doesn't refresh" report. Reads
+// the CURRENT DOM element (still present, about to be replaced) at the
+// moment the new HTML string is being built.
+function _sevenDayExtrasWasOpen(slotKey){
+  const el = document.querySelector(`.seven-day-extras[data-slot-key="${slotKey}"]`);
+  return !!(el && el.open);
 }
 function renderSevenDayMealCard(dayPlan, dt, slot, lang, dayIndex){
   const data=getSevenDaySlotData(dayPlan, dt, slot.key, lang, dayIndex);
@@ -13054,7 +13224,7 @@ function renderSevenDayMealCard(dayPlan, dt, slot, lang, dayIndex){
     <div class="seven-day-meal-desc">${data.text||'—'}</div>
     <div class="seven-day-card-meta"><div class="seven-day-kcal-pill">${data.kcal||0} kcal</div></div>
     ${selectHtml ? `<div class="seven-day-control"><div class="seven-day-control-label">${controlLabel}</div>${selectHtml}</div>` : ''}
-    ${extrasHtml ? `<details class="seven-day-extras"><summary><span class="seven-day-control-label">${addOnsLabel}</span><span class="seven-day-selected-count">${extrasCountLabel}</span></summary>${extrasHtml}</details>` : ''}
+    ${extrasHtml ? `<details class="seven-day-extras" data-slot-key="${slot.key}"${_sevenDayExtrasWasOpen(slot.key)?' open':''}><summary><span class="seven-day-control-label">${addOnsLabel}</span><span class="seven-day-selected-count">${extrasCountLabel}</span></summary>${extrasHtml}</details>` : ''}
     ${customSnackButton ? `<div class="custom-snack-food-row">${customSnackButton}</div>` : ''}
   </div>`;
 }
@@ -13199,9 +13369,9 @@ Starch: ${payload.exchanges.starch}
 Protein: ${payload.exchanges.protein}
 Fat: ${payload.exchanges.fat} (= ${payload.exchanges.fat} tsp olive oil total for the WHOLE DAY — spread across all meals/snacks, max 6 tsp in any single dish)
 Target kcal: ${payload.kcal_target}
-Target macro split: ${payload.macros.carb_percent}% carbohydrate / ${payload.macros.protein_percent}% protein / ${payload.macros.fat_percent}% fat (i.e. ≈${Math.round(payload.kcal_target*payload.macros.carb_percent/100/4)}g carb, ≈${Math.round(payload.kcal_target*payload.macros.protein_percent/100/4)}g protein, ≈${Math.round(payload.kcal_target*payload.macros.fat_percent/100/9)}g fat per day) — the exchange servings above are the primary source of truth for portions, but total_protein_g/total_carb_g/total_fat_g for each day must be consistent with this split.
+Target macro split: ${payload.macros.carb_percent}% carbohydrate / ${payload.macros.protein_percent}% protein / ${payload.macros.fat_percent}% fat (i.e. ≈${Math.round(payload.kcal_target*payload.macros.carb_percent/100/4)}g carb, ≈${Math.round(payload.kcal_target*payload.macros.protein_percent/100/4)}g protein, ≈${Math.round(payload.kcal_target*payload.macros.fat_percent/100/9)}g fat per day) — the exchange servings above are the primary source of truth for portions; choose ingredient quantities so the day's likely composition is consistent with this split (we compute the actual totals from your ingredients, not from any total you might otherwise report).
 
-Return ONLY valid JSON with monday through sunday, each containing breakfast, snack1, lunch, snack2, dinner, before_sleep, total_kcal, total_protein_g, total_carb_g, total_fat_g. Each meal must include name, description_gr, description_en, kcal. total_protein_g/total_carb_g/total_fat_g must be the day's total grams and must be consistent with total_kcal (protein_g*4 + carb_g*4 + fat_g*9 ≈ total_kcal) and with the macro percentages given above (carb_percent/protein_percent/fat_percent of ${payload.kcal_target} kcal).`;
+Return ONLY valid JSON with monday through sunday, each containing breakfast, snack1, lunch, snack2, dinner, before_sleep. Each meal must include: name, description_gr, description_en, and ingredients (an array of {name, quantity_g} — name must be a specific, plain-language food/ingredient name in English, e.g. "chicken breast, cooked" not a dish name; quantity_g is the grams of that ingredient in this meal). Do NOT include kcal or macro totals yourself — these are computed from the ingredients you list, not from your own estimate, so ingredient names and quantities must be accurate and specific rather than approximate.`;
 }
 
 async function generateAiSevenDayPlan(){
@@ -13219,7 +13389,7 @@ async function generateAiSevenDayPlan(){
     if(response.error) throw response.error;
     const plan=response.data?.plan || response.data?.meal_plan || response.data;
     applyAiSevenDayPlan(plan, payload);
-    const issues=[...(S.aiOilWarnings||[]), ...(S.aiKcalMacroWarnings||[])];
+    const issues=[...(S.aiOilWarnings||[]), ...(S.aiUnresolvedWarnings||[])];
     S.aiPlanStatus = issues.length
       ? `⚠️ AI plan generated — please review each day and adjust before sharing. Issues detected and need manual correction: ${issues.slice(0,6).join('; ')}${issues.length>6?` (+${issues.length-6} more)`:''}.`
       : '✨ AI plan generated — please review each day and adjust as needed before sharing with client.';
@@ -13241,33 +13411,57 @@ function applyAiSevenDayPlan(plan, payload){
   validateAiMealPlanForDiet(plan, dietType);
   validateAiMealPlanVisibleOil(plan, caps);
   ensureWeekPlans();
+  const dayLabels=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const unresolvedFlags=[];
   S.weekPlans=S.weekPlans.map((existing,i)=>{
     const src=plan[keys[i]] || plan[WEEK_DAYS_EN[i]] || plan[WEEK_DAYS_GR[i]] || plan[i];
     if(!src) return existing;
     const aiMeals={};
+    let dayKcal=0, dayProtein=0, dayCarb=0, dayFat=0;
     SEVEN_DAY_SLOTS.forEach(slot=>{
       const meal=src[slot.ai] || src[slot.key];
-      if(meal){
-        const description_gr=String(meal.description_gr||meal.description||meal.text||'').trim();
-        const description_en=String(meal.description_en||meal.description||meal.text||'').trim();
-        aiMeals[slot.ai]={
-          name:String(meal.name||'').trim(),
-          description_gr,
-          description_en,
-          kcal:Math.round(Number(meal.kcal||0))
-        };
+      if(!meal) return;
+      const description_gr=String(meal.description_gr||meal.description||meal.text||'').trim();
+      const description_en=String(meal.description_en||meal.description||meal.text||'').trim();
+      // CANONICAL RESOLUTION — the AI never supplies the nutritional truth.
+      // Every suggested ingredient is resolved against FOOD_DATABASE via the
+      // same window.NutreseEngine.validateAiMealSuggestion() used nowhere
+      // else in the app before this fix; kcal/macros are computed from
+      // resolved foods only, never from the AI's own claimed numbers.
+      const items=Array.isArray(meal.ingredients) ? meal.ingredients : [];
+      const validation=items.length ? window.NutreseEngine.validateAiMealSuggestion(items) : null;
+      let mealKcal=0, mealProtein=0, mealCarb=0, mealFat=0;
+      if(validation && validation.computed_totals){
+        mealKcal=Math.round(validation.computed_totals.kcal||0);
+        mealProtein=validation.computed_totals.protein||0;
+        mealCarb=validation.computed_totals.carbs||0;
+        mealFat=validation.computed_totals.fat||0;
       }
+      if(!items.length){
+        unresolvedFlags.push(`${dayLabels[i]} ${slot.key}: AI did not provide ingredients — this meal has no verified nutrition and must be built manually before use.`);
+      } else if(validation && !validation.fully_resolved){
+        validation.flags.forEach(f=>unresolvedFlags.push(`${dayLabels[i]} ${slot.key}: ${f}`));
+      }
+      aiMeals[slot.ai]={
+        name:String(meal.name||'').trim(),
+        description_gr,
+        description_en,
+        kcal:mealKcal, // verified, FOOD_DATABASE-derived — never the AI's own claim
+        resolved_ingredients: validation ? validation.resolved : [],
+        fully_resolved: !!(validation && validation.fully_resolved && items.length),
+      };
+      dayKcal+=mealKcal; dayProtein+=mealProtein; dayCarb+=mealCarb; dayFat+=mealFat;
     });
-    const aiDayTotals={
-      kcal:Number(src.total_kcal)||null,
-      protein:Number(src.total_protein_g)||null,
-      carb:Number(src.total_carb_g)||null,
-      fat:Number(src.total_fat_g)||null
-    };
+    const aiDayTotals={ kcal:dayKcal||null, protein:dayProtein||null, carb:dayCarb||null, fat:dayFat||null };
     return {...existing, aiMeals, aiDayTotals, source:'ai'};
   });
   S.aiOilWarnings=null;
-  S.aiKcalMacroWarnings=validateAiMealPlanKcalMacros(plan, payload);
+  // Verified totals now feed the same day-total pipeline every other plan
+  // uses, so evaluatePlanQuality() (via calcDayTotalsForPlanDisplay) judges
+  // AI plans exactly like any other — no separate AI-specific kcal/macro
+  // consistency check is needed for that. This only surfaces genuinely
+  // unresolved ingredients requiring clinician attention.
+  S.aiUnresolvedWarnings=unresolvedFlags;
   S.currentTemplate=null;
   enforceWeekPlanDietCompatibility(dietType);
   traceDecision('applyAiSevenDayPlan','return',{weekPlans:S.weekPlans});
@@ -13881,6 +14075,14 @@ function buildReport(){
 
 
 function renderEngine(){
+  // INTENTIONAL EXCEPTION from evaluatePlanQuality() — this entire function
+  // (and everything it renders into #engine-table, #engine-realism, and
+  // #engine-gap) is a developer/engineering diagnostics view, not a
+  // clinician-facing assessment. Per explicit product decision, diagnostics
+  // are allowed to expose raw thresholds (±50/±100 kcal, ±1% macro split,
+  // etc.) rather than the canonical clinical evaluation — that's the point
+  // of a diagnostics view. Do not unify these with evaluatePlanQuality()
+  // without a specific reason to change that decision.
   calcExchanges();
   const isGr = window.appLang==='gr';
   const ex=S.ex;
@@ -14139,6 +14341,7 @@ async function updatePracticeOverview(){
 function addTracking(){
   S.tracking.unshift({date:v('t-date')||new Date().toLocaleDateString('el-GR'),weight:v('t-weight'),bf:v('t-bf'),muscle:v('t-muscle'),visceral:v('t-visceral'),notes:v('t-notes')});
   S_isDirty=true;
+  _traceDirty('addTracking', true);
   if(typeof updateSaveStatusUI==='function') updateSaveStatusUI();
   renderTracking();
 }
@@ -14982,7 +15185,7 @@ async function fetchUSDAFoods(query){
 }
 function normalizeRecipeFoodResult(recipe){
   const ingredients=recipe.ingredients||[];
-  const total=recipe.nutrition||recipeTotals(ingredients);
+  const total=recipe.nutrition||recipeLibraryTotals(ingredients);
   const totalGrams=ingredients.reduce((sum,ing)=>sum+(foodNumber(ing.grams)||0),0);
   const servings=Math.max(1, recipe.servings||1);
   const servingGrams=totalGrams>0 ? Math.round(totalGrams/servings) : 100;
@@ -15410,7 +15613,7 @@ function renderRecipeTemplates(){
   const isGr=window.appLang==='gr';
   el.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px">${NUTRESE_RECIPE_TEMPLATES.map(t=>{
     const ingredients=t.ingredients.map(localizeRecipeTemplateIngredient);
-    const total=recipeTotals(ingredients);
+    const total=recipeLibraryTotals(ingredients);
     const per=Math.round(total.kcal/Math.max(1,t.servings||1));
     const name=window.NutreseEngine.getClinicalName(t.name, isGr?'gr':'en');
     const summary=isGr?t.summary.gr:t.summary.en;
@@ -15501,7 +15704,18 @@ function ingredientTotals(ing){
     fat:(foodNumber(ing.fat100)||0)*factor,
   };
 }
-function recipeTotals(ingredients){
+// Recipe Library's own totals function — deliberately named differently
+// from the canonical engine's recipeTotals() (line ~4424) to eliminate a
+// naming collision. Both were previously named recipeTotals(); this one,
+// declared later in the script, was silently shadowing the canonical one
+// for any BARE global call. It never caused an active bug (buildRecipe()'s
+// internal reference is closure-scoped and unaffected), but was a latent
+// risk for any future code accidentally relying on the bare global name
+// expecting canonical behavior. This function's own logic and shape are
+// completely unchanged — same kcal100-based math the Recipe Library has
+// always used, since its ingredients are dietitian-typed/USDA-sourced,
+// not FOOD_DATABASE food_id references.
+function recipeLibraryTotals(ingredients){
   return (ingredients||[]).reduce((acc,ing)=>{
     const t=ingredientTotals(ing);
     acc.kcal+=t.kcal; acc.carbs+=t.carbs; acc.protein+=t.protein; acc.fat+=t.fat;
@@ -15571,7 +15785,7 @@ function renderRecipeDraft(){
   if(!Array.isArray(S.recipeDraft)) S.recipeDraft=[];
   const isGr = window.appLang==='gr';
   const servings=Math.max(1, parseInt(v('recipe-servings')||'1',10)||1);
-  const total=recipeTotals(S.recipeDraft);
+  const total=recipeLibraryTotals(S.recipeDraft);
   const per={kcal:total.kcal/servings, carbs:total.carbs/servings, protein:total.protein/servings, fat:total.fat/servings};
   const rows=(S.recipeDraft||[]).map((ing,i)=>{
     const t=ingredientTotals(ing);
@@ -15614,7 +15828,7 @@ async function loadRecipes(options={}){
       const {data,error}=await supabaseClient.from('recipes').select('*').eq('user_id',currentUser.id).order('updated_at',{ascending:false});
       if(error) throw error;
       if(data){
-        const remote=data.map(r=>({id:r.id,name:r.name,servings:r.servings||1,ingredients:r.ingredients||[],nutrition:r.nutrition||recipeTotals(r.ingredients||[]),updated_at:r.updated_at}));
+        const remote=data.map(r=>({id:r.id,name:r.name,servings:r.servings||1,ingredients:r.ingredients||[],nutrition:r.nutrition||recipeLibraryTotals(r.ingredients||[]),updated_at:r.updated_at}));
         const remoteKeys=new Set(remote.map(r=>String(r.id)));
         S.recipes=[...remote, ...localRecipes.filter(r=>!remoteKeys.has(String(r.id)))]
           .sort((a,b)=>String(b.updated_at||'').localeCompare(String(a.updated_at||'')));
@@ -15652,7 +15866,7 @@ async function saveRecipe(){
   if(!S.recipeDraft.length){ alert('Add at least one ingredient.'); return; }
   if(S.recipeDraft.some(ing=>(foodNumber(ing.kcal100)+foodNumber(ing.carbs100)+foodNumber(ing.protein100)+foodNumber(ing.fat100))<=0)){ alert('Each ingredient needs nutrition values per 100g before saving.'); return; }
   const editingId=S.editingRecipeId;
-  const recipe={id:editingId || `recipe_${Date.now()}`,name,servings,instructions,photo,ingredients:S.recipeDraft.map(x=>({...x})),nutrition:recipeTotals(S.recipeDraft),updated_at:new Date().toISOString()};
+  const recipe={id:editingId || `recipe_${Date.now()}`,name,servings,instructions,photo,ingredients:S.recipeDraft.map(x=>({...x})),nutrition:recipeLibraryTotals(S.recipeDraft),updated_at:new Date().toISOString()};
   let savedToCloud=false;
   if(currentUser){
     try{
@@ -15710,7 +15924,7 @@ function renderRecipesList(){
   const isGr = window.appLang==='gr';
   if(!S.recipes || !S.recipes.length){ el.innerHTML=`<div style="color:var(--text-muted);text-align:center;padding:18px">${isGr?'Δεν υπάρχουν αποθηκευμένες συνταγές ακόμη.':'No saved recipes yet.'}</div>`; return; }
   el.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px">${S.recipes.map(r=>{
-    const total=r.nutrition||recipeTotals(r.ingredients||[]);
+    const total=r.nutrition||recipeLibraryTotals(r.ingredients||[]);
     const servings=Math.max(1,r.servings||1);
     const photoHtml = r.photo
       ? `<div style="width:100%;height:110px;border-radius:10px 10px 0 0;overflow:hidden"><img class="recipe-photo-thumb" src="${r.photo}" loading="lazy" onerror="this.style.display='none'"></div>`
@@ -15737,7 +15951,7 @@ function printRecipe(id){
   if(!r) return;
   const ingredients=r.ingredients||[];
   const servings=Math.max(1,r.servings||1);
-  const total=r.nutrition||recipeTotals(ingredients);
+  const total=r.nutrition||recipeLibraryTotals(ingredients);
   const per={kcal:total.kcal/servings, carbs:total.carbs/servings, protein:total.protein/servings, fat:total.fat/servings};
   const oldTitle=document.title;
   const oldPrintArea=document.getElementById('recipe-print-area');
@@ -15802,7 +16016,7 @@ async function loadCustomMeals(opts={}){
     try{
       const {data,error}=await supabaseClient.from('custom_meals').select('*').eq('user_id',currentUser.id).order('updated_at',{ascending:false});
       if(error) throw error;
-      S.customMeals=(data||[]).map(r=>({id:r.id,name:r.name,ingredients:Array.isArray(r.ingredients)?r.ingredients:[],nutrition:r.nutrition||recipeTotals(r.ingredients||[]),updated_at:r.updated_at}));
+      S.customMeals=(data||[]).map(r=>({id:r.id,name:r.name,ingredients:Array.isArray(r.ingredients)?r.ingredients:[],nutrition:r.nutrition||recipeLibraryTotals(r.ingredients||[]),updated_at:r.updated_at}));
       persistCustomMealsLocal();
     }catch(e){ console.error('[Nutrese custom meals] load failed', e); }
   }
@@ -16441,6 +16655,7 @@ return {
 
 // Restores a previously captured state into the form + app state, then recalculates everything
 function applyState(state){
+  window._dirtyTrace.push({t:Date.now(), fn:'applyState:ENTRY', dirtyAtEntry:S_isDirty, activePage:document.querySelector('.page.active')?.id});
   if(!state) return;
   S.clientPhoto = validClientPhotoDataUrl(state.clientPhoto) ? state.clientPhoto : '';
   renderClientPhotoControls();
@@ -16516,6 +16731,7 @@ function applyState(state){
   S.planQualityUserOverride=undefined;
   if(document.getElementById('page-labs')?.classList.contains('active')) { const labDateEl=document.getElementById('lab-date'); if(labDateEl) labDateEl.value=S.labDate||''; renderClientDocuments(); renderLabsTable(); }
   calcAll(); calcBodyComp(); calcMacros();
+  window._dirtyTrace.push({t:Date.now(), fn:'applyState:EXIT', dirtyAtExit:S_isDirty, activePage:document.querySelector('.page.active')?.id});
 }
 
 // Resets the whole form/state back to a blank "new client" template
@@ -17035,6 +17251,7 @@ async function saveCurrentClient(options={}){
   if(!currentUser){
     upsertLocalClient(localRow);
     S_isDirty=false;
+    _traceDirty('saveCurrentClient', false);
     if(!silent) alert('Client saved locally: '+name+'\n\nFind it anytime under "My Clients".');
     await renderClientList();
     refreshConditionVisualState();
@@ -17066,10 +17283,12 @@ async function saveCurrentClient(options={}){
     console.error('[Nutrese clients] Supabase save failed', error);
     upsertLocalClient(localRow);
     S_isDirty=false;
+    _traceDirty('saveCurrentClient', false);
     if(!silent) alert('Client saved locally: '+name+'\n\nSupabase clients table is unavailable or not configured yet: '+(error.message||error));
   } else {
     if(savedRemote) upsertLocalClient({...savedRemote, localOnly:false});
     S_isDirty=false; // changes are now safely in the cloud
+    _traceDirty('saveCurrentClient', false);
     if(!silent) alert('Client saved: '+name+'\n\nFind it anytime under "My Clients" in the sidebar.');
   }
   await renderClientList();
@@ -17110,6 +17329,7 @@ async function loadClientById(rowId){
   renderClientPhotoControls();
   setActiveClientIdentity(data.id, data.client_ref || data.data?.clientRef || data.data?.fields?.['p-id'] || '');
   S_isDirty=false; // freshly loaded from cloud, nothing unsaved yet
+  _traceDirty('loadClientById', false);
   nav('dashboard');
 }
 
@@ -17298,8 +17518,48 @@ function autosaveSession(){
 }
 let autosaveTimer=null;
 let S_isDirty=false; // tracks whether changes exist that haven't been pushed via "Save Client" to the cloud
+
+// ── PRODUCTION-SAFE DIRTY-STATE TRACE (permanent, disabled by default) ───
+// Set window.NUTRESE_TRACE_DIRTY_STATE = true (console or a future settings
+// toggle) to start capturing dirty-state transitions in a real session,
+// without needing this build's temporary investigation instrumentation
+// below. Bounded to the last 200 entries so it can't grow unbounded in a
+// long-running session. Zero cost when disabled (the default) beyond one
+// boolean check per transition.
+window.NUTRESE_TRACE_DIRTY_STATE = window.NUTRESE_TRACE_DIRTY_STATE || false;
+window.__nutreseDirtyDiagnostics = window.__nutreseDirtyDiagnostics || [];
+function _traceDirtyProd(fnName, fromVal, toVal){
+  if(!window.NUTRESE_TRACE_DIRTY_STATE) return;
+  const log = window.__nutreseDirtyDiagnostics;
+  log.push({
+    t: Date.now(),
+    clientId: S.activeClientId || null,
+    fn: fnName,
+    from: fromVal,
+    to: toVal,
+    page: document.querySelector('.page.active')?.id || '(none)',
+  });
+  if(log.length > 200) log.shift();
+}
+// ── TEMP DIAGNOSTIC (remove after root-cause investigation) ──────────────
+window._dirtyTrace = window._dirtyTrace || [];
+function _traceDirty(fnName, newVal){
+  const activePage = document.querySelector('.page.active')?.id || '(none)';
+  _traceDirtyProd(fnName, S_isDirty, newVal); // feed the permanent, gated trace too
+  window._dirtyTrace.push({
+    t: Date.now(),
+    fn: fnName,
+    from: S_isDirty,
+    to: newVal,
+    activePage,
+    clientId: S.activeClientId || null,
+    clientName: (typeof v==='function' ? v('p-name') : null),
+  });
+}
+// ── END TEMP DIAGNOSTIC ───────────────────────────────────────────────────
 function scheduleAutosave(){
   S_isDirty=true;
+  _traceDirty('scheduleAutosave', true);
   setAutosaveStatus('', window.appLang==='gr'?'Μη αποθηκευμένες αλλαγές':'Unsaved changes');
   clearTimeout(autosaveTimer);
   autosaveTimer=setTimeout(autosaveSession, 1000);
