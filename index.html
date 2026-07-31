@@ -518,6 +518,8 @@ i.ti-circle-x { color: var(--red-text); }
 .feedback-card-title { font-size: 16px; font-weight: 800; color: var(--text-primary); line-height:1.3; }
 .feedback-card-sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
 .feedback-close { border: 1px solid var(--border); background: var(--bg-page); color: var(--text-secondary); border-radius: 6px; cursor: pointer; padding: 4px 8px; font-weight: 800; }
+.app-feedback-type-btn { flex: 1; }
+.app-feedback-type-btn.is-active { background: var(--teal-600); color: #fff; border-color: var(--teal-600); }
 .btn.danger { background: var(--red-text); border-color: var(--red-text); color: #fff; }
 .btn.danger:hover { filter: brightness(0.92); }
 .save-confirm-summary { background: var(--bg-page); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-bottom: 14px; font-size: 13px; }
@@ -2172,7 +2174,7 @@ table th,
             <div class="dashboard-onboard-icon"><i class="ti ti-clipboard-list" aria-hidden="true"></i></div>
             <div class="dashboard-onboard-text">
               <div class="dashboard-onboard-title"><span class="i18n" data-en="Build your first meal plan" data-gr="Δημιουργήστε το πρώτο διατροφικό πλάνο">Build your first meal plan</span></div>
-              <div class="dashboard-onboard-sub"><span class="i18n" data-en="Exchange-based plans, generated automatically from their targets." data-gr="Πλάνα με ισοδύναμα, αυτόματα από τους στόχους τους.">Exchange-based plans, generated automatically from their targets.</span></div>
+              <div class="dashboard-onboard-sub"><span class="i18n" data-en="Generate Automatically for an instant starting point, or Build Manually From Scratch for full control — both use the same exchange system and calculations." data-gr="Αυτόματη Δημιουργία για άμεση αφετηρία, ή Χειροκίνητη Δημιουργία από την Αρχή για πλήρη έλεγχο — και τα δύο χρησιμοποιούν το ίδιο σύστημα ισοδυνάμων και υπολογισμών.">Generate Automatically for an instant starting point, or Build Manually From Scratch for full control — both use the same exchange system and calculations.</span></div>
             </div>
             <i class="ti ti-chevron-right" aria-hidden="true"></i>
           </div>
@@ -3219,6 +3221,37 @@ table th,
         <button class="btn primary" id="save-confirm-btn" onclick="confirmSaveClient()"><i class="ti ti-device-floppy" aria-hidden="true"></i> <span class="i18n" data-en="Save Client" data-gr="Αποθήκευση Πελάτη">Save Client</span></button>
       </div>
       <div class="feedback-status" id="save-confirm-status"></div>
+    </div>
+  </div>
+</div>
+
+<!-- FLOATING FEEDBACK BUTTON — persistent but low-key, visible on every page -->
+<button id="app-feedback-fab" class="no-print" onclick="openAppFeedback()" title="Feedback" aria-label="Send feedback" style="position:fixed;right:18px;bottom:18px;z-index:640;width:46px;height:46px;border-radius:50%;background:var(--teal-600);color:#fff;border:none;box-shadow:0 4px 14px rgba(15,17,23,.22);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:19px;">
+  <i class="ti ti-message-circle-2" aria-hidden="true"></i>
+</button>
+
+<div class="feedback-modal no-print" id="app-feedback-modal" role="dialog" aria-modal="true" aria-labelledby="app-feedback-title">
+  <div class="feedback-card" style="width:min(420px,100%)">
+    <div class="feedback-card-header">
+      <div>
+        <div class="feedback-card-title" id="app-feedback-title"><i class="ti ti-message-circle-2" aria-hidden="true"></i> <span class="i18n" data-en="Send feedback" data-gr="Αποστολή σχολίου">Send feedback</span></div>
+        <div class="feedback-card-sub i18n" data-en="Bug, idea, or anything on your mind — this goes straight to us." data-gr="Πρόβλημα, ιδέα ή οτιδήποτε άλλο — φτάνει απευθείας σε εμάς.">Bug, idea, or anything on your mind — this goes straight to us.</div>
+      </div>
+      <button class="feedback-close" onclick="closeAppFeedback()" aria-label="Close">✕</button>
+    </div>
+    <div style="padding:16px 18px">
+      <div style="display:flex;gap:8px;margin-bottom:12px" id="app-feedback-type-row">
+        <button type="button" class="btn app-feedback-type-btn is-active" data-type="bug" onclick="setAppFeedbackType('bug', this)">🐞 <span class="i18n" data-en="Bug" data-gr="Πρόβλημα">Bug</span></button>
+        <button type="button" class="btn app-feedback-type-btn" data-type="idea" onclick="setAppFeedbackType('idea', this)">💡 <span class="i18n" data-en="Idea" data-gr="Ιδέα">Idea</span></button>
+        <button type="button" class="btn app-feedback-type-btn" data-type="other" onclick="setAppFeedbackType('other', this)">💬 <span class="i18n" data-en="Other" data-gr="Άλλο">Other</span></button>
+      </div>
+      <textarea id="app-feedback-text" rows="5" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:13.5px;resize:vertical" placeholder="What happened, or what would help?"></textarea>
+      <div class="field-note i18n" style="margin-top:8px" data-en="We automatically include the page you're on and a timestamp so we can find and reproduce the issue — no client data is included." data-gr="Συμπεριλαμβάνουμε αυτόματα τη σελίδα στην οποία βρίσκεστε και μια χρονική σήμανση ώστε να μπορούμε να εντοπίσουμε το πρόβλημα — δεν συμπεριλαμβάνονται δεδομένα πελάτη.">We automatically include the page you're on and a timestamp so we can find and reproduce the issue — no client data is included.</div>
+      <div id="app-feedback-status" style="margin-top:8px;font-size:12.5px"></div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px">
+        <button class="btn" onclick="closeAppFeedback()"><span class="i18n" data-en="Cancel" data-gr="Ακύρωση">Cancel</span></button>
+        <button class="btn primary" id="app-feedback-submit-btn" onclick="submitAppFeedback()"><span class="i18n" data-en="Send" data-gr="Αποστολή">Send</span></button>
+      </div>
     </div>
   </div>
 </div>
@@ -11792,6 +11825,73 @@ function strictSlotText(dayPlan, slotKey, lang='GR', dayIndex=0, audience='clini
   return strictSnackDescription(exch, dayPlan[extrasKey]||[], lang);
 }
 
+let appFeedbackType='bug';
+function openAppFeedback(){
+  const modal=document.getElementById('app-feedback-modal');
+  if(modal) modal.classList.add('open');
+  setEl('app-feedback-status','');
+  const textEl=document.getElementById('app-feedback-text');
+  if(textEl) textEl.value='';
+  appFeedbackType='bug';
+  document.querySelectorAll('.app-feedback-type-btn').forEach(b=>b.classList.toggle('is-active', b.dataset.type==='bug'));
+}
+function closeAppFeedback(){
+  const modal=document.getElementById('app-feedback-modal');
+  if(modal) modal.classList.remove('open');
+}
+function setAppFeedbackType(type, btnEl){
+  appFeedbackType=type;
+  document.querySelectorAll('.app-feedback-type-btn').forEach(b=>b.classList.toggle('is-active', b===btnEl));
+}
+// Deliberately minimal, reproduction-focused context — no client health/
+// personal data, only what's needed to find and reproduce the report.
+function captureAppFeedbackContext(){
+  return {
+    page: document.querySelector('.page.active')?.id || null,
+    clientId: S?.activeClientId || null, // for reproduction only — not client data itself
+    lang: window.appLang || null,
+    viewport: `${window.innerWidth}x${window.innerHeight}`,
+    userAgent: navigator.userAgent,
+    url: location.href.split('#')[0],
+    timestamp: new Date().toISOString(),
+  };
+}
+async function submitAppFeedback(){
+  const text=(v('app-feedback-text')||'').trim();
+  if(!text){ setEl('app-feedback-status', window.appLang==='gr'?'Γράψτε κάτι πριν την αποστολή.':'Please write something before sending.'); return; }
+  const btn=document.getElementById('app-feedback-submit-btn');
+  if(btn) btn.disabled=true;
+  setEl('app-feedback-status', window.appLang==='gr'?'Αποστολή…':'Sending…');
+  const entry={
+    type: appFeedbackType,
+    message: text,
+    context: captureAppFeedbackContext(),
+    user_id: currentUser?.id || null,
+    created_at: new Date().toISOString(),
+  };
+  let savedToCloud=false;
+  if(currentUser && typeof supabaseClient!=='undefined'){
+    try{
+      const {error}=await supabaseClient.from('app_feedback').insert([entry]);
+      if(!error) savedToCloud=true;
+      else console.warn('[Nutrese feedback] Supabase insert failed, falling back to local queue', error);
+    }catch(e){
+      console.warn('[Nutrese feedback] Supabase insert threw, falling back to local queue', e);
+    }
+  }
+  if(!savedToCloud){
+    try{
+      const key='nutriflow_pending_feedback';
+      const queue=JSON.parse(localStorage.getItem(key)||'[]');
+      queue.push(entry);
+      localStorage.setItem(key, JSON.stringify(queue));
+    }catch(e){ console.error('[Nutrese feedback] Local fallback also failed', e); }
+    console.log('[Nutrese feedback]', entry);
+  }
+  if(btn) btn.disabled=false;
+  setEl('app-feedback-status', window.appLang==='gr'?'Ευχαριστούμε! Λάβαμε το σχόλιό σας.':'Thank you — your feedback was received.');
+  setTimeout(closeAppFeedback, 1200);
+}
 function openNewMealPlanChoice(){
   const modal=document.getElementById('new-meal-plan-modal');
   if(modal) modal.classList.add('open');
