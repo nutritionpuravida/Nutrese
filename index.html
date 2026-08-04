@@ -7065,6 +7065,7 @@ let recoveringSession = false; // true if we just had an unexpected sign-out and
 let intentionalSignOut = false; // true only when the user deliberately clicks Sign out
 let _authReadyResolve;
 window.authReadyPromise = new Promise(resolve => { _authReadyResolve = resolve; });
+window.authReadyPromise.then(() => { if(typeof syncPendingLocalFeedback==='function') syncPendingLocalFeedback(); });
 let _authReadyFired = false;
 setTimeout(()=>{ if(!_authReadyFired){ _authReadyFired = true; _authReadyResolve(); } }, 4000);
 isPasswordRecoveryFlow = isPasswordRecoveryUrl();
@@ -11912,12 +11913,14 @@ async function submitAppFeedback(){
     created_at: new Date().toISOString(),
   };
   let savedToCloud=false;
+  let cloudErrorDetail='';
   if(currentUser && typeof supabaseClient!=='undefined'){
     try{
       const {error}=await supabaseClient.from('app_feedback').insert([entry]);
       if(!error) savedToCloud=true;
-      else console.warn('[Nutrese feedback] Supabase insert failed, falling back to local queue', error);
+      else { cloudErrorDetail=error.message||String(error); console.warn('[Nutrese feedback] Supabase insert failed, falling back to local queue', error); }
     }catch(e){
+      cloudErrorDetail=e.message||String(e);
       console.warn('[Nutrese feedback] Supabase insert threw, falling back to local queue', e);
     }
   }
@@ -11929,10 +11932,45 @@ async function submitAppFeedback(){
       localStorage.setItem(key, JSON.stringify(queue));
     }catch(e){ console.error('[Nutrese feedback] Local fallback also failed', e); }
     console.log('[Nutrese feedback]', entry);
+  } else {
+    // A successful cloud submission means the table/connection is working
+    // — take the opportunity to flush anything still queued locally from
+    // earlier attempts, rather than leaving it stuck until next reload.
+    syncPendingLocalFeedback();
   }
   if(btn) btn.disabled=false;
-  setEl('app-feedback-status', window.appLang==='gr'?'Ευχαριστούμε! Λάβαμε το σχόλιό σας.':'Thank you — your feedback was received.');
-  setTimeout(closeAppFeedback, 1200);
+  // HONEST status: previously showed "received" unconditionally, even when
+  // the write silently fell back to local-only storage (invisible to the
+  // team, stuck on this one device). Now clearly distinguishes the two.
+  const isGr = window.appLang==='gr';
+  if(savedToCloud){
+    setEl('app-feedback-status', isGr?'Ευχαριστούμε! Το σχόλιό σας παραλήφθηκε.':'Thank you — your feedback was received.');
+    setTimeout(closeAppFeedback, 1200);
+  } else {
+    setEl('app-feedback-status', isGr
+      ? 'Δεν στάλθηκε ακόμη — αποθηκεύτηκε μόνο σε αυτή τη συσκευή. Θα σταλεί αυτόματα μόλις είναι δυνατή η σύνδεση.'
+      : 'Not yet delivered — saved on this device only. It will send automatically once the connection is available.');
+    // Deliberately NOT auto-closing here, so the person sees this status
+    // rather than assuming success and moving on.
+  }
+}
+// Attempts to push any locally-queued feedback (from prior failed
+// submissions) to the cloud. Safe to call opportunistically -- silently
+// does nothing if there's no queue, no session, or the destination still
+// isn't reachable.
+async function syncPendingLocalFeedback(){
+  if(!currentUser || typeof supabaseClient==='undefined') return;
+  const key='nutriflow_pending_feedback';
+  let queue=[];
+  try{ queue=JSON.parse(localStorage.getItem(key)||'[]'); }catch(e){ return; }
+  if(!queue.length) return;
+  try{
+    const {error}=await supabaseClient.from('app_feedback').insert(queue);
+    if(!error){
+      localStorage.removeItem(key);
+      console.log(`[Nutrese feedback] Synced ${queue.length} previously-queued item(s) to the cloud.`);
+    }
+  }catch(e){ /* still unreachable — leave the queue in place, try again next time */ }
 }
 function openNewMealPlanChoice(){
   const modal=document.getElementById('new-meal-plan-modal');
@@ -14426,11 +14464,14 @@ function updateDashMetrics(){
     return `<div><div class="m-label">${label}</div><div class="m-value" style="font-size:16px">${pct}%</div></div>`;
   }).join('');
   const alerts=[];
-  if(incomplete) alerts.push(isGr?'Λείπουν: '+missingProfile.join(', ')+'. Συμπληρώστε το Προφίλ Πελάτη για να ξεκλειδώσετε τα πλάνα.':'Missing: '+missingProfile.join(', ')+'. Complete Client Profile to unlock plans.');
-  if(lowKcal) alerts.push(isGr?'<i class="ti ti-alert-triangle" aria-hidden="true"></i> Πολύ χαμηλός στόχος θερμίδων ('+Math.round(S.goalKcal)+' kcal) — χρειάζεται κλινική επανεξέταση.':'<i class="ti ti-alert-triangle" aria-hidden="true"></i> Goal calories very low ('+Math.round(S.goalKcal)+' kcal) — clinical review needed.');
-  if(anyCapped) alerts.push(isGr?'Ο στόχος μακροθρεπτικών υπερβαίνει ρεαλιστικές μερίδες τροφίμων — ελέγξτε τους Στόχους και το Σύστημα Ισοδυνάμων για ασφαλέστερες προσαρμογές.':'Macro target exceeds realistic food portions — review Macro Targets and Exchange System for safer adjustment options.');
+  const hasActiveClient = !!(S.activeClientId || (v('p-name')||'').trim());
+  if(!hasActiveClient){
+    alerts.push(`<span style="color:var(--text-secondary)">${isGr?'Δημιουργήστε ή επιλέξτε έναν πελάτη για να ξεκινήσετε αξιολογήσεις, σχεδιασμό γευμάτων και αναφορές.':'Create or select a client to begin assessments, meal planning and reports.'}</span>`);
+  } else if(incomplete) alerts.push(isGr?'Λείπουν: '+missingProfile.join(', ')+'. Συμπληρώστε το Προφίλ Πελάτη για να ξεκλειδώσετε τα πλάνα.':'Missing: '+missingProfile.join(', ')+'. Complete Client Profile to unlock plans.');
+  if(hasActiveClient && lowKcal) alerts.push(isGr?'<i class="ti ti-alert-triangle" aria-hidden="true"></i> Πολύ χαμηλός στόχος θερμίδων ('+Math.round(S.goalKcal)+' kcal) — χρειάζεται κλινική επανεξέταση.':'<i class="ti ti-alert-triangle" aria-hidden="true"></i> Goal calories very low ('+Math.round(S.goalKcal)+' kcal) — clinical review needed.');
+  if(hasActiveClient && anyCapped) alerts.push(isGr?'Ο στόχος μακροθρεπτικών υπερβαίνει ρεαλιστικές μερίδες τροφίμων — ελέγξτε τους Στόχους και το Σύστημα Ισοδυνάμων για ασφαλέστερες προσαρμογές.':'Macro target exceeds realistic food portions — review Macro Targets and Exchange System for safer adjustment options.');
   const dashAlert=document.getElementById('dash-alert');
-  if(dashAlert) dashAlert.innerHTML=alerts.map(a=>`<div class="alert warn"><i class="ti ti-alert-triangle" aria-hidden="true"></i> ${a}</div>`).join('');
+  if(dashAlert) dashAlert.innerHTML=alerts.map(a=>`<div class="alert ${hasActiveClient?'warn':'info'}">${hasActiveClient?'<i class="ti ti-alert-triangle" aria-hidden="true"></i> ':'<i class="ti ti-info-circle" aria-hidden="true"></i> '}${a}</div>`).join('');
 }
 
 function renderDashboard(){ updateDashMetrics(); updatePracticeOverview(); buildOneDayPlan(); loadAppointments().then(()=>{ renderDashboardAppointments(); updateTodayAppointmentCount(); }); }
