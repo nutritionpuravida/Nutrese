@@ -1687,6 +1687,21 @@ table th,
 .seven-day-control-label{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted)}
 .seven-day-select{width:100%;border-radius:12px;border:1px solid color-mix(in srgb,var(--border) 80%,transparent);background:var(--bg-surface);color:var(--text-primary);font-weight:800;font-size:13px;padding:9px 11px;outline:none}
 .seven-day-select:focus{border-color:var(--teal-600);box-shadow:0 0 0 3px color-mix(in srgb,var(--teal-600) 16%,transparent)}
+.seven-day-food-list{display:flex;flex-direction:column;gap:0;border:1px solid color-mix(in srgb,var(--border) 58%,transparent);border-radius:14px;overflow:hidden}
+.seven-day-food-row{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;font-size:13px;border-bottom:1px solid color-mix(in srgb,var(--border) 40%,transparent)}
+.seven-day-food-row:last-child{border-bottom:none}
+.seven-day-food-name{color:var(--text-primary)}
+.seven-day-food-grams{color:var(--text-muted);font-weight:800;font-size:12px}
+.seven-day-add-food-btn{width:100%;justify-content:center;border-radius:14px}
+.seven-day-secondary-actions{display:flex;gap:8px;flex-wrap:wrap}
+.seven-day-secondary-btn{font-size:12px;padding:7px 10px;border-radius:999px}
+.seven-day-secondary-btn i{font-size:14px}
+.seven-day-more-options{margin-top:2px}
+.seven-day-more-options summary{list-style:none;cursor:pointer;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted)}
+.seven-day-more-options summary::-webkit-details-marker{display:none}
+.seven-day-add-slot-btn{width:100%;justify-content:center;border-radius:18px;border:1px dashed color-mix(in srgb,var(--border) 80%,transparent);background:transparent;color:var(--text-secondary);padding:14px;font-size:13px}
+.seven-day-add-slot-btn:hover{border-color:var(--teal-600);color:var(--teal-700)}
+.seven-day-add-slot-hint{display:block;font-size:11px;color:var(--text-muted);font-weight:400;margin-top:2px}
 .snack-extras-group{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:10px;max-height:210px;overflow:auto;padding-right:2px}
 .snack-extra-chip{display:flex;flex-direction:column;gap:4px;max-width:100%}
 .snack-extra-chip label{position:relative;display:flex;align-items:center;gap:6px;border:1px solid color-mix(in srgb,var(--border) 72%,transparent);border-radius:12px;background:color-mix(in srgb,var(--bg-surface) 88%,transparent);padding:8px 10px;font-size:12px;font-weight:850;line-height:1.25;cursor:pointer;color:var(--text-primary);box-shadow:0 1px 0 rgba(255,255,255,.04);min-height:38px}
@@ -11159,11 +11174,21 @@ function buildOneDayPlan(){
     });
   }
   const planEl=document.getElementById('oneday-plan');
-  if(planEl) planEl.innerHTML=visibleMeals.map(m=>
-    `<div class="meal-row">
-      <div class="meal-time">${m.time}<div style="font-size:10px;color:var(--text-muted);font-weight:400;margin-top:2px">${m.kcal} kcal</div></div>
-      <div class="meal-desc">${m.text}${renderExtraFoodsForSlot(m.slot, null)}<br><span class="meal-tag">${lang==='EN'?'EN':'GR'}</span></div>
-    </div>`).join('');
+  if(planEl){
+    // Same canonical calculation function Seven-Day already uses for its
+    // cards -- both ultimately derive from the same engine/strict ledger
+    // as calcDayTotals() above, so there is no risk of a second, divergent
+    // pipeline. This is purely how Breakfast/Lunch/Dinner are displayed;
+    // every existing calculation above (Plan Quality, warnings, gap
+    // advice) continues to use calcDayTotals() completely unchanged.
+    const dayPlanShim={brk, lun, din, snk1Extras, snk2Extras, sleepExtras};
+    const dtForCards=calcDayTotalsForPlanDisplay(dayPlanShim, lang, 0);
+    const mainCardsHtml=['brk','lun','din'].map(key=>{
+      const slot=SEVEN_DAY_SLOTS.find(s=>s.key===key);
+      return renderSevenDayMealCard(dayPlanShim, dtForCards, slot, lang, null, true);
+    }).join('');
+    planEl.innerHTML=`<div class="seven-day-card-grid">${mainCardsHtml}</div>`;
+  }
   const gapAbs=Math.abs(displayedGap);
   const exM=S.exMeta, exx=S.ex;
   let gapOk, gapColor, gapBadge, pqRootCauseMsg=null;
@@ -13406,7 +13431,10 @@ function buildSevenDay(){
     </div>
     ${renderDayTargetAdvice(dt, lang)}
     <div class="seven-day-card-grid">
-      ${SEVEN_DAY_SLOTS.map(slot=>renderSevenDayMealCard(dayPlan, dt, slot, lang, active)).join('')}
+      ${SEVEN_DAY_SLOTS.map(slot=>{
+        if(isOptionalMealSlot(slot.key) && !isOptionalSlotVisible(slot.key)) return renderOptionalSlotAddButton(slot, lang);
+        return renderSevenDayMealCard(dayPlan, dt, slot, lang, active);
+      }).join('')}
     </div>`;
   }
   const sevenBody=document.getElementById('sevenday-body');
@@ -13454,40 +13482,164 @@ function _sevenDayExtrasWasOpen(slotKey){
   const el = document.querySelector(`.seven-day-extras[data-slot-key="${slotKey}"]`);
   return !!(el && el.open);
 }
-function renderSevenDayMealCard(dayPlan, dt, slot, lang, dayIndex){
+// ── OPTIONAL MEAL SLOTS ──
+// Snack 1/2 and Before Sleep are hidden by default -- most dietitians don't
+// prescribe all six eating occasions for every client. Three-state model:
+// undefined = auto-detect from existing data (so a client who already has
+// snack entries never loses visibility of them), true = explicitly shown,
+// false = explicitly hidden. Plan-level (not per-day), and shared between
+// One-Day and Seven-Day so the two planners feel identical.
+function isOptionalMealSlot(slotKey){ return ['snk1','snk2','sleep'].includes(slotKey); }
+function isOptionalSlotVisible(slotKey){
+  return S.optionalSlotsVisible?.[slotKey] === true;
+}
+function showSevenDayOptionalSlot(slotKey){
+  S.optionalSlotsVisible = {...(S.optionalSlotsVisible||{}), [slotKey]:true};
+  scheduleAutosave();
+  buildSevenDay();
+}
+function hideSevenDayOptionalSlot(slotKey){
+  S.optionalSlotsVisible = {...(S.optionalSlotsVisible||{}), [slotKey]:false};
+  scheduleAutosave();
+  buildSevenDay();
+}
+function renderOptionalSlotAddButton(slot, lang){
+  const label = lang==='EN'
+    ? (slot.key==='sleep' ? 'Add before-sleep snack' : 'Add snack')
+    : (slot.key==='sleep' ? 'Προσθήκη σνακ πριν τον ύπνο' : 'Προσθήκη σνακ');
+  const extraKey = slotExtraKey(slot.key);
+  const hasExistingContent = extraKey && (S.weekPlans||[]).some(p=>(p[extraKey]||[]).length>0);
+  const hint = hasExistingContent
+    ? `<span class="seven-day-add-slot-hint">${lang==='EN'?'Already has entries — tap to show':'Έχει ήδη καταχωρήσεις — πατήστε για εμφάνιση'}</span>`
+    : '';
+  return `<button class="btn seven-day-add-slot-btn" onclick="showSevenDayOptionalSlot('${slot.key}')"><i class="ti ti-plus" aria-hidden="true"></i> ${label}${hint}</button>`;
+}
+// "Browse recipes" -- secondary access to the existing template dropdown,
+// reusing it rather than building a separate recipe browser. Opens the
+// "More options" panel and focuses the (already-rendered) select.
+function openSevenDayRecipeBrowser(dayIndex, slotKey){
+  const card = document.querySelectorAll('.seven-day-card')[SEVEN_DAY_SLOTS.findIndex(s=>s.key===slotKey)];
+  const details = card?.querySelector('.seven-day-more-options');
+  if(details) details.open = true;
+  const select = card?.querySelector('.seven-day-select');
+  if(select) select.focus();
+}
+// "Regenerate" on the card -- opens the canonical editor already seeded
+// from the current AI meal, then immediately triggers the same validated
+// regenerate flow already built and tested in Phase 1.
+function regenerateSevenDayAiMeal(dayIndex, slotKey){
+  const context = dayIndex===null ? {type:'oneday', slot:SEVEN_DAY_SLOTS.find(s=>s.key===slotKey)?.ai} : {type:'week', dayIndex, key:slotKey};
+  openCustomMealBuilder(context);
+  regenerateAiMealInBuilder();
+}
+// One-day equivalent of toggleWeekPlanExtra() -- updates S.mealSel's
+// snack-extras array directly and re-renders. Only reachable if a future
+// pass reuses the snack card branch for One-Day; today's One-Day snack UI
+// uses its own existing checkbox handler and never calls this.
+function toggleOneDaySnackExtra(extrasKey, extraValue, checked){
+  const current = S.mealSel[extrasKey] || [];
+  S.mealSel[extrasKey] = checked ? [...current, extraValue] : current.filter(v=>v!==extraValue);
+  buildOneDayPlan();
+}
+// Resolves a slot's real ingredient list for the food-preview card, across
+// all three meal sources -- reuses existing, already-proven functions only.
+function mealSlotIngredientsForPreview(dayPlan, slotKey, slotAiKey){
+  const aiMeal = dayPlan?.aiMeals?.[slotAiKey];
+  if(aiMeal && Array.isArray(aiMeal.resolved_ingredients) && aiMeal.resolved_ingredients.length) return aiMeal.resolved_ingredients;
+  const rawKey = dayPlan?.[slotKey];
+  if(isCustomMealKey(rawKey)){
+    const meal=getCustomMealByKey(rawKey);
+    if(meal?.instance?.ingredients?.length) return meal.instance.ingredients;
+  }
+  if(isMigratedMeal(rawKey)){
+    try{
+      const frozen=window.NutreseEngine.freezeMealInstance(rawKey, {servingsUsed:1});
+      if(frozen?.ingredients?.length) return frozen.ingredients;
+    }catch(e){ /* legacy/non-structured template — no ingredient list available */ }
+  }
+  return null;
+}
+function renderSevenDayMealCard(dayPlan, dt, slot, lang, dayIndex, oneDayMode=false){
   const data=getSevenDaySlotData(dayPlan, dt, slot.key, lang, dayIndex);
   const extraKey=slotExtraKey(slot.key);
   const filteredBrk=filteredMealOptions(BREAKFAST_OPTIONS, v('p-diet')||'Omnivore');
   const filteredLun=filteredMealOptions(LUNCH_OPTIONS, v('p-diet')||'Omnivore');
   const filteredDin=filteredMealOptions(DINNER_OPTIONS, v('p-diet')||'Omnivore');
-  const selectHtml=slot.key==='brk' ? `<select class="seven-day-select" onchange="handleWeekMealSelect(${dayIndex},'brk',this)">${mealOptionsHtml(filteredBrk,dayPlan.brk)}</select>` :
-    slot.key==='lun' ? `<select class="seven-day-select" onchange="handleWeekMealSelect(${dayIndex},'lun',this)">${mealOptionsHtml(filteredLun,dayPlan.lun)}</select>` :
-    slot.key==='din' ? `<select class="seven-day-select" onchange="handleWeekMealSelect(${dayIndex},'din',this)">${mealOptionsHtml(filteredDin,dayPlan.din)}</select>` : '';
+  const selectOnchange = oneDayMode
+    ? (mealKey)=>`handleOneDayMealSelect('${slot.ai}',this)`
+    : (mealKey)=>`handleWeekMealSelect(${dayIndex},'${mealKey}',this)`;
+  const selectHtml=slot.key==='brk' ? `<select class="seven-day-select" onchange="${selectOnchange('brk')}">${mealOptionsHtml(filteredBrk,dayPlan.brk)}</select>` :
+    slot.key==='lun' ? `<select class="seven-day-select" onchange="${selectOnchange('lun')}">${mealOptionsHtml(filteredLun,dayPlan.lun)}</select>` :
+    slot.key==='din' ? `<select class="seven-day-select" onchange="${selectOnchange('din')}">${mealOptionsHtml(filteredDin,dayPlan.din)}</select>` : '';
   const selectedExtras=extraKey ? (dayPlan[extraKey]||[]) : [];
   const extrasCountLabel=selectedExtras.length ? (lang==='EN'?`${selectedExtras.length} selected`:`${selectedExtras.length} επιλεγμένα`) : (lang==='EN'?'Optional':'Προαιρετικά');
   const extrasHtml=extraKey && !dayPlan.aiMeals ? `<div class="snack-extras-group">${SNACK_EXTRAS.filter(e=>snackExtraAllowedForSlot(e, slot.key)).map(e=>{
     const checked=selectedExtras.includes(e.v);
     const noteText=checked ? snackReplacementNote(e.v, lang) : '';
     const note=noteText ? `<div class="snack-extra-note">${noteText}</div>` : '';
-    return `<div class="snack-extra-chip ${checked?'is-checked':''}"><label title="${safeHtml(e.tip||'')}"><input type="checkbox" data-group="${e.group||''}" ${checked?'checked':''} onchange="toggleWeekPlanExtra(${dayIndex},'${extraKey}','${e.v}',this.checked)"> <span>${snackExtraLabel(e, lang)}</span></label>${note}</div>`;
+    const onchangeAttr = oneDayMode
+      ? `toggleOneDaySnackExtra('${extraKey}','${e.v}',this.checked)`
+      : `toggleWeekPlanExtra(${dayIndex},'${extraKey}','${e.v}',this.checked)`;
+    return `<div class="snack-extra-chip ${checked?'is-checked':''}"><label title="${safeHtml(e.tip||'')}"><input type="checkbox" data-group="${e.group||''}" ${checked?'checked':''} onchange="${onchangeAttr}"> <span>${snackExtraLabel(e, lang)}</span></label>${note}</div>`;
   }).join('')}</div>` : '';
-  const controlLabel=lang==='EN'?'Change meal':'Αλλαγή γεύματος';
   const addOnsLabel=lang==='EN'?'Snack add-ons':'Προσθήκες σνακ';
-  const customSnackButton=extraKey && !dayPlan.aiMeals ? customSnackFoodButton(slot.key, dayIndex, lang) : '';
-  const isEmptySlot = ['brk','lun','din'].includes(slot.key) && isNoMealKey(dayPlan[slot.key]);
+  const customSnackButton=extraKey && !dayPlan.aiMeals ? customSnackFoodButton(slot.key, oneDayMode?null:dayIndex, lang) : '';
+  const isMainMealSlot = ['brk','lun','din'].includes(slot.key);
+  const isEmptySlot = isMainMealSlot && isNoMealKey(dayPlan[slot.key]);
   const emptySlotTitle = lang==='EN' ? 'Not yet planned' : 'Δεν έχει οριστεί ακόμη';
-  const emptySlotDesc = lang==='EN' ? 'Choose "＋ Custom meal" below to build this meal.' : 'Επιλέξτε "＋ Προσαρμοσμένο γεύμα" παρακάτω για να δημιουργήσετε αυτό το γεύμα.';
+
+  if(isMainMealSlot){
+    // ── FOOD-LEVEL EDITING AS PRIMARY WORKFLOW ──
+    // Add Food is the primary action; recipes/templates and AI actions are
+    // secondary. All of this opens the SAME canonical openCustomMealBuilder()
+    // already proven in Phase 1 -- no new editor, no new calculation path.
+    // Identical for One-Day and Seven-Day: only the builder context differs.
+    const builderContext = oneDayMode
+      ? `{type:'oneday', slot:'${slot.ai}'}`
+      : `{type:'week', dayIndex:${dayIndex}, key:'${slot.key}'}`;
+    const ingredients = mealSlotIngredientsForPreview(dayPlan, slot.key, slot.ai);
+    const foodRowsHtml = ingredients
+      ? ingredients.map(i=>{
+          const food=window.NutreseEngine.FOOD_DATABASE[i.food_id];
+          const name=food ? window.NutreseEngine.getClinicalName(food.name, lang==='EN'?'en':'gr') : i.food_id;
+          return `<div class="seven-day-food-row"><span class="seven-day-food-name">${safeHtml(name)}</span><span class="seven-day-food-grams">${Math.round(i.grams)} g</span></div>`;
+        }).join('')
+      : '';
+    const isAiSourced = !!dayPlan?.aiMeals?.[slot.ai];
+    const secondaryActions = [
+      `<button class="btn seven-day-secondary-btn" onclick="openSevenDayRecipeBrowser(${oneDayMode?'null':dayIndex},'${slot.key}')" title="${lang==='EN'?'Browse recipes':'Περιήγηση συνταγών'}"><i class="ti ti-book" aria-hidden="true"></i> ${lang==='EN'?'Browse recipes':'Συνταγές'}</button>`,
+      isAiSourced ? `<button class="btn seven-day-secondary-btn" onclick="regenerateSevenDayAiMeal(${oneDayMode?'null':dayIndex},'${slot.key}')" title="${lang==='EN'?'Regenerate with AI':'Αναδημιουργία με AI'}"><i class="ti ti-refresh" aria-hidden="true"></i> ${lang==='EN'?'Regenerate':'Αναδημιουργία'}</button>` : '',
+    ].filter(Boolean).join('');
+    return `<div class="seven-day-card">
+      <div class="seven-day-card-head">
+        <div>
+          <div class="seven-day-slot-label"><span>${slot.icon}</span><span>${lang==='EN'?slot.labelEN:slot.labelGR}</span></div>
+          <div class="seven-day-meal-title">${isEmptySlot ? emptySlotTitle : safeHtml(data.name||'Meal')}</div>
+        </div>
+        <div class="seven-day-kcal-pill">${data.kcal||0} kcal</div>
+      </div>
+      ${foodRowsHtml ? `<div class="seven-day-food-list">${foodRowsHtml}</div>` : `<div class="seven-day-meal-desc">${isEmptySlot ? (lang==='EN'?'No foods added yet.':'Δεν έχουν προστεθεί τρόφιμα ακόμη.') : (data.text||'—')}</div>`}
+      <button class="btn primary seven-day-add-food-btn" onclick="openCustomMealBuilder(${builderContext})"><i class="ti ti-plus" aria-hidden="true"></i> ${lang==='EN'?'Add food':'Προσθήκη τροφίμου'}</button>
+      <div class="seven-day-secondary-actions">${secondaryActions}</div>
+      <details class="seven-day-more-options"><summary>${lang==='EN'?'More options':'Περισσότερες επιλογές'}</summary>
+        ${selectHtml ? `<div class="seven-day-control"><div class="seven-day-control-label">${lang==='EN'?'Replace entire meal':'Αντικατάσταση ολόκληρου γεύματος'}</div>${selectHtml}</div>` : ''}
+      </details>
+    </div>`;
+  }
+
+  // ── SNACK / BEFORE-SLEEP: unchanged exchange-based editor for now ──
+  // (Phase 2 will bring these onto the same food-level workflow once the
+  // calculation pathway is migrated -- see the Phase 2 impact review.)
   return `<div class="seven-day-card">
     <div class="seven-day-card-head">
       <div>
         <div class="seven-day-slot-label"><span>${slot.icon}</span><span>${lang==='EN'?slot.labelEN:slot.labelGR}</span></div>
-        <div class="seven-day-meal-title">${isEmptySlot ? emptySlotTitle : safeHtml(data.name||'Meal')}</div>
+        <div class="seven-day-meal-title">${safeHtml(data.name||'Meal')}</div>
       </div>
-      <button class="btn seven-day-edit-btn" title="${lang==='EN'?'Edit meal':'Επεξεργασία γεύματος'}" onclick="openCustomMealBuilder({type:'week', dayIndex:${dayIndex}, key:'${slot.key}'})"><i class="ti ti-pencil" aria-hidden="true"></i></button>
+      <button class="btn seven-day-edit-btn" title="${lang==='EN'?'Remove this slot':'Αφαίρεση αυτής της θέσης'}" onclick="hideSevenDayOptionalSlot('${slot.key}')"><i class="ti ti-x" aria-hidden="true"></i></button>
     </div>
-    <div class="seven-day-meal-desc">${isEmptySlot ? emptySlotDesc : (data.text||'—')}</div>
+    <div class="seven-day-meal-desc">${data.text||'—'}</div>
     <div class="seven-day-card-meta"><div class="seven-day-kcal-pill">${data.kcal||0} kcal</div></div>
-    ${selectHtml ? `<div class="seven-day-control"><div class="seven-day-control-label">${controlLabel}</div>${selectHtml}</div>` : ''}
     ${extrasHtml ? `<details class="seven-day-extras" data-slot-key="${slot.key}"${_sevenDayExtrasWasOpen(slot.key)?' open':''}><summary><span class="seven-day-control-label">${addOnsLabel}</span><span class="seven-day-selected-count">${extrasCountLabel}</span></summary>${extrasHtml}</details>` : ''}
     ${customSnackButton ? `<div class="custom-snack-food-row">${customSnackButton}</div>` : ''}
   </div>`;
@@ -16855,6 +17007,7 @@ return {
     weekPlans:S.weekPlans, savedWeeklyPlan:S.savedWeeklyPlan, customMeals:S.customMeals, mealLanguage:S.mealLanguage, reportOptions:S.reportOptions,
     currentTemplate:S.currentTemplate||null,
     sevenDayView:S.sevenDayView, sevenDayActiveIndex:S.sevenDayActiveIndex, aiPlanStatus:S.aiPlanStatus,
+    optionalSlotsVisible:S.optionalSlotsVisible,
     weightSuggestionLocked:S.weightSuggestionLocked, bcManual:S.bcManual,
     intake:S.intake, notes:S.notes, labValues:S.labValues, labDate:S.labDate, clientDocuments:S.clientDocuments, extraFoods:S.extraFoods, equivalentNotes:S.equivalentNotes,
     clientPhoto:S.clientPhoto,
@@ -16923,6 +17076,7 @@ function applyState(state){
   S.sevenDayView=state.sevenDayView||'day';
   S.sevenDayActiveIndex=state.sevenDayActiveIndex!==undefined ? (Number(state.sevenDayActiveIndex)||0) : 0;
   S.aiPlanStatus=state.aiPlanStatus!==undefined ? state.aiPlanStatus : '';
+  S.optionalSlotsVisible=state.optionalSlotsVisible && typeof state.optionalSlotsVisible==='object' ? state.optionalSlotsVisible : {};
   S.extraFoods=Array.isArray(state.extraFoods)?state.extraFoods:[];
   S.equivalentNotes=state.equivalentNotes&&typeof state.equivalentNotes==='object' ? state.equivalentNotes : {};
   // LANGUAGE: a saved client must NEVER silently change the interface
@@ -16995,6 +17149,7 @@ function resetForm(){
   S.savedWeeklyPlan=null;
   S.aiPlanStatus='';
   S.sevenDayActiveIndex=0;
+  S.optionalSlotsVisible={};
   // LANGUAGE: the application language is the single source of truth. A new
   // client must inherit the dietitian's CURRENT choice. This previously
   // hardcoded 'GR', so creating a client while the UI was in English forced
