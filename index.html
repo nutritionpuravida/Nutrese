@@ -1692,6 +1692,7 @@ table th,
 .seven-day-food-row:last-child{border-bottom:none}
 .seven-day-food-name{color:var(--text-primary)}
 .seven-day-food-grams{color:var(--text-muted);font-weight:800;font-size:12px}
+.seven-day-food-grams-sub{font-weight:400;opacity:.75}
 .seven-day-add-food-btn{width:100%;justify-content:center;border-radius:14px}
 .seven-day-secondary-actions{display:flex;gap:8px;flex-wrap:wrap}
 .seven-day-secondary-btn{font-size:12px;padding:7px 10px;border-radius:999px}
@@ -1707,7 +1708,7 @@ table th,
 .snack-extra-chip label{position:relative;display:flex;align-items:center;gap:6px;border:1px solid color-mix(in srgb,var(--border) 72%,transparent);border-radius:12px;background:color-mix(in srgb,var(--bg-surface) 88%,transparent);padding:8px 10px;font-size:12px;font-weight:850;line-height:1.25;cursor:pointer;color:var(--text-primary);box-shadow:0 1px 0 rgba(255,255,255,.04);min-height:38px}
 .snack-extra-chip.is-checked label{border-color:color-mix(in srgb,var(--teal-600) 64%,var(--border));background:color-mix(in srgb,var(--teal-600) 18%,var(--bg-surface));color:var(--text-primary)}
 .snack-extra-chip input{width:14px;height:14px;accent-color:var(--teal-600);flex:0 0 auto}
-.snack-extra-note{color:var(--teal-700);font-size:10px;font-weight:900;margin-left:10px;line-height:1.25}.seven-day-selected-count{font-size:11px;font-weight:900;color:var(--teal-700);background:color-mix(in srgb,var(--teal-600) 12%,transparent);border:1px solid color-mix(in srgb,var(--teal-600) 22%,transparent);border-radius:999px;padding:3px 8px;white-space:nowrap}
+.snack-extra-note{color:var(--teal-700);font-size:11.5px;font-weight:600;margin-left:10px;line-height:1.4}.seven-day-selected-count{font-size:11px;font-weight:900;color:var(--teal-700);background:color-mix(in srgb,var(--teal-600) 12%,transparent);border:1px solid color-mix(in srgb,var(--teal-600) 22%,transparent);border-radius:999px;padding:3px 8px;white-space:nowrap}
 .main-meal-adjustment-note{margin-top:8px;padding:8px 10px;border-radius:12px;background:color-mix(in srgb,var(--teal-600) 12%,transparent);border:1px solid color-mix(in srgb,var(--teal-600) 28%,transparent);color:var(--teal-700);font-size:11px;font-weight:900;line-height:1.35}
 .seven-day-target-advice{margin:12px 0 18px;padding:12px 14px;border-radius:16px;border:1px solid color-mix(in srgb,var(--teal-600) 22%,var(--border));background:color-mix(in srgb,var(--teal-600) 8%,var(--bg-surface));color:var(--text-secondary);font-size:13px;line-height:1.45}.seven-day-target-advice strong{color:var(--text-primary)}
 @media (max-width:760px){.seven-day-card-grid{grid-template-columns:1fr}.snack-extras-group{grid-template-columns:1fr;max-height:none}.seven-day-card{border-radius:16px;padding:14px}}
@@ -2101,7 +2102,7 @@ table th,
     <div class="nav-group-label"><span class="i18n" data-en="Workflow" data-gr="Ροή Εργασίας">Workflow</span></div>
     <button class="nav-item active" onclick="nav('dashboard')"><i class="ti ti-chart-bar" aria-hidden="true"></i> <span class="i18n" data-en="Dashboard" data-gr="Πίνακας Ελέγχου">Dashboard</span></button>
     <button class="nav-item" onclick="nav('profile')"><i class="ti ti-user" aria-hidden="true"></i> <span class="i18n" data-en="Client Profile" data-gr="Προφίλ Πελάτη">Client Profile</span></button>
-    <button class="nav-item" onclick="nav('fooddb')"><i class="ti ti-search" aria-hidden="true"></i> <span class="i18n" data-en="Food Database" data-gr="Αναζήτηση Τροφίμων">Food Database</span></button>
+    <button class="nav-item" onclick="S._foodAddIntent=null; document.getElementById('fooddb-back-to-plan-btn').style.display='none'; nav('fooddb')"><i class="ti ti-search" aria-hidden="true"></i> <span class="i18n" data-en="Food Database" data-gr="Αναζήτηση Τροφίμων">Food Database</span></button>
     <button class="nav-item" onclick="nav('recipes')"><i class="ti ti-chef-hat" aria-hidden="true"></i> <span class="i18n" data-en="Recipes" data-gr="Συνταγές">Recipes</span></button>
     <button class="nav-item" onclick="nav('equivalents')"><i class="ti ti-clipboard-list" aria-hidden="true"></i> <span class="i18n" data-en="Equivalents Guide" data-gr="Οδηγός Ισοδυνάμων">Equivalents Guide</span></button>
   </div>
@@ -2902,7 +2903,10 @@ table th,
   <!-- FOOD DATABASE -->
   <div class="page" id="page-fooddb">
     <div class="card">
-      <div class="card-header"><span class="card-title"><i class="ti ti-search" aria-hidden="true"></i> <span class="i18n" data-en="Food Database — USDA FoodData Central" data-gr="Αναζήτηση Τροφίμων — USDA FoodData Central">Food Database — USDA FoodData Central</span></span></div>
+      <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+        <span class="card-title"><i class="ti ti-search" aria-hidden="true"></i> <span class="i18n" data-en="Food Database — USDA FoodData Central" data-gr="Αναζήτηση Τροφίμων — USDA FoodData Central">Food Database — USDA FoodData Central</span></span>
+        <button class="btn" id="fooddb-back-to-plan-btn" style="display:none" onclick="returnToPlanFromFoodDb()"><i class="ti ti-arrow-left" aria-hidden="true"></i> <span class="i18n" data-en="Back to meal plan" data-gr="Επιστροφή στο πλάνο γευμάτων">Back to meal plan</span></button>
+      </div>
       <div class="card-body">
         <div class="alert info"><i class="ti ti-info-circle" aria-hidden="true"></i> <span class="i18n" data-en="Search uses USDA FoodData Central Foundation/SR Legacy data. Values are per 100g and should be reviewed clinically before use." data-gr="Η αναζήτηση χρησιμοποιεί δεδομένα USDA FoodData Central Foundation/SR Legacy. Οι τιμές είναι ανά 100g και πρέπει να ελέγχονται κλινικά πριν τη χρήση.">Search uses USDA FoodData Central Foundation/SR Legacy data. Values are per 100g and should be reviewed clinically before use.</span></div>
         <div class="form-grid two">
@@ -2991,8 +2995,8 @@ table th,
       <div class="card-body">
         <div class="alert info"><span class="i18n" data-en="Build a meal from Nutrese's clinical food database. Values are stored for your account and can be reused in the meal dropdowns." data-gr="Δημιουργήστε ένα γεύμα από την κλινική βάση τροφίμων του Nutrese. Οι τιμές αποθηκεύονται στον λογαριασμό σας και μπορούν να επαναχρησιμοποιηθούν στα αναπτυσσόμενα μενού γευμάτων.">Build a meal from Nutrese's clinical food database. Values are stored for your account and can be reused in the meal dropdowns.</span></div>
         <div class="form-grid two">
-          <div class="form-field"><label><span class="i18n" data-en="Meal name" data-gr="Όνομα γεύματος">Meal name</span></label><input type="text" id="custom-meal-name" class="i18n-ph" data-en-ph="e.g. Salmon quinoa bowl" data-gr-ph="π.χ. Μπολ σολομού με κινόα" placeholder="e.g. Salmon quinoa bowl" oninput="renderCustomMealDraft()"></div>
-          <div class="form-field"><label><span class="i18n" data-en="Ingredient search" data-gr="Αναζήτηση συστατικού">Ingredient search</span></label><input type="text" id="custom-meal-search" class="i18n-ph" data-en-ph="e.g. chicken, potato, olive oil" data-gr-ph="π.χ. κοτόπουλο, πατάτα, ελαιόλαδο" placeholder="e.g. chicken, potato, olive oil" onkeydown="if(event.key==='Enter') searchCustomMealFoods()"></div>
+          <div class="form-field"><label><span class="i18n" data-en="Search foods to add" data-gr="Αναζήτηση τροφίμων για προσθήκη">Search foods to add</span></label><input type="text" id="custom-meal-search" class="i18n-ph" data-en-ph="e.g. chicken, potato, olive oil" data-gr-ph="π.χ. κοτόπουλο, πατάτα, ελαιόλαδο" placeholder="e.g. chicken, potato, olive oil" onkeydown="if(event.key==='Enter') searchCustomMealFoods()"></div>
+          <div class="form-field"><label><span class="i18n" data-en="Meal name (optional)" data-gr="Όνομα γεύματος (προαιρετικό)">Meal name (optional)</span></label><input type="text" id="custom-meal-name" class="i18n-ph" data-en-ph="Leave blank to name it later" data-gr-ph="Αφήστε κενό για να το ονομάσετε αργότερα" placeholder="Leave blank to name it later" oninput="renderCustomMealDraft()"></div>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 12px">
           <button class="btn" onclick="searchCustomMealFoods()"><span class="i18n" data-en="Search foods" data-gr="Αναζήτηση τροφίμων">Search foods</span></button>
@@ -8003,6 +8007,8 @@ function openFoodDatabaseForSnack(slot='snk1', dayIndex=null){
   const validSlot=EXTRA_FOOD_SLOTS.some(s=>s.v===slot) ? slot : 'snk1';
   S._foodAddIntent={slot:validSlot, dayIndex:Number.isInteger(dayIndex)?dayIndex:null};
   nav('fooddb');
+  const backBtn=document.getElementById('fooddb-back-to-plan-btn');
+  if(backBtn) backBtn.style.display='inline-flex';
   const isEn=(S.mealLanguage||'GR')==='EN';
   const slotObj=EXTRA_FOOD_SLOTS.find(s=>s.v===validSlot)||EXTRA_FOOD_SLOTS[1];
   const slotLabel=isEn?(slotObj.en||slotObj.label):(slotObj.gr||slotObj.label);
@@ -8011,6 +8017,19 @@ function openFoodDatabaseForSnack(slot='snk1', dayIndex=null){
     : `Αναζητήστε τρόφιμο και προσθέστε το στο ${safeHtml(slotLabel)}. Η θέση είναι ήδη προεπιλεγμένη στα αποτελέσματα.`);
   if(S.foodResults&&S.foodResults.length) renderFoodResults(S.foodResults);
   setTimeout(()=>{ const search=document.getElementById('food-search'); if(search) search.focus(); }, 0);
+}
+function returnToPlanFromFoodDb(){
+  const intent=S._foodAddIntent;
+  if(intent && Number.isInteger(intent.dayIndex)){
+    S.sevenDayActiveIndex=intent.dayIndex;
+    nav('sevenday');
+    buildSevenDay();
+  } else {
+    nav('oneday');
+    buildOneDayPlan();
+  }
+  const backBtn=document.getElementById('fooddb-back-to-plan-btn');
+  if(backBtn) backBtn.style.display='none';
 }
 function selectedExtraFoodDays(index){
   const dayChoice=v(`food-add-day-${index}`)||'all';
@@ -9050,9 +9069,15 @@ function starchSnackIncludesFat(value){
 }
 function snackReplacementNote(value, lang){
   const isEn=(lang||S.mealLanguage||'GR')==='EN';
-  if(value==='nuts') return isEn ? '+1 fat in snack; -1 tsp olive oil from main meals' : '+1 λίπος στο σνακ; -1 κ.γ. ελαιόλαδο από κύρια γεύματα';
-  if(starchSnackIncludesFat(value)) return isEn ? '+1 starch +1 fat in snack; -1 starch and -1 tsp oil from main meals' : '+1 άμυλο +1 λίπος στο σνακ; -1 άμυλο και -1 κ.γ. λάδι από κύρια γεύματα';
-  if(STARCH_SNACK_VALUES.includes(value)) return isEn ? '+1 starch in snack; -1 starch from main meals' : '+1 άμυλο στο σνακ; -1 άμυλο από κύρια γεύματα';
+  if(value==='nuts') return isEn
+    ? 'This counts as part of today\'s fat budget — 1 tsp of olive oil is moved out of lunch or dinner to keep the day\'s total accurate, not added on top.'
+    : 'Αυτό υπολογίζεται ως μέρος του σημερινού ορίου λίπους — 1 κ.γ. ελαιόλαδο μετακινείται από το μεσημεριανό ή το βραδινό ώστε το σύνολο της ημέρας να παραμένει ακριβές, όχι επιπλέον.';
+  if(starchSnackIncludesFat(value)) return isEn
+    ? 'This counts as part of today\'s starch and fat budget — 1 starch portion and 1 tsp of oil are moved out of lunch or dinner to keep the day\'s total accurate, not added on top.'
+    : 'Αυτό υπολογίζεται ως μέρος του σημερινού ορίου αμύλου και λίπους — 1 μερίδα αμύλου και 1 κ.γ. λάδι μετακινούνται από το μεσημεριανό ή το βραδινό ώστε το σύνολο της ημέρας να παραμένει ακριβές, όχι επιπλέον.';
+  if(STARCH_SNACK_VALUES.includes(value)) return isEn
+    ? 'This counts as part of today\'s starch budget — 1 starch portion is moved out of lunch or dinner to keep the day\'s total accurate, not added on top.'
+    : 'Αυτό υπολογίζεται ως μέρος του σημερινού ορίου αμύλου — 1 μερίδα αμύλου μετακινείται από το μεσημεριανό ή το βραδινό ώστε το σύνολο της ημέρας να παραμένει ακριβές, όχι επιπλέον.';
   return '';
 }
 function snackExchangeMoveDetails(plan, lang='GR'){
@@ -13602,7 +13627,11 @@ function renderSevenDayMealCard(dayPlan, dt, slot, lang, dayIndex, oneDayMode=fa
       ? ingredients.map(i=>{
           const food=window.NutreseEngine.FOOD_DATABASE[i.food_id];
           const name=food ? window.NutreseEngine.getClinicalName(food.name, lang==='EN'?'en':'gr') : i.food_id;
-          return `<div class="seven-day-food-row"><span class="seven-day-food-name">${safeHtml(name)}</span><span class="seven-day-food-grams">${Math.round(i.grams)} g</span></div>`;
+          const hh=food ? window.NutreseEngine.formatHouseholdMeasure(i.household||window.NutreseEngine.getHouseholdSnapshot(food), i.grams, lang==='EN'?'en':'gr') : '';
+          const qtyDisplay = hh
+            ? `${safeHtml(hh)} <span class="seven-day-food-grams-sub">(${Math.round(i.grams)}g)</span>`
+            : `${Math.round(i.grams)} g`;
+          return `<div class="seven-day-food-row"><span class="seven-day-food-name">${safeHtml(name)}</span><span class="seven-day-food-grams">${qtyDisplay}</span></div>`;
         }).join('')
       : '';
     const isAiSourced = !!dayPlan?.aiMeals?.[slot.ai];
@@ -16431,6 +16460,7 @@ function openCustomMealBuilder(context){
   if(regenRow) regenRow.style.display = S.customMealDraftIsAiSeeded ? 'block' : 'none';
   renderCustomMealDraft();
   const modal=document.getElementById('custom-meal-modal'); if(modal) modal.style.display='flex';
+  setTimeout(()=>{ document.getElementById('custom-meal-search')?.focus(); }, 0);
 }
 function closeCustomMealBuilder(){ const modal=document.getElementById('custom-meal-modal'); if(modal) modal.style.display='none'; }
 function clearCustomMealDraft(){
@@ -16538,9 +16568,23 @@ function renderCustomMealDraft(){
     </div>`;
 }
 async function saveCustomMeal(){
-  const name=(v('custom-meal-name')||'').trim();
+  let name=(v('custom-meal-name')||'').trim();
   const isGr = window.appLang==='gr';
-  if(!name){ alert(isGr?'Εισάγετε όνομα γεύματος.':'Enter a meal name.'); return; }
+  if(!name && S.customMealDraft?.ingredients?.length){
+    // Auto-generate a sensible default rather than blocking the save --
+    // adjusting a quantity and saving is a common action that shouldn't
+    // require typing a name first, especially for an already-named
+    // AI-seeded meal being personalized.
+    const eng=window.NutreseEngine;
+    const firstNames=S.customMealDraft.ingredients.slice(0,2).map(i=>{
+      const food=eng.FOOD_DATABASE[i.food_id];
+      return food ? eng.getClinicalName(food.name, isGr?'gr':'en') : i.food_id;
+    });
+    const extra=S.customMealDraft.ingredients.length>2 ? (isGr?` +${S.customMealDraft.ingredients.length-2} ακόμη`:` +${S.customMealDraft.ingredients.length-2} more`) : '';
+    name=firstNames.join(', ')+extra;
+    const nameEl=document.getElementById('custom-meal-name');
+    if(nameEl) nameEl.value=name;
+  }
   if(!S.customMealDraft || !S.customMealDraft.ingredients || !S.customMealDraft.ingredients.length){ alert(isGr?'Προσθέστε τουλάχιστον ένα συστατικό.':'Add at least one ingredient.'); return; }
   // New canonical shape: the whole NutreseEngine instance (ingredients +
   // totals + exchanges together), not a loose ingredient array with
