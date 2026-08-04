@@ -102,7 +102,7 @@ select option { background-color: var(--bg-surface); color: var(--text-primary);
    the protected UI is never rendered/interactive for anonymous visitors,
    even before JS finishes running. */
 .app.hidden { display: none; }
-.sidebar { width: var(--nav-w); background: var(--bg-sidebar); border-right: 1px solid rgba(214,223,218,.82); display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto; transition: transform .25s; z-index: 100; }
+.sidebar { position: relative; width: var(--nav-w); background: var(--bg-sidebar); border-right: 1px solid rgba(214,223,218,.82); display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto; transition: transform .25s; z-index: 100; }
 .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
 .topbar { min-height: 56px; padding: 12px 16px; background: rgba(246,245,242,.82); backdrop-filter: saturate(180%) blur(14px); -webkit-backdrop-filter: saturate(180%) blur(14px); border-bottom: 1px solid var(--border); box-shadow: var(--shadow-xs); display: flex; align-items: center; gap: 10px; flex-shrink: 0; position: sticky; top: 0; z-index: 50; }
 [data-theme="dark"] .topbar { background: rgba(26,29,39,.72); box-shadow: none; border-bottom: 1px solid var(--border); }
@@ -113,8 +113,9 @@ select option { background-color: var(--bg-surface); color: var(--text-primary);
 
 /* ─── SIDEBAR ELEMENTS ─── */
 .logo-area { padding: 20px 16px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; gap: 10px; }
-.sidebar-collapse-btn { margin-left: auto; background: none; border: 1px solid transparent; color: var(--text-muted); cursor: pointer; width: 26px; height: 26px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; transition: background .14s ease, color .14s ease, border-color .14s ease; }
-.sidebar-collapse-btn:hover { background: var(--bg-hover); color: var(--text-primary); border-color: var(--border); }
+.sidebar-collapse-btn { margin-left: auto; background: none; border: 1px solid transparent; color: var(--text-muted); cursor: pointer; width: 26px; height: 26px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; transition: background .14s ease, color .14s ease, border-color .14s ease, transform .14s ease; }
+.sidebar-collapse-btn:hover { background: var(--bg-hover); color: var(--text-primary); border-color: var(--border); transform: scale(1.06); }
+.sidebar-collapse-btn:active { transform: scale(0.96); }
 /* ─── COLLAPSED SIDEBAR (desktop icon rail) ─── */
 .sidebar { transition: width .22s ease, transform .25s ease; }
 .sidebar.collapsed { width: 62px; }
@@ -520,6 +521,9 @@ i.ti-circle-x { color: var(--red-text); }
 .feedback-close { border: 1px solid var(--border); background: var(--bg-page); color: var(--text-secondary); border-radius: 6px; cursor: pointer; padding: 4px 8px; font-weight: 800; }
 .app-feedback-type-btn { flex: 1; }
 .app-feedback-type-btn.is-active { background: var(--teal-600); color: #fff; border-color: var(--teal-600); }
+#app-feedback-fab { transition: transform .16s ease, box-shadow .16s ease, background .16s ease; }
+#app-feedback-fab:hover { transform: translateY(-2px) scale(1.04); box-shadow: 0 8px 22px rgba(15,17,23,.28); background: var(--teal-700); }
+#app-feedback-fab:active { transform: translateY(0) scale(0.97); }
 .btn.danger { background: var(--red-text); border-color: var(--red-text); color: #fff; }
 .btn.danger:hover { filter: brightness(0.92); }
 .save-confirm-summary { background: var(--bg-page); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-bottom: 14px; font-size: 13px; }
@@ -2127,8 +2131,8 @@ table th,
   </div>
 
   <div class="client-tabbar no-print" id="client-tabbar">
-    <button class="client-tab" data-tab-for="intake" onclick="nav('intake')"><i class="ti ti-notes" aria-hidden="true"></i> <span class="i18n" data-en="Notes" data-gr="Σημειώσεις">Notes</span></button>
     <button class="client-tab" data-tab-for="profile" onclick="nav('profile')"><i class="ti ti-user" aria-hidden="true"></i> <span class="i18n" data-en="Profile" data-gr="Προφίλ">Profile</span></button>
+    <button class="client-tab" data-tab-for="intake" onclick="nav('intake')"><i class="ti ti-notes" aria-hidden="true"></i> <span class="i18n" data-en="Notes" data-gr="Σημειώσεις">Notes</span></button>
     <button class="client-tab" data-tab-for="bodycomp" onclick="nav('bodycomp')"><i class="ti ti-scale" aria-hidden="true"></i> <span class="i18n" data-en="Body Comp" data-gr="Σύσταση Σώματος">Body Comp</span></button>
     <button class="client-tab" data-tab-for="labs" onclick="nav('labs')"><i class="ti ti-droplet" aria-hidden="true"></i> <span class="i18n" data-en="Labs" data-gr="Εξετάσεις">Labs</span></button>
     <button class="client-tab" data-tab-for="macros" onclick="nav('macros')"><i class="ti ti-target" aria-hidden="true"></i> <span class="i18n" data-en="Targets & Exchanges" data-gr="Στόχοι & Ισοδύναμα">Targets & Exchanges</span></button>
@@ -2982,6 +2986,10 @@ table th,
         <div id="custom-meal-search-status" class="field-note"></div>
         <div id="custom-meal-search-results" style="margin-bottom:12px"></div>
         <div class="section-label"><span class="i18n" data-en="Ingredients" data-gr="Συστατικά">Ingredients</span></div>
+        <div id="custom-meal-regenerate-row" style="display:none;margin-bottom:10px">
+          <button class="btn" onclick="regenerateAiMealInBuilder()"><i class="ti ti-refresh" aria-hidden="true"></i> <span class="i18n" data-en="Regenerate this meal with AI" data-gr="Αναδημιουργία γεύματος με AI">Regenerate this meal with AI</span></button>
+          <span id="custom-meal-regenerate-status" class="field-note"></span>
+        </div>
         <div id="custom-meal-draft"></div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:14px">
           <button class="btn primary" onclick="saveCustomMeal()"><i class="ti ti-device-floppy" aria-hidden="true"></i> Save custom meal</button>
@@ -3251,6 +3259,27 @@ table th,
       <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px">
         <button class="btn" onclick="closeAppFeedback()"><span class="i18n" data-en="Cancel" data-gr="Ακύρωση">Cancel</span></button>
         <button class="btn primary" id="app-feedback-submit-btn" onclick="submitAppFeedback()"><span class="i18n" data-en="Send" data-gr="Αποστολή">Send</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="feedback-modal no-print" id="restore-session-modal" role="dialog" aria-modal="true" aria-labelledby="restore-session-title">
+  <div class="feedback-card" style="width:min(420px,100%)">
+    <div class="feedback-card-header">
+      <div>
+        <div class="feedback-card-title" id="restore-session-title"><i class="ti ti-history" aria-hidden="true"></i> <span class="i18n" data-en="Unsaved session found" data-gr="Βρέθηκε μη αποθηκευμένη συνεδρία">Unsaved session found</span></div>
+        <div class="feedback-card-sub i18n" data-en="We found an unsaved session for a client that wasn't saved before you left." data-gr="Βρήκαμε μια μη αποθηκευμένη συνεδρία για έναν πελάτη που δεν είχε αποθηκευτεί πριν φύγετε.">We found an unsaved session for a client that wasn't saved before you left.</div>
+      </div>
+    </div>
+    <div style="padding:16px 18px">
+      <div style="background:var(--bg-page);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:13.5px;margin-bottom:10px">
+        <span class="i18n" data-en="Client:" data-gr="Πελάτης:">Client:</span> <strong id="restore-session-client-name"></strong>
+      </div>
+      <div class="field-note i18n" data-en="Restoring will bring back this client's full data, including their follow-up and body composition history. Choose Start Fresh if you're beginning a different, new client." data-gr="Η επαναφορά θα επαναφέρει όλα τα δεδομένα αυτού του πελάτη, συμπεριλαμβανομένου του ιστορικού παρακολούθησης και σύστασης σώματος. Επιλέξτε Νέα Έναρξη αν ξεκινάτε έναν διαφορετικό, νέο πελάτη.">Restoring will bring back this client's full data, including their follow-up and body composition history. Choose Start Fresh if you're beginning a different, new client.</div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">
+        <button class="btn" onclick="discardRestoredSession()"><span class="i18n" data-en="Start Fresh" data-gr="Νέα Έναρξη">Start Fresh</span></button>
+        <button class="btn primary" onclick="confirmRestoreSession()"><i class="ti ti-history" aria-hidden="true"></i> <span class="i18n" data-en="Restore This Client" data-gr="Επαναφορά Πελάτη">Restore This Client</span></button>
       </div>
     </div>
   </div>
@@ -8198,6 +8227,19 @@ const WEEK_PLANS = [
   {day:'Κυριακή', brk:'BRK_BOILED_EGGS_2',       lun:'LUN_TUNA_RICE',       din:'DIN_BIFTEKI_BULGUR',        snk1Extras:['fruit','driedfruit'], snk2Extras:['fruit','yogurt'], sleepExtras:[]},
 ];
 const WEEK_DAYS_GR=['Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο','Κυριακή'];
+// Safe deep clone of the default week template. freshWeekPlans()
+// (the previous pattern, used in 6 places) only shallow-clones each day's
+// top-level object -- the nested snk1Extras/snk2Extras/sleepExtras arrays
+// remained direct references into the shared, global WEEK_PLANS constant.
+// toggleWeekPlanExtra() mutates these arrays in place (push/filter), so a
+// dietitian checking a non-grouped snack extra on a fresh default-template
+// day could silently corrupt the shared template for every future new
+// client in the same session. Confirmed and fixed as part of the client
+// data isolation audit -- always use this helper, never spread WEEK_PLANS
+// directly.
+function freshWeekPlans(){
+  return JSON.parse(JSON.stringify(WEEK_PLANS));
+}
 const WEEK_DAYS_EN=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 function isTunaMealKey(key){
   return /TUNA|LOUVI_TUNA/.test(String(key||''));
@@ -8924,7 +8966,7 @@ function mealOptionsHtml(options, current){
   const customCreate=`<option value="__CUSTOM__">${lang==='EN'?'＋ Custom meal':'＋ Προσαρμοσμένο γεύμα'}</option>`;
   const custom=(S.customMeals||[]).map(m=>{
     const v='CUSTOM_'+m.id;
-    return `<option value="${v}" ${v===current?'selected':''}><i class="ti ti-pencil" aria-hidden="true"></i> Custom — ${safeHtml(m.name||'Meal')}</option>`;
+    return `<option value="${v}" ${v===current?'selected':''}>${lang==='EN'?'Custom':'Προσαρμοσμένο'} — ${safeHtml(m.name||'Meal')}</option>`;
   }).join('');
   return noneOption + base + customCreate + custom;
 }
@@ -11383,7 +11425,7 @@ window.closeSevenDayModal=closeSevenDayModal;
 
 // Updates one meal slot (breakfast/lunch/dinner — single dropdown value) for one day in the 7-Day Plan
 function updateWeekPlan(dayIndex, mealKey, value){
-  if(!S.weekPlans) S.weekPlans = WEEK_PLANS.map(p=>({...p}));
+  if(!S.weekPlans) S.weekPlans = freshWeekPlans();
   const diet=v('p-diet')||S.dietType||'Omnivore';
   const optionMap={brk:BREAKFAST_OPTIONS,lun:LUNCH_OPTIONS,din:DINNER_OPTIONS};
   const fallback=mealKey==='brk'?'BRK_OATS_VEGAN':'__NONE__';
@@ -11400,7 +11442,7 @@ function updateWeekPlan(dayIndex, mealKey, value){
 
 // Toggles one snack EXTRA (multi-select) for one day in the 7-Day Plan
 function toggleWeekPlanExtra(dayIndex, extrasKey, extraValue, checked){
-  if(!S.weekPlans) S.weekPlans = WEEK_PLANS.map(p=>({...p}));
+  if(!S.weekPlans) S.weekPlans = freshWeekPlans();
   const day = S.weekPlans[dayIndex];
   if(!day[extrasKey]) day[extrasKey]=[];
   const item=SNACK_EXTRAS.find(e=>e.v===extraValue);
@@ -11935,7 +11977,7 @@ function ensureWeekPlans(){
   // bug. If a future regression test directly sets a day's meal key and
   // later observes it "reverted," check whether manualMeals was set
   // correctly before treating it as a false positive.
-  if(!S.weekPlans) S.weekPlans = WEEK_PLANS.map(p=>({...p}));
+  if(!S.weekPlans) S.weekPlans = freshWeekPlans();
   const dietTypeForDefaults = v('p-diet')||S.dietType||'Omnivore';
   const stricts = {
     Vegetarian: STRICT_WEEK_MEALS_VEGETARIAN,
@@ -12156,8 +12198,25 @@ window.saveWeeklyPlan=saveWeeklyPlan;
 
 function calcDayTotalsForPlanDisplay(dayPlan, lang='GR', dayIndex=0){
   traceDecision('calcDayTotalsForPlanDisplay','entry',{dayIndex, lang, dayPlan});
-  if(dayPlan?.aiMeals){
-    const slotKcal=Object.fromEntries(SEVEN_DAY_SLOTS.map(s=>[s.key, Math.round(Number(dayPlan.aiMeals?.[s.ai]?.kcal||0)) + extraKcal(s.key, dayIndex)]));
+  if(dayPlan?.aiMeals && Object.keys(dayPlan.aiMeals).length){
+    // A slot's own aiMeals entry may be missing even though the day still
+    // has OTHER AI-sourced slots (e.g. the dietitian edited just this one
+    // meal, correctly clearing only its entry per the per-slot fix in
+    // applyCustomMealSelection()). Falling back to 0 here would silently
+    // hide a real, valid custom meal or migrated recipe's actual kcal.
+    const slotOwnKcal=(s)=>{
+      const rawKey=dayPlan[s.key];
+      if(isCustomMealKey(rawKey)) return customMealKcal(rawKey);
+      if(isMigratedMeal(rawKey)){
+        try{ return Math.round(window.NutreseEngine.freezeMealInstance(rawKey, {servingsUsed:1})?.totals?.kcal||0); }catch(e){ return 0; }
+      }
+      return 0;
+    };
+    const slotKcal=Object.fromEntries(SEVEN_DAY_SLOTS.map(s=>{
+      const aiEntry=dayPlan.aiMeals?.[s.ai];
+      const base = aiEntry ? Number(aiEntry.kcal||0) : slotOwnKcal(s);
+      return [s.key, Math.round(base) + extraKcal(s.key, dayIndex)];
+    }));
     const totalKcal=SEVEN_DAY_SLOTS.reduce((sum,s)=>sum+slotKcal[s.key],0);
     const target=Math.round(S.goalKcal||0);
     const result={
@@ -13386,7 +13445,7 @@ function renderSevenDayMealCard(dayPlan, dt, slot, lang, dayIndex){
         <div class="seven-day-slot-label"><span>${slot.icon}</span><span>${lang==='EN'?slot.labelEN:slot.labelGR}</span></div>
         <div class="seven-day-meal-title">${isEmptySlot ? emptySlotTitle : safeHtml(data.name||'Meal')}</div>
       </div>
-      <button class="btn seven-day-edit-btn" title="${lang==='EN'?'Edit meal':'Επεξεργασία γεύματος'}" onclick="openFlexibleMealEditor(${dayIndex},'${slot.key}')"><i class="ti ti-pencil" aria-hidden="true"></i></button>
+      <button class="btn seven-day-edit-btn" title="${lang==='EN'?'Edit meal':'Επεξεργασία γεύματος'}" onclick="openCustomMealBuilder({type:'week', dayIndex:${dayIndex}, key:'${slot.key}'})"><i class="ti ti-pencil" aria-hidden="true"></i></button>
     </div>
     <div class="seven-day-meal-desc">${isEmptySlot ? emptySlotDesc : (data.text||'—')}</div>
     <div class="seven-day-card-meta"><div class="seven-day-kcal-pill">${data.kcal||0} kcal</div></div>
@@ -13634,156 +13693,55 @@ function applyAiSevenDayPlan(plan, payload){
   traceDecision('applyAiSevenDayPlan','return',{weekPlans:S.weekPlans});
 }
 
-let flexibleMealEditContext=null;
-let flexibleMealSearchResults=[];
 
-function openFlexibleMealEditor(dayIndex, slotKey){
-  ensureWeekPlans();
-  const lang=S.mealLanguage||'GR';
-  const isGr = lang==='GR';
-  const dayPlan=S.weekPlans[dayIndex];
-  const dt=calcDayTotalsForPlanDisplay(dayPlan, lang, dayIndex);
-  const slot=SEVEN_DAY_SLOTS.find(s=>s.key===slotKey);
-  const current=getSevenDaySlotData(dayPlan, dt, slotKey, lang, dayIndex);
-  flexibleMealEditContext={dayIndex, slotKey};
-  closeFlexibleMealEditor();
-  const savedOptions=(S.customMeals||[]).map(m=>`<option value="${safeHtml(m.id)}">${safeHtml(m.name||'Custom meal')}</option>`).join('');
-  const overlay=document.createElement('div');
-  overlay.id='flex-meal-editor';
-  overlay.className='no-print';
-  overlay.style.cssText='position:fixed;inset:0;z-index:1250;background:rgba(0,0,0,.62);display:flex;align-items:center;justify-content:center;padding:18px';
-  overlay.onclick=e=>{ if(e.target===overlay) closeFlexibleMealEditor(); };
-  overlay.innerHTML=`<div style="width:min(820px,96vw);max-height:90vh;overflow:auto;background:var(--bg-surface);color:var(--text-primary);border:1px solid var(--border);border-radius:10px;box-shadow:0 18px 70px rgba(0,0,0,.35)">
-    <div style="position:sticky;top:0;background:var(--teal-600);color:#fff;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;z-index:1">
-      <div><div style="font-size:18px;font-weight:900">${safeHtml(weekDayLabel(dayPlan,dayIndex,lang))} — ${safeHtml(lang==='EN'?slot.labelEN:slot.labelGR)}</div><div style="font-size:12px;opacity:.9">Edit meal text and kcal; daily total updates immediately.</div></div>
-      <button class="btn" style="background:#fff!important;color:#0F6E56!important;font-size:18px;font-weight:900" onclick="closeFlexibleMealEditor()"><i class="ti ti-x" aria-hidden="true"></i></button>
-    </div>
-    <div style="padding:16px;display:grid;gap:12px">
-      <div class="form-grid two">
-        <div class="form-field"><label>${isGr?'Όνομα γεύματος':'Meal name'}</label><input id="flex-meal-name" type="text" value="${safeHtml(current.name||'')}"></div>
-        <div class="form-field"><label>kcal</label><input id="flex-meal-kcal" type="number" min="0" step="1" value="${Math.round(current.kcal||0)}"></div>
-      </div>
-      <div class="form-field"><label>${isGr?'Ελληνική περιγραφή':'Greek description'}</label><textarea id="flex-meal-desc-gr" rows="3">${safeHtml(current.text||'')}</textarea></div>
-      <div class="form-field"><label>${isGr?'Αγγλική περιγραφή':'English description'}</label><textarea id="flex-meal-desc-en" rows="3">${safeHtml(current.text||'')}</textarea></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:end">
-        <div class="form-field" style="min-width:240px;flex:1"><label>${isGr?'Αποθηκευμένα προσαρμοσμένα γεύματα':'Saved custom meals'}</label><select id="flex-saved-meal"><option value="">${isGr?'Επιλέξτε αποθηκευμένο γεύμα...':'Select saved meal...'}</option>${savedOptions}</select></div>
-        <button class="btn" onclick="useSavedCustomMealInFlexibleEditor()">${isGr?'Χρήση αποθηκευμένου γεύματος':'Use saved meal'}</button>
-        <button class="btn" onclick="regenerateFlexibleMealSlot()">${isGr?'Αναδημιουργία αυτού του γεύματος':'Regenerate this meal'}</button>
-      </div>
-      <div class="section-label">${isGr?'Αναζήτηση συστατικού USDA':'USDA ingredient search'}</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <input id="flex-usda-search" type="text" class="i18n-ph" data-en-ph="e.g. chicken breast, potato, oats" data-gr-ph="π.χ. στήθος κοτόπουλο, πατάτα, βρώμη" placeholder="e.g. chicken breast, potato, oats" style="flex:1;min-width:220px" onkeydown="if(event.key==='Enter')searchFlexibleMealFoods()">
-        <button class="btn" onclick="searchFlexibleMealFoods()">${isGr?'Αναζήτηση USDA':'Search USDA'}</button>
-      </div>
-      <div id="flex-usda-status" class="field-note"></div>
-      <div id="flex-usda-results"></div>
-      <div style="display:flex;gap:8px;justify-content:flex-end">
-        <button class="btn" onclick="closeFlexibleMealEditor()">${isGr?'Ακύρωση':'Cancel'}</button>
-        <button class="btn primary" onclick="saveFlexibleMealEdit()">${isGr?'Αποθήκευση γεύματος':'Save meal'}</button>
-      </div>
-    </div>
-  </div>`;
-  document.body.appendChild(overlay);
-}
-window.openFlexibleMealEditor=openFlexibleMealEditor;
-
-function closeFlexibleMealEditor(){ document.getElementById('flex-meal-editor')?.remove(); }
-window.closeFlexibleMealEditor=closeFlexibleMealEditor;
-
-function saveFlexibleMealEdit(){
-  const ctx=flexibleMealEditContext; if(!ctx) return;
-  ensureWeekPlans();
-  const slot=SEVEN_DAY_SLOTS.find(s=>s.key===ctx.slotKey);
-  const day=S.weekPlans[ctx.dayIndex];
-  if(!day.aiMeals) day.aiMeals={};
-  day.aiMeals[slot.ai]={
-    name:v('flex-meal-name')||'Custom meal',
-    description_gr:v('flex-meal-desc-gr')||v('flex-meal-desc-en')||'',
-    description_en:v('flex-meal-desc-en')||v('flex-meal-desc-gr')||'',
-    kcal:Math.round(Number(v('flex-meal-kcal')||0))
-  };
-  day.source='manual';
-  closeFlexibleMealEditor();
-  buildSevenDay();
-  if(document.getElementById('page-report')?.classList.contains('active')) buildReport();
-}
-window.saveFlexibleMealEdit=saveFlexibleMealEdit;
-
-function useSavedCustomMealInFlexibleEditor(){
-  const id=v('flex-saved-meal');
-  const meal=(S.customMeals||[]).find(m=>String(m.id)===String(id));
-  if(!meal) return;
-  const kcal=Math.round(Number(meal.perServing?.kcal || meal.total?.kcal || meal.kcal || 0));
-  const desc=(meal.ingredients||[]).map(i=>`${i.name} ${i.grams||''}g`.trim()).join(' + ') || meal.name;
-  const nameEl=document.getElementById('flex-meal-name'), kcalEl=document.getElementById('flex-meal-kcal'), gr=document.getElementById('flex-meal-desc-gr'), en=document.getElementById('flex-meal-desc-en');
-  if(nameEl) nameEl.value=meal.name||'Custom meal';
-  if(kcalEl) kcalEl.value=kcal;
-  if(gr) gr.value=desc;
-  if(en) en.value=desc;
-}
-window.useSavedCustomMealInFlexibleEditor=useSavedCustomMealInFlexibleEditor;
-
-async function searchFlexibleMealFoods(){
-  const query=v('flex-usda-search');
-  if(!query){ setEl('flex-usda-status','Enter an ingredient name.'); return; }
-  setEl('flex-usda-status','Searching USDA FoodData Central...');
-  setEl('flex-usda-results','');
-  try{
-    flexibleMealSearchResults=await fetchUSDAFoods(query);
-    renderFlexibleMealFoodResults();
-    setEl('flex-usda-status', flexibleMealSearchResults.length ? `${flexibleMealSearchResults.length} foods found. Use one to replace this meal draft.` : 'No foods found.');
-  }catch(err){
-    flexibleMealSearchResults=[];
-    setEl('flex-usda-status',`USDA search failed: ${err.message}`);
-  }
-}
-window.searchFlexibleMealFoods=searchFlexibleMealFoods;
-
-function renderFlexibleMealFoodResults(){
-  const el=document.getElementById('flex-usda-results'); if(!el) return;
+// Regenerates the currently-open meal via AI, then validates the result
+// through the SAME resolveAiFoodSuggestion()/validateAiMealSuggestion()
+// pipeline the main 7-day generation uses -- never trusts a raw AI kcal
+// claim. Only shown when the current draft was seeded from an AI meal.
+async function regenerateAiMealInBuilder(){
+  const ctx=S.customMealContext;
+  if(!ctx || ctx.type!=='week'){ return; }
+  const slotDef=SEVEN_DAY_SLOTS.find(s=>s.key===ctx.key);
+  if(!slotDef) return;
   const isGr = window.appLang==='gr';
-  el.innerHTML=`<table><thead><tr><th>${isGr?'Τρόφιμο':'Food'}</th><th>kcal/100g</th><th>${isGr?'Γραμμάρια':'Grams'}</th><th></th></tr></thead><tbody>${flexibleMealSearchResults.slice(0,8).map((p,i)=>`<tr>
-    <td><strong>${safeHtml(p.name)}</strong><div style="font-size:11px;color:var(--text-muted)">${safeHtml(p.brand||'USDA')}</div></td>
-    <td>${formatFoodNumber(p.kcal100,'')}</td>
-    <td><input id="flex-food-g-${i}" type="number" min="1" step="1" value="100" style="width:80px"></td>
-    <td><button class="btn" onclick="useFlexibleMealFood(${i})">${isGr?'Χρήση':'Use'}</button></td>
-  </tr>`).join('')}</tbody></table>`;
-}
-
-function useFlexibleMealFood(index){
-  const p=flexibleMealSearchResults[index]; if(!p) return;
-  const grams=Number(v(`flex-food-g-${index}`)||100);
-  const kcal=Math.round((foodNumber(p.kcal100)||0)*grams/100);
-  const text=`${p.name} (${grams}g)`;
-  const nameEl=document.getElementById('flex-meal-name'), kcalEl=document.getElementById('flex-meal-kcal'), gr=document.getElementById('flex-meal-desc-gr'), en=document.getElementById('flex-meal-desc-en');
-  if(nameEl) nameEl.value=p.name;
-  if(kcalEl) kcalEl.value=kcal;
-  if(gr) gr.value=text;
-  if(en) en.value=text;
-}
-window.useFlexibleMealFood=useFlexibleMealFood;
-
-async function regenerateFlexibleMealSlot(){
-  const ctx=flexibleMealEditContext;
-  if(!ctx){ return; }
-  setEl('flex-usda-status','Regenerating this meal with AI...');
+  setEl('custom-meal-regenerate-status', isGr?'Αναδημιουργία με AI...':'Regenerating with AI...');
   try{
-    const payload={...collectAiMealPlanPayload(), day:WEEK_DAYS_EN[ctx.dayIndex], slot:SEVEN_DAY_SLOTS.find(s=>s.key===ctx.slotKey)?.ai};
+    const payload={...collectAiMealPlanPayload(), day:WEEK_DAYS_EN[ctx.dayIndex], slot:slotDef.ai};
     const response=await withTimeout(supabaseClient.functions.invoke('generate-ai-plan', {body:{payload, prompt:aiMealPlanPrompt(payload), mode:'single_meal', model:'claude-sonnet-4-6'}}), 30000, 'AI meal regeneration');
     if(response.error) throw response.error;
     const meal=response.data?.meal || response.data;
-    if(!meal) throw new Error('No meal returned.');
-    const nameEl=document.getElementById('flex-meal-name'), kcalEl=document.getElementById('flex-meal-kcal'), gr=document.getElementById('flex-meal-desc-gr'), en=document.getElementById('flex-meal-desc-en');
-    if(nameEl) nameEl.value=meal.name||'AI meal';
-    if(kcalEl) kcalEl.value=Math.round(Number(meal.kcal||0));
-    if(gr) gr.value=meal.description_gr||meal.description||'';
-    if(en) en.value=meal.description_en||meal.description||'';
-    setEl('flex-usda-status','AI meal regenerated. Review and save if suitable.');
+    if(!meal || !Array.isArray(meal.ingredients) || !meal.ingredients.length){
+      throw new Error(isGr?'Το AI δεν επέστρεψε έγκυρα συστατικά.':'AI did not return valid ingredients.');
+    }
+    const validation=window.NutreseEngine.validateAiMealSuggestion(meal.ingredients);
+    if(!validation.resolved.length){
+      throw new Error(isGr?'Κανένα από τα προτεινόμενα συστατικά δεν βρέθηκε στη βάση τροφίμων.':'None of the suggested ingredients were found in the food database.');
+    }
+    const totals=validation.computed_totals || window.NutreseEngine.recipeTotals(validation.resolved);
+    const exchanges=validation.computed_exchanges || window.NutreseEngine.deriveExchanges(validation.resolved);
+    S.customMealDraft={
+      recipe_id:null,
+      ingredients: validation.resolved.map(i=>{
+        const food=window.NutreseEngine.FOOD_DATABASE[i.food_id];
+        const single = food ? window.NutreseEngine.recipeTotals([i]) : null;
+        return {
+          food_id:i.food_id, grams:i.grams, state:i.state,
+          food_name: food?.name || i.food_id,
+          household: food ? window.NutreseEngine.getHouseholdSnapshot(food) : undefined,
+          kcal: single?.kcal||0, protein_g: single?.protein_g||0, carbohydrate_g: single?.carbohydrate_g||0, fat_g: single?.fat_g||0, fiber_g: single?.fiber_g||0,
+        };
+      }),
+      totals, exchanges,
+    };
+    const nameEl=document.getElementById('custom-meal-name');
+    if(nameEl) nameEl.value=meal.name||'';
+    renderCustomMealDraft();
+    const warning = !validation.fully_resolved ? (isGr?' (ορισμένα συστατικά δεν επιβεβαιώθηκαν πλήρως — ελέγξτε πριν την αποθήκευση)':' (some ingredients were only partially matched — please review before saving)') : '';
+    setEl('custom-meal-regenerate-status', (isGr?'Αναδημιουργήθηκε. Ελέγξτε και αποθηκεύστε.':'Regenerated. Review and save.') + warning);
   }catch(err){
-    setEl('flex-usda-status',`AI regeneration unavailable: ${err.message || err}. You can edit manually.`);
+    setEl('custom-meal-regenerate-status', (isGr?'Η αναδημιουργία απέτυχε: ':'Regeneration failed: ')+(err.message||err));
   }
 }
-window.regenerateFlexibleMealSlot=regenerateFlexibleMealSlot;
 
 function reportModeFromOptions(){
   return '7day';
@@ -16204,6 +16162,7 @@ function rebuildMealDropdownOptions(){
 }
 function openCustomMealBuilder(context){
   S.customMealContext=context||null;
+  S.customMealDraftIsAiSeeded=false;
   const nameEl=document.getElementById('custom-meal-name');
   let seeded=false;
   // Determine what's currently selected in this slot — preserved correctly
@@ -16213,7 +16172,37 @@ function openCustomMealBuilder(context){
     : context?.type==='week'
       ? S.weekPlans?.[context.dayIndex]?.[context.key]
       : null;
-  if(currentKey && !isNoMealKey(currentKey)){
+  // AI meal check FIRST — mirrors aiMealForSlot()'s own priority order
+  // (dayPlan.aiMeals[slot] is checked before the raw key everywhere else
+  // in the app, so seeding must follow the same precedence).
+  const slotDef = context?.type==='week' ? SEVEN_DAY_SLOTS.find(s=>s.key===context.key) : null;
+  const aiMeal = (context?.type==='week' && slotDef) ? S.weekPlans?.[context.dayIndex]?.aiMeals?.[slotDef.ai] : null;
+  if(aiMeal && Array.isArray(aiMeal.resolved_ingredients) && aiMeal.resolved_ingredients.length){
+    // Hydrate the bare {food_id, grams, state} pairs into the same rich
+    // instance shape the rest of this builder already expects — the exact
+    // same functions validateAiMealSuggestion() used to compute this
+    // meal's own kcal/exchanges when it was first generated, so the
+    // seeded totals must match exactly before any edit is made.
+    const totals = window.NutreseEngine.recipeTotals(aiMeal.resolved_ingredients) || {kcal:0,protein_g:0,carbohydrate_g:0,fat_g:0,fiber_g:0};
+    const exchanges = window.NutreseEngine.deriveExchanges(aiMeal.resolved_ingredients) || {};
+    S.customMealDraft = {
+      recipe_id: null,
+      ingredients: aiMeal.resolved_ingredients.map(i=>{
+        const food=window.NutreseEngine.FOOD_DATABASE[i.food_id];
+        const single = food ? window.NutreseEngine.recipeTotals([i]) : null;
+        return {
+          food_id: i.food_id, grams: i.grams, state: i.state,
+          food_name: food?.name || i.food_id,
+          household: food ? window.NutreseEngine.getHouseholdSnapshot(food) : undefined,
+          kcal: single?.kcal||0, protein_g: single?.protein_g||0, carbohydrate_g: single?.carbohydrate_g||0, fat_g: single?.fat_g||0, fiber_g: single?.fiber_g||0,
+        };
+      }),
+      totals, exchanges,
+    };
+    if(nameEl) nameEl.value=aiMeal.name||'';
+    S.customMealDraftIsAiSeeded=true;
+    seeded=true;
+  } else if(currentKey && !isNoMealKey(currentKey)){
     if(isCustomMealKey(currentKey)){
       // Already a custom meal — load its existing saved instance so
       // editing continues where it left off, rather than starting over.
@@ -16244,7 +16233,9 @@ function openCustomMealBuilder(context){
     S.customMealDraft={recipe_id:null, ingredients:[], totals:{kcal:0,protein_g:0,carbohydrate_g:0,fat_g:0,fiber_g:0}, exchanges:{}};
     if(nameEl) nameEl.value='';
   }
-  setEl('custom-meal-search-status',''); setEl('custom-meal-search-results',''); setEl('custom-meal-save-status','');
+  setEl('custom-meal-search-status',''); setEl('custom-meal-search-results',''); setEl('custom-meal-save-status',''); setEl('custom-meal-regenerate-status','');
+  const regenRow=document.getElementById('custom-meal-regenerate-row');
+  if(regenRow) regenRow.style.display = S.customMealDraftIsAiSeeded ? 'block' : 'none';
   renderCustomMealDraft();
   const modal=document.getElementById('custom-meal-modal'); if(modal) modal.style.display='flex';
 }
@@ -16392,10 +16383,18 @@ function applyCustomMealSelection(key){
     const el=document.getElementById(id); if(el) el.value=key;
     buildOneDayPlan();
   } else if(ctx?.type==='week'){
-    if(!S.weekPlans) S.weekPlans=WEEK_PLANS.map(p=>({...p}));
+    if(!S.weekPlans) S.weekPlans=freshWeekPlans();
     S.weekPlans[ctx.dayIndex][ctx.key]=key;
     S.weekPlans[ctx.dayIndex].manualMeals={...(S.weekPlans[ctx.dayIndex].manualMeals||{}), [ctx.key]:true};
-    delete S.weekPlans[ctx.dayIndex].aiMeals;
+    // Clear only THIS slot's aiMeals entry — not the whole day's. A prior
+    // version deleted the entire aiMeals object here, silently reverting
+    // any OTHER AI-validated meal in the same day (e.g. lunch) back to a
+    // generic template default the moment breakfast was edited. Confirmed
+    // and fixed as part of the Phase 1 AI editor regression testing.
+    const editedSlotDef=SEVEN_DAY_SLOTS.find(s=>s.key===ctx.key);
+    if(editedSlotDef && S.weekPlans[ctx.dayIndex].aiMeals){
+      delete S.weekPlans[ctx.dayIndex].aiMeals[editedSlotDef.ai];
+    }
     S.weekPlans[ctx.dayIndex].source='engine';
     buildSevenDay();
   } else rebuildMealDropdownOptions();
@@ -16849,16 +16848,23 @@ function applyState(state){
   // never re-select on reload: the option simply didn't exist yet at the
   // moment the <select> tried to select it, and silently fell back to the
   // first option instead.
-  if(state.customMeals) S.customMeals=state.customMeals;
+  if(state.customMeals) S.customMeals=state.customMeals; // intentionally shared dietitian-wide library, not client-specific — see Recipe/Custom Meal architecture notes
   const brkEl=document.getElementById('s-breakfast'), lunEl=document.getElementById('s-lunch'), dinEl=document.getElementById('s-dinner');
   if(brkEl) brkEl.innerHTML = mealOptionsHtml(filteredMealOptions(BREAKFAST_OPTIONS,diet), (state.fields&&state.fields['s-breakfast'])||'BRK_TOAST');
   if(lunEl) lunEl.innerHTML = mealOptionsHtml(filteredMealOptions(LUNCH_OPTIONS,diet), (state.fields&&state.fields['s-lunch'])||'LUN_CHICKEN_RICE');
   if(dinEl) dinEl.innerHTML = mealOptionsHtml(filteredMealOptions(DINNER_OPTIONS,diet), (state.fields&&state.fields['s-dinner'])||'DIN_FISH_POTATO');
-  if(state.ex) S.ex={...S.ex,...state.ex};
-  if(state.exAuto) S.exAuto={...S.exAuto,...state.exAuto};
-  if(state.exMeta) S.exMeta=state.exMeta;
-  if(state.tracking) S.tracking=state.tracking;
-  if(state.mealSel) S.mealSel={...S.mealSel,...state.mealSel};
+  // DATA ISOLATION: every assignment below is unconditional with a safe
+  // default. A saved client whose data is missing one of these fields (or,
+  // for the exchange/mealSel fields, only partially populates it via
+  // spread-merge) must never silently retain the PREVIOUSLY-loaded
+  // client's value — that is exactly the bug class found and confirmed in
+  // the tracking/autosave-restore investigation. See the permanent
+  // regression test (verify_client_data_isolation) covering this class.
+  S.ex = state.ex ? {fruit:0,veg:0,dairy:0,starch:0,protein:0,fat:0,...state.ex} : {fruit:2,veg:5,dairy:2,starch:0,protein:0,fat:0};
+  S.exAuto = state.exAuto ? {starch:true,protein:true,fat:true,...state.exAuto} : {starch:true,protein:true,fat:true};
+  S.exMeta = state.exMeta || makeExMeta();
+  S.tracking = Array.isArray(state.tracking) ? state.tracking : [];
+  S.mealSel = state.mealSel ? {breakfast:'BRK_TOAST',lunch:'LUN_CHICKEN_RICE',dinner:'DIN_FISH_POTATO',snack1Extras:[],snack2Extras:[],sleepExtras:[],...state.mealSel} : {breakfast:'BRK_TOAST',lunch:'LUN_CHICKEN_RICE',dinner:'DIN_FISH_POTATO',snack1Extras:['fruit'],snack2Extras:['fruit'],sleepExtras:[]};
   // Restore snack checkbox UI to match the saved extras selection
   [['s-snack1','snack1Extras'],['s-snack2','snack2Extras'],['s-sleep','sleepExtras']].forEach(([elId,key])=>{
     const el=document.getElementById(elId);
@@ -16870,11 +16876,12 @@ function applyState(state){
   });
   S.savedWeeklyPlan=state.savedWeeklyPlan || null;
   if(state.savedWeeklyPlan?.weekPlans) S.weekPlans=state.savedWeeklyPlan.weekPlans;
-  else if(state.weekPlans) S.weekPlans=state.weekPlans;
+  else if(Array.isArray(state.weekPlans)) S.weekPlans=state.weekPlans;
+  else S.weekPlans=freshWeekPlans(); // no saved plan for this client — must never fall through to the previous client's weekPlans
   S.currentTemplate=state.currentTemplate||null;
-  if(state.sevenDayView) S.sevenDayView=state.sevenDayView;
-  if(state.sevenDayActiveIndex!==undefined) S.sevenDayActiveIndex=Number(state.sevenDayActiveIndex)||0;
-  if(state.aiPlanStatus!==undefined) S.aiPlanStatus=state.aiPlanStatus;
+  S.sevenDayView=state.sevenDayView||'day';
+  S.sevenDayActiveIndex=state.sevenDayActiveIndex!==undefined ? (Number(state.sevenDayActiveIndex)||0) : 0;
+  S.aiPlanStatus=state.aiPlanStatus!==undefined ? state.aiPlanStatus : '';
   S.extraFoods=Array.isArray(state.extraFoods)?state.extraFoods:[];
   S.equivalentNotes=state.equivalentNotes&&typeof state.equivalentNotes==='object' ? state.equivalentNotes : {};
   // LANGUAGE: a saved client must NEVER silently change the interface
@@ -16884,12 +16891,12 @@ function applyState(state){
   // application language.
   if(state.mealLanguage) S.savedMealLanguage=state.mealLanguage;
   S.mealLanguage = (window.appLang==='en') ? 'EN' : 'GR';
-  if(state.reportOptions){
-    S.reportOptions={includeBlood:true,includeEquivalents:false,days:allReportDayIndexes(),...state.reportOptions,oneDay:false,sevenDay:true};
-    syncReportModeControls();
-  }
-  if(state.intake){ S.intake=state.intake; }
-  if(state.notes){ S.notes=state.notes; }
+  S.reportOptions = state.reportOptions
+    ? {includeBlood:true,includeEquivalents:false,days:allReportDayIndexes(),...state.reportOptions,oneDay:false,sevenDay:true}
+    : {oneDay:false,sevenDay:true,includeBlood:true,includeEquivalents:false,days:allReportDayIndexes()};
+  syncReportModeControls();
+  S.intake = state.intake || {};
+  S.notes = state.notes || {};
   S.labValues=state.labValues||{};
   S.labDate=state.labDate||'';
   S.clientDocuments=mergeClientDocuments(Array.isArray(state.clientDocuments)?state.clientDocuments:[], loadClientDocumentsLocal(state.clientId || state.activeClientId || S.activeClientId, state.clientRef || state.activeClientRef || S.activeClientRef));
@@ -16942,9 +16949,11 @@ function resetForm(){
   S.lastDairyType='Moderate-fat'; S.lastMeatType='Lean';
   S.tracking=[]; S.intake={}; S.notes={}; S.labValues={}; S.labDate=''; S.clientDocuments=[]; S.extraFoods=[]; S.equivalentNotes={};
   S.mealSel={breakfast:'BRK_TOAST',lunch:'LUN_CHICKEN_RICE',dinner:'DIN_FISH_POTATO',snack1Extras:['fruit'],snack2Extras:['fruit'],sleepExtras:[]};
-  S.weekPlans=WEEK_PLANS.map(p=>({...p}));
+  S.weekPlans=freshWeekPlans();
   S.currentTemplate=null;
   S.savedWeeklyPlan=null;
+  S.aiPlanStatus='';
+  S.sevenDayActiveIndex=0;
   // LANGUAGE: the application language is the single source of truth. A new
   // client must inherit the dietitian's CURRENT choice. This previously
   // hardcoded 'GR', so creating a client while the UI was in English forced
@@ -17267,9 +17276,9 @@ async function newClient(){
   try{
     resetForm();
     await ensureActiveClientIdentity();
-    nav('intake');
+    nav('profile');
   } finally {
-    // Cleared only after resetForm, identity assignment, and the intake
+    // Cleared only after resetForm, identity assignment, and the profile
     // page's own render are fully complete — covers a real, confirmed
     // mechanism: switching away from a still-focused, edited field fires a
     // native blur-triggered 'change' event as part of this sequence, which
@@ -17780,6 +17789,7 @@ function scheduleAutosave(){
   S_isDirty=true;
   _traceDirtyProd('scheduleAutosave', S_isDirty, true);
   setAutosaveStatus('', window.appLang==='gr'?'Μη αποθηκευμένες αλλαγές':'Unsaved changes');
+  if(typeof updateSaveStatusUI==='function') updateSaveStatusUI(); // ensure the persistent Save Changes action appears immediately on any edit, on any editing page (incl. Body Composition) — not just the handful of call sites that previously refreshed it
   clearTimeout(autosaveTimer);
   autosaveTimer=setTimeout(autosaveSession, 1000);
 }
@@ -17801,18 +17811,44 @@ window.addEventListener('beforeunload', (e)=>{
 });
 
 // ── RESTORE LAST SESSION ON LOAD ──
+// Data-isolation fix: previously auto-applied the saved draft immediately
+// (including tracking/body-comp history) with only a passive, dismissible
+// banner — no explicit acknowledgment required. Confirmed reproducible: a
+// dietitian who didn't notice the banner and simply typed a new client's
+// name into the already-restored form would silently inherit the previous
+// client's follow-up/body-composition history, which then persisted
+// through save and reload. Now shows a modal requiring an explicit choice
+// before any state is applied, so no client can ever start pre-populated
+// with another client's data without the dietitian deliberately choosing it.
+window._pendingRestoreDraft=null;
 function tryRestoreAutosave(){
   let saved=null;
   try{ saved=JSON.parse(localStorage.getItem('nutriflow_autosave')||'null'); }catch(e){}
   if(!saved || !saved.fields) return;
   const hasData = saved.fields['p-name'] || saved.fields['p-age'] || saved.fields['p-weight'];
   if(!hasData) return;
+  window._pendingRestoreDraft=saved;
+  const nameEl=document.getElementById('restore-session-client-name');
+  if(nameEl) nameEl.textContent = saved.fields['p-name'] || (window.appLang==='gr'?'άγνωστος πελάτης':'unnamed client');
+  const modal=document.getElementById('restore-session-modal');
+  if(modal) modal.classList.add('open');
+}
+function confirmRestoreSession(){
+  const saved=window._pendingRestoreDraft;
+  const modal=document.getElementById('restore-session-modal');
+  if(modal) modal.classList.remove('open');
+  if(!saved) return;
   applyState(saved);
-  const banner=document.createElement('div');
-  banner.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--teal-600);color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:600;z-index:200;box-shadow:0 4px 20px rgba(0,0,0,.3);max-width:320px;width:90%;text-align:center';
-  banner.innerHTML='<i class="ti ti-circle-check" aria-hidden="true"></i> Restored your last session ('+(saved.fields['p-name']||'unnamed client')+')';
-  document.body.appendChild(banner);
-  setTimeout(()=>banner.remove(), 5000);
+  window._pendingRestoreDraft=null;
+}
+function discardRestoredSession(){
+  const modal=document.getElementById('restore-session-modal');
+  if(modal) modal.classList.remove('open');
+  window._pendingRestoreDraft=null;
+  try{ localStorage.removeItem('nutriflow_autosave'); }catch(e){}
+  // Explicitly ensure a clean, blank form — the whole point of this fix is
+  // that "start fresh" must never leave any prior client's state attached.
+  if(typeof resetForm==='function') resetForm();
 }
 
 function v(id){const el=document.getElementById(id); return el?el.value:'';}
