@@ -7627,7 +7627,7 @@ function customMealText(key, lang='GR'){
   // LEGACY PATH — old-shape meal (ingredients: loose array, no food_id).
   // Kept solely so previously-saved meals remain readable; never used for
   // anything new. Rebuilt via the new Manual Builder when a dietitian edits it.
-  return `${safeHtml(meal.name||'Custom meal')} <i class="ti ti-pencil" aria-hidden="true"></i>`;
+  return safeHtml(meal.name||'Custom meal');
 }
 function customMealKcal(key){
   const meal=getCustomMealByKey(key);
@@ -12162,7 +12162,7 @@ function fallbackSlotData(dayPlan, dt, slotKey, lang, dayIndex){
 function mealOptionLabel(key, lang='GR'){
   const all=[...BREAKFAST_OPTIONS,...LUNCH_OPTIONS,...DINNER_OPTIONS];
   const found=all.find(o=>o.v===key);
-  if(!found) return isCustomMealKey(key) ? customMealText(key, lang).split('–')[0].trim() : '';
+  if(!found) return isCustomMealKey(key) ? customMealText(key, lang).trim() : '';
   return mealOptionDisplayLabel(found, lang).replace(/\s*[🌱🥚]+/g,'');
 }
 
@@ -12297,6 +12297,21 @@ function calcDayTotalsForPlanDisplay(dayPlan, lang='GR', dayIndex=0){
       if(isCustomMealKey(rawKey)) return customMealKcal(rawKey);
       if(isMigratedMeal(rawKey)){
         try{ return Math.round(window.NutreseEngine.freezeMealInstance(rawKey, {servingsUsed:1})?.totals?.kcal||0); }catch(e){ return 0; }
+      }
+      // Snack slots are extras-array-based (snk1Extras/snk2Extras/sleepExtras),
+      // never a meal key -- reuse the exact same buildSlotSnack() function
+      // the non-AI strict-ledger path already relies on, so a fruit/dairy/
+      // starch/nuts selection on an AI-generated day is never silently
+      // shown as 0 kcal.
+      const extraKey=slotExtraKey(s.key);
+      if(extraKey){
+        try{
+          const extras=dayPlan[extraKey]||[];
+          const fruitDist=getFruitDistribution(dayPlan);
+          const dairyDist=getDairyDistribution(dayPlan.brk, dayPlan);
+          const built=buildSlotSnack(s.key, extras, 'EN', dayPlan.brk, dayPlan, fruitDist, dairyDist);
+          return Math.round(exchangesToKcal(built.exch, null) + (built.addOnKcal||0));
+        }catch(e){ return 0; }
       }
       return 0;
     };
