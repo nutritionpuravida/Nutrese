@@ -2995,7 +2995,12 @@ table th,
       <div class="card-body">
         <div class="alert info"><span class="i18n" data-en="Build a meal from Nutrese's clinical food database. Values are stored for your account and can be reused in the meal dropdowns." data-gr="Δημιουργήστε ένα γεύμα από την κλινική βάση τροφίμων του Nutrese. Οι τιμές αποθηκεύονται στον λογαριασμό σας και μπορούν να επαναχρησιμοποιηθούν στα αναπτυσσόμενα μενού γευμάτων.">Build a meal from Nutrese's clinical food database. Values are stored for your account and can be reused in the meal dropdowns.</span></div>
         <div class="form-grid two">
-          <div class="form-field"><label><span class="i18n" data-en="Search foods to add" data-gr="Αναζήτηση τροφίμων για προσθήκη">Search foods to add</span></label><input type="text" id="custom-meal-search" class="i18n-ph" data-en-ph="e.g. chicken, potato, olive oil" data-gr-ph="π.χ. κοτόπουλο, πατάτα, ελαιόλαδο" placeholder="e.g. chicken, potato, olive oil" onkeydown="if(event.key==='Enter') searchCustomMealFoods()"></div>
+          <div class="form-field"><label><span class="i18n" data-en="Search foods to add" data-gr="Αναζήτηση τροφίμων για προσθήκη">Search foods to add</span></label>
+            <div style="display:flex;gap:8px">
+              <input type="text" id="custom-meal-search" class="i18n-ph" style="flex:1" data-en-ph="e.g. chicken, potato, olive oil" data-gr-ph="π.χ. κοτόπουλο, πατάτα, ελαιόλαδο" placeholder="e.g. chicken, potato, olive oil" onkeydown="if(event.key==='Enter') searchCustomMealFoods()">
+              <button class="btn primary" type="button" onclick="searchCustomMealFoods()" style="white-space:nowrap"><i class="ti ti-search" aria-hidden="true"></i> <span class="i18n" data-en="Search" data-gr="Αναζήτηση">Search</span></button>
+            </div>
+          </div>
           <div class="form-field"><label><span class="i18n" data-en="Meal name (optional)" data-gr="Όνομα γεύματος (προαιρετικό)">Meal name (optional)</span></label><input type="text" id="custom-meal-name" class="i18n-ph" data-en-ph="Leave blank to name it later" data-gr-ph="Αφήστε κενό για να το ονομάσετε αργότερα" placeholder="Leave blank to name it later" oninput="renderCustomMealDraft()"></div>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 12px">
