@@ -13336,7 +13336,7 @@ function renderPlanQualitySummary(){
   // honest rather than potentially hiding an engine limitation.
   let actualKcal = ex.fruit*m.fruit.kcal + ex.veg*m.veg.kcal + ex.dairy*m.dairy.kcal + ex.starch*m.starch.kcal + ex.protein*m.protein.kcal + ex.fat*m.fat.kcal;
   if(S.weekPlans && S.weekPlans.length){
-    const dayTotals = S.weekPlans.map((day,i)=>calcDayTotalsForPlan(day, S.mealLanguage||'GR', i).totalKcal);
+    const dayTotals = S.weekPlans.map((day,i)=>calcDayTotalsForPlanDisplay(day, S.mealLanguage||'GR', i).totalKcal);
     actualKcal = dayTotals.reduce((a,b)=>a+b,0)/dayTotals.length;
   }
   const totalCHO  = ex.fruit*m.fruit.cho + ex.veg*m.veg.cho + ex.dairy*m.dairy.cho + ex.starch*m.starch.cho;
@@ -14154,6 +14154,15 @@ function applyAiSevenDayPlan(plan, payload){
         unresolvedFlags.push(`${dayLabels[i]} ${slot.key}: AI did not provide ingredients — this meal has no verified nutrition and must be built manually before use.`);
       } else if(validation && !validation.fully_resolved){
         validation.flags.forEach(f=>unresolvedFlags.push(`${dayLabels[i]} ${slot.key}: ${f}`));
+      }
+      if(validation && Array.isArray(validation.resolved)){
+        const addedFatCapGrams=Number(caps?.fatPerMealMax||6) * 5; // reuses the existing per-meal cap (default 6 tsp) and the food database's own tsp->g conversion (5g/tsp, same value as olive_oil.household.grams_per_unit) — not a new limit
+        validation.resolved.forEach(ing=>{
+          const food=window.NutreseEngine.FOOD_DATABASE[ing.food_id];
+          if(food?.fat_role==='added' && Number(ing.grams||0) > addedFatCapGrams){
+            unresolvedFlags.push(`${dayLabels[i]} ${slot.key}: ${window.NutreseEngine.getClinicalName(food,'en')} is ${Math.round(ing.grams)}g, above the ${Math.round(addedFatCapGrams)}g (${caps?.fatPerMealMax||6} tsp) realistic per-meal visible-oil limit — review before sharing. Quantity was NOT changed automatically.`);
+          }
+        });
       }
       aiMeals[slot.ai]={
         name:String(meal.name||'').trim(),
