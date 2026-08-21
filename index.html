@@ -6052,11 +6052,23 @@ function resolveAiFoodSuggestion(aiItem) {
 }
 function validateAiMealSuggestion(aiItems) {
   const resolved = [], flags = [];
+  const seenFoodIds = new Map(); // food_id -> index in resolved[], scoped to this single meal only
   aiItems.forEach(item => {
     const r = resolveAiFoodSuggestion(item);
     if (r.resolved) {
-      resolved.push({ food_id: r.food_id, grams: r.grams, state: r.state });
-      if (r.match_confidence !== 'exact') flags.push(`"${item.name}" matched to "${getClinicalName(FOOD_DATABASE[r.food_id], 'en')}" with partial confidence — please confirm this is correct.`);
+      if (seenFoodIds.has(r.food_id)) {
+        // Same food appeared more than once in this meal (e.g. the AI split
+        // one ingredient's quantity across two lines) — consolidate into the
+        // existing entry by summing grams rather than keeping two separate
+        // line items for the same food. Nothing is discarded.
+        const idx = seenFoodIds.get(r.food_id);
+        resolved[idx].grams += r.grams;
+        flags.push(`"${item.name}" appeared more than once in this meal and was consolidated into a single ${resolved[idx].grams}g entry.`);
+      } else {
+        seenFoodIds.set(r.food_id, resolved.length);
+        resolved.push({ food_id: r.food_id, grams: r.grams, state: r.state });
+        if (r.match_confidence !== 'exact') flags.push(`"${item.name}" matched to "${getClinicalName(FOOD_DATABASE[r.food_id], 'en')}" with partial confidence — please confirm this is correct.`);
+      }
     } else {
       flags.push(r.flag);
     }
@@ -14052,6 +14064,7 @@ STRICT RULES:
 - Include variety: fish, chicken, eggs, lean meat
 - FAT/OIL REALISM (important, frequently violated): 1 fat exchange = 1 tsp olive oil. Never write more than 6 tsp of visible added oil/butter in a single dish, even if the client's total daily fat exchanges (below) is much higher than that. If the daily fat total cannot fit within 6 tsp per meal across the day's main meals, distribute the remainder across snacks, or substitute whole-food fat sources (olives, nuts, avocado, tahini) for some of the exchanges instead of concentrating it all as poured oil in one meal. A single dish listing 10+ tsp of oil is a clinical error — do not do this even for high-calorie weight-gain targets.
 - SNACK NECESSITY (decide per client — do not use a fixed percentage split): First check whether Breakfast + Lunch + Dinner alone can realistically reach the target kcal using the realistic-portion limits above (fish/meat ≤150g, oil ≤6 tsp/dish, etc). If yes, you may leave snack1, snack2, and before_sleep out of the JSON entirely for that day — a lower-calorie client legitimately needs no snacks. If three main meals cannot reach the target without unrealistic portions, you must use one or more of snack1/snack2/before_sleep to carry the remaining kcal, and reduce Breakfast/Lunch/Dinner accordingly rather than overloading them. When snacks are used, keep portions snack-appropriate (fruit, dairy, nuts, small starch — not main-meal-sized servings) and distribute the exchange servings across every slot you populate, main meals and snacks alike, so the day's exchange totals stay coherent. Never leave the day 20%+ below target by stopping after Dinner when realistic snack additions could close the gap.
+- INGREDIENT UNIQUENESS: The same food must never appear more than once within a single meal's ingredients list. If a meal needs more olive oil (or any ingredient) than a single line would suggest, represent it as one consolidated entry with the total quantity — never split the same ingredient into multiple entries within one meal, even to work around the 6 tsp per-dish guidance above.
 
 THIS CLIENT'S EXCHANGE VALUES (use these exact numbers, not generic textbook values):
 - Fruit: ${ev.fruit} kcal per serving
