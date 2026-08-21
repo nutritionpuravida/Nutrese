@@ -8058,10 +8058,40 @@ function exchangesToKcal(composition, portions, fruitOverride, dairyOverride){
 }
 
 function oliveOilAmountFromText(text, lang='GR'){
+  const s=String(text||'');
   const isEn=lang==='EN';
-  const re=isEn?/(\d+(?:\.\d+)?)\s*tsp olive oil/i:/(\d+(?:\.\d+)?)\s*κ\.γ\. ελαιόλαδο/i;
-  const m=String(text||'').match(re);
-  return m?Number(m[1]||0):0;
+  let total=0;
+  // Appended/legacy-format amount: "N tbsp(s)[ + M tsp] olive oil" or plain
+  // "M tsp olive oil". The tbsp component was previously never captured at
+  // all -- formatOilMeasure() switches to "N tbsp(s)[ + M tsp] olive oil"
+  // for any amount of 3 tsp or more, and the old regex only ever matched
+  // the trailing tsp remainder, silently dropping the tbsp portion.
+  const tbspRe=isEn
+    ?/(\d+(?:\.\d+)?)\s*tbsps?(?:\s*\+\s*(\d+(?:\.\d+)?)\s*tsp)?\s*olive oil/i
+    :/(\d+(?:\.\d+)?)\s*κ\.σ\.(?:\s*\+\s*(\d+(?:\.\d+)?)\s*κ\.γ\.)?\s*ελαιόλαδο/i;
+  const tm=s.match(tbspRe);
+  if(tm){
+    total+=Number(tm[1]||0)*3+Number(tm[2]||0);
+  }else{
+    const tspRe=isEn?/(\d+(?:\.\d+)?)\s*tsp olive oil/i:/(\d+(?:\.\d+)?)\s*κ\.γ\. ελαιόλαδο/i;
+    const m=s.match(tspRe);
+    if(m) total+=Number(m[1]||0);
+  }
+  // Migrated-meal instance base text ("Olive oil — 1⅔ tsp (8g)") never
+  // matched either pattern above, since it's a different format from the
+  // legacy catalog text these were written for -- the tsp/tbsp portion in
+  // between can contain unicode fractions and mixed units, so extract the
+  // grams value in parentheses instead (always present, always a plain
+  // number) and convert via the same 5g/tsp ratio already established as
+  // olive_oil's own household measure.
+  const gramsRe=isEn?/Olive oil\s*—\s*[^(]*\((\d+(?:\.\d+)?)g\)/i:/Ελαιόλαδο\s*—\s*[^(]*\((\d+(?:[.,]\d+)?)g\)/i;
+  const gm=s.match(gramsRe);
+  if(gm){
+    const grams=Number(String(gm[1]||'0').replace(',','.'));
+    const gramsPerTsp=Number(window.NutreseEngine?.FOOD_DATABASE?.olive_oil?.household?.grams_per_unit)||5;
+    total+=grams/gramsPerTsp;
+  }
+  return total;
 }
 
 function formatOilMeasure(tsp, lang='GR'){
@@ -11573,7 +11603,7 @@ function calcDayTotalsForPlan(dayPlan, lang='GR', dayIndex=0){
   const slotCanAddOil=(slot)=>{
     const key=slot==='lun'?dayPlan.lun:dayPlan.din;
     if(isNoMealKey(key) || isCustomMealKey(key) || mealCatalogIsFixedComposition(key)) return false;
-    return oilAmount(slot) < visibleOilCap;
+    return oilAmount(slot) + 1 <= visibleOilCap;
   };
   let guard=0;
   while(target && totalKcal < target-50 && guard++<20){
