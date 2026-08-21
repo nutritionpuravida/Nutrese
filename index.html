@@ -2437,6 +2437,11 @@ table th,
             <div class="field-note" id="cal-adj-note" style="margin-top:4px"></div>
           </div>
         </div>
+        <div class="form-grid three">
+          <div class="form-field"><label><span class="i18n" data-en="Target Weight (kg)" data-gr="Στόχος Βάρους (κιλά)">Target Weight (kg)</span></label><input type="number" id="p-target-weight" placeholder="e.g. 65" step="0.1" oninput="scheduleAutosave()">
+            <div class="field-note" style="margin-top:4px"><span class="i18n" data-en="Optional short-term goal, separate from current weight and calculated Ideal Body Weight. Documentation only -- does not affect calorie or macro calculations." data-gr="Προαιρετικός βραχυπρόθεσμος στόχος, ξεχωριστός από το τρέχον βάρος και το υπολογιζόμενο Ιδανικό Σωματικό Βάρος. Μόνο για τεκμηρίωση -- δεν επηρεάζει τους υπολογισμούς θερμίδων ή μακροθρεπτικών.">Optional short-term goal, separate from current weight and calculated Ideal Body Weight. Documentation only -- does not affect calorie or macro calculations.</span></div>
+          </div>
+        </div>
         <div class="section-label"><span class="i18n" data-en="Clinical Information" data-gr="Κλινικές Πληροφορίες">Clinical Information</span></div>
         <div class="form-grid">
           <div class="form-field full">
@@ -11616,15 +11621,19 @@ function openSevenDayModal(dayIndex){
   if(!S.weekPlans || !S.weekPlans[dayIndex]) return;
   closeSevenDayModal();
   const p=S.weekPlans[dayIndex];
-  const dt=calcDayTotalsForPlan(p, lang, dayIndex);
+  const dt=calcDayTotalsForPlanDisplay(p, lang, dayIndex);
   const dayLabel=weekDayLabel(p, dayIndex, lang);
+  const slotRow=(key, label)=>{
+    const data=getSevenDaySlotData(p, dt, key, lang, dayIndex);
+    return [label, data.text, data.kcal];
+  };
   const rows=[
-    [lang==='EN'?'Breakfast':'Πρωινό', mealText(p.brk,null,lang)+renderExtraFoodsForSlot('brk', dayIndex), dt.brkKcal],
-    [lang==='EN'?'Snack 1':'Σνακ 1', dt.snk1Text+renderExtraFoodsForSlot('snk1', dayIndex), dt.snk1Kcal],
-    [lang==='EN'?'Lunch':'Μεσημεριανό', mealTextWithOilBalance(p.lun,dt.portions.lunch,lang,dt.oilBalance?.lun||0)+renderExtraFoodsForSlot('lun', dayIndex), dt.lunKcal],
-    [lang==='EN'?'Snack 2':'Σνακ 2', dt.snk2Text+renderExtraFoodsForSlot('snk2', dayIndex), dt.snk2Kcal],
-    [lang==='EN'?'Dinner':'Βραδινό', mealTextWithOilBalance(p.din,dt.portions.dinner,lang,dt.oilBalance?.din||0)+renderExtraFoodsForSlot('din', dayIndex), dt.dinKcal],
-    [lang==='EN'?'Before sleep':'Πριν τον ύπνο', dt.slpText+renderExtraFoodsForSlot('sleep', dayIndex), dt.slpKcal],
+    slotRow('brk', lang==='EN'?'Breakfast':'Πρωινό'),
+    slotRow('snk1', lang==='EN'?'Snack 1':'Σνακ 1'),
+    slotRow('lun', lang==='EN'?'Lunch':'Μεσημεριανό'),
+    slotRow('snk2', lang==='EN'?'Snack 2':'Σνακ 2'),
+    slotRow('din', lang==='EN'?'Dinner':'Βραδινό'),
+    slotRow('sleep', lang==='EN'?'Before sleep':'Πριν τον ύπνο'),
   ];
   const overlay=document.createElement('div');
   overlay.id='seven-day-modal';
@@ -14042,6 +14051,7 @@ STRICT RULES:
 - Fish/meat portions max 150g per meal
 - Include variety: fish, chicken, eggs, lean meat
 - FAT/OIL REALISM (important, frequently violated): 1 fat exchange = 1 tsp olive oil. Never write more than 6 tsp of visible added oil/butter in a single dish, even if the client's total daily fat exchanges (below) is much higher than that. If the daily fat total cannot fit within 6 tsp per meal across the day's main meals, distribute the remainder across snacks, or substitute whole-food fat sources (olives, nuts, avocado, tahini) for some of the exchanges instead of concentrating it all as poured oil in one meal. A single dish listing 10+ tsp of oil is a clinical error — do not do this even for high-calorie weight-gain targets.
+- SNACK NECESSITY (decide per client — do not use a fixed percentage split): First check whether Breakfast + Lunch + Dinner alone can realistically reach the target kcal using the realistic-portion limits above (fish/meat ≤150g, oil ≤6 tsp/dish, etc). If yes, you may leave snack1, snack2, and before_sleep out of the JSON entirely for that day — a lower-calorie client legitimately needs no snacks. If three main meals cannot reach the target without unrealistic portions, you must use one or more of snack1/snack2/before_sleep to carry the remaining kcal, and reduce Breakfast/Lunch/Dinner accordingly rather than overloading them. When snacks are used, keep portions snack-appropriate (fruit, dairy, nuts, small starch — not main-meal-sized servings) and distribute the exchange servings across every slot you populate, main meals and snacks alike, so the day's exchange totals stay coherent. Never leave the day 20%+ below target by stopping after Dinner when realistic snack additions could close the gap.
 
 THIS CLIENT'S EXCHANGE VALUES (use these exact numbers, not generic textbook values):
 - Fruit: ${ev.fruit} kcal per serving
@@ -14061,7 +14071,7 @@ Fat: ${payload.exchanges.fat} (= ${payload.exchanges.fat} tsp olive oil total fo
 Target kcal: ${payload.kcal_target}
 Target macro split: ${payload.macros.carb_percent}% carbohydrate / ${payload.macros.protein_percent}% protein / ${payload.macros.fat_percent}% fat (i.e. ≈${Math.round(payload.kcal_target*payload.macros.carb_percent/100/4)}g carb, ≈${Math.round(payload.kcal_target*payload.macros.protein_percent/100/4)}g protein, ≈${Math.round(payload.kcal_target*payload.macros.fat_percent/100/9)}g fat per day) — the exchange servings above are the primary source of truth for portions; choose ingredient quantities so the day's likely composition is consistent with this split (we compute the actual totals from your ingredients, not from any total you might otherwise report).
 
-Return ONLY valid JSON with monday through sunday, each containing breakfast, snack1, lunch, snack2, dinner, before_sleep. Each meal must include: name, description_gr, description_en, and ingredients (an array of {name, quantity_g} — name must be a specific, plain-language food/ingredient name in English, e.g. "chicken breast, cooked" not a dish name; quantity_g is the grams of that ingredient in this meal). Do NOT include kcal or macro totals yourself — these are computed from the ingredients you list, not from your own estimate, so ingredient names and quantities must be accurate and specific rather than approximate.`;
+Return ONLY valid JSON with monday through sunday, each containing breakfast, snack1, lunch, snack2, dinner, before_sleep. Only include snack1, snack2, or before_sleep in a day's JSON if you determined that slot is needed for that day (per the SNACK NECESSITY rule above); omit any slot you determine is unnecessary rather than including it with placeholder content. Each meal must include: name, description_gr, description_en, and ingredients (an array of {name, quantity_g} — name must be a specific, plain-language food/ingredient name in English, e.g. "chicken breast, cooked" not a dish name; quantity_g is the grams of that ingredient in this meal). Do NOT include kcal or macro totals yourself — these are computed from the ingredients you list, not from your own estimate, so ingredient names and quantities must be accurate and specific rather than approximate.`;
 }
 
 async function generateAiSevenDayPlan(){
@@ -14145,6 +14155,23 @@ function applyAiSevenDayPlan(plan, payload){
     const aiDayTotals={ kcal:dayKcal||null, protein:dayProtein||null, carb:dayCarb||null, fat:dayFat||null };
     return {...existing, aiMeals, aiDayTotals, source:'ai'};
   });
+  // Reveal any optional slot the AI actually populated with real content,
+  // so a generated plan's snacks appear immediately rather than staying
+  // collapsed behind "Add Snack" -- matches how Breakfast/Lunch/Dinner are
+  // always visible for a generated day. A slot left empty by the AI across
+  // every day stays hidden, same as an untouched manual plan.
+  const populatedOptionalSlots={};
+  SEVEN_DAY_SLOTS.forEach(slot=>{
+    if(!isOptionalMealSlot(slot.key)) return;
+    const hasContent=S.weekPlans.some(p=>{
+      const m=p.aiMeals?.[slot.ai];
+      return m && Array.isArray(m.resolved_ingredients) && m.resolved_ingredients.length>0;
+    });
+    if(hasContent) populatedOptionalSlots[slot.key]=true;
+  });
+  if(Object.keys(populatedOptionalSlots).length){
+    S.optionalSlotsVisible={...(S.optionalSlotsVisible||{}), ...populatedOptionalSlots};
+  }
   S.aiOilWarnings=null;
   // Verified totals now feed the same day-total pipeline every other plan
   // uses, so evaluatePlanQuality() (via calcDayTotalsForPlanDisplay) judges
@@ -16610,7 +16637,17 @@ async function loadCustomMeals(opts={}){
     try{
       const {data,error}=await supabaseClient.from('custom_meals').select('*').eq('user_id',currentUser.id).order('updated_at',{ascending:false});
       if(error) throw error;
-      S.customMeals=(data||[]).map(r=>({id:r.id,name:r.name,ingredients:Array.isArray(r.ingredients)?r.ingredients:[],nutrition:r.nutrition||recipeLibraryTotals(r.ingredients||[]),updated_at:r.updated_at}));
+      S.customMeals=(data||[]).map(r=>{
+        const isNewShape = r.ingredients && !Array.isArray(r.ingredients) && Array.isArray(r.ingredients.ingredients);
+        if(isNewShape){
+          return {id:r.id, name:r.name, instance:r.ingredients, updated_at:r.updated_at};
+        }
+        // Genuinely old-shape row (ingredients: loose array, no food_id) --
+        // unchanged from before, so customMealText()/customMealKcal() keep
+        // falling through to their existing legacy branches exactly as
+        // they already do.
+        return {id:r.id, name:r.name, ingredients:Array.isArray(r.ingredients)?r.ingredients:[], nutrition:r.nutrition||recipeLibraryTotals(r.ingredients||[]), updated_at:r.updated_at};
+      });
       persistCustomMealsLocal();
     }catch(e){ console.error('[Nutrese custom meals] load failed', e); }
   }
@@ -17279,7 +17316,7 @@ function renderDashboardAppointments(){
 //  CLIENT SAVE / LOAD / PERSISTENCE
 // ═══════════════════════════════════════════
 const SAVE_FIELD_IDS = [
-  'p-id','p-name','p-date','p-age','p-sex','p-activity','p-height','p-weight','p-cal-adj','p-goal','p-meat','p-dairy','p-diet','p-trimester','p-bmr-equation',
+  'p-id','p-name','p-date','p-age','p-sex','p-activity','p-height','p-weight','p-target-weight','p-cal-adj','p-goal','p-meat','p-dairy','p-diet','p-trimester','p-bmr-equation',
   'bc-bf','bc-water','bc-fatmass','bc-ffm','bc-muscle','bc-metage','bc-visceral','bc-physique','bc-bone',
   'bc-fold-triceps','bc-fold-biceps','bc-fold-subscapular','bc-fold-suprailiac','bc-fold-abdominal','bc-fold-thigh','bc-fold-calf','bc-fold-notes',
   'm-carb','m-protein',
