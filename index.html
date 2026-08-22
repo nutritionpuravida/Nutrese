@@ -7690,9 +7690,9 @@ function exportStructuredPlanJSON(){
   URL.revokeObjectURL(url);
 }
 
-function migratedMealKcal(key){
+function migratedMealKcal(key, portions=null){
   if(!isMigratedMeal(key)) return null;
-  const inst = getStructuredInstanceForSlot(key, null);
+  const inst = getStructuredInstanceForSlot(key, portions);
   return inst.totals.kcal;
 }
 
@@ -7703,7 +7703,44 @@ function getStructuredInstanceForSlot(key, portions, _slotCtx){
       return stored[_slotCtx.slot];
     }
   }
-  return window.NutreseEngine.freezeMealInstance(key);
+  const extraProt=Number(portions?.prot||0);
+  const extraFat=Number(portions?.fat||0);
+  if(!extraProt && !extraFat){
+    return window.NutreseEngine.freezeMealInstance(key);
+  }
+  const base=window.NutreseEngine.freezeMealInstance(key);
+  const db=window.NutreseEngine.FOOD_DATABASE;
+  const scaled=base.ingredients.map(i=>({food_id:i.food_id, grams:i.grams, state:i.state}));
+  const addTo=(food_id, extraGrams, fallbackState)=>{
+    const existing=scaled.find(i=>i.food_id===food_id);
+    if(existing) existing.grams+=extraGrams;
+    else scaled.push({food_id, grams:extraGrams, state:fallbackState});
+  };
+  if(extraProt>0){
+    let proteinAnchor=null, bestProteinContrib=-1;
+    scaled.forEach(i=>{
+      const food=db[i.food_id];
+      if(!food) return;
+      const contrib=(food.protein100||0)*i.grams/100;
+      if(contrib>bestProteinContrib){ bestProteinContrib=contrib; proteinAnchor=i.food_id; }
+    });
+    if(proteinAnchor){
+      const proPerEx=(S.exMeta && S.exMeta.protein && S.exMeta.protein.pro) || 7;
+      const gramsPerProteinEx=Math.round(30*(proPerEx/7));
+      addTo(proteinAnchor, extraProt*gramsPerProteinEx, 'cooked');
+    }
+  }
+  if(extraFat>0){
+    const gramsPerFatEx=Number(db.olive_oil?.household?.grams_per_unit)||5;
+    const caps=getEffectiveCaps(S.conditions);
+    const fatCapTsp=Number(caps?.fatPerMealMax)||6;
+    const fatCapGrams=fatCapTsp*gramsPerFatEx;
+    const existingOilGrams=(scaled.find(i=>i.food_id==='olive_oil')||{grams:0}).grams;
+    const roomLeftGrams=Math.max(0, fatCapGrams-existingOilGrams);
+    const requestedGrams=extraFat*gramsPerFatEx;
+    addTo('olive_oil', Math.min(requestedGrams, roomLeftGrams), 'n/a');
+  }
+  return window.NutreseEngine.freezeMealInstance(key, {scaledIngredients: scaled});
 }
 
 function mealText(key, portions, lang, opts){
@@ -11573,8 +11610,8 @@ function calcDayTotalsForPlan(dayPlan, lang='GR', dayIndex=0){
   const sleepBuilt = allocation.snacks.sleepBuilt;
 
   const brkKcal  = (migratedMealKcal(dayPlan.brk) ?? (isCustomMealKey(dayPlan.brk)?customMealKcal(dayPlan.brk):exchangesToKcal(brkComp, null))) + extraKcal('brk', dayIndex);
-  let lunKcal  = (migratedMealKcal(dayPlan.lun) ?? (isCustomMealKey(dayPlan.lun)?customMealKcal(dayPlan.lun):exchangesToKcal(lunComp, effectivePortionsForKcal(dayPlan.lun, portions.lunch)))) + extraKcal('lun', dayIndex);
-  let dinKcal  = (migratedMealKcal(dayPlan.din) ?? (isCustomMealKey(dayPlan.din)?customMealKcal(dayPlan.din):exchangesToKcal(dinComp, effectivePortionsForKcal(dayPlan.din, portions.dinner)))) + extraKcal('din', dayIndex);
+  let lunKcal  = (migratedMealKcal(dayPlan.lun, portions.lunch) ?? (isCustomMealKey(dayPlan.lun)?customMealKcal(dayPlan.lun):exchangesToKcal(lunComp, effectivePortionsForKcal(dayPlan.lun, portions.lunch)))) + extraKcal('lun', dayIndex);
+  let dinKcal  = (migratedMealKcal(dayPlan.din, portions.dinner) ?? (isCustomMealKey(dayPlan.din)?customMealKcal(dayPlan.din):exchangesToKcal(dinComp, effectivePortionsForKcal(dayPlan.din, portions.dinner)))) + extraKcal('din', dayIndex);
   const unifiedSnackKcal=(rawKey)=>migratedMealKcal(rawKey) ?? (isCustomMealKey(rawKey)?customMealKcal(rawKey):0);
   const snk1Kcal = (dayUsesUnifiedSnackModel(dayPlan)
     ? unifiedSnackKcal(dayPlan.snk1)
@@ -12287,12 +12324,75 @@ function startManualPlanFromScratch(){
   buildSevenDay();
   scheduleAutosave();
 }
+function populateDefaultSnacksForDay(day, dayIndex){
+  if(day.defaultSnacksPopulated) return;
+  if(!dayUsesUnifiedSnackModel(day) || day.source==='ai'){
+    day.defaultSnacksPopulated=true;
+    return;
+  }
+  if(!S.goalKcal || !S.ex) return; // profile not ready yet -- retry on a later call
+  const eng=window.NutreseEngine;
+  const lang=S.mealLanguage||'GR';
+  const alloc=getDayMealAllocation(day, lang); // frozen, unchanged
+  const dt=calcDayTotalsForPlan(day, lang, dayIndex); // frozen, unchanged
+  const target=Math.round(S.goalKcal);
+  let runningTotal=dt.brkKcal+dt.lunKcal+dt.dinKcal;
+
+  const leftoverFruit=Math.max(0, (S.ex.fruit||0)-(alloc.allocated.fruit||0));
+  const leftoverDairy=Math.max(0, (S.ex.dairy||0)-(alloc.allocated.dairy||0));
+  const leftoverProtFat=Math.max(0, (S.ex.protein||0)-(alloc.allocated.protein||0)) + Math.max(0, (S.ex.fat||0)-(alloc.allocated.fat||0));
+
+  const candidates=[];
+  if(leftoverFruit>0) candidates.push({food_id:'apple', grams:120, state:'raw', label:'Apple'});
+  if(leftoverDairy>0) candidates.push({food_id:'greek_yogurt_2pct', grams:170, state:'n/a', label:'Greek Yogurt'});
+  if(leftoverProtFat>0) candidates.push({food_id:'almonds', grams:20, state:'n/a', label:'Almonds'});
+
+  const availableSlots=['snk1','snk2','sleep'].filter(s=>!day[s]);
+  const overshootTolerance=1.05; // up to 5% over target before a snack is treated as an unnecessary overshoot
+  const warnings=[];
+  let slotIdx=0;
+
+  candidates.forEach(item=>{
+    if(slotIdx>=availableSlots.length){
+      warnings.push('A genuinely remaining exchange could not be placed -- no available snack slot left.');
+      return;
+    }
+    const bareIngredient={food_id:item.food_id, grams:item.grams, state:item.state};
+    const totals=eng.recipeTotals([bareIngredient]);
+    const snackKcal=Math.round(totals.kcal);
+    if(runningTotal+snackKcal > target*overshootTolerance){
+      warnings.push('A realistic snack was available but would push the day meaningfully over target -- constrained, not added.');
+      return;
+    }
+    const slot=availableSlots[slotIdx++];
+    const exchanges=eng.deriveExchanges([bareIngredient]);
+    const food=eng.FOOD_DATABASE[item.food_id];
+    const single=eng.recipeTotals([bareIngredient]);
+    const hydratedIngredient={
+      food_id:item.food_id, grams:item.grams, state:item.state,
+      food_name: food?.name || item.food_id,
+      household: food ? eng.getHouseholdSnapshot(food) : undefined,
+      kcal: single.kcal||0, protein_g: single.protein_g||0, carbohydrate_g: single.carbohydrate_g||0, fat_g: single.fat_g||0, fiber_g: single.fiber_g||0,
+    };
+    const instance={ingredients:[hydratedIngredient], totals, exchanges};
+    const id='cm_default_'+Date.now()+'_'+slot;
+    const meal={id, name:item.label, instance, updated_at:new Date().toISOString(), localOnly:true, source:'default-generator'};
+    S.customMeals=[meal, ...(S.customMeals||[])];
+    day[slot]='CUSTOM_'+id;
+    runningTotal+=snackKcal;
+  });
+
+  if(warnings.length) day.defaultGeneratorWarnings=warnings;
+  day.defaultSnacksPopulated=true;
+}
+
 function ensureWeekPlans(){
   // REGRESSION NOTE (found during Plan Quality unification testing): a test
   // or script that directly mutates S.weekPlans[i].brk/lun/din WITHOUT also
   // setting the matching manualMeals[key]=true flag is not a valid
   // application state — it's indistinguishable from an unedited default,
   // so this function will correctly normalize it back to the current diet
+
   // type's strict default on its next call (see the `if(!p.manualMeals.lun)`
   // pattern below). This is intentional, already-validated behavior, not a
   // bug. If a future regression test directly sets a day's meal key and
@@ -12313,6 +12413,7 @@ function ensureWeekPlans(){
       if(!p.manualMeals.lun) p.lun=strict.lun;
       if(!p.manualMeals.din) p.din=strict.din;
     }
+    populateDefaultSnacksForDay(p, index);
     if(!dayUsesUnifiedSnackModel(p)){
       p.snk1Extras=[...new Set([...(Array.isArray(p.snk1Extras)?p.snk1Extras:[]), ...(Array.isArray(p.snack1Extras)?p.snack1Extras:[])])];
       p.snk2Extras=[...new Set([...(Array.isArray(p.snk2Extras)?p.snk2Extras:[]), ...(Array.isArray(p.snack2Extras)?p.snack2Extras:[])])];
