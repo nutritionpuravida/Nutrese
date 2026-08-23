@@ -2785,6 +2785,7 @@ table th,
         <button class="btn primary" onclick="openNewMealPlanChoice()"><i class="ti ti-plus" aria-hidden="true"></i> <span class="i18n" data-en="New Meal Plan" data-gr="Νέο Πλάνο Γευμάτων">New Meal Plan</span></button>
       </div>
       <div class="card-body">
+        <div id="existing-client-snack-suggestion"></div>
         <div id="plan-quality-summary" style="margin-bottom:16px"></div>
         <div id="rebalance-preview" style="margin-bottom:16px"></div>
         <div id="sevenday-body"></div>
@@ -9731,9 +9732,9 @@ function exchangeUseDiff(target=S.ex, used={}, keys=['fruit','veg','dairy','star
 // (e.g. 12 tsp olive oil or 400g meat/day) regardless of what the raw
 // macro math would otherwise produce.
 const CAPS = {
-  starchDailyMax: 8,    // 8 exchanges/day ≈ 8 slices bread equivalent
+  starchDailyMax: 8,    // 8 exchanges/day ≈ 8 slices bread equivalent -- kept at the safe 2-meal ceiling; see SNACK_EXTRA_EXCHANGE_BONUS below for the separate, non-allocation snack capacity.
   starchPerMealMax: 4,  // ≤4 per main meal
-  proteinDailyMax: 8,   // 8 exchanges/day ≈ 240g cooked meat/fish/day total
+  proteinDailyMax: 8,   // 8 exchanges/day ≈ 240g cooked meat/fish/day total -- kept at the safe 2-meal ceiling; see SNACK_EXTRA_EXCHANGE_BONUS below.
   proteinPerMealMax: 4, // ≤4 per main meal ≈ 120g cooked per meal
   // FIX: fat previously had no universal default (was 99 = effectively no cap),
   // relying entirely on condition-specific overrides below. Any client without
@@ -9742,9 +9743,21 @@ const CAPS = {
   // oil into a single dish (e.g. 25 tsp) for high-calorie targets such as
   // weight-gain plans. These are a generous but bounded universal ceiling —
   // review/adjust the numbers if your clinical judgment differs.
-  fatDailyMax: 12,       // = 2 x fatPerMealMax, so it's always achievable across the day's 2 main meals without overflow — matches the pattern already used for starch/protein above. Also evidence-aligned: PREDIMED (the major Mediterranean-diet CVD trial) found benefits up to ~4 tbsp/day (12 tsp) even for very active adherents; general-population benefit plateaus around 20g/~4.5 tsp/day.
+  fatDailyMax: 12,       // = 2 x fatPerMealMax -- kept at the safe 2-meal ceiling; see SNACK_EXTRA_EXCHANGE_BONUS below. Also evidence-aligned: PREDIMED (the major Mediterranean-diet CVD trial) found benefits up to ~4 tbsp/day (12 tsp) even for very active adherents; general-population benefit plateaus around 20g/~4.5 tsp/day.
   fatPerMealMax: 6,      // ≤6 tsp (2 tbsp) oil per main meal — standard single-dish serving is ~1 tbsp (3 tsp) for dressing/sautéing; 2 tbsp covers a more substantial dish without being unrealistic.
 };
+// Separate, deliberately NOT part of CAPS.XDailyMax: the additional realistic
+// exchange capacity Snack 1 and Snack 2 can each contribute (1 exchange per
+// category, matching SNACK_EXTRAS' own single-item options -- crackers=1
+// starch, nuts=1 fat, its protein-containing combos=1 protein). This is used
+// ONLY by populateDefaultSnacksForDay() to decide how much extra to realize
+// as real snack ingredients -- it must never be added into S.ex.starch/
+// protein/fat directly, since those values feed getDayMealAllocation()'s
+// target every time it's called, and that frozen function's own "never
+// silently discard" overflow logic will otherwise dump any amount beyond
+// 2xPerMealMax into dinner regardless of the per-meal cap. Before Sleep is
+// excluded -- SNACK_EXTRAS reserves it exclusively for dairy.
+const SNACK_EXTRA_EXCHANGE_BONUS = { starch: 2, protein: 2, fat: 2 }; // Snack 1 + Snack 2, 1 exchange each
 
 // Split a daily exchange total across N main meals, each capped at perMealMax
 // Splits a total number of exchanges across `numMeals`, respecting a per-meal
@@ -10978,6 +10991,7 @@ function calcExchanges(){
   const remFAT=Math.max(0,S.fatG-usedFAT-ex.starch*m.starch.fat-ex.protein*m.protein.fat);
   const fatNeeded= m.fat.fat>0 ? Math.round(remFAT/m.fat.fat) : 0;
   if(S.exAuto.fat) ex.fat=Math.min(fatNeeded, caps.fatDailyMax);
+  S.exRawNeeded = { starch: starchNeeded, protein: proteinNeeded, fat: fatNeeded };
 
   // ── Clinical gap: what the macro target needs vs. what realistic
   // portion caps actually provide. Surfaced in Engine Control / Dashboard
@@ -12324,66 +12338,199 @@ function startManualPlanFromScratch(){
   buildSevenDay();
   scheduleAutosave();
 }
+const NUTRESE_GENERATOR_VERSION = 1; // bump this whenever the default generator's own logic changes; existing eligible (non-manually-edited, non-hidden) slots then become eligible for automatic re-generation on next load
 function populateDefaultSnacksForDay(day, dayIndex){
-  if(day.defaultSnacksPopulated) return;
+  if(day.generatorVersion === NUTRESE_GENERATOR_VERSION) return;
   if(!dayUsesUnifiedSnackModel(day) || day.source==='ai'){
-    day.defaultSnacksPopulated=true;
+    day.generatorVersion = NUTRESE_GENERATOR_VERSION;
     return;
   }
   if(!S.goalKcal || !S.ex) return; // profile not ready yet -- retry on a later call
   const eng=window.NutreseEngine;
   const lang=S.mealLanguage||'GR';
-  const alloc=getDayMealAllocation(day, lang); // frozen, unchanged
+  const caps=S.effCaps || getEffectiveCaps(S.conditions);
+  const manualMeals=day.manualMeals||{};
+  const isHidden=(slot)=> S.optionalSlotsVisible?.[slot]===false;
+  const isEligible=(slot)=> !manualMeals[slot] && !isHidden(slot);
+  const alloc=getDayMealAllocation(day, lang); // frozen, unchanged -- S.ex never exceeds the safe 2-meal ceiling, so this never triggers the frozen overflow behavior
   const dt=calcDayTotalsForPlan(day, lang, dayIndex); // frozen, unchanged
   const target=Math.round(S.goalKcal);
   let runningTotal=dt.brkKcal+dt.lunKcal+dt.dinKcal;
+  const rawNeeded=S.exRawNeeded || {starch:0, protein:0, fat:0};
 
+  // Fruit/dairy: any leftover within what was already suggested (unchanged from before).
   const leftoverFruit=Math.max(0, (S.ex.fruit||0)-(alloc.allocated.fruit||0));
   const leftoverDairy=Math.max(0, (S.ex.dairy||0)-(alloc.allocated.dairy||0));
-  const leftoverProtFat=Math.max(0, (S.ex.protein||0)-(alloc.allocated.protein||0)) + Math.max(0, (S.ex.fat||0)-(alloc.allocated.fat||0));
 
-  const candidates=[];
-  if(leftoverFruit>0) candidates.push({food_id:'apple', grams:120, state:'raw', label:'Apple'});
-  if(leftoverDairy>0) candidates.push({food_id:'greek_yogurt_2pct', grams:170, state:'n/a', label:'Greek Yogurt'});
-  if(leftoverProtFat>0) candidates.push({food_id:'almonds', grams:20, state:'n/a', label:'Almonds'});
+  // Starch/protein/fat: genuine additional need is computed SEPARATELY from
+  // S.ex/getDayMealAllocation() entirely -- how far the client's raw,
+  // uncapped need exceeds the safe 2-meal ceiling, capped at the realistic
+  // snack bonus (1 exchange per category per available snack slot).
+  const extraStarch=Math.min(SNACK_EXTRA_EXCHANGE_BONUS.starch, Math.max(0, (rawNeeded.starch||0)-caps.starchDailyMax));
+  const extraProtein=Math.min(SNACK_EXTRA_EXCHANGE_BONUS.protein, Math.max(0, (rawNeeded.protein||0)-caps.proteinDailyMax));
+  const extraFat=Math.min(SNACK_EXTRA_EXCHANGE_BONUS.fat, Math.max(0, (rawNeeded.fat||0)-caps.fatDailyMax));
 
-  const availableSlots=['snk1','snk2','sleep'].filter(s=>!day[s]);
+  // Slot-specific assignment, matching the existing SNACK_EXTRAS convention:
+  // Before Sleep is reserved for dairy only. Snack 1/Snack 2 carry fruit and
+  // the starch/protein/fat bonus, using the existing crackers+cheese combo
+  // when both starch and protein are genuinely needed (matching
+  // snk_crackers_cheese), so one realistic snack covers two categories
+  // rather than competing for two separate slots. Eligibility is now based
+  // on manualMeals/hidden state, not merely "is the slot currently empty" --
+  // an already-populated-by-an-older-generator-version slot is still
+  // eligible for update as long as it was never manually edited.
+  const assignments=[];
+  if(leftoverDairy>0 && isEligible('sleep')) assignments.push({slot:'sleep', label:'Greek Yogurt', ingredients:[{food_id:'greek_yogurt_2pct', grams:170, state:'n/a'}]});
+  const nonSleepSlots=['snk1','snk2'].filter(isEligible);
+  let remainingSlots=nonSleepSlots.slice();
+  if(leftoverFruit>0 && extraFat===SNACK_EXTRA_EXCHANGE_BONUS.fat && remainingSlots.includes('snk1')){
+    // Matches the existing snk_fruit_ricecakes_tahini_nuts combo exactly (1
+    // fruit + 1 starch + 2 fat, dedicated to snk1) -- when the client's
+    // genuine need includes both fruit and the full fat bonus, this single
+    // realistic snack covers three needs at once (also contributing 1
+    // starch exchange), freeing Snack 2 entirely for protein if also needed.
+    assignments.push({slot:'snk1', label:'Fruit with Rice Cakes, Tahini and Almonds', ingredients:[{food_id:'apple', grams:120, state:'raw'},{food_id:'rice_cakes', grams:20, state:'n/a'},{food_id:'tahini', grams:15, state:'n/a'},{food_id:'almonds', grams:24, state:'n/a'}]});
+    remainingSlots=remainingSlots.filter(s=>s!=='snk1');
+    if(extraProtein>0 && remainingSlots.length){
+      assignments.push({slot:remainingSlots.shift(), label:'Cottage Cheese', ingredients:[{food_id:'cottage_cheese', grams:100, state:'n/a'}]});
+    }
+  }else if(leftoverFruit>0 && extraStarch>0 && extraProtein>0 && remainingSlots.includes('snk1')){
+    // Matches the existing snk_fruit_crackers_cottage combo exactly (1 fruit + 1 starch + 1 protein, dedicated to snk1) -- consolidates all three into one realistic snack instead of competing for two slots.
+    assignments.push({slot:'snk1', label:'Fruit with Crackers and Cottage Cheese', ingredients:[{food_id:'apple', grams:120, state:'raw'},{food_id:'crackers_wholegrain', grams:30, state:'n/a'},{food_id:'cottage_cheese', grams:100, state:'n/a'}]});
+    remainingSlots=remainingSlots.filter(s=>s!=='snk1');
+    if(extraFat>0 && remainingSlots.length) assignments.push({slot:remainingSlots.shift(), label:'Almonds', ingredients:[{food_id:'almonds', grams:20, state:'n/a'}]});
+  }else{
+    if(leftoverFruit>0 && remainingSlots.length){ assignments.push({slot:remainingSlots.shift(), label:'Apple', ingredients:[{food_id:'apple', grams:120, state:'raw'}]}); }
+    if(extraStarch>0 && extraProtein>0 && remainingSlots.length){
+      assignments.push({slot:remainingSlots.shift(), label:'Crackers with Light Cheese', ingredients:[{food_id:'crackers_wholegrain', grams:30, state:'n/a'},{food_id:'cheese_light_slice', grams:30, state:'n/a'}]});
+    }else if(extraStarch>0 && remainingSlots.length){
+      assignments.push({slot:remainingSlots.shift(), label:'Crackers', ingredients:[{food_id:'crackers_wholegrain', grams:30, state:'n/a'}]});
+    }else if(extraProtein>0 && remainingSlots.length){
+      assignments.push({slot:remainingSlots.shift(), label:'Cottage Cheese', ingredients:[{food_id:'cottage_cheese', grams:100, state:'n/a'}]});
+    }
+    if(extraFat>0 && remainingSlots.length) assignments.push({slot:remainingSlots.shift(), label:'Almonds', ingredients:[{food_id:'almonds', grams:20, state:'n/a'}]});
+  }
+
   const overshootTolerance=1.05; // up to 5% over target before a snack is treated as an unnecessary overshoot
   const warnings=[];
-  let slotIdx=0;
+  const placedSlots=new Set();
 
-  candidates.forEach(item=>{
-    if(slotIdx>=availableSlots.length){
-      warnings.push('A genuinely remaining exchange could not be placed -- no available snack slot left.');
-      return;
-    }
-    const bareIngredient={food_id:item.food_id, grams:item.grams, state:item.state};
-    const totals=eng.recipeTotals([bareIngredient]);
+  assignments.forEach(item=>{
+    const totals=eng.recipeTotals(item.ingredients);
     const snackKcal=Math.round(totals.kcal);
     if(runningTotal+snackKcal > target*overshootTolerance){
-      warnings.push('A realistic snack was available but would push the day meaningfully over target -- constrained, not added.');
+      warnings.push(`A realistic ${item.label} snack was available but would push the day meaningfully over target -- constrained, not added.`);
       return;
     }
-    const slot=availableSlots[slotIdx++];
-    const exchanges=eng.deriveExchanges([bareIngredient]);
-    const food=eng.FOOD_DATABASE[item.food_id];
-    const single=eng.recipeTotals([bareIngredient]);
-    const hydratedIngredient={
-      food_id:item.food_id, grams:item.grams, state:item.state,
-      food_name: food?.name || item.food_id,
-      household: food ? eng.getHouseholdSnapshot(food) : undefined,
-      kcal: single.kcal||0, protein_g: single.protein_g||0, carbohydrate_g: single.carbohydrate_g||0, fat_g: single.fat_g||0, fiber_g: single.fiber_g||0,
-    };
-    const instance={ingredients:[hydratedIngredient], totals, exchanges};
-    const id='cm_default_'+Date.now()+'_'+slot;
+    // If this slot already holds a generator-owned meal from an older
+    // version, remove that old entry before adding the replacement --
+    // otherwise every future version bump would leave an orphaned,
+    // never-referenced customMeal behind.
+    const existingKey=day[item.slot];
+    if(existingKey && isCustomMealKey(existingKey)){
+      const existingId=String(existingKey).replace('CUSTOM_','');
+      const existingMeal=(S.customMeals||[]).find(m=>String(m.id)===existingId);
+      if(existingMeal && existingMeal.source==='default-generator'){
+        S.customMeals=S.customMeals.filter(m=>String(m.id)!==existingId);
+      }
+    }
+    const exchanges=eng.deriveExchanges(item.ingredients);
+    const hydratedIngredients=item.ingredients.map(ing=>{
+      const food=eng.FOOD_DATABASE[ing.food_id];
+      const single=eng.recipeTotals([ing]);
+      return {
+        food_id:ing.food_id, grams:ing.grams, state:ing.state,
+        food_name: food?.name || ing.food_id,
+        household: food ? eng.getHouseholdSnapshot(food) : undefined,
+        kcal: single.kcal||0, protein_g: single.protein_g||0, carbohydrate_g: single.carbohydrate_g||0, fat_g: single.fat_g||0, fiber_g: single.fiber_g||0,
+      };
+    });
+    const instance={ingredients:hydratedIngredients, totals, exchanges};
+    const id='cm_default_'+Date.now()+'_'+item.slot;
     const meal={id, name:item.label, instance, updated_at:new Date().toISOString(), localOnly:true, source:'default-generator'};
     S.customMeals=[meal, ...(S.customMeals||[])];
-    day[slot]='CUSTOM_'+id;
+    day[item.slot]='CUSTOM_'+id;
+    // FIX: generated snacks were never actually visible in the real UI --
+    // S.optionalSlotsVisible was never set, unlike the equivalent AI-plan
+    // path (applyAiSevenDayPlan), so the dietitian saw an "Add Snack"
+    // placeholder button instead of the real, generated card underneath it.
+    if(S.optionalSlotsVisible?.[item.slot]!==true){
+      S.optionalSlotsVisible={...(S.optionalSlotsVisible||{}), [item.slot]:true};
+    }
     runningTotal+=snackKcal;
+    placedSlots.add(item.slot);
   });
 
+  if(leftoverFruit>0 && !assignments.some(a=>placedSlots.has(a.slot) && (a.label==='Apple'||a.label==='Fruit with Crackers and Cottage Cheese'||a.label==='Fruit with Rice Cakes, Tahini and Almonds'))) warnings.push('Remaining fruit exchange(s) could not be realistically placed.');
+  if(leftoverDairy>0 && !placedSlots.has('sleep')) warnings.push('Remaining dairy exchange(s) could not be realistically placed -- Before Sleep unavailable, or would overshoot target.');
+  const starchPlaced=assignments.some(a=>placedSlots.has(a.slot) && (a.label==='Crackers'||a.label==='Crackers with Light Cheese'||a.label==='Fruit with Crackers and Cottage Cheese'||a.label==='Fruit with Rice Cakes, Tahini and Almonds'));
+  const proteinPlaced=assignments.some(a=>placedSlots.has(a.slot) && (a.label==='Cottage Cheese'||a.label==='Crackers with Light Cheese'||a.label==='Fruit with Crackers and Cottage Cheese'));
+  const fatPlaced=assignments.some(a=>placedSlots.has(a.slot) && (a.label==='Almonds'||a.label==='Fruit with Rice Cakes, Tahini and Almonds'));
+  if((extraStarch>0 && !starchPlaced) || (extraProtein>0 && !proteinPlaced) || (extraFat>0 && !fatPlaced)){
+    warnings.push('The full calorie/exchange target could not be realistically achieved with available meals and snack slots -- constrained honestly rather than using unrealistic portions.');
+  }
+
   if(warnings.length) day.defaultGeneratorWarnings=warnings;
-  day.defaultSnacksPopulated=true;
+  day.generatorVersion = NUTRESE_GENERATOR_VERSION;
+}
+
+function renderExistingClientSnackSuggestion(){
+  const el=document.getElementById('existing-client-snack-suggestion');
+  if(!el) return;
+  if(!S.existingClientSnackSuggestionPending){ el.innerHTML=''; return; }
+  const isGr = window.appLang!=='en';
+  el.innerHTML=`<div class="card" style="margin:0 0 16px;border:1px solid var(--teal-300, var(--border))">
+    <div class="card-body" style="padding:14px 16px">
+      <div style="font-weight:700;font-size:14px;margin-bottom:6px"><i class="ti ti-sparkles" aria-hidden="true"></i> ${isGr?'Βελτιωμένη Δημιουργία Σνακ Διαθέσιμη':'Improved Snack Generation Available'}</div>
+      <div style="font-size:13px;color:var(--text-secondary);margin-bottom:10px">
+        ${isGr
+          ? `Αυτό το πλάνο δημιουργήθηκε πριν από μια βελτίωση στον προεπιλεγμένο δημιουργό, ο οποίος τώρα μπορεί να προσθέσει ρεαλιστικά σνακ (Σνακ 1, Σνακ 2, Πριν τον Ύπνο) όταν χρειάζονται για να καλυφθεί ο θερμιδικός στόχος. Οποιοδήποτε γεύμα ή σνακ έχετε ήδη τροποποιήσει χειροκίνητα ΔΕΝ θα επηρεαστεί.`
+          : `This plan was created before an improvement to the default generator, which can now add realistic snacks (Snack 1, Snack 2, Before Sleep) when needed to help reach the calorie target. Anything you've already manually edited will NOT be affected.`}
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn primary" onclick="applyExistingClientSnackSuggestion()"><i class="ti ti-circle-check" aria-hidden="true"></i> ${isGr?'Εφαρμογή':'Apply'}</button>
+        <button class="btn" onclick="dismissExistingClientSnackSuggestion()">${isGr?'Παράβλεψη':'Dismiss'}</button>
+      </div>
+    </div>
+  </div>`;
+}
+function applyExistingClientSnackSuggestion(){
+  if(!S.weekPlans) return;
+  S.weekPlans.forEach((p,index)=>{
+    if(dayUsesUnifiedSnackModel(p) && p.source!=='ai' && p.generatorVersion===undefined){
+      populateDefaultSnacksForDay(p, index); // real, unchanged function -- every existing safeguard (manualMeals, hidden slots) applies exactly as it does for any future automatic version update
+    }
+  });
+  S.existingClientSnackSuggestionPending=false;
+  buildSevenDay();
+  renderExistingClientSnackSuggestion();
+  scheduleAutosave();
+}
+function dismissExistingClientSnackSuggestion(){
+  if(S.weekPlans){
+    // No new per-slot decline flag -- reuses the existing, plan-wide
+    // S.optionalSlotsVisible mechanism (already used for the "X" hide
+    // button on any snack card) to mark genuinely-still-empty optional
+    // slots as explicitly declined, so future generator versions respect
+    // this exactly like any other hidden slot, with no new concept needed.
+    const stillEmpty={snk1:false, snk2:false, sleep:false};
+    S.weekPlans.forEach(p=>{
+      if(dayUsesUnifiedSnackModel(p) && p.generatorVersion===undefined){
+        ['snk1','snk2','sleep'].forEach(slot=>{ if(!p[slot]) stillEmpty[slot]=true; });
+      }
+    });
+    const hideUpdates={};
+    Object.entries(stillEmpty).forEach(([slot,empty])=>{ if(empty) hideUpdates[slot]=false; });
+    if(Object.keys(hideUpdates).length) S.optionalSlotsVisible={...(S.optionalSlotsVisible||{}), ...hideUpdates};
+    S.weekPlans.forEach(p=>{
+      if(dayUsesUnifiedSnackModel(p) && p.generatorVersion===undefined){
+        p.generatorVersion = NUTRESE_GENERATOR_VERSION; // permanently exits the legacy/banner path for this client
+      }
+    });
+  }
+  S.existingClientSnackSuggestionPending=false;
+  renderExistingClientSnackSuggestion();
+  scheduleAutosave();
 }
 
 function ensureWeekPlans(){
@@ -12413,7 +12560,7 @@ function ensureWeekPlans(){
       if(!p.manualMeals.lun) p.lun=strict.lun;
       if(!p.manualMeals.din) p.din=strict.din;
     }
-    populateDefaultSnacksForDay(p, index);
+    if(!S.existingClientSnackSuggestionPending) populateDefaultSnacksForDay(p, index);
     if(!dayUsesUnifiedSnackModel(p)){
       p.snk1Extras=[...new Set([...(Array.isArray(p.snk1Extras)?p.snk1Extras:[]), ...(Array.isArray(p.snack1Extras)?p.snack1Extras:[])])];
       p.snk2Extras=[...new Set([...(Array.isArray(p.snk2Extras)?p.snk2Extras:[]), ...(Array.isArray(p.snack2Extras)?p.snack2Extras:[])])];
@@ -13845,6 +13992,7 @@ function buildSevenDay(){
   if(sevenBody) sevenBody.textContent='';
   setEl('sevenday-body', html);
   renderPlanQualitySummary();
+  renderExistingClientSnackSuggestion();
   updateMealLanguageButtons();
 }
 
@@ -17557,6 +17705,9 @@ function applyState(state){
   if(state.savedWeeklyPlan?.weekPlans) S.weekPlans=state.savedWeeklyPlan.weekPlans;
   else if(Array.isArray(state.weekPlans)) S.weekPlans=state.weekPlans;
   else S.weekPlans=freshWeekPlans(); // no saved plan for this client — must never fall through to the previous client's weekPlans
+  S.existingClientSnackSuggestionPending = Array.isArray(S.weekPlans) && S.weekPlans.some(d =>
+    dayUsesUnifiedSnackModel(d) && d.source!=='ai' && d.generatorVersion===undefined
+  );
   S.currentTemplate=state.currentTemplate||null;
   S.sevenDayView=state.sevenDayView||'day';
   S.sevenDayActiveIndex=state.sevenDayActiveIndex!==undefined ? (Number(state.sevenDayActiveIndex)||0) : 0;
