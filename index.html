@@ -17191,7 +17191,7 @@ async function loadCustomMeals(opts={}){
     try{
       const {data,error}=await supabaseClient.from('custom_meals').select('*').eq('user_id',currentUser.id).order('updated_at',{ascending:false});
       if(error) throw error;
-      S.customMeals=(data||[]).map(r=>{
+      const fetchedMeals=(data||[]).map(r=>{
         const isNewShape = r.ingredients && !Array.isArray(r.ingredients) && Array.isArray(r.ingredients.ingredients);
         if(isNewShape){
           return {id:r.id, name:r.name, instance:r.ingredients, updated_at:r.updated_at};
@@ -17202,6 +17202,25 @@ async function loadCustomMeals(opts={}){
         // they already do.
         return {id:r.id, name:r.name, ingredients:Array.isArray(r.ingredients)?r.ingredients:[], nutrition:r.nutrition||recipeLibraryTotals(r.ingredients||[]), updated_at:r.updated_at};
       });
+      // Preserve any local-only meal (e.g. a freshly-generated snack, never
+      // auto-persisted) still referenced by the active plan/state and not
+      // yet present in this fetch -- otherwise a routine navigation/refresh
+      // silently discards it out from under the plan that still points to
+      // it, even though nothing about the plan itself changed.
+      const referencedIds=new Set();
+      (S.weekPlans||[]).forEach(day=>['brk','lun','din','snk1','snk2','sleep'].forEach(slot=>{
+        const key=day[slot];
+        if(isCustomMealKey(key)) referencedIds.add(customMealIdFromKey(key));
+      }));
+      if(S.mealSel) ['breakfast','lunch','dinner','snack1','snack2','before_sleep'].forEach(slot=>{
+        const key=S.mealSel[slot];
+        if(isCustomMealKey(key)) referencedIds.add(customMealIdFromKey(key));
+      });
+      const fetchedIds=new Set(fetchedMeals.map(m=>String(m.id)));
+      const preservedLocalOnly=(S.customMeals||[]).filter(m=>
+        m.localOnly && referencedIds.has(String(m.id)) && !fetchedIds.has(String(m.id))
+      );
+      S.customMeals=[...preservedLocalOnly, ...fetchedMeals];
       persistCustomMealsLocal();
     }catch(e){ console.error('[Nutrese custom meals] load failed', e); }
   }
