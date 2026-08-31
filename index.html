@@ -6368,7 +6368,7 @@ const STRIPE_PUBLISHABLE_KEY = 'pk_live_51TlSK6DwBpsAKvLe7ueIYxP53wiuWgWO4JCOLLa
 const STRIPE_MONTHLY_PRICE_ID = 'price_1ToMPVDwBpsAKvLemjXMV2Rg';
 const STRIPE_YEARLY_PRICE_ID = 'price_1ToMPWDwBpsAKvLe4Ial8JRS';
 const STRIPE_TRIAL_DAYS = 7;
-const AUTH_EMAIL_REDIRECT_URL = 'https://nutritionpuravida.github.io/NutriFlow';
+const AUTH_EMAIL_REDIRECT_URL = window.location.origin; // dynamic, environment-aware -- always matches the domain actually serving this page (confirmed production: https://www.nutrese.eu, per this app's own canonical/og:url metadata), so this can never go stale the way a hardcoded historical URL did
 
 let currentUser = null;
 let authTab = 'signin';
