@@ -7114,7 +7114,7 @@ async function adminAccessAction(action){
       // deployed function hasn't been updated yet, so this never breaks the
       // already-working new-user path in the meantime.
       if(result?.userStatus==='existing_unconfirmed_resend_failed'){
-        setAdminAccessStatus(`Existing unconfirmed user -- resend failed: ${result?.error || 'unknown error'}. The existing-user resend path needs a different delivery mechanism; do not assume this user received anything.`, true);
+        setAdminAccessStatus(`Existing unconfirmed user -- resend failed: ${result?.resendError || 'unknown error'}. The existing-user resend path needs a different delivery mechanism; do not assume this user received anything.`, true);
       }else if(result?.userStatus==='existing_confirmed'){
         setAdminAccessStatus('This user already has a confirmed account -- no invitation needed. Access change saved and audited.');
       }else if(result?.userStatus==='existing_unconfirmed_resent' || (result?.invited && result?.userStatus)){
