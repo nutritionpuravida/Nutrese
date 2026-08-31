@@ -7107,9 +7107,26 @@ async function adminAccessAction(action){
   try{
     setAdminAccessStatus(action==='invite_professional_trial' ? 'Sending invitation...' : 'Saving access change...');
     const result=await callAdminAccessFunction({action, ...form});
-    setAdminAccessStatus(action==='invite_professional_trial'
-      ? (result?.invited ? 'Invitation email sent and trial access created.' : 'User already exists. Trial access saved and audited.')
-      : 'Access change saved and audited.');
+    if(action==='invite_professional_trial'){
+      // Distinguishes the real invitation-lifecycle outcomes -- matches the
+      // corrected edge-function response shape {invited, userStatus, error}.
+      // Falls back gracefully to the prior, simpler {invited} boolean if the
+      // deployed function hasn't been updated yet, so this never breaks the
+      // already-working new-user path in the meantime.
+      if(result?.userStatus==='existing_unconfirmed_resend_failed'){
+        setAdminAccessStatus(`Existing unconfirmed user -- resend failed: ${result?.error || 'unknown error'}. The existing-user resend path needs a different delivery mechanism; do not assume this user received anything.`, true);
+      }else if(result?.userStatus==='existing_confirmed'){
+        setAdminAccessStatus('This user already has a confirmed account -- no invitation needed. Access change saved and audited.');
+      }else if(result?.userStatus==='existing_unconfirmed_resent' || (result?.invited && result?.userStatus)){
+        setAdminAccessStatus('Fresh invitation resent to this existing, unconfirmed user. Trial access restored to pending.');
+      }else if(result?.invited){
+        setAdminAccessStatus('Invitation email sent and trial access created.');
+      }else{
+        setAdminAccessStatus('User already exists. Trial access saved and audited.');
+      }
+    }else{
+      setAdminAccessStatus('Access change saved and audited.');
+    }
     await loadAdminAccessRecords();
   }catch(err){
     console.error('[Nutrese admin access] action failed', err);
