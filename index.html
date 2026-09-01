@@ -7141,17 +7141,19 @@ async function adminAccessAction(action){
     const result=await callAdminAccessFunction({action, ...form});
     if(action==='invite_professional_trial'){
       // Distinguishes the real invitation-lifecycle outcomes -- matches the
-      // corrected edge-function response shape {invited, userStatus, error}.
-      // Falls back gracefully to the prior, simpler {invited} boolean if the
-      // deployed function hasn't been updated yet, so this never breaks the
-      // already-working new-user path in the meantime.
+      // corrected edge-function response shape {invited, userStatus, ...}.
+      // Every case sets an explicit, specific userStatus value now, so exact
+      // string matching is used throughout -- no ambiguous fallback that
+      // could misclassify a genuinely new invitation as a resend.
       if(result?.userStatus==='existing_unconfirmed_resend_failed'){
         setAdminAccessStatus(`Existing unconfirmed user -- resend failed: ${result?.resendError || 'unknown error'}. The existing-user resend path needs a different delivery mechanism; do not assume this user received anything.`, true);
-      }else if(result?.userStatus==='existing_confirmed'){
-        setAdminAccessStatus('This user already has a confirmed account -- no invitation needed. Access change saved and audited.');
-      }else if(result?.userStatus==='existing_unconfirmed_resent' || (result?.invited && result?.userStatus)){
-        setAdminAccessStatus('Fresh invitation resent to this existing, unconfirmed user. Trial access restored to pending.');
-      }else if(result?.invited){
+      }else if(result?.userStatus==='existing_confirmed_reset_failed'){
+        setAdminAccessStatus(`Confirmed user -- account access link failed to send: ${result?.resetError || 'unknown error'}.`, true);
+      }else if(result?.userStatus==='existing_confirmed_reset_sent'){
+        setAdminAccessStatus('Account access link sent to this confirmed user\'s email. Their trial/access status was not changed.');
+      }else if(result?.userStatus==='existing_unconfirmed_resent'){
+        setAdminAccessStatus('Fresh invitation resent to this existing, unconfirmed user. Trial/access status was not changed.');
+      }else if(result?.userStatus==='new' || result?.invited){
         setAdminAccessStatus('Invitation email sent and trial access created.');
       }else{
         setAdminAccessStatus('User already exists. Trial access saved and audited.');
