@@ -19382,9 +19382,19 @@ window.onload=function(){
   if(!handledSignedOutReturn) handleStripeReturnRefresh();
   loadAppointments().then(renderDashboardAppointments);
   if(!handledSignedOutReturn) tryRestoreAutosave();
-  // Auto-save on any input/change anywhere in the form
-  document.addEventListener('input', scheduleAutosave);
-  document.addEventListener('change', scheduleAutosave);
+  // Auto-save on any input/change while genuinely on a client-editing tab.
+  // Scoped (not global) so unrelated inputs elsewhere -- e.g. the "Search
+  // clients" box on My Clients, or Food Database/Recipes search -- can never
+  // incorrectly mark the session dirty with no connection to an actual
+  // client edit.
+  document.addEventListener('input', ()=>{
+    const activePage = document.querySelector('.page.active')?.id?.replace('page-','');
+    if(CLIENT_TAB_PAGES.includes(activePage)) scheduleAutosave();
+  });
+  document.addEventListener('change', ()=>{
+    const activePage = document.querySelector('.page.active')?.id?.replace('page-','');
+    if(CLIENT_TAB_PAGES.includes(activePage)) scheduleAutosave();
+  });
   restoreSidebarCollapsed();
 };
 </script>
