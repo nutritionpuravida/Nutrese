@@ -2118,20 +2118,20 @@ table th,
   </div>
   <div class="nav-group-card">
     <div class="nav-group-label"><span class="i18n" data-en="Clients" data-gr="Πελάτες">Clients</span></div>
-    <button class="nav-item" onclick="nav('clients')"><i class="ti ti-users" aria-hidden="true"></i> <span class="i18n" data-en="My Clients" data-gr="Οι Πελάτες μου">My Clients</span></button>
-    <button class="nav-item" onclick="nav('appointments')"><i class="ti ti-calendar-event" aria-hidden="true"></i> <span class="i18n" data-en="Calendar" data-gr="Ημερολόγιο">Calendar</span></button>
+    <button class="nav-item" onclick="navGuarded('clients')"><i class="ti ti-users" aria-hidden="true"></i> <span class="i18n" data-en="My Clients" data-gr="Οι Πελάτες μου">My Clients</span></button>
+    <button class="nav-item" onclick="navGuarded('appointments')"><i class="ti ti-calendar-event" aria-hidden="true"></i> <span class="i18n" data-en="Calendar" data-gr="Ημερολόγιο">Calendar</span></button>
   </div>
   <div class="nav-group-card">
     <div class="nav-group-label"><span class="i18n" data-en="Workflow" data-gr="Ροή Εργασίας">Workflow</span></div>
-    <button class="nav-item active" onclick="nav('dashboard')"><i class="ti ti-chart-bar" aria-hidden="true"></i> <span class="i18n" data-en="Dashboard" data-gr="Πίνακας Ελέγχου">Dashboard</span></button>
+    <button class="nav-item active" onclick="navGuarded('dashboard')"><i class="ti ti-chart-bar" aria-hidden="true"></i> <span class="i18n" data-en="Dashboard" data-gr="Πίνακας Ελέγχου">Dashboard</span></button>
     <button class="nav-item" onclick="nav('profile')"><i class="ti ti-user" aria-hidden="true"></i> <span class="i18n" data-en="Client Profile" data-gr="Προφίλ Πελάτη">Client Profile</span></button>
-    <button class="nav-item" onclick="S._foodAddIntent=null; document.getElementById('fooddb-back-to-plan-btn').style.display='none'; nav('fooddb')"><i class="ti ti-search" aria-hidden="true"></i> <span class="i18n" data-en="Food Database" data-gr="Αναζήτηση Τροφίμων">Food Database</span></button>
-    <button class="nav-item" onclick="nav('recipes')"><i class="ti ti-chef-hat" aria-hidden="true"></i> <span class="i18n" data-en="Recipes" data-gr="Συνταγές">Recipes</span></button>
-    <button class="nav-item" onclick="nav('equivalents')"><i class="ti ti-clipboard-list" aria-hidden="true"></i> <span class="i18n" data-en="Equivalents Guide" data-gr="Οδηγός Ισοδυνάμων">Equivalents Guide</span></button>
+    <button class="nav-item" onclick="S._foodAddIntent=null; document.getElementById('fooddb-back-to-plan-btn').style.display='none'; navGuarded('fooddb')"><i class="ti ti-search" aria-hidden="true"></i> <span class="i18n" data-en="Food Database" data-gr="Αναζήτηση Τροφίμων">Food Database</span></button>
+    <button class="nav-item" onclick="navGuarded('recipes')"><i class="ti ti-chef-hat" aria-hidden="true"></i> <span class="i18n" data-en="Recipes" data-gr="Συνταγές">Recipes</span></button>
+    <button class="nav-item" onclick="navGuarded('equivalents')"><i class="ti ti-clipboard-list" aria-hidden="true"></i> <span class="i18n" data-en="Equivalents Guide" data-gr="Οδηγός Ισοδυνάμων">Equivalents Guide</span></button>
   </div>
   <div class="nav-group-card">
     <div class="nav-group-label"><span class="i18n" data-en="Settings" data-gr="Ρυθμίσεις">Settings</span></div>
-    <button class="nav-item" onclick="nav('account')"><i class="ti ti-credit-card" aria-hidden="true"></i> <span class="i18n" data-en="Account / Subscription" data-gr="Λογαριασμός / Συνδρομή">Account / Subscription</span></button>
+    <button class="nav-item" onclick="navGuarded('account')"><i class="ti ti-credit-card" aria-hidden="true"></i> <span class="i18n" data-en="Account / Subscription" data-gr="Λογαριασμός / Συνδρομή">Account / Subscription</span></button>
     <button class="nav-item" onclick="handleSignOut()"><i class="ti ti-logout" aria-hidden="true"></i> <span class="i18n" data-en="Log out" data-gr="Αποσύνδεση">Log out</span></button>
   </div>
   <button class="sidebar-help-card" onclick="nav('help');closeSidebar()" type="button">
@@ -2186,9 +2186,9 @@ table th,
   <div class="page active" id="page-dashboard">
     <div id="dash-alert"></div>
     <div class="dash-stat-strip">
-      <div onclick="nav('clients')"><span class="bs-value" id="d-total-clients">—</span><span class="bs-label"><span class="i18n" data-en="Active clients" data-gr="Ενεργοί πελάτες">Active clients</span></span></div>
+      <div onclick="navGuarded('clients')"><span class="bs-value" id="d-total-clients">—</span><span class="bs-label"><span class="i18n" data-en="Active clients" data-gr="Ενεργοί πελάτες">Active clients</span></span></div>
       <div class="dash-stat-divider"></div>
-      <div onclick="nav('appointments')"><span class="bs-value" id="d-today-appts">—</span><span class="bs-label"><span id="d-today-appts-sub"><span class="i18n" data-en="Appointments today" data-gr="Ραντεβού σήμερα">Appointments today</span></span></span></div>
+      <div onclick="navGuarded('appointments')"><span class="bs-value" id="d-today-appts">—</span><span class="bs-label"><span id="d-today-appts-sub"><span class="i18n" data-en="Appointments today" data-gr="Ραντεβού σήμερα">Appointments today</span></span></span></div>
     </div>
 
     <div id="dash-no-client-prompt" style="display:none">
@@ -2205,7 +2205,7 @@ table th,
             </div>
             <i class="ti ti-chevron-right" aria-hidden="true"></i>
           </div>
-          <div class="dashboard-onboard-item" onclick="nav('appointments')">
+          <div class="dashboard-onboard-item" onclick="navGuarded('appointments')">
             <div class="dashboard-onboard-icon"><i class="ti ti-calendar-plus" aria-hidden="true"></i></div>
             <div class="dashboard-onboard-text">
               <div class="dashboard-onboard-title"><span class="i18n" data-en="Schedule your first appointment" data-gr="Προγραμματίστε το πρώτο ραντεβού">Schedule your first appointment</span></div>
@@ -2213,7 +2213,7 @@ table th,
             </div>
             <i class="ti ti-chevron-right" aria-hidden="true"></i>
           </div>
-          <div class="dashboard-onboard-item" onclick="nav('clients')">
+          <div class="dashboard-onboard-item" onclick="navGuarded('clients')">
             <div class="dashboard-onboard-icon"><i class="ti ti-clipboard-list" aria-hidden="true"></i></div>
             <div class="dashboard-onboard-text">
               <div class="dashboard-onboard-title"><span class="i18n" data-en="Build your first meal plan" data-gr="Δημιουργήστε το πρώτο διατροφικό πλάνο">Build your first meal plan</span></div>
@@ -2272,12 +2272,12 @@ table th,
       </div>
 
       <div class="dash-card dash-activity-card">
-        <div class="dash-insight-label"><span class="i18n" data-en="Today" data-gr="Σήμερα">Today</span> <span class="card-action" onclick="nav('appointments')"><span class="i18n" data-en="Calendar →" data-gr="Ημερολόγιο →">Calendar →</span></span></div>
+        <div class="dash-insight-label"><span class="i18n" data-en="Today" data-gr="Σήμερα">Today</span> <span class="card-action" onclick="navGuarded('appointments')"><span class="i18n" data-en="Calendar →" data-gr="Ημερολόγιο →">Calendar →</span></span></div>
         <div id="dash-appointments"><div style="color:var(--text-muted);font-size:13px"><span class="i18n" data-en="No appointments today." data-gr="Κανένα ραντεβού σήμερα.">No appointments today.</span></div></div>
         <div id="dash-quick-actions" style="display:none">
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button class="btn" onclick="nav('clients');newClient()"><i class="ti ti-user-plus" aria-hidden="true"></i> <span class="i18n" data-en="New client" data-gr="Νέος πελάτης">New client</span></button>
-            <button class="btn" onclick="nav('appointments');openAppointmentForm(todayISO())"><i class="ti ti-calendar-plus" aria-hidden="true"></i> <span class="i18n" data-en="New appointment" data-gr="Νέο ραντεβού">New appointment</span></button>
+            <button class="btn" onclick="navGuarded('appointments').then(proceeded => { if(proceeded) openAppointmentForm(todayISO()); })"><i class="ti ti-calendar-plus" aria-hidden="true"></i> <span class="i18n" data-en="New appointment" data-gr="Νέο ραντεβού">New appointment</span></button>
             <button class="btn" onclick="S.sevenDayView='week';nav('sevenday')"><i class="ti ti-calendar-week" aria-hidden="true"></i> <span class="i18n" data-en="Weekly plan" data-gr="Εβδομαδιαίο πλάνο">Weekly plan</span></button>
             <button class="btn" onclick="nav('report')"><i class="ti ti-file-report" aria-hidden="true"></i> <span class="i18n" data-en="Reports" data-gr="Αναφορές">Reports</span></button>
           </div>
@@ -2838,7 +2838,7 @@ table th,
               </label>
             </div>
             <div style="padding-top:10px;border-top:1px solid var(--border)">
-              <div style="font-size:12px;color:var(--text-muted)" id="report-branding-status"><span class="i18n" data-en="Report branding:" data-gr="Επωνυμία αναφοράς:">Report branding:</span> <a onclick="nav('account')" style="color:var(--teal-600);text-decoration:underline;cursor:pointer"><span class="i18n" data-en="Manage in Account →" data-gr="Διαχείριση στον Λογαριασμό →">Manage in Account →</span></a></div>
+              <div style="font-size:12px;color:var(--text-muted)" id="report-branding-status"><span class="i18n" data-en="Report branding:" data-gr="Επωνυμία αναφοράς:">Report branding:</span> <a onclick="navGuarded('account')" style="color:var(--teal-600);text-decoration:underline;cursor:pointer"><span class="i18n" data-en="Manage in Account →" data-gr="Διαχείριση στον Λογαριασμό →">Manage in Account →</span></a></div>
             </div>
             <div style="padding-top:10px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px">
               <button class="btn primary" onclick="printPage()" id="report-print-btn" style="align-self:flex-start"><i class="ti ti-printer" aria-hidden="true"></i> Print Full Report</button>
@@ -3399,13 +3399,13 @@ table th,
 
 <!-- BOTTOM NAV (mobile) -->
 <nav class="bottom-nav" id="bottom-nav">
-  <button class="bnav-item active" onclick="nav('dashboard');setBnav(this)"><span><i class="ti ti-chart-bar" aria-hidden="true"></i></span><span class="i18n" data-en="Home" data-gr="Αρχική">Home</span></button>
-  <button class="bnav-item" onclick="nav('clients');setBnav(this)"><span><i class="ti ti-users" aria-hidden="true"></i></span><span class="i18n" data-en="Clients" data-gr="Πελάτες">Clients</span></button>
+  <button class="bnav-item active" onclick="navGuarded('dashboard').then(proceeded => { if(proceeded) setBnav(this); })"><span><i class="ti ti-chart-bar" aria-hidden="true"></i></span><span class="i18n" data-en="Home" data-gr="Αρχική">Home</span></button>
+  <button class="bnav-item" onclick="navGuarded('clients').then(proceeded => { if(proceeded) setBnav(this); })"><span><i class="ti ti-users" aria-hidden="true"></i></span><span class="i18n" data-en="Clients" data-gr="Πελάτες">Clients</span></button>
   <button class="bnav-item" onclick="nav('profile');setBnav(this)"><span><i class="ti ti-user" aria-hidden="true"></i></span><span class="i18n" data-en="Profile" data-gr="Προφίλ">Profile</span></button>
-  <button class="bnav-item" onclick="nav('fooddb');setBnav(this)"><span><i class="ti ti-search" aria-hidden="true"></i></span><span class="i18n" data-en="Foods" data-gr="Τρόφιμα">Foods</span></button>
-  <button class="bnav-item" onclick="nav('recipes');setBnav(this)"><span><i class="ti ti-chef-hat" aria-hidden="true"></i></span><span class="i18n" data-en="Recipes" data-gr="Συνταγές">Recipes</span></button>
-  <button class="bnav-item" onclick="nav('appointments');setBnav(this)"><span><i class="ti ti-calendar" aria-hidden="true"></i></span><span class="i18n" data-en="Calendar" data-gr="Ημερολόγιο">Calendar</span></button>
-  <button class="bnav-item" onclick="nav('account');setBnav(this)"><span><i class="ti ti-credit-card" aria-hidden="true"></i></span><span class="i18n" data-en="Account" data-gr="Λογαριασμός">Account</span></button>
+  <button class="bnav-item" onclick="navGuarded('fooddb').then(proceeded => { if(proceeded) setBnav(this); })"><span><i class="ti ti-search" aria-hidden="true"></i></span><span class="i18n" data-en="Foods" data-gr="Τρόφιμα">Foods</span></button>
+  <button class="bnav-item" onclick="navGuarded('recipes').then(proceeded => { if(proceeded) setBnav(this); })"><span><i class="ti ti-chef-hat" aria-hidden="true"></i></span><span class="i18n" data-en="Recipes" data-gr="Συνταγές">Recipes</span></button>
+  <button class="bnav-item" onclick="navGuarded('appointments').then(proceeded => { if(proceeded) setBnav(this); })"><span><i class="ti ti-calendar" aria-hidden="true"></i></span><span class="i18n" data-en="Calendar" data-gr="Ημερολόγιο">Calendar</span></button>
+  <button class="bnav-item" onclick="navGuarded('account').then(proceeded => { if(proceeded) setBnav(this); })"><span><i class="ti ti-credit-card" aria-hidden="true"></i></span><span class="i18n" data-en="Account" data-gr="Λογαριασμός">Account</span></button>
 </nav>
 <script>
 /* ============================================================
@@ -10843,6 +10843,30 @@ const PAGE_INFO_GR = {
 };
 
 const CLIENT_TAB_PAGES = ['profile','bodycomp','intake','labs','macros','sevenday','tracking','report'];
+// Thin async wrapper around nav(), used ONLY by top-level/sidebar navigation
+// triggers -- never by internal, programmatic nav() calls (tab-to-tab
+// transitions, or calls already gated by newClient()/loadClientById()'s own
+// checks). Resolves the existing unsaved-changes protection at the actual
+// point of leaving client-editing context, so a later "+ New client" click
+// can never inherit a stale dirty flag from an earlier, already-abandoned
+// page. Returns Promise<boolean>: true if navigation proceeded (including
+// when no guard was needed), false if the user cancelled and nothing moved.
+async function navGuarded(id){
+  const fromId = document.querySelector('.page.active')?.id?.replace('page-','');
+  const leavingClientContext = fromId && CLIENT_TAB_PAGES.includes(fromId) && !CLIENT_TAB_PAGES.includes(id);
+  if(leavingClientContext && S_isDirty){
+    const choice = await confirmUnsavedChanges();
+    if(choice==='cancel') return false; // stays on the current client page, caller must not proceed further
+    if(choice==='discard'){
+      // 'save' already clears S_isDirty inside saveCurrentClient(); an
+      // explicit discard must clear it here, since nothing else will.
+      S_isDirty=false;
+      _traceDirtyProd('navGuarded:discard', true, false);
+    }
+  }
+  nav(id);
+  return true;
+}
 const PRINT_PAGES = ['equivalents'];
 
 function nav(id) {
