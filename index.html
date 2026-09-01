@@ -6375,12 +6375,30 @@ let authTab = 'signin';
 let subscriptionState = {status:'unknown', active:false, currentPeriodEnd:null, trialDaysRemaining:null, trialActive:false, trialExpired:false};
 let isIntentionalNavigation = false;
 let isPasswordRecoveryFlow = false;
+let isInvitationSetupFlow = false;
 
 function isPasswordRecoveryUrl(){
   try{
     const search=new URLSearchParams(window.location.search || '');
     const hash=new URLSearchParams((window.location.hash || '').replace(/^#/, ''));
     return search.get('type') === 'recovery' || hash.get('type') === 'recovery';
+  }catch(e){
+    return false;
+  }
+}
+
+function isInvitationUrl(){
+  // Exact structural mirror of isPasswordRecoveryUrl() -- Supabase places
+  // type=invite in the same URL location for an accepted invitation link.
+  // This is never sufficient on its own: every call site also requires a
+  // genuine session.user to be present, which only exists because Supabase's
+  // own server already validated the invite token -- an attacker appending
+  // ?type=invite to an arbitrary URL gains nothing, since no real session
+  // would ever accompany it.
+  try{
+    const search=new URLSearchParams(window.location.search || '');
+    const hash=new URLSearchParams((window.location.hash || '').replace(/^#/, ''));
+    return search.get('type') === 'invite' || hash.get('type') === 'invite';
   }catch(e){
     return false;
   }
@@ -6490,8 +6508,9 @@ async function resendConfirmationEmail(){
   if(btn){ btn.disabled=false; btn.textContent='Resend confirmation email'; btn.style.display='block'; }
 }
 
-function showPasswordResetPanel(){
-  isPasswordRecoveryFlow = true;
+function showPasswordResetPanel(mode){
+  const isInvite = mode==='invite';
+  if(isInvite){ isInvitationSetupFlow = true; } else { isPasswordRecoveryFlow = true; }
   authTab='signin';
   document.getElementById('tab-signin')?.classList.add('active');
   document.getElementById('tab-signup')?.classList.remove('active');
@@ -6515,7 +6534,7 @@ function showPasswordResetPanel(){
   if(resend) resend.style.display='none';
   hideSubscriptionScreen();
   showAuthScreen();
-  setAuthMessage('Enter your new password below.','success');
+  setAuthMessage(isInvite ? 'Welcome to Nutrese — create your password below to finish setting up your account.' : 'Enter your new password below.','success');
 }
 function hidePasswordResetPanel(){
   const panel=document.getElementById('password-reset-panel');
@@ -6558,14 +6577,27 @@ async function completePasswordReset(){
   const btn=document.getElementById('reset-password-submit-btn');
   if(p1.length<6){ setAuthMessage('Password must be at least 6 characters.','error'); return; }
   if(p1!==p2){ setAuthMessage('Passwords do not match.','error'); return; }
+  const wasInvitationSetup = isInvitationSetupFlow;
   if(btn){ btn.disabled=true; btn.textContent='Updating…'; }
   try{
     const result=await withTimeout(supabaseClient.auth.updateUser({password:p1}),10000,'update password');
     if(result.error) throw result.error;
-    setAuthMessage('Password updated. You can now sign in with your new password.','success');
     isPasswordRecoveryFlow = false;
+    isInvitationSetupFlow = false;
     hidePasswordResetPanel();
-    supabaseClient.auth.signOut().catch(()=>{});
+    if(wasInvitationSetup){
+      // Invitation first-time setup: keep the existing, already-authenticated
+      // session active and drop the user straight into Nutrese -- do NOT
+      // sign out, since this user has no prior working credential to fall
+      // back on if we did.
+      setAuthMessage('Password created. Welcome to Nutrese!','success');
+      showAppShell();
+    }else{
+      // Password recovery: unchanged existing behavior -- require a fresh
+      // login with the new password, proving it actually works.
+      setAuthMessage('Password updated. You can now sign in with your new password.','success');
+      supabaseClient.auth.signOut().catch(()=>{});
+    }
   }catch(err){
     console.error('[Nutrese auth] password update failed', err);
     setAuthMessage(friendlyAuthError(err,'Could not update password. Please try again.'),'error');
@@ -6660,7 +6692,7 @@ function hideAppShell(){
 }
 function showMarketingSite(pageKey){
   const site=document.getElementById('marketing-site');
-  if(!site || currentUser || isPasswordRecoveryFlow) return;
+  if(!site || currentUser || isPasswordRecoveryFlow || isInvitationSetupFlow) return;
   applyMarketingTheme();
   showCookieNoticeIfNeeded();
   const route=pageKey || marketingRouteFromHash() || 'home';
@@ -6977,7 +7009,7 @@ async function fetchSubscriptionStatusWithRetry(){
   }
 }
 async function refreshSubscriptionGate(){
-  if(isPasswordRecoveryFlow){
+  if(isPasswordRecoveryFlow || isInvitationSetupFlow){
     hideSubscriptionScreen();
     showAuthScreen();
     return;
@@ -7276,13 +7308,25 @@ window.authReadyPromise.then(() => { if(typeof syncPendingLocalFeedback==='funct
 let _authReadyFired = false;
 setTimeout(()=>{ if(!_authReadyFired){ _authReadyFired = true; _authReadyResolve(); } }, 4000);
 isPasswordRecoveryFlow = isPasswordRecoveryUrl();
+isInvitationSetupFlow = isInvitationUrl();
 supabaseClient.auth.onAuthStateChange(async (event, session)=>{
   console.log('[Nutrese auth] onAuthStateChange', {event, hasSession:!!session, email:session?.user?.email || null});
   if(!_authReadyFired){ _authReadyFired = true; _authReadyResolve(); }
   if((event==='PASSWORD_RECOVERY' || isPasswordRecoveryFlow || isPasswordRecoveryUrl()) && session?.user){
     isPasswordRecoveryFlow = true;
     currentUser=session.user;
-    showPasswordResetPanel();
+    showPasswordResetPanel('recovery');
+    return;
+  }
+  if((isInvitationSetupFlow || isInvitationUrl()) && session?.user){
+    // Genuine invitation first-time password setup: Supabase's client
+    // already validated the invite token and established this real session
+    // before onAuthStateChange ever fired -- this branch only routes an
+    // already-authenticated user to the password-creation screen, it never
+    // grants access on its own.
+    isInvitationSetupFlow = true;
+    currentUser=session.user;
+    showPasswordResetPanel('invite');
     return;
   }
   currentUser = session ? session.user : null;
@@ -19308,7 +19352,7 @@ window.onload=function(){
   calcAll(); calcMacros(); renderDashboard();
   loadCustomMeals({render:false}).then(()=>rebuildMealDropdownOptions()).catch(e=>console.error('[Nutrese custom meals] startup load failed', e));
   const handledSignedOutReturn = handleSignedOutReturn();
-  if(!handledSignedOutReturn && !currentUser && !isPasswordRecoveryFlow && !isPasswordRecoveryUrl()) showMarketingSite(marketingRouteFromHash() || 'home');
+  if(!handledSignedOutReturn && !currentUser && !isPasswordRecoveryFlow && !isPasswordRecoveryUrl() && !isInvitationSetupFlow && !isInvitationUrl()) showMarketingSite(marketingRouteFromHash() || 'home');
   if(!handledSignedOutReturn) handleStripeReturnRefresh();
   loadAppointments().then(renderDashboardAppointments);
   if(!handledSignedOutReturn) tryRestoreAutosave();
