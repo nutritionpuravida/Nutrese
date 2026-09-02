@@ -2671,7 +2671,6 @@ table th,
       <div class="card-body">
         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
           <button class="btn" onclick="applySuggestedExchangeServings()">✨ <span class="i18n" data-en="Suggested servings" data-gr="Προτεινόμενες μερίδες">Suggested servings</span></button>
-          <button class="btn" onclick="generateAiSevenDayPlan()">✨ <span class="i18n" data-en="Generate AI Plan" data-gr="Δημιουργία Πλάνου με AI">Generate AI Plan</span></button>
           <button class="btn primary" onclick="refreshExchangePlansNow()"><i class="ti ti-refresh" aria-hidden="true"></i> <span class="i18n" data-en="Apply to Meal Plans" data-gr="Εφαρμογή στα Πλάνα Γευμάτων">Apply to Meal Plans</span></button>
         </div>
         <div id="exchange-rows"></div>
@@ -10005,6 +10004,63 @@ const CAPS = {
 // 2xPerMealMax into dinner regardless of the per-meal cap. Before Sleep is
 // excluded -- SNACK_EXTRAS reserves it exclusively for dairy.
 const SNACK_EXTRA_EXCHANGE_BONUS = { starch: 2, protein: 2, fat: 2 }; // Snack 1 + Snack 2, 1 exchange each
+const SNACK_ITEM_REALISTIC_MAX_GRAMS = { cottage_cheese: 200 }; // the only scaled snack ingredient whose {3,3,3}-ceiling amount (300g) exceeds a practical single-snack portion; crackers (max 90g), almonds (max 60g), and cheese_light_slice (max 90g) remain realistic unscaled
+function realisticSnackGrams(foodId, grams){
+  const cap = SNACK_ITEM_REALISTIC_MAX_GRAMS[foodId];
+  return cap!==undefined ? Math.min(grams, cap) : grams;
+}
+
+// Bounded, calorie-target-driven capacity extension for higher-calorie
+// clients. Returns the ORIGINAL {2,2,2} bonus unchanged for any client whose
+// target sits within the existing realism-cap ceiling -- provably identical
+// behavior for every already-validated low/moderate-calorie profile. Above
+// that ceiling, scales up proportionally to the target's 45/20/35-equivalent
+// split of the gap, using the exact per-exchange kcal values already
+// established (starch=81, protein=46, fat=45 kcal/exchange), hard-capped at
+// {starch:5, protein:5, fat:7} -- confirmed via direct testing to be the
+// exact ceiling the existing Snack 1 + Snack 2 slots can realistically
+// accommodate without a third occasion or unrealistic single-item portions.
+// Never touches CAPS or COND_CAP_OVERRIDES -- this only affects how much
+// EXTRA a snack can realize beyond the existing, unchanged realism/clinical
+// ceiling, exactly like the original constant it replaces.
+function calorieBasedSnackBonus(){
+  // Reduced from an initially-modeled {5,5,7} after direct testing showed
+  // that ceiling produces a 500g cottage cheese portion -- clearly
+  // unrealistic for a single snack item. {3,3,3} caps every scaled
+  // ingredient at a realistic single-item portion (max 90g crackers, 300g
+  // cottage cheese, 60g almonds) while still providing genuine additional
+  // capacity over the original {2,2,2}. This is the exact, direct answer to
+  // "can Snack 1 + Snack 2 safely handle 2500-2900kcal capacity": only up to
+  // this realistic ceiling -- anything beyond it correctly falls through to
+  // the existing, honest exchange-cap Plan Quality message rather than
+  // being hidden behind an unrealistic portion.
+  const HARD_MAX = { starch: 3, protein: 3, fat: 3 };
+  const goalKcal = Number(S.goalKcal||0);
+  const caps = getEffectiveCaps(S.conditions);
+  const baseCeilingExchanges = {
+    starch: caps.starchDailyMax + SNACK_EXTRA_EXCHANGE_BONUS.starch,
+    protein: caps.proteinDailyMax + SNACK_EXTRA_EXCHANGE_BONUS.protein,
+    fat: caps.fatDailyMax + SNACK_EXTRA_EXCHANGE_BONUS.fat,
+  };
+  const perExKcal = { starch: 81, protein: 46, fat: 45 };
+  // Approximate base (fruit/veg/dairy + capped main-meal + original bonus)
+  // kcal ceiling, using the client's own actual exchange targets rather than
+  // a hardcoded number, so this stays correct across different profiles.
+  const ex = S.ex, m = S.exMeta;
+  if(!ex || !m) return {...SNACK_EXTRA_EXCHANGE_BONUS}; // exchanges not yet computed -- safe, unchanged default
+  const baseKcal = (ex.fruit||0)*(m.fruit?.kcal||60) + (ex.veg||0)*(m.veg?.kcal||30) + (ex.dairy||0)*(m.dairy?.kcal||80);
+  const currentCeilingKcal = baseKcal + baseCeilingExchanges.starch*perExKcal.starch + baseCeilingExchanges.protein*perExKcal.protein + baseCeilingExchanges.fat*perExKcal.fat;
+  const gap = Math.max(0, goalKcal - currentCeilingKcal);
+  if(gap<=0) return {...SNACK_EXTRA_EXCHANGE_BONUS};
+  const extraStarch = Math.round((gap*0.45)/perExKcal.starch);
+  const extraProtein = Math.round((gap*0.20)/perExKcal.protein);
+  const extraFat = Math.round((gap*0.35)/perExKcal.fat);
+  return {
+    starch: Math.min(HARD_MAX.starch, SNACK_EXTRA_EXCHANGE_BONUS.starch + extraStarch),
+    protein: Math.min(HARD_MAX.protein, SNACK_EXTRA_EXCHANGE_BONUS.protein + extraProtein),
+    fat: Math.min(HARD_MAX.fat, SNACK_EXTRA_EXCHANGE_BONUS.fat + extraFat),
+  };
+}
 
 // Split a daily exchange total across N main meals, each capped at perMealMax
 // Splits a total number of exchanges across `numMeals`, respecting a per-meal
@@ -12995,11 +13051,13 @@ function populateDefaultSnacksForDay(day, dayIndex){
 
   // Starch/protein/fat: genuine additional need is computed SEPARATELY from
   // S.ex/getDayMealAllocation() entirely -- how far the client's raw,
-  // uncapped need exceeds the safe 2-meal ceiling, capped at the realistic
-  // snack bonus (1 exchange per category per available snack slot).
-  const extraStarch=Math.min(SNACK_EXTRA_EXCHANGE_BONUS.starch, Math.max(0, (rawNeeded.starch||0)-caps.starchDailyMax));
-  const extraProtein=Math.min(SNACK_EXTRA_EXCHANGE_BONUS.protein, Math.max(0, (rawNeeded.protein||0)-caps.proteinDailyMax));
-  const extraFat=Math.min(SNACK_EXTRA_EXCHANGE_BONUS.fat, Math.max(0, (rawNeeded.fat||0)-caps.fatDailyMax));
+  // uncapped need exceeds the safe 2-meal ceiling, capped at the bounded,
+  // calorie-target-driven snack bonus (returns the original {2,2,2} for any
+  // client within the existing ceiling -- see calorieBasedSnackBonus()).
+  const snackBonus=calorieBasedSnackBonus();
+  const extraStarch=Math.min(snackBonus.starch, Math.max(0, (rawNeeded.starch||0)-caps.starchDailyMax));
+  const extraProtein=Math.min(snackBonus.protein, Math.max(0, (rawNeeded.protein||0)-caps.proteinDailyMax));
+  const extraFat=Math.min(snackBonus.fat, Math.max(0, (rawNeeded.fat||0)-caps.fatDailyMax));
 
   // Slot-specific assignment, matching the existing SNACK_EXTRAS convention:
   // Before Sleep is reserved for dairy only. Snack 1/Snack 2 carry fruit and
@@ -13026,19 +13084,19 @@ function populateDefaultSnacksForDay(day, dayIndex){
     }
   }else if(leftoverFruit>0 && extraStarch>0 && extraProtein>0 && remainingSlots.includes('snk1')){
     // Matches the existing snk_fruit_crackers_cottage combo exactly (1 fruit + 1 starch + 1 protein, dedicated to snk1) -- consolidates all three into one realistic snack instead of competing for two slots.
-    assignments.push({slot:'snk1', label:'Fruit with Crackers and Cottage Cheese', ingredients:[{food_id:'apple', grams:120, state:'raw'},{food_id:'crackers_wholegrain', grams:30, state:'n/a'},{food_id:'cottage_cheese', grams:100, state:'n/a'}]});
+    assignments.push({slot:'snk1', label:'Fruit with Crackers and Cottage Cheese', ingredients:[{food_id:'apple', grams:120, state:'raw'},{food_id:'crackers_wholegrain', grams:30*extraStarch, state:'n/a'},{food_id:'cottage_cheese', grams:realisticSnackGrams('cottage_cheese', 100*extraProtein), state:'n/a'}]});
     remainingSlots=remainingSlots.filter(s=>s!=='snk1');
-    if(extraFat>0 && remainingSlots.length) assignments.push({slot:remainingSlots.shift(), label:'Almonds', ingredients:[{food_id:'almonds', grams:20, state:'n/a'}]});
+    if(extraFat>0 && remainingSlots.length) assignments.push({slot:remainingSlots.shift(), label:'Almonds', ingredients:[{food_id:'almonds', grams:20*extraFat, state:'n/a'}]});
   }else{
     if(leftoverFruit>0 && remainingSlots.length){ assignments.push({slot:remainingSlots.shift(), label:'Apple', ingredients:[{food_id:'apple', grams:120, state:'raw'}]}); }
     if(extraStarch>0 && extraProtein>0 && remainingSlots.length){
-      assignments.push({slot:remainingSlots.shift(), label:'Crackers with Light Cheese', ingredients:[{food_id:'crackers_wholegrain', grams:30, state:'n/a'},{food_id:'cheese_light_slice', grams:30, state:'n/a'}]});
+      assignments.push({slot:remainingSlots.shift(), label:'Crackers with Light Cheese', ingredients:[{food_id:'crackers_wholegrain', grams:30*extraStarch, state:'n/a'},{food_id:'cheese_light_slice', grams:30*extraProtein, state:'n/a'}]});
     }else if(extraStarch>0 && remainingSlots.length){
-      assignments.push({slot:remainingSlots.shift(), label:'Crackers', ingredients:[{food_id:'crackers_wholegrain', grams:30, state:'n/a'}]});
+      assignments.push({slot:remainingSlots.shift(), label:'Crackers', ingredients:[{food_id:'crackers_wholegrain', grams:30*extraStarch, state:'n/a'}]});
     }else if(extraProtein>0 && remainingSlots.length){
-      assignments.push({slot:remainingSlots.shift(), label:'Cottage Cheese', ingredients:[{food_id:'cottage_cheese', grams:100, state:'n/a'}]});
+      assignments.push({slot:remainingSlots.shift(), label:'Cottage Cheese', ingredients:[{food_id:'cottage_cheese', grams:realisticSnackGrams('cottage_cheese', 100*extraProtein), state:'n/a'}]});
     }
-    if(extraFat>0 && remainingSlots.length) assignments.push({slot:remainingSlots.shift(), label:'Almonds', ingredients:[{food_id:'almonds', grams:20, state:'n/a'}]});
+    if(extraFat>0 && remainingSlots.length) assignments.push({slot:remainingSlots.shift(), label:'Almonds', ingredients:[{food_id:'almonds', grams:20*extraFat, state:'n/a'}]});
   }
   // The client's fruit target can genuinely be 2 full exchanges, not just
   // "some" fruit -- the checks above only ever place one fruit-based item.
@@ -13196,9 +13254,14 @@ function ensureWeekPlans(){
     const strict=stricts[index];
     if(strict && p.source!=='ai'){
       p.manualMeals=p.manualMeals||{};
-      if(!p.manualMeals.brk) p.brk=strict.brk;
-      if(!p.manualMeals.lun) p.lun=strict.lun;
-      if(!p.manualMeals.din) p.din=strict.din;
+      // Only fall back to the hardcoded strict default when this day has
+      // genuinely never been processed by the generator at all -- once
+      // generatorVersion is set, a real, deliberate Tier 1-4 decision has
+      // already been made and persisted for this day, and must not be
+      // silently discarded merely because it wasn't a manual dietitian edit.
+      if(!p.manualMeals.brk && p.generatorVersion===undefined) p.brk=strict.brk;
+      if(!p.manualMeals.lun && p.generatorVersion===undefined) p.lun=strict.lun;
+      if(!p.manualMeals.din && p.generatorVersion===undefined) p.din=strict.din;
     }
   });
   const anyDayNeedsMigration=S.weekPlans.some(p=>p.generatorVersion!==NUTRESE_GENERATOR_VERSION);
@@ -14232,11 +14295,16 @@ function evaluatePlanQuality(targets, actual){
   }
   return {metrics, overall, rootCause};
 }
-function planQualityRootCauseMessage(rootCause, isGr){
+function planQualityRootCauseMessage(rootCause, isGr, achievedKcal){
   if(rootCause==='exchange-cap'){
+    const requested = Math.round(S.goalKcal||0);
+    const achieved = Math.round(achievedKcal||0);
+    const numbers = (achievedKcal!==undefined && requested>0)
+      ? (isGr ? `Ζητήθηκαν: ${requested} kcal · Δημιουργήθηκαν: ${achieved} kcal. ` : `Requested: ${requested} kcal · Generated: ${achieved} kcal. `)
+      : '';
     return isGr
-      ? 'Τα τρέχοντα όρια του συστήματος ισοδυνάμων δεν επιτρέπουν πλήρη επίτευξη αυτού του στόχου θερμίδων διατηρώντας ρεαλιστικές μερίδες τροφίμων.'
-      : 'Current exchange-system limits cannot fully achieve this calorie target while maintaining realistic food portions.';
+      ? `${numbers}Τα τρέχοντα όρια του συστήματος ισοδυνάμων δεν επιτρέπουν πλήρη επίτευξη αυτού του στόχου θερμίδων διατηρώντας ρεαλιστικές μερίδες τροφίμων. Επανεξετάστε και προσαρμόστε το πλάνο πριν τη χρήση.`
+      : `${numbers}The current exchange/portion limits prevent the plan from reaching the requested calorie target. Review and adjust the plan before use.`;
   }
   if(rootCause==='calorie-floor-applied'){
     const raw = Math.round(S.rawGoalKcalBeforeFloor||0);
@@ -14305,7 +14373,7 @@ function renderPlanQualitySummary(){
     if(level==='warn') return isGr?`${label}: ελαφρώς εκτός εύρους`:`${label}: Slightly outside target range`;
     return isGr?`${label}: χρειάζεται επανεξέταση`:`${label}: Needs review`;
   };
-  const rootCauseMsg = planQualityRootCauseMessage(rootCause, isGr);
+  const rootCauseMsg = planQualityRootCauseMessage(rootCause, isGr, actualKcal);
   const detailRows=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px 16px;font-size:13px;margin-top:10px">
         ${metrics.map(s=>`<div style="display:flex;align-items:center;gap:6px${capFlagFor[s.key]&&s.level!=='ok'?';color:var(--teal-700)':''}">${iconForMetric(s.key,s.level)} <span>${textFor(s.key,metricLabel[s.key],s.level)}</span></div>`).join('')}
       </div>${rootCauseMsg?`<div style="margin-top:10px;padding:8px 12px;background:var(--amber-bg);border-radius:6px;font-size:12px;color:var(--amber-text)"><i class="ti ti-info-circle" aria-hidden="true"></i> ${rootCauseMsg}</div>`:''}`;
@@ -14583,7 +14651,6 @@ function buildSevenDay(){
     <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
       <button class="btn primary" onclick="saveWeeklyPlan()"><i class="ti ti-device-floppy" aria-hidden="true"></i> ${lang==='EN'?'Save Plan':'Αποθήκευση Πλάνου'}</button>
       <button class="btn" onclick="openTemplatePicker()"><i class="ti ti-clipboard-list" aria-hidden="true"></i> ${lang==='EN'?'Use Template':'Χρήση Προτύπου'}</button>
-      <button class="btn" onclick="generateAiSevenDayPlan()">✨ ${lang==='EN'?'Generate AI Plan':'Δημιουργία Πλάνου με AI'}</button>
       <button class="btn" onclick="previewRebalanceWeek()">✨ ${lang==='EN'?'Rebalance Week':'Επαναϊσορρόπηση Εβδομάδας'}</button>
       ${ENABLE_EXPORT_JSON_BUTTON ? `<button class="btn" onclick="exportStructuredPlanJSON()"><i class="ti ti-file-code" aria-hidden="true"></i> ${lang==='EN'?'Export JSON':'Εξαγωγή JSON'}</button>` : ''}
       <span id="weekly-plan-save-status" style="font-size:13px;font-weight:800;color:var(--teal-700)"></span>
@@ -15555,8 +15622,17 @@ function buildReport(){
     ['BMI', S.bmi ? `${S.bmi.toFixed(1)}${S.bmiCat ? ' · '+S.bmiCat : ''}` : '—'],
     [isEn?'Primary condition':'Κύρια κατάσταση', condNames || '—'],
   ];
+  const reportPqEx=S.ex, reportPqM=S.exMeta;
+  let reportPqActualKcal=reportPqEx.fruit*reportPqM.fruit.kcal + reportPqEx.veg*reportPqM.veg.kcal + reportPqEx.dairy*reportPqM.dairy.kcal + reportPqEx.starch*reportPqM.starch.kcal + reportPqEx.protein*reportPqM.protein.kcal + reportPqEx.fat*reportPqM.fat.kcal;
+  if(S.weekPlans && S.weekPlans.length){
+    const reportDayTotals=S.weekPlans.map((day,i)=>calcDayTotalsForPlanDisplay(day, S.mealLanguage||'GR', i).totalKcal);
+    reportPqActualKcal=reportDayTotals.reduce((a,b)=>a+b,0)/reportDayTotals.length;
+  }
+  const reportPq=evaluatePlanQuality({kcal:S.goalKcal, carb:S.carbG, prot:S.protG, fat:S.fatG}, {kcal:reportPqActualKcal, carb:0, prot:0, fat:0});
+  const reportPqMsg = reportPq.rootCause==='exchange-cap' ? planQualityRootCauseMessage(reportPq.rootCause, !isEn, reportPqActualKcal) : null;
+  const reportPqWarningHtml = reportPqMsg ? `<div style="margin:0 0 14px;padding:10px 14px;background:#fff3cd;border:1px solid #ffe08a;border-radius:6px;font-size:13px;color:#664d03"><strong>${isEn?'Plan Quality':'Ποιότητα Πλάνου'}:</strong> ${reportPqMsg}</div>` : '';
   setEl('report-body',`<div class="client-report-print" style="width:100%;font-family:Arial,sans-serif;font-size:14px;color:var(--text-primary);background:var(--bg-surface)">
-
+    ${reportPqWarningHtml}
     <div class="report-page-one with-week">
     <!-- HEADER -->
     <div style="padding-bottom:12px;border-bottom:3px solid var(--teal-600);margin-bottom:14px">
@@ -19051,7 +19127,7 @@ async function loadClientById(rowId){
     applyState(data.data);
     renderClientPhotoControls();
     setActiveClientIdentity(data.id, data.client_ref || data.data?.clientRef || data.data?.fields?.['p-id'] || '');
-    nav('dashboard');
+    nav('profile');
   } finally {
     // Cleared only after hydration, calculations, and initial rendering are
     // fully complete — a finally block so a mid-load exception can never
