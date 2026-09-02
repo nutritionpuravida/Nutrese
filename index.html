@@ -13043,7 +13043,27 @@ function halfPortionFruit(fruit){
   return {food_id:fruit.food_id, grams:Math.round(fruit.grams/2), state:'raw', label:fruit.label};
 }
 function populateDefaultSnacksForDay(day, dayIndex){
-  if(day.generatorVersion === NUTRESE_GENERATOR_VERSION) return;
+  // generatorVersion===current is normally sufficient proof this day's
+  // snacks are already correct -- but it can also predate a fix elsewhere
+  // (e.g. the persistCustomMealsLocal() gap fixed earlier this session) that
+  // left an existing client's saved snk1/snk2 key pointing at a custom meal
+  // that no longer exists. Detect that specific case -- a genuinely dangling
+  // reference on a slot NOT protected by manualMeals -- and treat it exactly
+  // like a missing snack, eligible for regeneration, rather than trusting
+  // the version number alone. A manually-protected slot is never touched
+  // here regardless of whether it resolves, since that's the dietitian's
+  // deliberate choice, not something for the generator to second-guess.
+  const manualMealsForDangleCheck = day.manualMeals||{};
+  const isDangling = (slot) => {
+    const key = day[slot];
+    return isCustomMealKey(key) && !manualMealsForDangleCheck[slot] && !getCustomMealByKey(key);
+  };
+  const hasDanglingSnack = isDangling('snk1') || isDangling('snk2');
+  if(day.generatorVersion === NUTRESE_GENERATOR_VERSION && !hasDanglingSnack) return;
+  if(hasDanglingSnack){
+    if(isDangling('snk1')) day.snk1 = null;
+    if(isDangling('snk2')) day.snk2 = null;
+  }
   if(!dayUsesUnifiedSnackModel(day) || day.source==='ai'){
     day.generatorVersion = NUTRESE_GENERATOR_VERSION;
     return;
@@ -13914,6 +13934,21 @@ function applyMealPlanTemplate(templateKey){
   // existing STRICT_WEEK_MEALS behavior.
   if(Array.isArray(S.weekPlans) && S.weekPlans.length){
     S.preTemplateSnapshot = JSON.parse(JSON.stringify(S.weekPlans));
+    // The weekPlans snapshot above only preserves the snk1/snk2/sleep KEYS --
+    // not the underlying S.customMeals objects those keys point to. The
+    // snack-regeneration this function triggers below deliberately deletes
+    // the old default-generator custom meal for any slot it re-evaluates
+    // (see populateDefaultSnacksForDay()'s own cleanup logic), so without
+    // this, "Remove Template" would restore a reference to an object that
+    // no longer exists. Captured now, before that cleanup ever runs.
+    const referencedIdsForSnapshot = new Set();
+    S.weekPlans.forEach(day => ['snk1','snk2','sleep'].forEach(slot => {
+      const key = day[slot];
+      if (isCustomMealKey(key)) referencedIdsForSnapshot.add(customMealIdFromKey(key));
+    }));
+    S.preTemplateCustomMealsSnapshot = (S.customMeals||[])
+      .filter(m => referencedIdsForSnapshot.has(String(m.id)))
+      .map(m => JSON.parse(JSON.stringify(m)));
   }
   const isGr = window.appLang==='gr';
   // 0. Clinical condition, if the template targets one — guard against silently
@@ -14066,6 +14101,15 @@ function removeCurrentTemplate(){
   if(hasSnapshot){
     S.weekPlans = S.preTemplateSnapshot;
     S.preTemplateSnapshot = null;
+    if(Array.isArray(S.preTemplateCustomMealsSnapshot) && S.preTemplateCustomMealsSnapshot.length){
+      const currentIds = new Set((S.customMeals||[]).map(m=>String(m.id)));
+      const toRestore = S.preTemplateCustomMealsSnapshot.filter(m => !currentIds.has(String(m.id)));
+      if(toRestore.length){
+        S.customMeals = [...toRestore, ...(S.customMeals||[])];
+        persistCustomMealsLocal();
+      }
+    }
+    S.preTemplateCustomMealsSnapshot = null;
   }else{
     const dietType=v('p-diet')||S.dietType||'Omnivore';
     const stricts={
