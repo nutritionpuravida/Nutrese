@@ -13932,7 +13932,11 @@ function applyMealPlanTemplate(templateKey){
   // captured if a real plan already exists; if not, there is nothing to
   // restore later, and removeCurrentTemplate() correctly falls back to its
   // existing STRICT_WEEK_MEALS behavior.
-  if(Array.isArray(S.weekPlans) && S.weekPlans.length){
+  // Only capture if no undo snapshot already exists -- if a template is
+  // already active and a second one is applied without removing the first,
+  // the undo point must remain the TRUE original (pre-first-template) state,
+  // not get overwritten with the intermediate, already-templated state.
+  if(!S.preTemplateSnapshot && Array.isArray(S.weekPlans) && S.weekPlans.length){
     S.preTemplateSnapshot = JSON.parse(JSON.stringify(S.weekPlans));
     // The weekPlans snapshot above only preserves the snk1/snk2/sleep KEYS --
     // not the underlying S.customMeals objects those keys point to. The
@@ -18515,6 +18519,8 @@ return {
     ex:S.ex, exAuto:S.exAuto, exMeta:S.exMeta, tracking:S.tracking, mealSel:S.mealSel,
     weekPlans:S.weekPlans, savedWeeklyPlan:S.savedWeeklyPlan, customMeals:S.customMeals, mealLanguage:S.mealLanguage, reportOptions:S.reportOptions,
     currentTemplate:S.currentTemplate||null,
+    preTemplateSnapshot:S.preTemplateSnapshot||null,
+    preTemplateCustomMealsSnapshot:S.preTemplateCustomMealsSnapshot||null,
     sevenDayView:S.sevenDayView, sevenDayActiveIndex:S.sevenDayActiveIndex, aiPlanStatus:S.aiPlanStatus,
     optionalSlotsVisible:S.optionalSlotsVisible,
     weightSuggestionLocked:S.weightSuggestionLocked, bcManual:S.bcManual,
@@ -18585,6 +18591,8 @@ function applyState(state){
     dayUsesUnifiedSnackModel(d) && d.source!=='ai' && d.generatorVersion===undefined
   );
   S.currentTemplate=state.currentTemplate||null;
+  S.preTemplateSnapshot=state.preTemplateSnapshot||null;
+  S.preTemplateCustomMealsSnapshot=state.preTemplateCustomMealsSnapshot||null;
   S.sevenDayView=state.sevenDayView||'day';
   S.sevenDayActiveIndex=state.sevenDayActiveIndex!==undefined ? (Number(state.sevenDayActiveIndex)||0) : 0;
   S.aiPlanStatus=state.aiPlanStatus!==undefined ? state.aiPlanStatus : '';
