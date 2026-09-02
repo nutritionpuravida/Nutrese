@@ -13018,6 +13018,22 @@ function selectWeeklyMainMeals(weekPlans){
   });
 }
 
+const SNACK_FRUIT_ROTATION_POOL = [
+  {food_id:'apple', grams:120, label:'Apple'},
+  {food_id:'raspberries', grams:120, label:'Raspberries'},
+]; // restricted to these two after direct testing: both are EXACTLY 62.4 kcal/exchange (confirmed via kcal100*grams/100) -- banana (89kcal) and clementine (34.8kcal) measurably shifted daily totals, conflicting with the explicit priority of calorie accuracy over variety
+function pickRotatingFruit(dayIndex, excludeFoodId){
+  const pool = excludeFoodId ? SNACK_FRUIT_ROTATION_POOL.filter(f=>f.food_id!==excludeFoodId) : SNACK_FRUIT_ROTATION_POOL;
+  return pool[((dayIndex||0) % pool.length + pool.length) % pool.length];
+}
+function halfPortionFruit(fruit){
+  // Halving a food already calibrated to exactly 1 exchange at its own
+  // grams value yields ~0.5 exchange's worth from that food -- two
+  // different half-portions together sum to ~1 full exchange, the same
+  // total the single full-size portion represented, just split across two
+  // slots for variety and Snack 2 consistency instead of concentrated in one.
+  return {food_id:fruit.food_id, grams:Math.round(fruit.grams/2), state:'raw', label:fruit.label};
+}
 function populateDefaultSnacksForDay(day, dayIndex){
   if(day.generatorVersion === NUTRESE_GENERATOR_VERSION) return;
   if(!dayUsesUnifiedSnackModel(day) || day.source==='ai'){
@@ -13088,7 +13104,21 @@ function populateDefaultSnacksForDay(day, dayIndex){
     remainingSlots=remainingSlots.filter(s=>s!=='snk1');
     if(extraFat>0 && remainingSlots.length) assignments.push({slot:remainingSlots.shift(), label:'Almonds', ingredients:[{food_id:'almonds', grams:20*extraFat, state:'n/a'}]});
   }else{
-    if(leftoverFruit>0 && remainingSlots.length){ assignments.push({slot:remainingSlots.shift(), label:'Apple', ingredients:[{food_id:'apple', grams:120, state:'raw'}]}); }
+    const noBonusWillFillOtherSlot = extraStarch<=0 && extraProtein<=0 && extraFat<=0;
+    if(leftoverFruit===1 && noBonusWillFillOtherSlot && remainingSlots.length>=2){
+      // Nothing else would fill the second slot -- split the single fruit
+      // exchange across both slots (two different rotating fruits, half
+      // portion each) instead of leaving Snack 2 empty. Same total
+      // fruit-exchange amount as before, just distributed across two slots.
+      const fruitA = pickRotatingFruit(dayIndex);
+      const fruitB = pickRotatingFruit(dayIndex+1, fruitA.food_id);
+      const halfA = halfPortionFruit(fruitA), halfB = halfPortionFruit(fruitB);
+      assignments.push({slot:remainingSlots.shift(), label:halfA.label, ingredients:[{food_id:halfA.food_id, grams:halfA.grams, state:'raw'}]});
+      assignments.push({slot:remainingSlots.shift(), label:halfB.label, ingredients:[{food_id:halfB.food_id, grams:halfB.grams, state:'raw'}]});
+    }else if(leftoverFruit>0 && remainingSlots.length){
+      const fruit = pickRotatingFruit(dayIndex);
+      assignments.push({slot:remainingSlots.shift(), label:fruit.label, ingredients:[{food_id:fruit.food_id, grams:fruit.grams, state:'raw'}]});
+    }
     if(extraStarch>0 && extraProtein>0 && remainingSlots.length){
       assignments.push({slot:remainingSlots.shift(), label:'Crackers with Light Cheese', ingredients:[{food_id:'crackers_wholegrain', grams:30*extraStarch, state:'n/a'},{food_id:'cheese_light_slice', grams:30*extraProtein, state:'n/a'}]});
     }else if(extraStarch>0 && remainingSlots.length){
@@ -13105,7 +13135,12 @@ function populateDefaultSnacksForDay(day, dayIndex){
   // used above) as a candidate -- the unchanged overshoot guard below still
   // decides whether it actually fits; this never forces anything.
   if(leftoverFruit>=2 && remainingSlots.length){
-    assignments.push({slot:remainingSlots.shift(), label:'Banana', ingredients:[{food_id:'banana', grams:100, state:'raw'}]});
+    const alreadyUsedFruitIds = new Set(assignments.flatMap(a=>a.ingredients.map(i=>i.food_id)).filter(id=>SNACK_FRUIT_ROTATION_POOL.some(f=>f.food_id===id)));
+    let secondFruit = pickRotatingFruit(dayIndex+1);
+    if(alreadyUsedFruitIds.has(secondFruit.food_id)){
+      secondFruit = SNACK_FRUIT_ROTATION_POOL.find(f=>!alreadyUsedFruitIds.has(f.food_id)) || secondFruit;
+    }
+    assignments.push({slot:remainingSlots.shift(), label:secondFruit.label, ingredients:[{food_id:secondFruit.food_id, grams:secondFruit.grams, state:'raw'}]});
   }
   if(leftoverDairy>0 && isEligible('sleep')) assignments.push({slot:'sleep', label:'Milk', ingredients:[{food_id:'milk_lowfat', grams:240, state:'n/a'}]});
 
