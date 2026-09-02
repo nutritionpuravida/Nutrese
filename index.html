@@ -13270,7 +13270,19 @@ function ensureWeekPlans(){
   }
   S.weekPlans.forEach((p,index)=>{
     const wasStaleVersion=p.generatorVersion!==NUTRESE_GENERATOR_VERSION;
-    if(!S.existingClientSnackSuggestionPending) populateDefaultSnacksForDay(p, index);
+    // Snacks are populated whenever this day has genuinely never had them
+    // generated before (tracked separately from generatorVersion via
+    // snacksGeneratedOnce), REGARDLESS of the main-meal migration pause --
+    // populateDefaultSnacksForDay() never touches main meals, exchanges, or
+    // manual edits, so it carries none of the risk that pause exists for.
+    // This closes the confirmed gap where a restored old client's snacks
+    // stayed genuinely null until the dietitian noticed and answered the
+    // separate main-meal-improvement banner.
+    const needsSnackPopulation = (!p.snk1 || !p.snk2) && !p.snacksGeneratedOnce;
+    if(needsSnackPopulation || !S.existingClientSnackSuggestionPending){
+      populateDefaultSnacksForDay(p, index);
+      p.snacksGeneratedOnce = true;
+    }
     if(wasStaleVersion && !S.existingClientSnackSuggestionPending && !p.weeklySelectionApplied) computeTargetAwareGeneratorBonus(p, index);
     if(!dayUsesUnifiedSnackModel(p)){
       p.snk1Extras=[...new Set([...(Array.isArray(p.snk1Extras)?p.snk1Extras:[]), ...(Array.isArray(p.snack1Extras)?p.snack1Extras:[])])];
