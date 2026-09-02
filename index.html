@@ -13936,7 +13936,7 @@ function applyMealPlanTemplate(templateKey){
   // already active and a second one is applied without removing the first,
   // the undo point must remain the TRUE original (pre-first-template) state,
   // not get overwritten with the intermediate, already-templated state.
-  if(!S.preTemplateSnapshot && Array.isArray(S.weekPlans) && S.weekPlans.length){
+  if(!S.currentTemplate && Array.isArray(S.weekPlans) && S.weekPlans.length){
     S.preTemplateSnapshot = JSON.parse(JSON.stringify(S.weekPlans));
     // The weekPlans snapshot above only preserves the snk1/snk2/sleep KEYS --
     // not the underlying S.customMeals objects those keys point to. The
