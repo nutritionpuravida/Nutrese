@@ -12971,6 +12971,14 @@ function resolveDayMainMeals(day, dayIndex, lang, target, toleranceCeiling, dail
           lunInst=getStructuredInstanceForSlot(lunKey, allocLD.portions.lunch);
           dinInst=getStructuredInstanceForSlot(dinKey, allocLD.portions.dinner);
         }catch(e){ continue; }
+        // Cheap pre-filter: reduction only ever LOWERS combined kcal, so if
+        // the base (pre-reduction) total is already below what's needed to
+        // leave room for both snacks, no amount of reduction can help --
+        // skip the expensive internal search entirely for this candidate.
+        const baseCombinedKcal = lunInst.totals.kcal + dinInst.totals.kcal;
+        const roomNeeded = target - REQUIRED_SNACK_MIN_KCAL;
+        if(baseCombinedKcal < roomNeeded) continue; // too low already -- reduction can't help
+        if(baseCombinedKcal > roomNeeded + 100) continue; // too high -- max reduction (100kcal) can't bring it down enough
         const found=findMinimalReduction(lunKey, dinKey, 10, 100);
         if(!found) continue;
         const check=checkExchangeReasonable(lunInst.exchanges, dinInst.exchanges);
@@ -13182,6 +13190,7 @@ function populateDefaultSnacksForDay(day, dayIndex){
     const id='cm_default_'+Date.now()+'_'+item.slot;
     const meal={id, name:item.label, instance, updated_at:new Date().toISOString(), localOnly:true, source:'default-generator'};
     S.customMeals=[meal, ...(S.customMeals||[])];
+    persistCustomMealsLocal(); // keep localStorage in sync immediately -- otherwise the next loadCustomMeals() call (any nav to sevenday/oneday/report) unconditionally overwrites S.customMeals with a stale cached snapshot that predates this newly-generated snack, silently discarding it
     day[item.slot]='CUSTOM_'+id;
     // FIX: generated snacks were never actually visible in the real UI --
     // S.optionalSlotsVisible was never set, unlike the equivalent AI-plan
@@ -13896,6 +13905,16 @@ function pickTemplateDayMeals(tpl, dayIndex, prevDay){
 function applyMealPlanTemplate(templateKey){
   const tpl=MEAL_PLAN_TEMPLATES[templateKey];
   if(!tpl) return;
+  // Capture a genuinely independent, deep-cloned snapshot of the plan as it
+  // existed immediately BEFORE this template is applied -- separate from
+  // S.currentTemplate.snapshot (which captures the template's own as-applied
+  // state for a different purpose, Reapply Original Template). Only
+  // captured if a real plan already exists; if not, there is nothing to
+  // restore later, and removeCurrentTemplate() correctly falls back to its
+  // existing STRICT_WEEK_MEALS behavior.
+  if(Array.isArray(S.weekPlans) && S.weekPlans.length){
+    S.preTemplateSnapshot = JSON.parse(JSON.stringify(S.weekPlans));
+  }
   const isGr = window.appLang==='gr';
   // 0. Clinical condition, if the template targets one — guard against silently
   // overwriting a different condition already set for this client (conditions
@@ -13936,12 +13955,21 @@ function applyMealPlanTemplate(templateKey){
     day.brk=firstCompatibleMealKey(BREAKFAST_OPTIONS, picked.brk, templateDiet, 'BRK_OATS_VEGAN');
     day.lun=firstCompatibleMealKey(LUNCH_OPTIONS, picked.lun, templateDiet, '__NONE__');
     day.din=firstCompatibleMealKey(DINNER_OPTIONS, picked.din, templateDiet, '__NONE__');
-    day.manualMeals={brk:true, lun:true, din:true};
+    day.manualMeals={...(day.manualMeals||{}), brk:true, lun:true, din:true};
     delete day.aiMeals;
     day.source='template';
     day.snk1Extras=[...tpl.snacks.snk1]; day.snack1Extras=day.snk1Extras;
     day.snk2Extras=[...tpl.snacks.snk2]; day.snack2Extras=day.snk2Extras;
     day.sleepExtras=[...tpl.snacks.sleep];
+    // The main meals just changed -- force snacks to be re-evaluated against
+    // them on the next ensureWeekPlans() call, rather than leaving them
+    // silently stale against meals that no longer exist. This does NOT
+    // discard existing snacks unconditionally: populateDefaultSnacksForDay()
+    // (unchanged) still respects manualMeals[slot] for snk1/snk2/sleep via
+    // its own isEligible() check, so a deliberately customized/protected
+    // snack is left untouched -- only an automatically-generated one gets
+    // genuinely re-evaluated.
+    day.generatorVersion=undefined;
     prevDay=picked;
   });
   const dietWarnings=enforceWeekPlanDietCompatibility(templateDiet);
@@ -14021,35 +14049,45 @@ function reapplyOriginalTemplate(){
 }
 window.reapplyOriginalTemplate=reapplyOriginalTemplate;
 
-// "Remove Template" — exits template mode entirely and restores Nutrese's
-// own default intelligent meal-planning system (the diet-appropriate
-// STRICT_WEEK_MEALS variant), same starting point as a never-templated plan.
+// "Remove Template" — restores the plan exactly as it existed before this
+// template was applied (S.preTemplateSnapshot, captured at the start of
+// applyMealPlanTemplate()), when that snapshot is available. Falls back to
+// the original behavior (Nutrese's default STRICT_WEEK_MEALS system) only
+// when no snapshot exists -- e.g. a client/template combination saved
+// before this fix, or a template applied to a client with no prior plan.
 function removeCurrentTemplate(){
   if(!S.currentTemplate) return;
   const isGr = window.appLang==='gr';
-  if(!confirm(isGr
-    ? 'Αφαίρεση προτύπου και επαναφορά στο προεπιλεγμένο έξυπνο σύστημα πλάνων γευμάτων του Nutrese; Το τρέχον πλάνο θα αντικατασταθεί.'
-    : "Remove the template and restore Nutrese's default intelligent meal-planning system? The current plan will be replaced.")) return;
-  const dietType=v('p-diet')||S.dietType||'Omnivore';
-  const stricts={
-    Vegetarian: STRICT_WEEK_MEALS_VEGETARIAN,
-    Vegan: STRICT_WEEK_MEALS_VEGAN,
-    Pescatarian: STRICT_WEEK_MEALS_PESCATARIAN,
-  }[dietType] || STRICT_WEEK_MEALS;
-  ensureWeekPlans();
-  S.weekPlans.forEach((day,i)=>{
-    const strict=stricts[i];
-    day.manualMeals={};
-    delete day.aiMeals;
-    day.source='engine';
-    if(strict){ day.brk=strict.brk; day.lun=strict.lun; day.din=strict.din; }
-    const base=WEEK_PLANS[i];
-    day.snk1Extras=[...(base?.snk1Extras||['fruit'])]; day.snack1Extras=day.snk1Extras;
-    day.snk2Extras=[...(base?.snk2Extras||['fruit'])]; day.snack2Extras=day.snk2Extras;
-    day.sleepExtras=[...(base?.sleepExtras||[])];
-  });
-  enforceWeeklyTunaCap(S.weekPlans);
-  enforceWeekPlanDietCompatibility(dietType);
+  const hasSnapshot = Array.isArray(S.preTemplateSnapshot) && S.preTemplateSnapshot.length>0;
+  const confirmMsg = hasSnapshot
+    ? (isGr ? 'Αφαίρεση αυτού του προτύπου και επαναφορά του πλάνου που είχατε πριν την εφαρμογή του;' : 'Remove this template and restore the plan you had before applying it?')
+    : (isGr ? 'Αφαίρεση προτύπου και επαναφορά στο προεπιλεγμένο έξυπνο σύστημα πλάνων γευμάτων του Nutrese; Το τρέχον πλάνο θα αντικατασταθεί.' : "Remove the template and restore Nutrese's default intelligent meal-planning system? The current plan will be replaced.");
+  if(!confirm(confirmMsg)) return;
+  if(hasSnapshot){
+    S.weekPlans = S.preTemplateSnapshot;
+    S.preTemplateSnapshot = null;
+  }else{
+    const dietType=v('p-diet')||S.dietType||'Omnivore';
+    const stricts={
+      Vegetarian: STRICT_WEEK_MEALS_VEGETARIAN,
+      Vegan: STRICT_WEEK_MEALS_VEGAN,
+      Pescatarian: STRICT_WEEK_MEALS_PESCATARIAN,
+    }[dietType] || STRICT_WEEK_MEALS;
+    ensureWeekPlans();
+    S.weekPlans.forEach((day,i)=>{
+      const strict=stricts[i];
+      day.manualMeals={};
+      delete day.aiMeals;
+      day.source='engine';
+      if(strict){ day.brk=strict.brk; day.lun=strict.lun; day.din=strict.din; }
+      const base=WEEK_PLANS[i];
+      day.snk1Extras=[...(base?.snk1Extras||['fruit'])]; day.snack1Extras=day.snk1Extras;
+      day.snk2Extras=[...(base?.snk2Extras||['fruit'])]; day.snack2Extras=day.snk2Extras;
+      day.sleepExtras=[...(base?.sleepExtras||[])];
+    });
+    enforceWeeklyTunaCap(S.weekPlans);
+    enforceWeekPlanDietCompatibility(dietType);
+  }
   S.currentTemplate=null;
   if(!S_isHydrating){
     S_isDirty=true;
