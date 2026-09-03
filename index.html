@@ -15122,13 +15122,22 @@ function renderSevenDayWeekSummary(lang='GR'){
       const sleep=showBeforeSleepColumn ? getSevenDaySlotData(p, dt, 'sleep', lang, i) : null;
       const rowBg=i%2===0?pal.row:pal.alt;
       const tdStyle=tdStyleFor(rowBg);
+      // Small, unobtrusive action links beneath a main-meal cell's text --
+      // reuses openCustomMealBuilder()/openMealLibrary() completely
+      // unchanged, with the exact same {type:'week',dayIndex,key} context
+      // the day-view cards already use for this same slot.
+      const mainMealActionsHtml=(key)=>`<div style="margin-top:4px;font-size:11px;font-weight:700">
+        <a href="javascript:void(0)" onclick="openCustomMealBuilder({type:'week',dayIndex:${i},key:'${key}'})" style="color:${important(pal.kcal)};text-decoration:none">${lang==='EN'?'Add food':'Προσθήκη'}</a>
+        <span style="color:${important(pal.border)}"> · </span>
+        <a href="javascript:void(0)" onclick="openMealLibrary({type:'week',dayIndex:${i},key:'${key}'})" style="color:${important(pal.kcal)};text-decoration:none">${lang==='EN'?'Library':'Βιβλιοθήκη'}</a>
+      </div>`;
       return `<tr style="border-bottom:1px solid ${pal.border} !important;background:${important(rowBg)}">
         <td style="${tdStyle};font-weight:900;color:${important(pal.day)}">${safeHtml(weekDayLabel(p,i,lang))}</td>
-        <td style="${tdStyle}">${safeHtml(stripHtmlTags(brk.text||'—'))}</td>
+        <td style="${tdStyle}">${safeHtml(stripHtmlTags(brk.text||'—'))}${mainMealActionsHtml('brk')}</td>
         <td style="${tdStyle}">${safeHtml(stripHtmlTags(snk1.text||'—'))}</td>
-        <td style="${tdStyle}">${safeHtml(stripHtmlTags(lun.text||'—'))}</td>
+        <td style="${tdStyle}">${safeHtml(stripHtmlTags(lun.text||'—'))}${mainMealActionsHtml('lun')}</td>
         <td style="${tdStyle}">${safeHtml(stripHtmlTags(snk2.text||'—'))}</td>
-        <td style="${tdStyle}">${safeHtml(stripHtmlTags(din.text||'—'))}</td>
+        <td style="${tdStyle}">${safeHtml(stripHtmlTags(din.text||'—'))}${mainMealActionsHtml('din')}</td>
         ${showBeforeSleepColumn ? `<td style="${tdStyle}">${safeHtml(stripHtmlTags(sleep?.text||'—'))}</td>` : ''}
         <td style="${tdStyle};text-align:right;font-weight:900;color:${important(pal.kcal)}">${dt.totalKcal}</td>
       </tr>`;
