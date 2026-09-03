@@ -1811,7 +1811,7 @@ table th,
 #page-bodycomp .card { border-radius:18px; overflow:hidden; }
 #page-tracking .card { border-radius:18px; overflow:hidden; }
 #page-oneday .card { border-radius:18px; overflow:hidden; }
-#page-sevenday .card { border-radius:18px; overflow:hidden; }
+#page-sevenday .card { border-radius:18px; overflow:visible; }
 #page-macros .card-header { border-bottom:1px solid rgba(212,221,209,.48); background:linear-gradient(135deg,rgba(15,118,110,.045),rgba(255,255,255,.72)); }
 #page-macros .form-grid.three .form-field { padding:14px; border:1px solid rgba(212,221,209,.62); border-radius:16px; background:linear-gradient(145deg,rgba(255,255,255,.78),rgba(248,252,250,.92)); }
 #page-macros .form-grid.three .form-field label { font-size:12px!important; font-weight:900!important; letter-spacing:.04em; text-transform:uppercase; color:var(--text-muted); }
@@ -14780,7 +14780,7 @@ function buildSevenDay(){
     const activeTab=i===active;
     return `<button class="btn ${activeTab?'primary':''}" style="padding:7px 10px;font-size:12px;min-width:58px" onclick="setSevenDayActive(${i})">${safeHtml(weekDayLabel(p,i,lang).slice(0,3))}</button>`;
   }).join('');
-  let html=`<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:12px">
+  let html=`<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:12px;position:sticky;top:0;z-index:20;background:var(--bg-page);padding:8px 0">
     <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
       <button class="btn primary" onclick="saveWeeklyPlan()"><i class="ti ti-device-floppy" aria-hidden="true"></i> ${lang==='EN'?'Save Plan':'Αποθήκευση Πλάνου'}</button>
       <button class="btn" onclick="openTemplatePicker()"><i class="ti ti-clipboard-list" aria-hidden="true"></i> ${lang==='EN'?'Use Template':'Χρήση Προτύπου'}</button>
