@@ -18991,6 +18991,7 @@ async function newClient(){
   S_isHydrating=true;
   try{
     resetForm();
+    maybeOfferAutosaveRestore(null);
     await ensureActiveClientIdentity();
     nav('profile');
   } finally {
@@ -19217,6 +19218,7 @@ async function saveCurrentClient(options={}){
 }
 
 async function loadClientById(rowId){
+  maybeOfferAutosaveRestore(rowId);
   // Warn before switching, so in-progress edits to the current client
   // aren't silently lost — same protection newClient() already has.
   if(S_isDirty){
@@ -19443,6 +19445,7 @@ function setAutosaveStatus(state, text){
   el.textContent=text || '';
 }
 function autosaveSession(){
+  if(!S_isDirty) return; // nothing unsaved to protect -- writing here anyway would leave a stale-but-identical autosave that later triggers an unnecessary, misleading restore prompt for a client that was already fully, explicitly saved
   try{
     localStorage.setItem('nutriflow_autosave', JSON.stringify(captureState()));
     // The local working-draft protects against tab closes/refreshes, but it
@@ -19543,7 +19546,26 @@ function tryRestoreAutosave(){
   if(!saved || !saved.fields) return;
   const hasData = saved.fields['p-name'] || saved.fields['p-age'] || saved.fields['p-weight'];
   if(!hasData) return;
+  // Only capture the pending draft here -- do NOT show the modal yet. At
+  // this point in startup, no specific client has been opened, so there is
+  // nothing meaningful to compare the draft's clientId against. Showing it
+  // unconditionally here was the confirmed cause of a stale, unrelated
+  // client's autosave silently blocking whatever client the dietitian
+  // opens next. See maybeOfferAutosaveRestore(), called once an actual
+  // client context (new or existing) is entered.
   window._pendingRestoreDraft=saved;
+}
+// Offers the pending autosave restore ONLY if it genuinely belongs to the
+// client context now being entered -- targetClientId is the id being
+// opened (loadClientById), or null for a brand-new, unsaved client
+// (newClient). A draft with no clientId represents a client that was never
+// saved at all, so it is only offered when starting a new client (both
+// sides null) -- never for an existing, different, already-saved client.
+function maybeOfferAutosaveRestore(targetClientId){
+  const saved=window._pendingRestoreDraft;
+  if(!saved) return;
+  const savedClientId=saved.clientId||null;
+  if(savedClientId!==(targetClientId||null)) return;
   const nameEl=document.getElementById('restore-session-client-name');
   if(nameEl) nameEl.textContent = saved.fields['p-name'] || (window.appLang==='gr'?'άγνωστος πελάτης':'unnamed client');
   const modal=document.getElementById('restore-session-modal');
