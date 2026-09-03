@@ -3020,6 +3020,22 @@ table th,
     </div>
   </div>
 
+  <div id="meal-library-modal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.62);z-index:9999;align-items:center;justify-content:center;padding:18px">
+    <div class="card" style="width:min(760px,96vw);max-height:90vh;overflow:auto;margin:0">
+      <div class="card-header">
+        <span class="card-title"><i class="ti ti-bookmarks" aria-hidden="true"></i> <span class="i18n" data-en="Saved meals" data-gr="Αποθηκευμένα γεύματα">Saved meals</span></span>
+        <button class="btn" onclick="closeMealLibrary()" style="margin-left:auto"><i class="ti ti-x" aria-hidden="true"></i> <span class="i18n" data-en="Close" data-gr="Κλείσιμο">Close</span></button>
+      </div>
+      <div class="card-body">
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <input type="text" id="meal-library-search" class="i18n-ph" style="flex:1" data-en-ph="Search saved meals by name" data-gr-ph="Αναζήτηση αποθηκευμένων γευμάτων με όνομα" placeholder="Search saved meals by name" oninput="renderMealLibrary()">
+          <button class="btn primary" onclick="openCustomMealBuilder({type:'library'})"><i class="ti ti-plus" aria-hidden="true"></i> <span class="i18n" data-en="New saved meal" data-gr="Νέο αποθηκευμένο γεύμα">New saved meal</span></button>
+        </div>
+        <div id="meal-library-list"></div>
+      </div>
+    </div>
+  </div>
+
   <div id="custom-meal-modal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.62);z-index:9999;align-items:center;justify-content:center;padding:18px">
     <div class="card" style="width:min(920px,96vw);max-height:90vh;overflow:auto;margin:0">
       <div class="card-header">
@@ -3031,7 +3047,7 @@ table th,
         <div class="form-grid two">
           <div class="form-field"><label><span class="i18n" data-en="Search foods to add" data-gr="Αναζήτηση τροφίμων για προσθήκη">Search foods to add</span></label>
             <div style="display:flex;gap:8px">
-              <input type="text" id="custom-meal-search" class="i18n-ph" style="flex:1" data-en-ph="e.g. chicken, potato, olive oil" data-gr-ph="π.χ. κοτόπουλο, πατάτα, ελαιόλαδο" placeholder="e.g. chicken, potato, olive oil" onkeydown="if(event.key==='Enter') searchCustomMealFoods()">
+              <input type="text" id="custom-meal-search" class="i18n-ph" style="flex:1" data-en-ph="e.g. chicken, potato, olive oil" data-gr-ph="π.χ. κοτόπουλο, πατάτα, ελαιόλαδο" placeholder="e.g. chicken, potato, olive oil" onkeydown="if(event.key==='Enter') searchCustomMealFoods()" oninput="clearTimeout(window.__customMealSearchDebounce); window.__customMealSearchDebounce=setTimeout(searchCustomMealFoods, 250)">
               <button class="btn primary" type="button" onclick="searchCustomMealFoods()" style="white-space:nowrap"><i class="ti ti-search" aria-hidden="true"></i> <span class="i18n" data-en="Search" data-gr="Αναζήτηση">Search</span></button>
             </div>
           </div>
@@ -15047,6 +15063,7 @@ function renderSevenDayMealCard(dayPlan, dt, slot, lang, dayIndex, oneDayMode=fa
       </div>
       ${foodRowsHtml ? `<div class="seven-day-food-list">${foodRowsHtml}</div>` : `<div class="seven-day-meal-desc">${isEmptySlot ? (lang==='EN'?'No foods added yet.':'Δεν έχουν προστεθεί τρόφιμα ακόμη.') : (data.text||'—')}</div>`}
       <button class="btn primary seven-day-add-food-btn" onclick="openCustomMealBuilder(${builderContext})"><i class="ti ti-plus" aria-hidden="true"></i> ${lang==='EN'?'Add food':'Προσθήκη τροφίμου'}</button>
+      ${['brk','lun','din'].includes(slot.key) ? `<button class="btn seven-day-add-food-btn" onclick="openMealLibrary(${builderContext})"><i class="ti ti-bookmarks" aria-hidden="true"></i> ${lang==='EN'?'Choose from Library':'Επιλογή από Βιβλιοθήκη'}</button>` : ''}
       <div class="seven-day-secondary-actions">${secondaryActions}</div>
       <details class="seven-day-more-options"><summary>${lang==='EN'?'More options':'Περισσότερες επιλογές'}</summary>
         ${selectHtml ? `<div class="seven-day-control"><div class="seven-day-control-label">${lang==='EN'?'Replace entire meal':'Αντικατάσταση ολόκληρου γεύματος'}</div>${selectHtml}</div>` : ''}
@@ -17827,7 +17844,7 @@ async function loadCustomMeals(opts={}){
       });
       const fetchedIds=new Set(fetchedMeals.map(m=>String(m.id)));
       const preservedLocalOnly=(S.customMeals||[]).filter(m=>
-        referencedIds.has(String(m.id)) && !fetchedIds.has(String(m.id))
+        !fetchedIds.has(String(m.id)) && (referencedIds.has(String(m.id)) || m.source!=='default-generator')
       );
       S.customMeals=[...preservedLocalOnly, ...fetchedMeals];
       persistCustomMealsLocal();
@@ -17846,6 +17863,82 @@ function rebuildMealDropdownOptions(){
   if(lun) lun.innerHTML=mealOptionsHtml(filteredMealOptions(LUNCH_OPTIONS,diet), lun.value||S.mealSel?.lunch||'LUN_CHICKEN_RICE');
   if(din) din.innerHTML=mealOptionsHtml(filteredMealOptions(DINNER_OPTIONS,diet), din.value||S.mealSel?.dinner||'DIN_FISH_POTATO');
 }
+// ── SAVED MEALS LIBRARY ──
+// Reuses the existing S.customMeals/CUSTOM_<id>/localOnly architecture
+// entirely -- no parallel data model. A "saved" (library-worthy) meal is
+// simply any customMeal whose source isn't 'default-generator' (the flag
+// already set exclusively by the automatic snack generator) -- confirmed
+// via direct inspection to be the existing, correct distinction, requiring
+// no new field.
+function openMealLibrary(context){
+  S.mealLibraryContext=context||null;
+  setEl('meal-library-search','');
+  renderMealLibrary();
+  const modal=document.getElementById('meal-library-modal'); if(modal) modal.style.display='flex';
+}
+function closeMealLibrary(){ const modal=document.getElementById('meal-library-modal'); if(modal) modal.style.display='none'; }
+function renderMealLibrary(){
+  const el=document.getElementById('meal-library-list'); if(!el) return;
+  const isGr = window.appLang==='gr';
+  const query=(v('meal-library-search')||'').trim().toLowerCase();
+  const savedMeals=(S.customMeals||[]).filter(m=>m.source!=='default-generator');
+  const filtered=query ? savedMeals.filter(m=>(m.name||'').toLowerCase().includes(query)) : savedMeals;
+  if(!filtered.length){
+    el.innerHTML=`<div style="text-align:center;color:var(--text-muted);padding:20px">${savedMeals.length ? (isGr?'Δεν βρέθηκαν αποθηκευμένα γεύματα.':'No saved meals match your search.') : (isGr?'Δεν υπάρχουν ακόμη αποθηκευμένα γεύματα. Δημιουργήστε ένα με το κουμπί παραπάνω.':'No saved meals yet. Create one with the button above.')}</div>`;
+    return;
+  }
+  el.innerHTML=filtered.map(m=>{
+    const t=m.instance?.totals||{};
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--border);border-radius:10px;margin-bottom:8px">
+      <div style="flex:1">
+        <div style="font-weight:700">${safeHtml(m.name||'')}</div>
+        <div class="field-note">${Math.round(t.kcal||0)} kcal · ${formatFoodNumber(t.carbohydrate_g,'g')} ${isGr?'υδατ.':'carb'} · ${formatFoodNumber(t.protein_g,'g')} ${isGr?'πρωτ.':'protein'} · ${formatFoodNumber(t.fat_g,'g')} ${isGr?'λίπος':'fat'}</div>
+      </div>
+      <button class="btn primary" style="padding:6px 10px;font-size:12px" onclick="useLibraryMeal('${m.id}')" ${S.mealLibraryContext ? '' : 'disabled title="'+(isGr?'Ανοίξτε τη βιβλιοθήκη από ένα γεύμα (Πρωινό/Μεσημεριανό/Βραδινό) για χρήση.':'Open the library from a meal slot (Breakfast/Lunch/Dinner) to use this.')+'"'}>${isGr?'Χρήση':'Use'}</button>
+      <button class="btn" style="padding:6px 10px;font-size:12px" onclick="editLibraryMeal('${m.id}')">${isGr?'Επεξεργασία':'Edit'}</button>
+      <button class="btn" style="padding:6px 10px;font-size:12px" onclick="duplicateLibraryMeal('${m.id}')">${isGr?'Αντιγραφή':'Duplicate'}</button>
+      <button class="btn" style="padding:6px 10px;font-size:12px;color:var(--danger,#c0392b)" onclick="deleteLibraryMeal('${m.id}')">${isGr?'Διαγραφή':'Delete'}</button>
+    </div>`;
+  }).join('');
+}
+function useLibraryMeal(id){
+  const ctx=S.mealLibraryContext;
+  if(!ctx){ alert(window.appLang==='gr'?'Ανοίξτε τη βιβλιοθήκη από ένα γεύμα για χρήση.':'Open the library from a meal slot to use this.'); return; }
+  S.customMealContext=ctx;
+  applyCustomMealSelection('CUSTOM_'+id);
+  closeMealLibrary();
+}
+function editLibraryMeal(id){
+  closeMealLibrary();
+  openCustomMealBuilder({type:'library', editId:id});
+}
+function duplicateLibraryMeal(id){
+  const existing=getCustomMealByKey(id);
+  if(!existing) return;
+  const isGr = window.appLang==='gr';
+  closeMealLibrary();
+  S.customMealContext={type:'library'};
+  S.customMealDraft=JSON.parse(JSON.stringify(existing.instance||{ingredients:[],totals:{kcal:0,protein_g:0,carbohydrate_g:0,fat_g:0,fiber_g:0},exchanges:{}}));
+  S.customMealDraftIsAiSeeded=false;
+  const nameEl=document.getElementById('custom-meal-name');
+  if(nameEl) nameEl.value=(existing.name||'')+(isGr?' (αντίγραφο)':' (copy)');
+  setEl('custom-meal-search-status',''); setEl('custom-meal-search-results',''); setEl('custom-meal-save-status',''); setEl('custom-meal-regenerate-status','');
+  const regenRow=document.getElementById('custom-meal-regenerate-row');
+  if(regenRow) regenRow.style.display='none';
+  renderCustomMealDraft();
+  const modal=document.getElementById('custom-meal-modal'); if(modal) modal.style.display='flex';
+}
+async function deleteLibraryMeal(id){
+  const isGr = window.appLang==='gr';
+  if(!confirm(isGr?'Διαγραφή αυτού του αποθηκευμένου γεύματος; Δεν μπορεί να αναιρεθεί.':'Delete this saved meal? This cannot be undone.')) return;
+  if(currentUser){
+    try{ await supabaseClient.from('custom_meals').delete().eq('id',id).eq('user_id',currentUser.id); }
+    catch(e){ console.error('[Nutrese custom meals] delete failed', e); }
+  }
+  S.customMeals=(S.customMeals||[]).filter(m=>String(m.id)!==String(id));
+  persistCustomMealsLocal();
+  renderMealLibrary();
+}
 function openCustomMealBuilder(context){
   S.customMealContext=context||null;
   S.customMealDraftIsAiSeeded=false;
@@ -17857,7 +17950,9 @@ function openCustomMealBuilder(context){
     ? S.mealSel?.[context.slot]
     : context?.type==='week'
       ? S.weekPlans?.[context.dayIndex]?.[context.key]
-      : null;
+      : context?.type==='library' && context.editId
+        ? 'CUSTOM_'+context.editId
+        : null;
   // AI meal check FIRST — mirrors aiMealForSlot()'s own priority order
   // (dayPlan.aiMeals[slot] is checked before the raw key everywhere else
   // in the app, so seeding must follow the same precedence).
@@ -18071,19 +18166,36 @@ async function saveCustomMeal(){
   // separately-computed nutrition. Written into the existing 'ingredients'
   // column (JSONB — holds any structure) so no schema change is needed.
   const instance=S.customMealDraft;
-  let meal={id:'cm_'+Date.now(), name, instance, updated_at:new Date().toISOString(), localOnly:true};
+  const ctx=S.customMealContext;
+  const editingLibraryId=(ctx?.type==='library' && ctx.editId) ? ctx.editId : null;
+  let meal={id:editingLibraryId||('cm_'+Date.now()), name, instance, updated_at:new Date().toISOString(), localOnly:true};
   if(currentUser){
     try{
       const row={user_id:currentUser.id, name, ingredients:instance, nutrition:instance.totals, updated_at:new Date().toISOString()};
-      const {data,error}=await supabaseClient.from('custom_meals').insert(row).select().maybeSingle();
-      if(error) throw error;
-      if(data) meal={id:data.id, name:data.name, instance:data.ingredients||instance, updated_at:data.updated_at, localOnly:false};
+      if(editingLibraryId){
+        // Editing an already-persisted library meal in place -- UPDATE, not
+        // INSERT, so re-saving an edit never accumulates a duplicate row.
+        const {data,error}=await supabaseClient.from('custom_meals').update(row).eq('id',editingLibraryId).eq('user_id',currentUser.id).select().maybeSingle();
+        if(error) throw error;
+        if(data) meal={id:data.id, name:data.name, instance:data.ingredients||instance, updated_at:data.updated_at, localOnly:false};
+        else meal={id:editingLibraryId, name, instance, updated_at:new Date().toISOString(), localOnly:false};
+      } else {
+        const {data,error}=await supabaseClient.from('custom_meals').insert(row).select().maybeSingle();
+        if(error) throw error;
+        if(data) meal={id:data.id, name:data.name, instance:data.ingredients||instance, updated_at:data.updated_at, localOnly:false};
+      }
     }catch(e){ console.error('[Nutrese custom meals] save failed', e); setEl('custom-meal-save-status', isGr?'Αποθηκεύτηκε τοπικά. Ο πίνακας custom_meals ενδέχεται να μην έχει ρυθμιστεί ακόμη.':'Saved locally. Supabase custom_meals table may not be configured yet.'); }
   }
   S.customMeals=[meal,...(S.customMeals||[]).filter(m=>String(m.id)!==String(meal.id))];
   persistCustomMealsLocal();
-  applyCustomMealSelection('CUSTOM_'+meal.id);
-  closeCustomMealBuilder();
+  if(ctx?.type==='library'){
+    // Saving to/editing the library only -- no specific slot to apply to.
+    closeCustomMealBuilder();
+    openMealLibrary(S.mealLibraryContext);
+  } else {
+    applyCustomMealSelection('CUSTOM_'+meal.id);
+    closeCustomMealBuilder();
+  }
 }
 function applyCustomMealSelection(key){
   const ctx=S.customMealContext;
