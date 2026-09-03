@@ -13991,9 +13991,10 @@ function applyMealPlanTemplate(templateKey){
   let prevDay=null;
   S.weekPlans.forEach((day,i)=>{
     const picked=pickTemplateDayMeals(tpl, i, prevDay);
-    day.brk=firstCompatibleMealKey(BREAKFAST_OPTIONS, picked.brk, templateDiet, 'BRK_OATS_VEGAN');
-    day.lun=firstCompatibleMealKey(LUNCH_OPTIONS, picked.lun, templateDiet, '__NONE__');
-    day.din=firstCompatibleMealKey(DINNER_OPTIONS, picked.din, templateDiet, '__NONE__');
+    const wasManual={brk:!!day.manualMeals?.brk, lun:!!day.manualMeals?.lun, din:!!day.manualMeals?.din};
+    if(!wasManual.brk) day.brk=firstCompatibleMealKey(BREAKFAST_OPTIONS, picked.brk, templateDiet, 'BRK_OATS_VEGAN');
+    if(!wasManual.lun) day.lun=firstCompatibleMealKey(LUNCH_OPTIONS, picked.lun, templateDiet, '__NONE__');
+    if(!wasManual.din) day.din=firstCompatibleMealKey(DINNER_OPTIONS, picked.din, templateDiet, '__NONE__');
     day.manualMeals={...(day.manualMeals||{}), brk:true, lun:true, din:true};
     delete day.aiMeals;
     day.source='template';
@@ -17826,7 +17827,7 @@ async function loadCustomMeals(opts={}){
       });
       const fetchedIds=new Set(fetchedMeals.map(m=>String(m.id)));
       const preservedLocalOnly=(S.customMeals||[]).filter(m=>
-        m.localOnly && referencedIds.has(String(m.id)) && !fetchedIds.has(String(m.id))
+        referencedIds.has(String(m.id)) && !fetchedIds.has(String(m.id))
       );
       S.customMeals=[...preservedLocalOnly, ...fetchedMeals];
       persistCustomMealsLocal();
@@ -17983,6 +17984,16 @@ async function searchCustomMealFoods(){
       ...(food.aliases||[])
     ].filter(Boolean).join(' ').toLowerCase();
     return queryWords.every(w=>haystack.includes(w));
+  }).sort((a,b)=>{
+    // Prioritize matches from the beginning of the typed text: a display
+    // name that starts with the full query ranks highest, then a name
+    // whose first word starts with the query, then everything else --
+    // alphabetical within each tier for a stable, predictable order.
+    const nameA=(a.name?.clinical?.[isGr?'gr':'en']||'').toLowerCase();
+    const nameB=(b.name?.clinical?.[isGr?'gr':'en']||'').toLowerCase();
+    const rank=(name)=> name.startsWith(query) ? 0 : name.split(/[\s,]+/).some(w=>w.startsWith(query)) ? 1 : 2;
+    const rankDiff=rank(nameA)-rank(nameB);
+    return rankDiff!==0 ? rankDiff : nameA.localeCompare(nameB);
   }).slice(0,20);
   renderCustomMealSearchResults();
   const n=customMealSearchResults.length;
