@@ -2782,6 +2782,7 @@ table th,
     <div class="card">
       <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
         <span class="card-title"><i class="ti ti-calendar" aria-hidden="true"></i> <span class="i18n" data-en="7-Day Meal Plan" data-gr="Πλάνο Γευμάτων 7 Ημερών">7-Day Meal Plan</span></span>
+        <div id="manual-scratch-nav-button"></div>
         <button class="btn primary" onclick="openNewMealPlanChoice()"><i class="ti ti-plus" aria-hidden="true"></i> <span class="i18n" data-en="New Meal Plan" data-gr="Νέο Πλάνο Γευμάτων">New Meal Plan</span></button>
       </div>
       <div class="card-body">
@@ -2799,12 +2800,6 @@ table th,
       <h3 id="new-meal-plan-title" class="i18n" data-en="Create a new meal plan" data-gr="Δημιουργία νέου πλάνου γευμάτων">Create a new meal plan</h3>
       <p class="field-note i18n" data-en="Choose how you'd like to build this client's 7-day plan." data-gr="Επιλέξτε πώς θέλετε να δημιουργήσετε το πλάνο 7 ημερών του πελάτη.">Choose how you'd like to build this client's 7-day plan.</p>
       <div style="display:flex;flex-direction:column;gap:10px;margin-top:14px">
-        <button class="btn primary" style="justify-content:flex-start;padding:14px 16px" onclick="closeNewMealPlanChoice(); generateAiSevenDayPlan();">
-          <div style="text-align:left">
-            <div style="font-weight:600">✨ <span class="i18n" data-en="Generate Automatically (AI)" data-gr="Αυτόματη Δημιουργία (AI)">Generate Automatically (AI)</span></div>
-            <div style="font-weight:400;font-size:12.5px;opacity:0.85" class="i18n" data-en="Nutrese suggests a full 7-day plan based on this client's targets — review and adjust afterward." data-gr="Το Nutrese προτείνει ένα πλήρες πλάνο 7 ημερών βάσει των στόχων του πελάτη — ελέγξτε και προσαρμόστε στη συνέχεια.">Nutrese suggests a full 7-day plan based on this client's targets — review and adjust afterward.</div>
-          </div>
-        </button>
         <button class="btn" style="justify-content:flex-start;padding:14px 16px" onclick="startManualPlanFromScratch()">
           <div style="text-align:left">
             <div style="font-weight:600">✏️ <span class="i18n" data-en="Build Manually From Scratch" data-gr="Χειροκίνητη Δημιουργία από την Αρχή">Build Manually From Scratch</span></div>
@@ -12787,6 +12782,14 @@ function closeNewMealPlanChoice(){
 function startManualPlanFromScratch(){
   closeNewMealPlanChoice();
   ensureWeekPlans();
+  // Preserve the existing generated plan so the dietitian can always return
+  // to it -- never destroy it. Snapshot ONLY if one doesn't already exist
+  // (mirrors the established, already-validated template-undo pattern),
+  // so repeated manual edits never overwrite the true original generated
+  // plan with an intermediate, already-cleared state.
+  if(!S.preManualScratchSnapshot){
+    S.preManualScratchSnapshot = JSON.parse(JSON.stringify(S.weekPlans));
+  }
   S.weekPlans = S.weekPlans.map(p=>({
     ...p,
     brk:'__NONE__', lun:'__NONE__', din:'__NONE__',
@@ -12795,6 +12798,29 @@ function startManualPlanFromScratch(){
   }));
   S.currentTemplate=null;
   S.savedWeeklyPlan=null;
+  S.inManualScratchMode=true;
+  buildSevenDay();
+  scheduleAutosave();
+}
+// Switches back to the previously-existing generated plan, WITHOUT
+// regenerating it (restored exactly from the snapshot) and WITHOUT losing
+// whatever manual work is in progress -- that work is itself snapshotted
+// first, so switching is fully bidirectional and non-destructive in both
+// directions.
+function viewGeneratedPlanFromManualScratch(){
+  if(!S.preManualScratchSnapshot) return;
+  S.manualScratchInProgressSnapshot = JSON.parse(JSON.stringify(S.weekPlans));
+  S.weekPlans = JSON.parse(JSON.stringify(S.preManualScratchSnapshot));
+  S.inManualScratchMode=false;
+  buildSevenDay();
+  scheduleAutosave();
+}
+// Switches back to the in-progress manual/scratch plan after having viewed
+// the generated plan -- restores exactly what was there, never re-clears.
+function viewManualScratchPlan(){
+  if(!S.manualScratchInProgressSnapshot) return;
+  S.weekPlans = JSON.parse(JSON.stringify(S.manualScratchInProgressSnapshot));
+  S.inManualScratchMode=true;
   buildSevenDay();
   scheduleAutosave();
 }
@@ -14953,10 +14979,22 @@ function renderMicronutrientCoverage(){
   </div>`;
 }
 
+function renderManualScratchNavButton(){
+  const el=document.getElementById('manual-scratch-nav-button'); if(!el) return;
+  const isGr = window.appLang==='gr';
+  if(S.inManualScratchMode && S.preManualScratchSnapshot){
+    el.innerHTML = `<button class="btn" onclick="viewGeneratedPlanFromManualScratch()"><i class="ti ti-arrow-left" aria-hidden="true"></i> ${isGr?'Επιστροφή στο Δημιουργημένο Πλάνο':'Back to Generated Plan'}</button>`;
+  } else if(!S.inManualScratchMode && S.manualScratchInProgressSnapshot){
+    el.innerHTML = `<button class="btn" onclick="viewManualScratchPlan()"><i class="ti ti-arrow-right" aria-hidden="true"></i> ${isGr?'Επιστροφή στο Χειροκίνητο Πλάνο':'Back to Manual Plan'}</button>`;
+  } else {
+    el.innerHTML = '';
+  }
+}
 function buildSevenDay(){
   traceDecision('buildSevenDay','entry',{definition:'buildSevenDay#2', mealLanguage:S.mealLanguage, sevenDayView:S.sevenDayView, activeIndex:S.sevenDayActiveIndex});
   updateMealLanguageButtons();
   ensureWeekPlans();
+  renderManualScratchNavButton();
   const lang=S.mealLanguage||'GR';
   const active=Math.min(Math.max(Number(S.sevenDayActiveIndex||0),0),6);
   S.sevenDayActiveIndex=active;
@@ -19099,6 +19137,7 @@ return {
     ex:S.ex, exAuto:S.exAuto, exMeta:S.exMeta, tracking:S.tracking, mealSel:S.mealSel,
     weekPlans:S.weekPlans, savedWeeklyPlan:S.savedWeeklyPlan, customMeals:S.customMeals, mealLanguage:S.mealLanguage, reportOptions:S.reportOptions,
     workspaceCells:S.workspaceCells,
+    preManualScratchSnapshot:S.preManualScratchSnapshot, manualScratchInProgressSnapshot:S.manualScratchInProgressSnapshot, inManualScratchMode:S.inManualScratchMode,
     currentTemplate:S.currentTemplate||null,
     preTemplateSnapshot:S.preTemplateSnapshot||null,
     preTemplateCustomMealsSnapshot:S.preTemplateCustomMealsSnapshot||null,
@@ -19141,6 +19180,9 @@ function applyState(state){
   if(state.customMeals) S.customMeals=state.customMeals; // intentionally shared dietitian-wide library, not client-specific — see Recipe/Custom Meal architecture notes
   if(Array.isArray(state.workspaceCells) && state.workspaceCells.length===7) S.workspaceCells=state.workspaceCells;
   else ensureWorkspaceCells(); // pre-feature client -- fresh, empty grid, no migration needed
+  S.preManualScratchSnapshot = Array.isArray(state.preManualScratchSnapshot) ? state.preManualScratchSnapshot : null;
+  S.manualScratchInProgressSnapshot = Array.isArray(state.manualScratchInProgressSnapshot) ? state.manualScratchInProgressSnapshot : null;
+  S.inManualScratchMode = !!state.inManualScratchMode;
   const brkEl=document.getElementById('s-breakfast'), lunEl=document.getElementById('s-lunch'), dinEl=document.getElementById('s-dinner');
   if(brkEl) brkEl.innerHTML = mealOptionsHtml(filteredMealOptions(BREAKFAST_OPTIONS,diet), (state.fields&&state.fields['s-breakfast'])||'BRK_TOAST');
   if(lunEl) lunEl.innerHTML = mealOptionsHtml(filteredMealOptions(LUNCH_OPTIONS,diet), (state.fields&&state.fields['s-lunch'])||'LUN_CHICKEN_RICE');
@@ -19249,6 +19291,7 @@ function resetForm(){
   S.mealSel={breakfast:'BRK_TOAST',lunch:'LUN_CHICKEN_RICE',dinner:'DIN_FISH_POTATO',snack1Extras:[],snack2Extras:[],sleepExtras:[],snackModelVersion:'ingredients-v2'};
   S.weekPlans=freshWeekPlans();
   S.workspaceCells=undefined; ensureWorkspaceCells();
+  S.preManualScratchSnapshot=null; S.manualScratchInProgressSnapshot=null; S.inManualScratchMode=false;
   S.currentTemplate=null;
   S.savedWeeklyPlan=null;
   S.aiPlanStatus='';
