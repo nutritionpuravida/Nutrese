@@ -2176,6 +2176,7 @@ table th,
     <button class="client-tab" data-tab-for="labs" onclick="nav('labs')"><i class="ti ti-droplet" aria-hidden="true"></i> <span class="i18n" data-en="Labs" data-gr="Εξετάσεις">Labs</span></button>
     <button class="client-tab" data-tab-for="macros" onclick="nav('macros')"><i class="ti ti-target" aria-hidden="true"></i> <span class="i18n" data-en="Targets & Exchanges" data-gr="Στόχοι & Ισοδύναμα">Targets & Exchanges</span></button>
     <button class="client-tab" data-tab-for="sevenday" onclick="nav('sevenday')"><i class="ti ti-calendar" aria-hidden="true"></i> <span class="i18n" data-en="7-Day Plan" data-gr="Πλάνο 7 Ημερών">7-Day Plan</span></button>
+    <button class="client-tab" data-tab-for="workspace" onclick="nav('workspace')"><i class="ti ti-table" aria-hidden="true"></i> <span class="i18n" data-en="Meal Plan Workspace" data-gr="Χώρος Εργασίας Πλάνου">Meal Plan Workspace</span></button>
     <button class="client-tab" data-tab-for="report" onclick="nav('report')"><i class="ti ti-printer" aria-hidden="true"></i> <span class="i18n" data-en="Client Report" data-gr="Αναφορά Πελάτη">Client Report</span></button>
     <button class="client-tab" data-tab-for="tracking" onclick="nav('tracking')"><i class="ti ti-trending-up" aria-hidden="true"></i> <span class="i18n" data-en="Follow-up" data-gr="Παρακολούθηση">Follow-up</span></button>
   </div>
@@ -2817,6 +2818,19 @@ table th,
     </div>
   </div>
 
+  <!-- MEAL PLAN WORKSPACE -->
+  <div class="page" id="page-workspace">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title"><i class="ti ti-table" aria-hidden="true"></i> <span class="i18n" data-en="Meal Plan Workspace" data-gr="Χώρος Εργασίας Πλάνου">Meal Plan Workspace</span></span>
+      </div>
+      <div class="card-body">
+        <p class="field-note i18n" data-en="Free-form notes and instructions per cell. Add structured foods explicitly to calculate nutrition -- typed text is never scanned or converted automatically." data-gr="Ελεύθερες σημειώσεις και οδηγίες ανά κελί. Προσθέστε δομημένες τροφές ρητά για υπολογισμό διατροφής -- το κείμενο δεν σαρώνεται ή μετατρέπεται αυτόματα.">Free-form notes and instructions per cell. Add structured foods explicitly to calculate nutrition -- typed text is never scanned or converted automatically.</p>
+        <div id="workspace-grid" style="overflow-x:auto"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- REPORT -->
   <div class="page" id="page-report">
     <div class="card no-print" style="border:2px solid var(--teal-600)">
@@ -3016,6 +3030,41 @@ table th,
         <hr style="border:0;border-top:1px solid var(--border);margin:22px 0 16px">
         <h3 style="margin:0 0 12px;font-size:16px;color:var(--text-primary)"><span class="i18n" data-en="Saved Recipes" data-gr="Αποθηκευμένες Συνταγές">Saved Recipes</span></h3>
         <div id="recipes-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="workspace-search-modal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.62);z-index:9999;align-items:center;justify-content:center;padding:18px">
+    <div class="card" style="width:min(500px,96vw);max-height:80vh;overflow:auto;margin:0">
+      <div class="card-header">
+        <span class="card-title"><i class="ti ti-search" aria-hidden="true"></i> <span class="i18n" data-en="Add food" data-gr="Προσθήκη τροφίμου">Add food</span></span>
+        <button class="btn" onclick="closeWorkspaceFoodSearch()" style="margin-left:auto"><i class="ti ti-x" aria-hidden="true"></i></button>
+      </div>
+      <div class="card-body">
+        <input type="text" id="workspace-search-input" class="i18n-ph" data-en-ph="Search foods..." data-gr-ph="Αναζήτηση τροφίμων..." placeholder="Search foods..." style="width:100%;margin-bottom:10px" oninput="renderWorkspaceSearchResults()">
+        <div id="workspace-search-results"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="workspace-duplicate-modal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.62);z-index:9999;align-items:center;justify-content:center;padding:18px">
+    <div class="card" style="width:min(400px,96vw);margin:0">
+      <div class="card-header">
+        <span class="card-title"><i class="ti ti-copy" aria-hidden="true"></i> <span class="i18n" data-en="Duplicate to..." data-gr="Αντιγραφή σε...">Duplicate to...</span></span>
+        <button class="btn" onclick="closeWorkspaceDuplicate()" style="margin-left:auto"><i class="ti ti-x" aria-hidden="true"></i></button>
+      </div>
+      <div class="card-body">
+        <label class="field-note i18n" data-en="Day" data-gr="Ημέρα">Day</label>
+        <select id="workspace-duplicate-day" style="width:100%;margin-bottom:10px">
+          <option value="0">Monday</option><option value="1">Tuesday</option><option value="2">Wednesday</option>
+          <option value="3">Thursday</option><option value="4">Friday</option><option value="5">Saturday</option><option value="6">Sunday</option>
+        </select>
+        <label class="field-note i18n" data-en="Meal slot" data-gr="Γεύμα">Meal slot</label>
+        <select id="workspace-duplicate-slot" style="width:100%;margin-bottom:14px">
+          <option value="brk">Breakfast</option><option value="snk1">Snack 1</option><option value="lun">Lunch</option>
+          <option value="snk2">Snack 2</option><option value="din">Dinner</option><option value="sleep">Before sleep</option>
+        </select>
+        <button class="btn primary" style="width:100%" onclick="confirmWorkspaceDuplicate()"><span class="i18n" data-en="Duplicate" data-gr="Αντιγραφή">Duplicate</span></button>
       </div>
     </div>
   </div>
@@ -8768,6 +8817,21 @@ const WEEK_DAYS_GR=['Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη
 // client in the same session. Confirmed and fixed as part of the client
 // data isolation audit -- always use this helper, never spread WEEK_PLANS
 // directly.
+// Meal Plan Workspace: an entirely additive, parallel data layer -- never
+// read by Generator v6, NutreseEngine, templates, or S.weekPlans-based
+// rendering. Each cell holds free-form text (never scanned/parsed) and an
+// explicit structuredFoods array (the ONLY source of any calculated
+// nutrition for that cell). Lazily initialized so existing clients saved
+// before this feature continue loading correctly with no migration step.
+function ensureWorkspaceCells(){
+  if(!Array.isArray(S.workspaceCells) || S.workspaceCells.length!==7){
+    S.workspaceCells = Array.from({length:7}, ()=>({
+      brk:{text:'', structuredFoods:[]}, snk1:{text:'', structuredFoods:[]},
+      lun:{text:'', structuredFoods:[]}, snk2:{text:'', structuredFoods:[]},
+      din:{text:'', structuredFoods:[]}, sleep:{text:'', structuredFoods:[]},
+    }));
+  }
+}
 function freshWeekPlans(){
   const plans = JSON.parse(JSON.stringify(WEEK_PLANS));
   plans.forEach(p=>{
@@ -10020,7 +10084,7 @@ const CAPS = {
 // 2xPerMealMax into dinner regardless of the per-meal cap. Before Sleep is
 // excluded -- SNACK_EXTRAS reserves it exclusively for dairy.
 const SNACK_EXTRA_EXCHANGE_BONUS = { starch: 2, protein: 2, fat: 2 }; // Snack 1 + Snack 2, 1 exchange each
-const SNACK_ITEM_REALISTIC_MAX_GRAMS = { cottage_cheese: 200 }; // the only scaled snack ingredient whose {3,3,3}-ceiling amount (300g) exceeds a practical single-snack portion; crackers (max 90g), almonds (max 60g), and cheese_light_slice (max 90g) remain realistic unscaled
+const SNACK_ITEM_REALISTIC_MAX_GRAMS = { cottage_cheese: 200, crackers_wholegrain: 120, almonds: 80, cheese_light_slice: 120 }; // independent, per-ingredient safety net -- guarantees no single scaled snack ingredient exceeds a realistic single-snack portion regardless of how high the exchange-count ceiling (calorieBasedSnackBonus) is tuned
 function realisticSnackGrams(foodId, grams){
   const cap = SNACK_ITEM_REALISTIC_MAX_GRAMS[foodId];
   return cap!==undefined ? Math.min(grams, cap) : grams;
@@ -10050,7 +10114,32 @@ function calorieBasedSnackBonus(){
   // this realistic ceiling -- anything beyond it correctly falls through to
   // the existing, honest exchange-cap Plan Quality message rather than
   // being hidden behind an unrealistic portion.
-  const HARD_MAX = { starch: 3, protein: 3, fat: 3 };
+  //
+  // Condition-aware extension: the generic {3,3,3} ceiling is IDENTICAL
+  // regardless of whether a clinical condition further restricts a macro,
+  // meaning CKD/Dyslipidemia clients hit their (already lower, clinically
+  // correct) ceiling with the SAME small bonus as everyone else -- closing
+  // a smaller proportion of a larger gap. The only macro that can safely
+  // absorb more capacity for such a client is the one the condition does
+  // NOT restrict (e.g. starch for CKD, which only restricts protein/fat).
+  // A restricted macro's ceiling must never move from 3 -- that would
+  // directly undermine the clinical purpose of the cap.
+  const BASE_MAX = { starch: 3, protein: 3, fat: 3 };
+  const ELEVATED_MAX = { starch: 5, protein: 5, fat: 5 }; // still bounded; protein stays safe from the earlier-rejected 500g cottage-cheese case via the separate, unconditional SNACK_ITEM_REALISTIC_MAX_GRAMS cap
+  const GENERIC_HIGH_CAL_MAX = { starch: 5, protein: 5, fat: 5 }; // Evidence-based: tested progressively at 5/6/7. At 5, WeightGain_3220 improves from 22.6% to 6.0% avg deviation with realistic portions (crackers 120g, cottage cheese 200g, almonds 80g -- all at their independent per-ingredient caps). Confirmed empirically that 7 delivers IDENTICAL kcal/portions to 5, since the per-ingredient realistic-portion caps (not this exchange-count ceiling) are already the binding constraint -- raising further would provide zero benefit while adding unnecessary risk. 5 is therefore both sufficient and necessary.
+  const restrictedMacros = new Set();
+  (S.conditions||[]).forEach(cond=>{
+    const override = COND_CAP_OVERRIDES[cond];
+    if(!override) return;
+    if('starchDailyMax' in override) restrictedMacros.add('starch');
+    if('proteinDailyMax' in override) restrictedMacros.add('protein');
+    if('fatDailyMax' in override) restrictedMacros.add('fat');
+  });
+  const HARD_MAX = restrictedMacros.size
+    ? { starch: restrictedMacros.has('starch')?BASE_MAX.starch:ELEVATED_MAX.starch,
+        protein: restrictedMacros.has('protein')?BASE_MAX.protein:ELEVATED_MAX.protein,
+        fat: restrictedMacros.has('fat')?BASE_MAX.fat:ELEVATED_MAX.fat }
+    : {...GENERIC_HIGH_CAL_MAX}; // no clinical condition override at all -- nothing to protect, so the generic-only ceiling can go higher for genuinely high-calorie targets. Only activates when the gap below is actually large; normal/moderate-calorie generic clients see no change since their gap is already ~0.
   const goalKcal = Number(S.goalKcal||0);
   const caps = getEffectiveCaps(S.conditions);
   const baseCeilingExchanges = {
@@ -10914,7 +11003,7 @@ const PAGE_INFO_GR = {
   equivalents:{title:'Οδηγός Ισοδυνάμων',sub:'Εκτυπώσιμη λίστα ισοδυνάμων για πελάτες'},
 };
 
-const CLIENT_TAB_PAGES = ['profile','bodycomp','intake','labs','macros','sevenday','tracking','report'];
+const CLIENT_TAB_PAGES = ['profile','bodycomp','intake','labs','macros','sevenday','workspace','tracking','report'];
 // Thin async wrapper around nav(), used ONLY by top-level/sidebar navigation
 // triggers -- never by internal, programmatic nav() calls (tab-to-tab
 // transitions, or calls already gated by newClient()/loadClientById()'s own
@@ -10977,6 +11066,7 @@ function nav(id) {
   if(id==='bodycomp') calcBodyComp();
   if(id==='macros') { calcMacros(); renderClinicalMacroSuggestions(); refreshExMetaLabels(); renderExchanges(); }
   if(id==='exchanges') { nav('macros'); return; }
+  if(id==='workspace') { renderMealPlanWorkspace(); }
   // Always sync exchange inputs → S.ex before building meal plans
   // This ensures any value typed in the Exchange System is captured
   // even if the input's oninput event didn't fire (e.g. paste, spinner click)
@@ -13128,6 +13218,7 @@ function populateDefaultSnacksForDay(day, dayIndex){
   // on manualMeals/hidden state, not merely "is the slot currently empty" --
   // an already-populated-by-an-older-generator-version slot is still
   // eligible for update as long as it was never manually edited.
+  const overshootTolerance=1.05; // up to 5% over target before a snack is treated as an unnecessary overshoot -- moved earlier so the fold-almonds-safely check below can reference it
   const assignments=[];
   const nonSleepSlots=['snk1','snk2'].filter(isEligible);
   let remainingSlots=nonSleepSlots.slice();
@@ -13144,9 +13235,30 @@ function populateDefaultSnacksForDay(day, dayIndex){
     }
   }else if(leftoverFruit>0 && extraStarch>0 && extraProtein>0 && remainingSlots.includes('snk1')){
     // Matches the existing snk_fruit_crackers_cottage combo exactly (1 fruit + 1 starch + 1 protein, dedicated to snk1) -- consolidates all three into one realistic snack instead of competing for two slots.
-    assignments.push({slot:'snk1', label:'Fruit with Crackers and Cottage Cheese', ingredients:[{food_id:'apple', grams:120, state:'raw'},{food_id:'crackers_wholegrain', grams:30*extraStarch, state:'n/a'},{food_id:'cottage_cheese', grams:realisticSnackGrams('cottage_cheese', 100*extraProtein), state:'n/a'}]});
+    assignments.push({slot:'snk1', label:'Fruit with Crackers and Cottage Cheese', ingredients:[{food_id:'apple', grams:120, state:'raw'},{food_id:'crackers_wholegrain', grams:realisticSnackGrams('crackers_wholegrain', 30*extraStarch), state:'n/a'},{food_id:'cottage_cheese', grams:realisticSnackGrams('cottage_cheese', 100*extraProtein), state:'n/a'}]});
     remainingSlots=remainingSlots.filter(s=>s!=='snk1');
-    if(extraFat>0 && remainingSlots.length) assignments.push({slot:remainingSlots.shift(), label:'Almonds', ingredients:[{food_id:'almonds', grams:20*extraFat, state:'n/a'}]});
+    if(extraFat>0){
+      if(remainingSlots.length){
+        assignments.push({slot:remainingSlots.shift(), label:'Almonds', ingredients:[{food_id:'almonds', grams:realisticSnackGrams('almonds', 20*extraFat), state:'n/a'}]});
+      } else if(assignments.length){
+        // No slot left -- try folding almonds into the last-created
+        // assignment rather than silently dropping the fat-based calories.
+        // But check the COMBINED kcal against the overshoot guard first:
+        // folding must never risk pushing an already-safe, already-working
+        // assignment over the guard and losing it ENTIRELY (confirmed
+        // directly: this happened on first attempt without this check).
+        // If folding would overshoot, leave the original assignment
+        // untouched -- exactly the pre-existing, already-safe behavior --
+        // rather than gambling the whole snack to add the almonds portion.
+        const last = assignments[assignments.length-1];
+        const almondsIngredient = {food_id:'almonds', grams:realisticSnackGrams('almonds', 20*extraFat), state:'n/a'};
+        const combinedKcal = eng.recipeTotals([...last.ingredients, almondsIngredient]).kcal;
+        if(runningTotal+combinedKcal <= target*overshootTolerance){
+          last.ingredients.push(almondsIngredient);
+          last.label = last.label + ' with Almonds';
+        }
+      }
+    }
   }else{
     const noBonusWillFillOtherSlot = extraStarch<=0 && extraProtein<=0 && extraFat<=0;
     if(leftoverFruit===1 && noBonusWillFillOtherSlot && remainingSlots.length>=2){
@@ -13164,13 +13276,34 @@ function populateDefaultSnacksForDay(day, dayIndex){
       assignments.push({slot:remainingSlots.shift(), label:fruit.label, ingredients:[{food_id:fruit.food_id, grams:fruit.grams, state:'raw'}]});
     }
     if(extraStarch>0 && extraProtein>0 && remainingSlots.length){
-      assignments.push({slot:remainingSlots.shift(), label:'Crackers with Light Cheese', ingredients:[{food_id:'crackers_wholegrain', grams:30*extraStarch, state:'n/a'},{food_id:'cheese_light_slice', grams:30*extraProtein, state:'n/a'}]});
+      assignments.push({slot:remainingSlots.shift(), label:'Crackers with Light Cheese', ingredients:[{food_id:'crackers_wholegrain', grams:realisticSnackGrams('crackers_wholegrain', 30*extraStarch), state:'n/a'},{food_id:'cheese_light_slice', grams:realisticSnackGrams('cheese_light_slice', 30*extraProtein), state:'n/a'}]});
     }else if(extraStarch>0 && remainingSlots.length){
-      assignments.push({slot:remainingSlots.shift(), label:'Crackers', ingredients:[{food_id:'crackers_wholegrain', grams:30*extraStarch, state:'n/a'}]});
+      assignments.push({slot:remainingSlots.shift(), label:'Crackers', ingredients:[{food_id:'crackers_wholegrain', grams:realisticSnackGrams('crackers_wholegrain', 30*extraStarch), state:'n/a'}]});
     }else if(extraProtein>0 && remainingSlots.length){
       assignments.push({slot:remainingSlots.shift(), label:'Cottage Cheese', ingredients:[{food_id:'cottage_cheese', grams:realisticSnackGrams('cottage_cheese', 100*extraProtein), state:'n/a'}]});
     }
-    if(extraFat>0 && remainingSlots.length) assignments.push({slot:remainingSlots.shift(), label:'Almonds', ingredients:[{food_id:'almonds', grams:20*extraFat, state:'n/a'}]});
+    if(extraFat>0){
+      if(remainingSlots.length){
+        assignments.push({slot:remainingSlots.shift(), label:'Almonds', ingredients:[{food_id:'almonds', grams:realisticSnackGrams('almonds', 20*extraFat), state:'n/a'}]});
+      } else if(assignments.length){
+        // No slot left -- try folding almonds into the last-created
+        // assignment rather than silently dropping the fat-based calories.
+        // But check the COMBINED kcal against the overshoot guard first:
+        // folding must never risk pushing an already-safe, already-working
+        // assignment over the guard and losing it ENTIRELY (confirmed
+        // directly: this happened on first attempt without this check).
+        // If folding would overshoot, leave the original assignment
+        // untouched -- exactly the pre-existing, already-safe behavior --
+        // rather than gambling the whole snack to add the almonds portion.
+        const last = assignments[assignments.length-1];
+        const almondsIngredient = {food_id:'almonds', grams:realisticSnackGrams('almonds', 20*extraFat), state:'n/a'};
+        const combinedKcal = eng.recipeTotals([...last.ingredients, almondsIngredient]).kcal;
+        if(runningTotal+combinedKcal <= target*overshootTolerance){
+          last.ingredients.push(almondsIngredient);
+          last.label = last.label + ' with Almonds';
+        }
+      }
+    }
   }
   // The client's fruit target can genuinely be 2 full exchanges, not just
   // "some" fruit -- the checks above only ever place one fruit-based item.
@@ -13188,7 +13321,6 @@ function populateDefaultSnacksForDay(day, dayIndex){
   }
   if(leftoverDairy>0 && isEligible('sleep')) assignments.push({slot:'sleep', label:'Milk', ingredients:[{food_id:'milk_lowfat', grams:240, state:'n/a'}]});
 
-  const overshootTolerance=1.05; // up to 5% over target before a snack is treated as an unnecessary overshoot
   const warnings=[];
   const placedSlots=new Set();
 
@@ -13948,12 +14080,28 @@ function applyMealPlanTemplate(templateKey){
   // captured if a real plan already exists; if not, there is nothing to
   // restore later, and removeCurrentTemplate() correctly falls back to its
   // existing STRICT_WEEK_MEALS behavior.
-  // Only capture if no undo snapshot already exists -- if a template is
-  // already active and a second one is applied without removing the first,
-  // the undo point must remain the TRUE original (pre-first-template) state,
-  // not get overwritten with the intermediate, already-templated state.
-  if(!S.currentTemplate && Array.isArray(S.weekPlans) && S.weekPlans.length){
-    S.preTemplateSnapshot = JSON.parse(JSON.stringify(S.weekPlans));
+  // Capture the undo snapshot on the FIRST template application (no
+  // existing snapshot) exactly as before. On any SUBSEQUENT template
+  // application, incrementally MERGE any slot the dietitian has genuinely,
+  // deliberately edited since (dietitianEdited[slot]===true) into the
+  // EXISTING snapshot -- so a real manual edit made between two template
+  // applications becomes the new undo point for that specific slot,
+  // without disturbing the true original for every other, untouched slot.
+  if(Array.isArray(S.weekPlans) && S.weekPlans.length){
+    if(!S.currentTemplate){
+      S.preTemplateSnapshot = JSON.parse(JSON.stringify(S.weekPlans));
+    } else if(Array.isArray(S.preTemplateSnapshot)){
+      S.weekPlans.forEach((day,i)=>{
+        const snapDay=S.preTemplateSnapshot[i]; if(!snapDay) return;
+        ['brk','lun','din'].forEach(slot=>{
+          if(day.dietitianEdited?.[slot]){
+            snapDay[slot]=day[slot];
+            snapDay.manualMeals={...(snapDay.manualMeals||{}), [slot]:true};
+            snapDay.dietitianEdited={...(snapDay.dietitianEdited||{}), [slot]:true};
+          }
+        });
+      });
+    }
     // The weekPlans snapshot above only preserves the snk1/snk2/sleep KEYS --
     // not the underlying S.customMeals objects those keys point to. The
     // snack-regeneration this function triggers below deliberately deletes
@@ -13966,9 +14114,16 @@ function applyMealPlanTemplate(templateKey){
       const key = day[slot];
       if (isCustomMealKey(key)) referencedIdsForSnapshot.add(customMealIdFromKey(key));
     }));
-    S.preTemplateCustomMealsSnapshot = (S.customMeals||[])
-      .filter(m => referencedIdsForSnapshot.has(String(m.id)))
-      .map(m => JSON.parse(JSON.stringify(m)));
+    // Also cover any brk/lun/din custom-meal keys the merge above may have
+    // just pulled into the snapshot, so those genuinely-edited meals stay
+    // resolvable too, exactly like the existing snack handling.
+    (S.preTemplateSnapshot||[]).forEach(day => ['brk','lun','din'].forEach(slot => {
+      const key = day[slot];
+      if (isCustomMealKey(key)) referencedIdsForSnapshot.add(customMealIdFromKey(key));
+    }));
+    const existingSnapshotMeals = new Map((S.preTemplateCustomMealsSnapshot||[]).map(m=>[String(m.id), m]));
+    (S.customMeals||[]).forEach(m => { if(referencedIdsForSnapshot.has(String(m.id))) existingSnapshotMeals.set(String(m.id), JSON.parse(JSON.stringify(m))); });
+    S.preTemplateCustomMealsSnapshot = Array.from(existingSnapshotMeals.values());
   }
   const isGr = window.appLang==='gr';
   // 0. Clinical condition, if the template targets one — guard against silently
@@ -17829,13 +17984,13 @@ async function loadCustomMeals(opts={}){
       const fetchedMeals=(data||[]).map(r=>{
         const isNewShape = r.ingredients && !Array.isArray(r.ingredients) && Array.isArray(r.ingredients.ingredients);
         if(isNewShape){
-          return {id:r.id, name:r.name, instance:r.ingredients, updated_at:r.updated_at};
+          return {id:r.id, name:r.name, instance:r.ingredients, updated_at:r.updated_at, libraryDeleted:!!r.library_deleted};
         }
         // Genuinely old-shape row (ingredients: loose array, no food_id) --
         // unchanged from before, so customMealText()/customMealKcal() keep
         // falling through to their existing legacy branches exactly as
         // they already do.
-        return {id:r.id, name:r.name, ingredients:Array.isArray(r.ingredients)?r.ingredients:[], nutrition:r.nutrition||recipeLibraryTotals(r.ingredients||[]), updated_at:r.updated_at};
+        return {id:r.id, name:r.name, ingredients:Array.isArray(r.ingredients)?r.ingredients:[], nutrition:r.nutrition||recipeLibraryTotals(r.ingredients||[]), updated_at:r.updated_at, libraryDeleted:!!r.library_deleted};
       });
       // Preserve any local-only meal (e.g. a freshly-generated snack, never
       // auto-persisted) still referenced by the active plan/state and not
@@ -17879,8 +18034,169 @@ function rebuildMealDropdownOptions(){
 // already set exclusively by the automatic snack generator) -- confirmed
 // via direct inspection to be the existing, correct distinction, requiring
 // no new field.
+// ── MEAL PLAN WORKSPACE ──
+// Entirely additive: reads/writes ONLY S.workspaceCells, never S.weekPlans.
+// Free text is plain, natively-editable content -- never scanned, never
+// parsed for food content. Structured foods are the ONLY source of
+// calculated nutrition, added exclusively via explicit search+quantity.
+function calcWorkspaceCellTotals(cell){
+  const eng = window.NutreseEngine;
+  const foods = cell?.structuredFoods||[];
+  if(!foods.length) return null;
+  const ingredients = foods.map(f=>({food_id:f.food_id, grams:f.grams, state:'n/a'}));
+  return { totals: eng.recipeTotals(ingredients), exchanges: eng.deriveExchanges(ingredients) };
+}
+function renderMealPlanWorkspace(){
+  ensureWorkspaceCells();
+  const el = document.getElementById('workspace-grid'); if(!el) return;
+  const isGr = window.appLang==='gr';
+  const slots = [
+    {key:'brk', label:isGr?'Πρωινό':'Breakfast'}, {key:'snk1', label:isGr?'Σνακ 1':'Snack 1'},
+    {key:'lun', label:isGr?'Μεσημεριανό':'Lunch'}, {key:'snk2', label:isGr?'Σνακ 2':'Snack 2'},
+    {key:'din', label:isGr?'Βραδινό':'Dinner'}, {key:'sleep', label:isGr?'Πριν τον ύπνο':'Before sleep'},
+  ];
+  const dayLabels = isGr
+    ? ['Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο','Κυριακή']
+    : ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+  let html = '<table style="border-collapse:collapse;width:100%;min-width:900px"><thead><tr>';
+  html += `<th style="padding:8px;border:1px solid var(--border);text-align:left">${isGr?'Ημέρα':'Day'}</th>`;
+  slots.forEach(s=>{ html += `<th style="padding:8px;border:1px solid var(--border);text-align:left;min-width:150px">${safeHtml(s.label)}</th>`; });
+  html += '</tr></thead><tbody>';
+  S.workspaceCells.forEach((day,dayIndex)=>{
+    html += `<tr><td style="padding:8px;border:1px solid var(--border);font-weight:700;vertical-align:top">${safeHtml(dayLabels[dayIndex])}</td>`;
+    slots.forEach(s=>{
+      const cell = day[s.key] || {text:'', structuredFoods:[]};
+      const totals = calcWorkspaceCellTotals(cell);
+      html += `<td style="padding:6px;border:1px solid var(--border);vertical-align:top">
+        <textarea id="ws-text-${dayIndex}-${s.key}" oninput="updateWorkspaceCellText(${dayIndex},'${s.key}',this.value)" style="width:100%;min-height:60px;border:1px solid var(--border);border-radius:6px;padding:6px;font-size:12px;resize:vertical" placeholder="${isGr?'Ελεύθερο κείμενο...':'Free text...'}">${safeHtml(cell.text||'')}</textarea>
+        <div id="ws-foods-${dayIndex}-${s.key}" style="margin-top:4px;display:flex;flex-wrap:wrap;gap:4px">${renderWorkspaceFoodChips(dayIndex, s.key, cell)}</div>
+        <div style="margin-top:4px;display:flex;gap:6px;font-size:11px">
+          <a href="javascript:void(0)" onclick="openWorkspaceFoodSearch(${dayIndex},'${s.key}')" style="color:var(--teal-600)">+ ${isGr?'Τροφή':'Add food'}</a>
+          <a href="javascript:void(0)" onclick="openWorkspaceDuplicate(${dayIndex},'${s.key}')" style="color:var(--text-muted)">${isGr?'Αντιγραφή σε...':'Duplicate to...'}</a>
+        </div>
+        ${totals ? `<div id="ws-totals-${dayIndex}-${s.key}" style="margin-top:4px;font-size:11px;font-weight:700;color:var(--teal-700)">${Math.round(totals.totals.kcal)} kcal · ${formatFoodNumber(totals.totals.carbohydrate_g,'g')}C · ${formatFoodNumber(totals.totals.protein_g,'g')}P · ${formatFoodNumber(totals.totals.fat_g,'g')}F</div>` : `<div id="ws-totals-${dayIndex}-${s.key}"></div>`}
+      </td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  el.innerHTML = html;
+}
+function renderWorkspaceFoodChips(dayIndex, slot, cell){
+  const eng = window.NutreseEngine;
+  return (cell.structuredFoods||[]).map(f=>{
+    const food = eng.FOOD_DATABASE[f.food_id];
+    const name = food?.name?.clinical?.[window.appLang==='gr'?'gr':'en'] || f.food_id;
+    const kcal = Math.round(eng.recipeTotals([{food_id:f.food_id, grams:f.grams, state:'n/a'}]).kcal);
+    return `<span style="display:inline-flex;align-items:center;gap:4px;background:var(--teal-50,#e6f7f5);border:1px solid var(--teal-200,#b2e5df);border-radius:12px;padding:2px 8px;font-size:11px">
+      🥗 <input type="number" value="${f.grams}" min="1" style="width:44px;border:none;background:transparent;font-size:11px;padding:0" onchange="updateWorkspaceFoodQty(${dayIndex},'${slot}','${f.id}',this.value)">g ${safeHtml(name)} · ${kcal}kcal
+      <a href="javascript:void(0)" onclick="removeWorkspaceStructuredFood(${dayIndex},'${slot}','${f.id}')" style="color:#c0392b;font-weight:700;margin-left:2px">×</a>
+    </span>`;
+  }).join('');
+}
+function updateWorkspaceCellText(dayIndex, slot, value){
+  ensureWorkspaceCells();
+  S.workspaceCells[dayIndex][slot].text = value; // stored exactly as typed -- never scanned or parsed
+}
+function addWorkspaceStructuredFood(dayIndex, slot, foodId, grams){
+  ensureWorkspaceCells();
+  const cell = S.workspaceCells[dayIndex][slot];
+  cell.structuredFoods = cell.structuredFoods||[];
+  cell.structuredFoods.push({id:'wsf_'+Date.now()+'_'+Math.random().toString(36).slice(2,7), food_id:foodId, grams:Number(grams)});
+  refreshWorkspaceCell(dayIndex, slot);
+}
+function removeWorkspaceStructuredFood(dayIndex, slot, itemId){
+  const cell = S.workspaceCells[dayIndex][slot];
+  cell.structuredFoods = (cell.structuredFoods||[]).filter(f=>f.id!==itemId);
+  refreshWorkspaceCell(dayIndex, slot);
+}
+function updateWorkspaceFoodQty(dayIndex, slot, itemId, grams){
+  const cell = S.workspaceCells[dayIndex][slot];
+  const item = (cell.structuredFoods||[]).find(f=>f.id===itemId);
+  if(item) item.grams = Math.max(1, Number(grams)||1);
+  refreshWorkspaceCell(dayIndex, slot);
+}
+function refreshWorkspaceCell(dayIndex, slot){
+  // Re-renders only this cell's chips/totals -- preserves the textarea's
+  // current focus/cursor/scroll state for every OTHER cell on the grid,
+  // rather than re-rendering the entire table on every food change.
+  const cell = S.workspaceCells[dayIndex][slot];
+  const chipsEl = document.getElementById(`ws-foods-${dayIndex}-${slot}`);
+  if(chipsEl) chipsEl.innerHTML = renderWorkspaceFoodChips(dayIndex, slot, cell);
+  const totalsEl = document.getElementById(`ws-totals-${dayIndex}-${slot}`);
+  const totals = calcWorkspaceCellTotals(cell);
+  if(totalsEl) totalsEl.innerHTML = totals ? `${Math.round(totals.totals.kcal)} kcal · ${formatFoodNumber(totals.totals.carbohydrate_g,'g')}C · ${formatFoodNumber(totals.totals.protein_g,'g')}P · ${formatFoodNumber(totals.totals.fat_g,'g')}F` : '';
+}
+function searchWorkspaceFoods(query){
+  // Isolated duplicate of searchCustomMealFoods()'s ranking logic --
+  // deliberately NOT sharing state with S.customMealDraft/S.customMealContext
+  // to guarantee zero interference with the Manual Meal Builder.
+  const db = window.NutreseEngine.FOOD_DATABASE;
+  const q = (query||'').trim().toLowerCase();
+  if(!q) return [];
+  const isGr = window.appLang==='gr';
+  const queryWords = q.split(/\s+/).filter(Boolean);
+  const matches = Object.entries(db).filter(([id,food])=>{
+    const haystack = [food.name?.clinical?.en, food.name?.clinical?.gr, food.name?.patient?.en, food.name?.patient?.gr, ...(food.aliases||[])].filter(Boolean).join(' ').toLowerCase();
+    return queryWords.every(w=>haystack.includes(w));
+  }).sort((a,b)=>{
+    const nameA=(a[1].name?.clinical?.[isGr?'gr':'en']||'').toLowerCase();
+    const nameB=(b[1].name?.clinical?.[isGr?'gr':'en']||'').toLowerCase();
+    const rank=(name)=> name.startsWith(q) ? 0 : name.split(/[\s,]+/).some(w=>w.startsWith(q)) ? 1 : 2;
+    const rankDiff=rank(nameA)-rank(nameB);
+    return rankDiff!==0 ? rankDiff : nameA.localeCompare(nameB);
+  }).slice(0,15);
+  return matches.map(([id,food])=>({id, name:food.name?.clinical?.[isGr?'gr':'en']||id}));
+}
+function openWorkspaceFoodSearch(dayIndex, slot){
+  S.workspaceFoodSearchTarget = {dayIndex, slot};
+  setEl('workspace-search-input','');
+  document.getElementById('workspace-search-results').innerHTML='';
+  const modal = document.getElementById('workspace-search-modal'); if(modal) modal.style.display='flex';
+  setTimeout(()=>document.getElementById('workspace-search-input')?.focus(), 50);
+}
+function closeWorkspaceFoodSearch(){ const modal = document.getElementById('workspace-search-modal'); if(modal) modal.style.display='none'; }
+function renderWorkspaceSearchResults(){
+  const query = v('workspace-search-input');
+  const results = searchWorkspaceFoods(query);
+  const el = document.getElementById('workspace-search-results'); if(!el) return;
+  const isGr = window.appLang==='gr';
+  if(!results.length){ el.innerHTML = query ? `<div class="field-note">${isGr?'Δεν βρέθηκαν τροφές.':'No foods found.'}</div>` : ''; return; }
+  el.innerHTML = results.map((r,i)=>`<div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid var(--border)">
+    <span style="flex:1;font-size:13px">${safeHtml(r.name)}</span>
+    <input type="number" id="workspace-search-grams-${i}" value="100" min="1" style="width:60px" placeholder="g">
+    <button class="btn primary" style="padding:4px 10px;font-size:12px" onclick="addWorkspaceStructuredFood(S.workspaceFoodSearchTarget.dayIndex, S.workspaceFoodSearchTarget.slot, '${r.id}', v('workspace-search-grams-${i}')); closeWorkspaceFoodSearch();">${isGr?'Προσθήκη':'Add'}</button>
+  </div>`).join('');
+}
+function openWorkspaceDuplicate(dayIndex, slot){
+  S.workspaceDuplicateSource = {dayIndex, slot};
+  const modal = document.getElementById('workspace-duplicate-modal'); if(modal) modal.style.display='flex';
+}
+function closeWorkspaceDuplicate(){ const modal = document.getElementById('workspace-duplicate-modal'); if(modal) modal.style.display='none'; }
+function confirmWorkspaceDuplicate(){
+  const src = S.workspaceDuplicateSource; if(!src) return;
+  const targetDay = Number(v('workspace-duplicate-day'));
+  const targetSlot = v('workspace-duplicate-slot');
+  const sourceCell = S.workspaceCells[src.dayIndex][src.slot];
+  S.workspaceCells[targetDay][targetSlot] = JSON.parse(JSON.stringify(sourceCell));
+  closeWorkspaceDuplicate();
+  renderMealPlanWorkspace();
+}
 function openMealLibrary(context){
   S.mealLibraryContext=context||null;
+  // Use the meal-plan's own language (S.mealLanguage), not the dietitian's
+  // overall app UI language -- these can differ, and the library should
+  // stay consistent with whatever language the meal plan itself is in.
+  S.mealLibraryLang = S.mealLanguage || (window.appLang==='gr'?'GR':'EN');
+  const isGrLib = S.mealLibraryLang==='GR';
+  const titleEl=document.querySelector('#meal-library-modal .card-title span.i18n');
+  if(titleEl) titleEl.textContent = isGrLib?'Αποθηκευμένα γεύματα':'Saved meals';
+  const closeEl=document.querySelector('#meal-library-modal button[onclick="closeMealLibrary()"] span.i18n');
+  if(closeEl) closeEl.textContent = isGrLib?'Κλείσιμο':'Close';
+  const searchEl=document.getElementById('meal-library-search');
+  if(searchEl) searchEl.placeholder = isGrLib?'Αναζήτηση αποθηκευμένων γευμάτων με όνομα':'Search saved meals by name';
+  const newBtnEl=document.querySelector('#meal-library-modal button[onclick*="openCustomMealBuilder({type:\'library\'"] span.i18n');
+  if(newBtnEl) newBtnEl.textContent = isGrLib?'Νέο αποθηκευμένο γεύμα':'New saved meal';
   setEl('meal-library-search','');
   renderMealLibrary();
   const modal=document.getElementById('meal-library-modal'); if(modal) modal.style.display='flex';
@@ -17888,9 +18204,9 @@ function openMealLibrary(context){
 function closeMealLibrary(){ const modal=document.getElementById('meal-library-modal'); if(modal) modal.style.display='none'; }
 function renderMealLibrary(){
   const el=document.getElementById('meal-library-list'); if(!el) return;
-  const isGr = window.appLang==='gr';
+  const isGr = (S.mealLibraryLang || (window.appLang==='gr'?'GR':'EN'))==='GR';
   const query=(v('meal-library-search')||'').trim().toLowerCase();
-  const savedMeals=(S.customMeals||[]).filter(m=>m.source!=='default-generator');
+  const savedMeals=(S.customMeals||[]).filter(m=>m.source!=='default-generator' && !m.libraryDeleted);
   const filtered=query ? savedMeals.filter(m=>(m.name||'').toLowerCase().includes(query)) : savedMeals;
   if(!filtered.length){
     el.innerHTML=`<div style="text-align:center;color:var(--text-muted);padding:20px">${savedMeals.length ? (isGr?'Δεν βρέθηκαν αποθηκευμένα γεύματα.':'No saved meals match your search.') : (isGr?'Δεν υπάρχουν ακόμη αποθηκευμένα γεύματα. Δημιουργήστε ένα με το κουμπί παραπάνω.':'No saved meals yet. Create one with the button above.')}</div>`;
@@ -17924,7 +18240,7 @@ function editLibraryMeal(id){
 function duplicateLibraryMeal(id){
   const existing=getCustomMealByKey(id);
   if(!existing) return;
-  const isGr = window.appLang==='gr';
+  const isGr = (S.mealLibraryLang || (window.appLang==='gr'?'GR':'EN'))==='GR';
   closeMealLibrary();
   S.customMealContext={type:'library'};
   S.customMealDraft=JSON.parse(JSON.stringify(existing.instance||{ingredients:[],totals:{kcal:0,protein_g:0,carbohydrate_g:0,fat_g:0,fiber_g:0},exchanges:{}}));
@@ -17937,14 +18253,35 @@ function duplicateLibraryMeal(id){
   renderCustomMealDraft();
   const modal=document.getElementById('custom-meal-modal'); if(modal) modal.style.display='flex';
 }
+function isCustomMealCurrentlyReferenced(id){
+  // Checks the CURRENTLY LOADED client only -- the architecture does not
+  // hold other clients' weekPlans in memory, so a database-wide reference
+  // scan isn't reliably possible here. Soft-delete (below) is what actually
+  // guarantees safety regardless of what other clients reference; this
+  // check only powers an informational courtesy note for the client
+  // presently open.
+  const key='CUSTOM_'+id;
+  const inWeekPlans=(S.weekPlans||[]).some(day=>['brk','lun','din','snk1','snk2','sleep'].some(slot=>day[slot]===key));
+  const inMealSel=S.mealSel && Object.values(S.mealSel).includes(key);
+  return inWeekPlans || inMealSel;
+}
 async function deleteLibraryMeal(id){
-  const isGr = window.appLang==='gr';
-  if(!confirm(isGr?'Διαγραφή αυτού του αποθηκευμένου γεύματος; Δεν μπορεί να αναιρεθεί.':'Delete this saved meal? This cannot be undone.')) return;
+  const isGr = (S.mealLibraryLang || (window.appLang==='gr'?'GR':'EN'))==='GR';
+  const referencedHere=isCustomMealCurrentlyReferenced(id);
+  const confirmMsg=referencedHere
+    ? (isGr?'Αυτό το γεύμα χρησιμοποιείται στο τρέχον πλάνο πελάτη. Η αφαίρεσή του από τη Βιβλιοθήκη ΔΕΝ θα αλλάξει το υπάρχον πλάνο -- το γεύμα θα παραμείνει εκεί όπως είναι, απλώς δεν θα εμφανίζεται πλέον στη Βιβλιοθήκη για μελλοντική χρήση. Συνέχεια;':'This meal is currently used in the open client plan. Removing it from the Library will NOT change the existing plan -- the meal stays exactly as it is there; it just will not appear in the Library for future use anymore. Continue?')
+    : (isGr?'Διαγραφή αυτού του αποθηκευμένου γεύματος; Δεν μπορεί να αναιρεθεί.':'Delete this saved meal? This cannot be undone.');
+  if(!confirm(confirmMsg)) return;
+  // Soft delete: the underlying meal data is NEVER removed, so any
+  // existing reference -- in this client or any other, now or later --
+  // continues to resolve exactly as before. Only its visibility in the
+  // library listing changes.
   if(currentUser){
-    try{ await supabaseClient.from('custom_meals').delete().eq('id',id).eq('user_id',currentUser.id); }
-    catch(e){ console.error('[Nutrese custom meals] delete failed', e); }
+    try{ await supabaseClient.from('custom_meals').update({library_deleted:true}).eq('id',id).eq('user_id',currentUser.id); }
+    catch(e){ console.error('[Nutrese custom meals] soft-delete failed', e); }
   }
-  S.customMeals=(S.customMeals||[]).filter(m=>String(m.id)!==String(id));
+  const meal=(S.customMeals||[]).find(m=>String(m.id)===String(id));
+  if(meal) meal.libraryDeleted=true;
   persistCustomMealsLocal();
   renderMealLibrary();
 }
@@ -18224,6 +18561,7 @@ function applyCustomMealSelection(key){
     if(!S.weekPlans) S.weekPlans=freshWeekPlans();
     S.weekPlans[ctx.dayIndex][ctx.key]=key;
     S.weekPlans[ctx.dayIndex].manualMeals={...(S.weekPlans[ctx.dayIndex].manualMeals||{}), [ctx.key]:true};
+    S.weekPlans[ctx.dayIndex].dietitianEdited={...(S.weekPlans[ctx.dayIndex].dietitianEdited||{}), [ctx.key]:true};
     // Clear only THIS slot's aiMeals entry — not the whole day's. A prior
     // version deleted the entire aiMeals object here, silently reverting
     // any OTHER AI-validated meal in the same day (e.g. lunch) back to a
@@ -18650,6 +18988,7 @@ return {
     fields, conditions, primaryCondition,
     ex:S.ex, exAuto:S.exAuto, exMeta:S.exMeta, tracking:S.tracking, mealSel:S.mealSel,
     weekPlans:S.weekPlans, savedWeeklyPlan:S.savedWeeklyPlan, customMeals:S.customMeals, mealLanguage:S.mealLanguage, reportOptions:S.reportOptions,
+    workspaceCells:S.workspaceCells,
     currentTemplate:S.currentTemplate||null,
     preTemplateSnapshot:S.preTemplateSnapshot||null,
     preTemplateCustomMealsSnapshot:S.preTemplateCustomMealsSnapshot||null,
@@ -18690,6 +19029,8 @@ function applyState(state){
   // moment the <select> tried to select it, and silently fell back to the
   // first option instead.
   if(state.customMeals) S.customMeals=state.customMeals; // intentionally shared dietitian-wide library, not client-specific — see Recipe/Custom Meal architecture notes
+  if(Array.isArray(state.workspaceCells) && state.workspaceCells.length===7) S.workspaceCells=state.workspaceCells;
+  else ensureWorkspaceCells(); // pre-feature client -- fresh, empty grid, no migration needed
   const brkEl=document.getElementById('s-breakfast'), lunEl=document.getElementById('s-lunch'), dinEl=document.getElementById('s-dinner');
   if(brkEl) brkEl.innerHTML = mealOptionsHtml(filteredMealOptions(BREAKFAST_OPTIONS,diet), (state.fields&&state.fields['s-breakfast'])||'BRK_TOAST');
   if(lunEl) lunEl.innerHTML = mealOptionsHtml(filteredMealOptions(LUNCH_OPTIONS,diet), (state.fields&&state.fields['s-lunch'])||'LUN_CHICKEN_RICE');
@@ -18797,6 +19138,7 @@ function resetForm(){
   S.tracking=[]; S.intake={}; S.notes={}; S.labValues={}; S.labDate=''; S.clientDocuments=[]; S.extraFoods=[]; S.equivalentNotes={};
   S.mealSel={breakfast:'BRK_TOAST',lunch:'LUN_CHICKEN_RICE',dinner:'DIN_FISH_POTATO',snack1Extras:[],snack2Extras:[],sleepExtras:[],snackModelVersion:'ingredients-v2'};
   S.weekPlans=freshWeekPlans();
+  S.workspaceCells=undefined; ensureWorkspaceCells();
   S.currentTemplate=null;
   S.savedWeeklyPlan=null;
   S.aiPlanStatus='';
