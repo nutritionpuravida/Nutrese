@@ -2838,6 +2838,19 @@ table th,
         <span class="card-title" id="report-options-title"><i class="ti ti-settings" aria-hidden="true"></i> Report Options — Choose what to print</span>
       </div>
       <div class="card-body">
+        <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:2px solid var(--border)">
+          <div style="font-size:12px;font-weight:800;color:var(--text-secondary);margin-bottom:8px"><span class="i18n" data-en="Report source:" data-gr="Πηγή αναφοράς:">Report source:</span></div>
+          <div style="display:flex;gap:16px">
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;cursor:pointer">
+              <input type="radio" name="report-source" value="sevenday" checked onchange="setReportSource('sevenday')">
+              <span class="i18n" data-en="7-Day Meal Plan" data-gr="Πλάνο 7 Ημερών">7-Day Meal Plan</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;cursor:pointer">
+              <input type="radio" name="report-source" value="workspace" onchange="setReportSource('workspace')">
+              <span class="i18n" data-en="Meal Plan Workspace" data-gr="Χώρος Εργασίας Πλάνου">Meal Plan Workspace</span>
+            </label>
+          </div>
+        </div>
         <div style="display:grid;grid-template-columns:1fr 260px;gap:16px;align-items:start">
           <div style="display:flex;flex-direction:column;gap:12px">
             <div style="display:flex;flex-direction:column;gap:8px">
@@ -10618,7 +10631,6 @@ const GENERAL_HEALTH_RULES = [
   'Τρώτε γεύματα και σνακ σε σταθερό πρόγραμμα κάθε 3–4 ώρες, αποφεύγοντας την παράλειψη γευμάτων.',
   'Εναλλάσσετε τρόφιμα και τρόπους μαγειρέματος· προτιμήστε βραστά, ψητά, στον ατμό ή κατσαρόλας και αποφύγετε τα τηγανητά.',
   'Μειώστε το αλάτι χρησιμοποιώντας μυρωδικά, λεμόνι, ξύδι, σκόρδο και μπαχαρικά αντί για επιπλέον αλάτι.',
-  'Αποφύγετε επεισόδια υπερφαγίας· κρατήστε σταθερή δομή γευμάτων και ζητήστε υποστήριξη αν η υπερφαγία επαναλαμβάνεται.',
   'Διαβάζετε τις ετικέτες τροφίμων: μερίδα, θερμίδες, πρόσθετα σάκχαρα, κορεσμένα λιπαρά και αλάτι/νάτριο.',
   'Αλκοόλ: αν καταναλώνεται, με μέτρο — έως 1 μονάδα/ημέρα για γυναίκες, έως 2 για άνδρες (π.χ. 1 ποτήρι κρασί). Καμία ποσότητα αλκοόλ δεν θεωρείται ασφαλής στην εγκυμοσύνη.',
   'Φυσική δραστηριότητα: τουλάχιστον 150 λεπτά μέτριας έντασης άσκηση/εβδομάδα (π.χ. 30 λεπτά βάδισμα, 5 φορές/εβδομάδα), συν ασκήσεις ενδυνάμωσης 2 φορές/εβδομάδα.',
@@ -10633,7 +10645,6 @@ const GENERAL_HEALTH_RULES_EN = [
   'Eat meals and snacks on a regular schedule every 3-4 hours; avoid skipping meals.',
   'Alternate foods and cooking methods; choose boiled, baked, steamed or stewed meals and avoid fried foods.',
   'Reduce salt by using herbs, lemon, vinegar, garlic and spices instead of extra salt.',
-  'Avoid binge-eating episodes; keep a steady meal structure and seek support if binge-eating repeats.',
   'Read nutrition labels carefully: serving size, calories, added sugars, saturated fat and salt/sodium.',
   'Alcohol: if consumed, keep moderate. Avoid alcohol completely during pregnancy.',
   'Physical activity: at least 150 minutes of moderate exercise per week plus strength training twice weekly, if medically appropriate.',
@@ -11270,7 +11281,8 @@ function calcAll() {
     if(bmi<18.5) bmiCat=isGrBmi?'Λιποβαρής':'Underweight';
     else if(bmi<25) bmiCat=isGrBmi?'Φυσιολογικό βάρος':'Normal weight';
     else if(bmi<30) bmiCat=isGrBmi?'Υπέρβαρος':'Overweight';
-    else if(bmi<40) bmiCat=isGrBmi?'Παχυσαρκία Τάξη I–II':'Obesity Class I–II';
+    else if(bmi<35) bmiCat=isGrBmi?'Παχυσαρκία Τάξη I':'Obesity Class I';
+    else if(bmi<40) bmiCat=isGrBmi?'Παχυσαρκία Τάξη II':'Obesity Class II';
     else bmiCat=isGrBmi?'Τάξη III / Σοβαρή Παχυσαρκία':'Class III / Severe Obesity';
     S.bmiCat=bmiCat;
   }
@@ -15872,6 +15884,7 @@ function reportBodyCompositionHtml(isEn){
 }
 
 function buildReport(){
+  if(S.reportSource==='workspace'){ buildWorkspaceReport(); return; }
   updateMealLanguageButtons();
   syncReportModeControls();
   const ex=S.ex;
@@ -18046,6 +18059,62 @@ function calcWorkspaceCellTotals(cell){
   const ingredients = foods.map(f=>({food_id:f.food_id, grams:f.grams, state:'n/a'}));
   return { totals: eng.recipeTotals(ingredients), exchanges: eng.deriveExchanges(ingredients) };
 }
+function setReportSource(source){
+  S.reportSource = source;
+  buildReport();
+}
+function buildWorkspaceReport(){
+  ensureWorkspaceCells();
+  const isGr = window.appLang==='gr';
+  const isEn = !isGr;
+  const eng = window.NutreseEngine;
+  const dayLabels = isGr
+    ? ['Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο','Κυριακή']
+    : ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+  const slots = [
+    {key:'brk', label:isEn?'Breakfast':'Πρωινό'}, {key:'snk1', label:isEn?'Snack 1':'Σνακ 1'},
+    {key:'lun', label:isEn?'Lunch':'Μεσημεριανό'}, {key:'snk2', label:isEn?'Snack 2':'Σνακ 2'},
+    {key:'din', label:isEn?'Dinner':'Βραδινό'}, {key:'sleep', label:isEn?'Before sleep':'Πριν ύπνο'},
+  ];
+  const clientName = v('p-name') || '';
+  const today = formatDateDMY(new Date());
+  const cellHtml = (cell)=>{
+    const textHtml = cell.text ? `<div style="white-space:pre-wrap;font-size:12px">${safeHtml(cell.text)}</div>` : '';
+    const foods = cell.structuredFoods||[];
+    let foodsHtml = '', totalsHtml = '';
+    if(foods.length){
+      const ingredients = foods.map(f=>({food_id:f.food_id, grams:f.grams, state:'n/a'}));
+      const totals = eng.recipeTotals(ingredients);
+      foodsHtml = `<ul style="margin:4px 0 0;padding-left:16px;font-size:11px">` + foods.map(f=>{
+        const food = eng.FOOD_DATABASE[f.food_id];
+        const name = food?.name?.clinical?.[isGr?'gr':'en'] || f.food_id;
+        const hh = workspaceHouseholdInfo(f.food_id);
+        const qtyLabel = hh ? `${+(f.grams/hh.grams_per_unit).toFixed(2)} ${isGr?(HOUSEHOLD_UNIT_LABELS_GR[hh.unit]||hh.unit):(HOUSEHOLD_UNIT_LABELS_EN[hh.unit]||hh.unit)}` : `${f.grams}${isGr?'γρ':'g'}`;
+        return `<li>${safeHtml(name)} — ${qtyLabel}</li>`;
+      }).join('') + `</ul>`;
+      totalsHtml = `<div style="margin-top:4px;font-size:11px;font-weight:700;color:var(--teal-700)">${Math.round(totals.kcal)} kcal · ${formatFoodNumber(totals.carbohydrate_g,'g')}${isEn?'C':'Υ'} · ${formatFoodNumber(totals.protein_g,'g')}${isEn?'P':'Π'} · ${formatFoodNumber(totals.fat_g,'g')}${isEn?'F':'Λ'}</div>`;
+    }
+    return (textHtml||foodsHtml) ? `${textHtml}${foodsHtml}${totalsHtml}` : `<span style="color:var(--gray-400)">—</span>`;
+  };
+  const html = `
+    <div class="report-week-section report-week-full">
+      <div style="font-size:16px;font-weight:800;color:var(--teal-800);margin:0 0 4px;border-bottom:2px solid var(--teal-600);padding-bottom:4px"><i class="ti ti-table" aria-hidden="true"></i> ${isEn?'Meal Plan Workspace':'Χώρος Εργασίας Πλάνου'}</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px">${safeHtml(clientName)} · ${today}</div>
+      <table class="report-week-table" style="width:100%;table-layout:fixed;border-collapse:collapse;font-size:13px;line-height:1.3;background:var(--bg-surface);border:1px solid var(--border);color:var(--text-primary)">
+        <thead><tr style="background:var(--teal-600);color:#fff">
+          <th style="padding:4px;width:6%">${isEn?'Day':'Ημέρα'}</th>
+          ${slots.map(s=>`<th style="padding:4px">${safeHtml(s.label)}</th>`).join('')}
+        </tr></thead>
+        <tbody>
+        ${S.workspaceCells.map((day,i)=>`<tr style="background:${i%2===0?'var(--bg-surface)':'var(--teal-50)'};border-bottom:1px solid var(--border)">
+          <td style="padding:6px;font-weight:700;vertical-align:top">${safeHtml(dayLabels[i])}</td>
+          ${slots.map(s=>`<td style="padding:6px;vertical-align:top">${cellHtml(day[s.key]||{text:'',structuredFoods:[]})}</td>`).join('')}
+        </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+  const el = document.getElementById('report-body'); if(el) el.innerHTML = html;
+}
 function renderMealPlanWorkspace(){
   ensureWorkspaceCells();
   const el = document.getElementById('workspace-grid'); if(!el) return;
@@ -18082,14 +18151,34 @@ function renderMealPlanWorkspace(){
   html += '</tbody></table>';
   el.innerHTML = html;
 }
+// Reuses the existing household-measure engine functions directly -- no
+// second measurement system. Returns null for foods that should remain
+// grams (meat, fish, etc.), matching "do not invent household measures".
+const HOUSEHOLD_UNIT_LABELS_EN = {piece:'pcs', cup:'cup', tbsp:'tbsp', tsp:'tsp', slice:'slice', pot:'pot', skewer:'skewer', oz:'oz'};
+const HOUSEHOLD_UNIT_LABELS_GR = {piece:'τεμ.', cup:'φλιτζ.', tbsp:'κ.σ.', tsp:'κ.γ.', slice:'φέτα', pot:'δοχείο', skewer:'σουβλάκι', oz:'oz'};
+function workspaceHouseholdInfo(foodId){
+  const eng = window.NutreseEngine;
+  const food = eng.FOOD_DATABASE[foodId];
+  const hh = food ? eng.getHouseholdSnapshot(food) : null;
+  if(!hh || hh.unit==='sized_piece' || !hh.grams_per_unit) return null; // sized_piece (potatoes) has no single conversion factor -- grams fallback is correct for those
+  return hh; // {unit, grams_per_unit}
+}
 function renderWorkspaceFoodChips(dayIndex, slot, cell){
   const eng = window.NutreseEngine;
+  const isGr = window.appLang==='gr';
   return (cell.structuredFoods||[]).map(f=>{
     const food = eng.FOOD_DATABASE[f.food_id];
-    const name = food?.name?.clinical?.[window.appLang==='gr'?'gr':'en'] || f.food_id;
+    const name = food?.name?.clinical?.[isGr?'gr':'en'] || f.food_id;
     const kcal = Math.round(eng.recipeTotals([{food_id:f.food_id, grams:f.grams, state:'n/a'}]).kcal);
+    const hh = workspaceHouseholdInfo(f.food_id);
+    // Quantity input shows/accepts the HOUSEHOLD unit when one genuinely
+    // exists for this food (eggs -> pieces, rice -> cups, etc.); otherwise
+    // grams directly -- grams itself never stops being the stored, internal
+    // value used for every nutrition calculation.
+    const qtyValue = hh ? +(f.grams/hh.grams_per_unit).toFixed(2) : f.grams;
+    const unitLabel = hh ? (isGr ? (HOUSEHOLD_UNIT_LABELS_GR[hh.unit]||hh.unit) : (HOUSEHOLD_UNIT_LABELS_EN[hh.unit]||hh.unit)) : (isGr?'γρ':'g');
     return `<span style="display:inline-flex;align-items:center;gap:4px;background:var(--teal-50,#e6f7f5);border:1px solid var(--teal-200,#b2e5df);border-radius:12px;padding:2px 8px;font-size:11px">
-      🥗 <input type="number" value="${f.grams}" min="1" style="width:44px;border:none;background:transparent;font-size:11px;padding:0" onchange="updateWorkspaceFoodQty(${dayIndex},'${slot}','${f.id}',this.value)">g ${safeHtml(name)} · ${kcal}kcal
+      🥗 <input type="number" value="${qtyValue}" min="0.1" step="0.1" style="width:44px;border:none;background:transparent;font-size:11px;padding:0" onchange="updateWorkspaceFoodQty(${dayIndex},'${slot}','${f.id}',this.value)"> ${safeHtml(unitLabel)} ${safeHtml(name)} · ${kcal}kcal
       <a href="javascript:void(0)" onclick="removeWorkspaceStructuredFood(${dayIndex},'${slot}','${f.id}')" style="color:#c0392b;font-weight:700;margin-left:2px">×</a>
     </span>`;
   }).join('');
@@ -18098,11 +18187,13 @@ function updateWorkspaceCellText(dayIndex, slot, value){
   ensureWorkspaceCells();
   S.workspaceCells[dayIndex][slot].text = value; // stored exactly as typed -- never scanned or parsed
 }
-function addWorkspaceStructuredFood(dayIndex, slot, foodId, grams){
+function addWorkspaceStructuredFood(dayIndex, slot, foodId, qty){
   ensureWorkspaceCells();
   const cell = S.workspaceCells[dayIndex][slot];
   cell.structuredFoods = cell.structuredFoods||[];
-  cell.structuredFoods.push({id:'wsf_'+Date.now()+'_'+Math.random().toString(36).slice(2,7), food_id:foodId, grams:Number(grams)});
+  const hh = workspaceHouseholdInfo(foodId);
+  const grams = hh ? Number(qty)*hh.grams_per_unit : Number(qty);
+  cell.structuredFoods.push({id:'wsf_'+Date.now()+'_'+Math.random().toString(36).slice(2,7), food_id:foodId, grams:Math.max(1, grams)});
   refreshWorkspaceCell(dayIndex, slot);
 }
 function removeWorkspaceStructuredFood(dayIndex, slot, itemId){
@@ -18110,14 +18201,19 @@ function removeWorkspaceStructuredFood(dayIndex, slot, itemId){
   cell.structuredFoods = (cell.structuredFoods||[]).filter(f=>f.id!==itemId);
   refreshWorkspaceCell(dayIndex, slot);
 }
-function updateWorkspaceFoodQty(dayIndex, slot, itemId, grams){
+function updateWorkspaceFoodQty(dayIndex, slot, itemId, qty){
   const cell = S.workspaceCells[dayIndex][slot];
   const item = (cell.structuredFoods||[]).find(f=>f.id===itemId);
-  if(item) item.grams = Math.max(1, Number(grams)||1);
+  if(item){
+    const hh = workspaceHouseholdInfo(item.food_id);
+    const grams = hh ? Number(qty)*hh.grams_per_unit : Number(qty);
+    item.grams = Math.max(1, grams||1);
+  }
   refreshWorkspaceCell(dayIndex, slot);
 }
 function refreshWorkspaceCell(dayIndex, slot){
   // Re-renders only this cell's chips/totals -- preserves the textarea's
+
   // current focus/cursor/scroll state for every OTHER cell on the grid,
   // rather than re-rendering the entire table on every food change.
   const cell = S.workspaceCells[dayIndex][slot];
@@ -18162,11 +18258,17 @@ function renderWorkspaceSearchResults(){
   const el = document.getElementById('workspace-search-results'); if(!el) return;
   const isGr = window.appLang==='gr';
   if(!results.length){ el.innerHTML = query ? `<div class="field-note">${isGr?'Δεν βρέθηκαν τροφές.':'No foods found.'}</div>` : ''; return; }
-  el.innerHTML = results.map((r,i)=>`<div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid var(--border)">
+  el.innerHTML = results.map((r,i)=>{
+    const hh = workspaceHouseholdInfo(r.id);
+    const unitLabel = hh ? (isGr ? (HOUSEHOLD_UNIT_LABELS_GR[hh.unit]||hh.unit) : (HOUSEHOLD_UNIT_LABELS_EN[hh.unit]||hh.unit)) : (isGr?'γρ':'g');
+    const defaultQty = hh ? 1 : 100; // sensible starting point: 1 piece/cup/tbsp, or 100g when no household unit applies
+    return `<div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid var(--border)">
     <span style="flex:1;font-size:13px">${safeHtml(r.name)}</span>
-    <input type="number" id="workspace-search-grams-${i}" value="100" min="1" style="width:60px" placeholder="g">
+    <input type="number" id="workspace-search-grams-${i}" value="${defaultQty}" min="0.1" step="0.1" style="width:55px">
+    <span style="font-size:11px;color:var(--text-muted);min-width:32px">${safeHtml(unitLabel)}</span>
     <button class="btn primary" style="padding:4px 10px;font-size:12px" onclick="addWorkspaceStructuredFood(S.workspaceFoodSearchTarget.dayIndex, S.workspaceFoodSearchTarget.slot, '${r.id}', v('workspace-search-grams-${i}')); closeWorkspaceFoodSearch();">${isGr?'Προσθήκη':'Add'}</button>
-  </div>`).join('');
+  </div>`;
+  }).join('');
 }
 function openWorkspaceDuplicate(dayIndex, slot){
   S.workspaceDuplicateSource = {dayIndex, slot};
@@ -19187,7 +19289,7 @@ function setActiveClientIdentity(id, ref){
 // 'report' (a viewing surface) and every non-client screen (dashboard, food
 // database, recipes, equivalents, clients list, account...). Saving is part
 // of the client editing workflow, not a global header action.
-const CLIENT_EDIT_PAGES = ['profile','bodycomp','intake','labs','macros','sevenday','tracking','oneday','exchanges'];
+const CLIENT_EDIT_PAGES = ['profile','bodycomp','intake','labs','macros','sevenday','workspace','tracking','oneday','exchanges'];
 
 function currentPageId(){
   const active=document.querySelector('.page.active');
