@@ -2816,8 +2816,9 @@ table th,
   <!-- MEAL PLAN WORKSPACE -->
   <div class="page" id="page-workspace">
     <div class="card">
-      <div class="card-header">
+      <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
         <span class="card-title"><i class="ti ti-table" aria-hidden="true"></i> <span class="i18n" data-en="Meal Plan Workspace" data-gr="Χώρος Εργασίας Πλάνου">Meal Plan Workspace</span></span>
+        <div id="manual-scratch-nav-button-workspace"></div>
       </div>
       <div class="card-body">
         <p class="field-note i18n" data-en="Free-form notes and instructions per cell. Add structured foods explicitly to calculate nutrition -- typed text is never scanned or converted automatically." data-gr="Ελεύθερες σημειώσεις και οδηγίες ανά κελί. Προσθέστε δομημένες τροφές ρητά για υπολογισμό διατροφής -- το κείμενο δεν σαρώνεται ή μετατρέπεται αυτόματα.">Free-form notes and instructions per cell. Add structured foods explicitly to calculate nutrition -- typed text is never scanned or converted automatically.</p>
@@ -14980,15 +14981,18 @@ function renderMicronutrientCoverage(){
 }
 
 function renderManualScratchNavButton(){
-  const el=document.getElementById('manual-scratch-nav-button'); if(!el) return;
+  const el=document.getElementById('manual-scratch-nav-button');
+  const elWorkspace=document.getElementById('manual-scratch-nav-button-workspace');
+  if(!el && !elWorkspace) return;
   const isGr = window.appLang==='gr';
+  let html='';
   if(S.inManualScratchMode && S.preManualScratchSnapshot){
-    el.innerHTML = `<button class="btn" onclick="viewGeneratedPlanFromManualScratch()"><i class="ti ti-arrow-left" aria-hidden="true"></i> ${isGr?'Επιστροφή στο Δημιουργημένο Πλάνο':'Back to Generated Plan'}</button>`;
+    html = `<button class="btn" onclick="viewGeneratedPlanFromManualScratch()"><i class="ti ti-arrow-left" aria-hidden="true"></i> ${isGr?'Επιστροφή στο Δημιουργημένο Πλάνο':'Back to Generated Plan'}</button>`;
   } else if(!S.inManualScratchMode && S.manualScratchInProgressSnapshot){
-    el.innerHTML = `<button class="btn" onclick="viewManualScratchPlan()"><i class="ti ti-arrow-right" aria-hidden="true"></i> ${isGr?'Επιστροφή στο Χειροκίνητο Πλάνο':'Back to Manual Plan'}</button>`;
-  } else {
-    el.innerHTML = '';
+    html = `<button class="btn" onclick="viewManualScratchPlan()"><i class="ti ti-arrow-right" aria-hidden="true"></i> ${isGr?'Επιστροφή στο Χειροκίνητο Πλάνο':'Back to Manual Plan'}</button>`;
   }
+  if(el) el.innerHTML = html;
+  if(elWorkspace) elWorkspace.innerHTML = html;
 }
 function buildSevenDay(){
   traceDecision('buildSevenDay','entry',{definition:'buildSevenDay#2', mealLanguage:S.mealLanguage, sevenDayView:S.sevenDayView, activeIndex:S.sevenDayActiveIndex});
@@ -18163,6 +18167,7 @@ function buildWorkspaceReport(){
 }
 function renderMealPlanWorkspace(){
   ensureWorkspaceCells();
+  renderManualScratchNavButton();
   const el = document.getElementById('workspace-grid'); if(!el) return;
   const isGr = window.appLang==='gr';
   const slots = [
