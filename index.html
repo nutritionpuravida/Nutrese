@@ -2819,6 +2819,7 @@ table th,
       <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
         <span class="card-title"><i class="ti ti-table" aria-hidden="true"></i> <span class="i18n" data-en="Meal Plan Workspace" data-gr="Χώρος Εργασίας Πλάνου">Meal Plan Workspace</span></span>
         <div id="manual-scratch-nav-button-workspace"></div>
+        <button class="btn primary" onclick="openDietImportModal()"><i class="ti ti-clipboard-text" aria-hidden="true"></i> <span class="i18n" data-en="Paste / Import Diet" data-gr="Επικόλληση / Εισαγωγή Διατροφής">Paste / Import Diet</span></button>
       </div>
       <div class="card-body">
         <p class="field-note i18n" data-en="Free-form notes and instructions per cell. Add structured foods explicitly to calculate nutrition -- typed text is never scanned or converted automatically." data-gr="Ελεύθερες σημειώσεις και οδηγίες ανά κελί. Προσθέστε δομημένες τροφές ρητά για υπολογισμό διατροφής -- το κείμενο δεν σαρώνεται ή μετατρέπεται αυτόματα.">Free-form notes and instructions per cell. Add structured foods explicitly to calculate nutrition -- typed text is never scanned or converted automatically.</p>
@@ -3052,6 +3053,32 @@ table th,
       <div class="card-body">
         <input type="text" id="workspace-search-input" class="i18n-ph" data-en-ph="Search foods..." data-gr-ph="Αναζήτηση τροφίμων..." placeholder="Search foods..." style="width:100%;margin-bottom:10px" oninput="renderWorkspaceSearchResults()">
         <div id="workspace-search-results"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="diet-import-modal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.62);z-index:9999;align-items:center;justify-content:center;padding:18px">
+    <div class="card" style="width:min(900px,96vw);max-height:90vh;overflow:auto;margin:0">
+      <div class="card-header">
+        <span class="card-title"><i class="ti ti-clipboard-text" aria-hidden="true"></i> <span class="i18n" data-en="Paste / Import Diet" data-gr="Επικόλληση / Εισαγωγή Διατροφής">Paste / Import Diet</span></span>
+        <button class="btn" onclick="closeDietImportModal()" style="margin-left:auto"><i class="ti ti-x" aria-hidden="true"></i></button>
+      </div>
+      <div class="card-body">
+        <div id="diet-import-paste-step">
+          <p class="field-note i18n" data-en="Paste the complete diet copied from Excel, Word, or a plain text file. Recognized day and meal headings (English or Greek) will be detected automatically -- wording is preserved exactly, nothing is translated or converted to structured foods." data-gr="Επικολλήστε την πλήρη διατροφή αντιγραμμένη από Excel, Word ή αρχείο κειμένου. Οι επικεφαλίδες ημερών και γευμάτων (Ελληνικά ή Αγγλικά) θα εντοπιστούν αυτόματα -- η διατύπωση διατηρείται ακριβώς, χωρίς μετάφραση ή μετατροπή σε δομημένες τροφές.">Paste the complete diet copied from Excel, Word, or a plain text file. Recognized day and meal headings (English or Greek) will be detected automatically -- wording is preserved exactly, nothing is translated or converted to structured foods.</p>
+          <textarea id="diet-import-textarea" style="width:100%;min-height:220px;font-family:monospace;font-size:12px;border:1px solid var(--border);border-radius:8px;padding:10px" placeholder="Paste diet here..."></textarea>
+          <div style="margin-top:12px;text-align:right">
+            <button class="btn primary" onclick="previewDietImport()"><span class="i18n" data-en="Preview Import" data-gr="Προεπισκόπηση Εισαγωγής">Preview Import</span></button>
+          </div>
+        </div>
+        <div id="diet-import-preview-step" style="display:none">
+          <div id="diet-import-preview-warning"></div>
+          <div id="diet-import-preview-content" style="max-height:400px;overflow:auto;border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:12px"></div>
+          <div style="display:flex;justify-content:space-between">
+            <button class="btn" onclick="backToDietImportPaste()"><span class="i18n" data-en="Back" data-gr="Πίσω">Back</span></button>
+            <button class="btn primary" onclick="applyDietImport()"><span class="i18n" data-en="Apply to Workspace" data-gr="Εφαρμογή στον Χώρο Εργασίας">Apply to Workspace</span></button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -8846,8 +8873,13 @@ function ensureWorkspaceCells(){
       brk:{text:'', structuredFoods:[]}, snk1:{text:'', structuredFoods:[]},
       lun:{text:'', structuredFoods:[]}, snk2:{text:'', structuredFoods:[]},
       din:{text:'', structuredFoods:[]}, sleep:{text:'', structuredFoods:[]},
+      dailyKcal:{value:null, source:null}, // source: 'calculated' | 'manual' | 'imported' -- never conflated
     }));
   }
+  // Backward-compat: a client saved before dailyKcal existed still has 7
+  // valid day objects (the array-length check above already passed), just
+  // missing this one field on each -- add it without touching anything else.
+  S.workspaceCells.forEach(day=>{ if(!day.dailyKcal) day.dailyKcal={value:null, source:null}; });
 }
 function freshWeekPlans(){
   const plans = JSON.parse(JSON.stringify(WEEK_PLANS));
@@ -18128,6 +18160,7 @@ function buildWorkspaceReport(){
   ];
   const clientName = v('p-name') || '';
   const today = formatDateDMY(new Date());
+  const equivalentsGuideHtml = S.reportOptions?.includeEquivalents===true ? reportEquivalentsGuideHtml(isEn) : '';
   const cellHtml = (cell)=>{
     const textHtml = cell.text ? `<div style="white-space:pre-wrap;font-size:12px">${safeHtml(cell.text)}</div>` : '';
     const foods = cell.structuredFoods||[];
@@ -18146,6 +18179,15 @@ function buildWorkspaceReport(){
     }
     return (textHtml||foodsHtml) ? `${textHtml}${foodsHtml}${totalsHtml}` : `<span style="color:var(--gray-400)">—</span>`;
   };
+  const dailyKcalHtml = (day)=>{
+    const calc = calcWorkspaceDayStructuredKcal(day);
+    if(calc!==null) return `<div style="font-weight:800;color:var(--teal-700)">${Math.round(calc)} kcal</div><div style="font-size:10px;color:var(--text-muted)">${isEn?'calculated':'υπολογισμένο'}</div>`;
+    if(day.dailyKcal?.value){
+      const srcLabel = day.dailyKcal.source==='imported' ? (isEn?'imported':'εισαγόμενο') : (isEn?'manual':'χειροκίνητο');
+      return `<div style="font-weight:800">${day.dailyKcal.value} kcal</div><div style="font-size:10px;color:var(--text-muted)">${srcLabel}</div>`;
+    }
+    return `<span style="color:var(--gray-400);font-size:11px">—</span>`;
+  };
   const html = `
     <div class="report-week-section report-week-full">
       <div style="font-size:16px;font-weight:800;color:var(--teal-800);margin:0 0 4px;border-bottom:2px solid var(--teal-600);padding-bottom:4px"><i class="ti ti-table" aria-hidden="true"></i> ${isEn?'Meal Plan Workspace':'Χώρος Εργασίας Πλάνου'}</div>
@@ -18154,16 +18196,52 @@ function buildWorkspaceReport(){
         <thead><tr style="background:var(--teal-600);color:#fff">
           <th style="padding:4px;width:6%">${isEn?'Day':'Ημέρα'}</th>
           ${slots.map(s=>`<th style="padding:4px">${safeHtml(s.label)}</th>`).join('')}
+          <th style="padding:4px;width:8%">${isEn?'Daily Kcal':'Ημ. Θερμίδες'}</th>
         </tr></thead>
         <tbody>
         ${S.workspaceCells.map((day,i)=>`<tr style="background:${i%2===0?'var(--bg-surface)':'var(--teal-50)'};border-bottom:1px solid var(--border)">
           <td style="padding:6px;font-weight:700;vertical-align:top">${safeHtml(dayLabels[i])}</td>
           ${slots.map(s=>`<td style="padding:6px;vertical-align:top">${cellHtml(day[s.key]||{text:'',structuredFoods:[]})}</td>`).join('')}
+          <td style="padding:6px;vertical-align:top;text-align:center">${dailyKcalHtml(day)}</td>
         </tr>`).join('')}
         </tbody>
       </table>
-    </div>`;
+    </div>
+    ${equivalentsGuideHtml}`;
   const el = document.getElementById('report-body'); if(el) el.innerHTML = html;
+}
+function calcWorkspaceDayStructuredKcal(day){
+  const eng = window.NutreseEngine;
+  let total=0, hasAny=false;
+  ['brk','snk1','lun','snk2','din','sleep'].forEach(slot=>{
+    const foods = day[slot]?.structuredFoods||[];
+    if(foods.length){
+      hasAny=true;
+      const ingredients = foods.map(f=>({food_id:f.food_id, grams:f.grams, state:'n/a'}));
+      total += eng.recipeTotals(ingredients).kcal;
+    }
+  });
+  return hasAny ? total : null;
+}
+function updateWorkspaceDailyKcal(dayIndex, value){
+  ensureWorkspaceCells();
+  const num = value===''||value===null||value===undefined ? null : Number(value);
+  S.workspaceCells[dayIndex].dailyKcal = { value:num, source: num===null?null:'manual' };
+  refreshWorkspaceDayKcalDisplay(dayIndex);
+}
+function refreshWorkspaceDayKcalDisplay(dayIndex){
+  const day=S.workspaceCells[dayIndex]; if(!day) return;
+  const el=document.getElementById(`ws-kcal-display-${dayIndex}`); if(!el) return;
+  const isGr=window.appLang==='gr';
+  const calc=calcWorkspaceDayStructuredKcal(day);
+  if(calc!==null){
+    el.innerHTML = `<span style="color:var(--teal-700);font-weight:800">${Math.round(calc)} kcal</span><br><span style="font-size:10px;color:var(--text-muted)">${isGr?'υπολογισμένο':'calculated'}</span>`;
+  } else if(day.dailyKcal?.value){
+    const srcLabel = day.dailyKcal.source==='imported' ? (isGr?'εισαγόμενο':'imported') : (isGr?'χειροκίνητο':'manual');
+    el.innerHTML = `<span style="font-weight:800">${day.dailyKcal.value} kcal</span><br><span style="font-size:10px;color:var(--text-muted)">${srcLabel}</span>`;
+  } else {
+    el.innerHTML = `<span style="color:var(--gray-400);font-size:11px">${isGr?'Δεν έχει οριστεί':'Not set'}</span>`;
+  }
 }
 function renderMealPlanWorkspace(){
   ensureWorkspaceCells();
@@ -18181,6 +18259,7 @@ function renderMealPlanWorkspace(){
   let html = '<table style="border-collapse:collapse;width:100%;min-width:900px"><thead><tr>';
   html += `<th style="padding:8px;border:1px solid var(--border);text-align:left">${isGr?'Ημέρα':'Day'}</th>`;
   slots.forEach(s=>{ html += `<th style="padding:8px;border:1px solid var(--border);text-align:left;min-width:150px">${safeHtml(s.label)}</th>`; });
+  html += `<th style="padding:8px;border:1px solid var(--border);text-align:left;min-width:110px">${isGr?'Ημερήσιες Θερμίδες':'Daily Kcal'}</th>`;
   html += '</tr></thead><tbody>';
   S.workspaceCells.forEach((day,dayIndex)=>{
     html += `<tr><td style="padding:8px;border:1px solid var(--border);font-weight:700;vertical-align:top">${safeHtml(dayLabels[dayIndex])}</td>`;
@@ -18197,10 +18276,15 @@ function renderMealPlanWorkspace(){
         ${totals ? `<div id="ws-totals-${dayIndex}-${s.key}" style="margin-top:4px;font-size:11px;font-weight:700;color:var(--teal-700)">${Math.round(totals.totals.kcal)} kcal · ${formatFoodNumber(totals.totals.carbohydrate_g,'g')}C · ${formatFoodNumber(totals.totals.protein_g,'g')}P · ${formatFoodNumber(totals.totals.fat_g,'g')}F</div>` : `<div id="ws-totals-${dayIndex}-${s.key}"></div>`}
       </td>`;
     });
+    html += `<td style="padding:6px;border:1px solid var(--border);vertical-align:top">
+      <div id="ws-kcal-display-${dayIndex}" style="margin-bottom:4px"></div>
+      <input type="number" id="ws-kcal-input-${dayIndex}" placeholder="${isGr?'kcal':'kcal'}" style="width:100%;font-size:12px;border:1px solid var(--border);border-radius:6px;padding:4px" value="${day.dailyKcal?.source==='manual'||day.dailyKcal?.source==='imported' ? (day.dailyKcal.value??'') : ''}" onchange="updateWorkspaceDailyKcal(${dayIndex},this.value)">
+    </td>`;
     html += '</tr>';
   });
   html += '</tbody></table>';
   el.innerHTML = html;
+  for(let i=0;i<7;i++) refreshWorkspaceDayKcalDisplay(i);
 }
 // Reuses the existing household-measure engine functions directly -- no
 // second measurement system. Returns null for foods that should remain
@@ -18273,6 +18357,7 @@ function refreshWorkspaceCell(dayIndex, slot){
   const totalsEl = document.getElementById(`ws-totals-${dayIndex}-${slot}`);
   const totals = calcWorkspaceCellTotals(cell);
   if(totalsEl) totalsEl.innerHTML = totals ? `${Math.round(totals.totals.kcal)} kcal · ${formatFoodNumber(totals.totals.carbohydrate_g,'g')}C · ${formatFoodNumber(totals.totals.protein_g,'g')}P · ${formatFoodNumber(totals.totals.fat_g,'g')}F` : '';
+  refreshWorkspaceDayKcalDisplay(dayIndex);
 }
 function searchWorkspaceFoods(query){
   // Isolated duplicate of searchCustomMealFoods()'s ranking logic --
@@ -18320,6 +18405,160 @@ function renderWorkspaceSearchResults(){
     <button class="btn primary" style="padding:4px 10px;font-size:12px" onclick="addWorkspaceStructuredFood(S.workspaceFoodSearchTarget.dayIndex, S.workspaceFoodSearchTarget.slot, '${r.id}', v('workspace-search-grams-${i}')); closeWorkspaceFoodSearch();">${isGr?'Προσθήκη':'Add'}</button>
   </div>`;
   }).join('');
+}
+function openDietImportModal(){
+  document.getElementById('diet-import-textarea').value='';
+  document.getElementById('diet-import-preview-step').style.display='none';
+  document.getElementById('diet-import-paste-step').style.display='block';
+  const modal=document.getElementById('diet-import-modal'); if(modal) modal.style.display='flex';
+}
+function closeDietImportModal(){
+  // Cancel: S.workspaceCells was never touched by anything up to this
+  // point (preview only ever renders from a local, temporary parse result
+  // -- see previewDietImport()), so simply closing leaves the existing
+  // Workspace completely untouched, exactly as required.
+  const modal=document.getElementById('diet-import-modal'); if(modal) modal.style.display='none';
+  S.__dietImportPending=null;
+}
+function backToDietImportPaste(){
+  document.getElementById('diet-import-preview-step').style.display='none';
+  document.getElementById('diet-import-paste-step').style.display='block';
+}
+function previewDietImport(){
+  const isGr = window.appLang==='gr';
+  const rawText = document.getElementById('diet-import-textarea').value;
+  const parsed = parseImportedDietText(rawText);
+  S.__dietImportPending = parsed; // temporary, local to this modal session -- NOT written to S.workspaceCells yet
+  const dayLabels = isGr
+    ? ['Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο','Κυριακή']
+    : ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+  const mealLabels = {brk:isGr?'Πρωινό':'Breakfast', snk1:isGr?'Σνακ 1':'Snack 1', lun:isGr?'Μεσημεριανό':'Lunch',
+    snk2:isGr?'Σνακ 2':'Snack 2', din:isGr?'Βραδινό':'Dinner', sleep:isGr?'Πριν τον ύπνο':'Before sleep'};
+
+  const warningEl=document.getElementById('diet-import-preview-warning');
+  warningEl.innerHTML = parsed.confident ? '' :
+    `<div style="padding:10px 14px;background:#fff3cd;border:1px solid #ffe08a;border-radius:6px;margin-bottom:12px;font-size:13px;color:#664d03">${isGr?'Δεν εντοπίστηκαν σαφείς επικεφαλίδες ημερών/γευμάτων. Ελέγξτε προσεκτικά την προεπισκόπηση πριν την εφαρμογή, ή επιστρέψτε και προσαρμόστε το κείμενο.':'No clear day/meal headings were detected. Please review the preview carefully before applying, or go back and adjust the text.'}</div>`;
+
+  const contentEl=document.getElementById('diet-import-preview-content');
+  contentEl.innerHTML = parsed.days.map((day,i)=>{
+    const hasContent = Object.values(day).some(v=>v);
+    if(!hasContent) return '';
+    return `<div style="margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border)">
+      <div style="font-weight:800;color:var(--teal-800);margin-bottom:4px">${safeHtml(dayLabels[i])}</div>
+      ${Object.entries(day).filter(([k,v])=>v).map(([k,v])=>`<div style="font-size:12px;margin-bottom:4px"><strong>${mealLabels[k]}:</strong> <span style="white-space:pre-wrap">${safeHtml(v)}</span></div>`).join('')}
+    </div>`;
+  }).join('') || `<div style="color:var(--gray-400)">${isGr?'Δεν εντοπίστηκε περιεχόμενο.':'No content detected.'}</div>`;
+
+  document.getElementById('diet-import-paste-step').style.display='none';
+  document.getElementById('diet-import-preview-step').style.display='block';
+}
+function applyDietImport(){
+  const pending=S.__dietImportPending;
+  if(!pending) return;
+  ensureWorkspaceCells();
+  // The ONLY point in this entire flow that writes to S.workspaceCells --
+  // and only to .text (free-form content, preserved exactly as parsed from
+  // the pasted diet). structuredFoods and dailyKcal are never touched by
+  // import; those remain explicit, separate dietitian actions.
+  pending.days.forEach((day,i)=>{
+    Object.entries(day).forEach(([slot,text])=>{
+      if(text) S.workspaceCells[i][slot].text = text;
+    });
+  });
+  S.__dietImportPending=null;
+  closeDietImportModal();
+  renderMealPlanWorkspace();
+  scheduleAutosave();
+}
+const DIET_IMPORT_DAY_PATTERNS = [
+  {key:0, patterns:['monday','δευτερα']}, {key:1, patterns:['tuesday','τριτη']},
+  {key:2, patterns:['wednesday','τεταρτη']}, {key:3, patterns:['thursday','πεμπτη']},
+  {key:4, patterns:['friday','παρασκευη']}, {key:5, patterns:['saturday','σαββατο']},
+  {key:6, patterns:['sunday','κυριακη']},
+];
+const DIET_IMPORT_MEAL_PATTERNS = [
+  {key:'brk', patterns:['breakfast','πρωινο']},
+  {key:'snk1', patterns:['snack 1','snack1','δεκατιανο']},
+  {key:'lun', patterns:['lunch','μεσημεριανο']},
+  {key:'snk2', patterns:['snack 2','snack2','απογευματινο']},
+  {key:'din', patterns:['dinner','δειπνο']},
+  {key:'sleep', patterns:['before sleep','πριν τον υπνο','πριν υπνο']},
+];
+// Diacritic-insensitive, case-insensitive normalization for heading matching
+// only -- never applied to the actual diet content itself, which is always
+// preserved character-for-character exactly as pasted.
+function normalizeForDietMatch(str){
+  return String(str||'').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+}
+function matchDietImportDay(line){
+  const norm = normalizeForDietMatch(line);
+  if(!norm) return null;
+  for(const d of DIET_IMPORT_DAY_PATTERNS){
+    if(d.patterns.some(p=>norm===normalizeForDietMatch(p))) return d.key;
+  }
+  return null;
+}
+function matchDietImportMeal(line){
+  const norm = normalizeForDietMatch(line);
+  if(!norm) return null;
+  for(const m of DIET_IMPORT_MEAL_PATTERNS){
+    if(m.patterns.some(p=>norm===normalizeForDietMatch(p))) return m.key;
+  }
+  return null;
+}
+function parseImportedDietText(rawText){
+  const hasTabs = rawText.includes('\t');
+  const lines = rawText.split(/\r\n|\r|\n/);
+  const result = Array.from({length:7}, ()=>({brk:'',snk1:'',lun:'',snk2:'',din:'',sleep:''}));
+  let matchedAnything = false;
+
+  if(hasTabs){
+    // Excel/TSV clipboard convention: tabs=columns, newlines=rows. The
+    // Andys 2.xlsx structure has days as columns with meal headings and
+    // food lines stacked vertically within each column -- NOT a simple
+    // header-row-then-data-rows table. Find the header row (2+ day
+    // matches), then walk each matched column downward, splitting its
+    // content at meal-heading lines.
+    const rows = lines.map(l=>l.split('\t'));
+    let headerRowIdx=-1, dayColumnMap={};
+    for(let r=0;r<rows.length;r++){
+      const map={}; let count=0;
+      rows[r].forEach((cell,ci)=>{ const d=matchDietImportDay(cell); if(d!==null){ map[ci]=d; count++; } });
+      if(count>=2){ headerRowIdx=r; dayColumnMap=map; break; }
+    }
+    if(headerRowIdx>=0){
+      matchedAnything=true;
+      Object.entries(dayColumnMap).forEach(([ci,dayKey])=>{
+        const colIndex=Number(ci);
+        let currentMeal=null;
+        for(let r=headerRowIdx+1;r<rows.length;r++){
+          const cell=(rows[r][colIndex]||'').trim();
+          if(!cell) continue;
+          const mealKey=matchDietImportMeal(cell);
+          if(mealKey){ currentMeal=mealKey; }
+          else if(currentMeal){ result[dayKey][currentMeal] += (result[dayKey][currentMeal]?'\n':'')+cell; }
+        }
+      });
+    }
+  }
+
+  if(!matchedAnything){
+    // Plain text / Word mode: sequential day+meal heading detection in a
+    // single flowing text, exactly matching a typical Word-style diet.
+    let currentDay=null, currentMeal=null;
+    for(const rawLine of lines){
+      const line=rawLine.trim();
+      if(!line) continue;
+      const d=matchDietImportDay(line);
+      if(d!==null){ currentDay=d; currentMeal=null; matchedAnything=true; continue; }
+      const m=matchDietImportMeal(line);
+      if(m!==null && currentDay!==null){ currentMeal=m; matchedAnything=true; continue; }
+      if(currentDay!==null && currentMeal!==null){
+        result[currentDay][currentMeal] += (result[currentDay][currentMeal]?'\n':'')+line;
+      }
+    }
+  }
+  return { days: result, confident: matchedAnything };
 }
 function openWorkspaceDuplicate(dayIndex, slot){
   S.workspaceDuplicateSource = {dayIndex, slot};
