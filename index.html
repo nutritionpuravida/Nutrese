@@ -8094,6 +8094,7 @@ const GENERATOR_SNACK_LABEL_TRANSLATIONS={
   'Crackers':'Κράκερ',
   'Milk':'Γάλα',
   'Banana':'Μπανάνα',
+  'Raspberries':'Σμέουρα',
 };
 function customMealText(key, lang='GR'){
   const meal=getCustomMealByKey(key);
@@ -11231,6 +11232,14 @@ function calcBMR(equation, sex, age, h, w){
   // Mifflin-St Jeor (default)
   return sex==='M' ? 10*w+6.25*h-5*age+5 : 10*w+6.25*h-5*age-161;
 }
+function getBmiCategoryLabel(bmi, isGr){
+  if(bmi<18.5) return isGr?'Λιποβαρής':'Underweight';
+  if(bmi<25) return isGr?'Φυσιολογικό βάρος':'Normal weight';
+  if(bmi<30) return isGr?'Υπέρβαρος':'Overweight';
+  if(bmi<35) return isGr?'Παχυσαρκία Τάξη I':'Obesity Class I';
+  if(bmi<40) return isGr?'Παχυσαρκία Τάξη II':'Obesity Class II';
+  return isGr?'Τάξη III / Σοβαρή Παχυσαρκία':'Class III / Severe Obesity';
+}
 function calcAll() {
   const age=parseFloat(v('p-age'))||null, sex=v('p-sex'), h=parseFloat(v('p-height'))||null;
   const w=parseFloat(v('p-weight'))||null, act=parseFloat(v('p-activity'))||1.55;
@@ -11314,12 +11323,7 @@ function calcAll() {
   S.bmi=bmi;
   const isGrBmi = window.appLang==='gr';
   if(bmi!==null){
-    if(bmi<18.5) bmiCat=isGrBmi?'Λιποβαρής':'Underweight';
-    else if(bmi<25) bmiCat=isGrBmi?'Φυσιολογικό βάρος':'Normal weight';
-    else if(bmi<30) bmiCat=isGrBmi?'Υπέρβαρος':'Overweight';
-    else if(bmi<35) bmiCat=isGrBmi?'Παχυσαρκία Τάξη I':'Obesity Class I';
-    else if(bmi<40) bmiCat=isGrBmi?'Παχυσαρκία Τάξη II':'Obesity Class II';
-    else bmiCat=isGrBmi?'Τάξη III / Σοβαρή Παχυσαρκία':'Class III / Severe Obesity';
+    bmiCat = getBmiCategoryLabel(bmi, isGrBmi);
     S.bmiCat=bmiCat;
   }
   if(age&&h&&w){
@@ -15951,7 +15955,7 @@ function reportBodyCompositionHtml(isEn){
   return reportMetricGridHtml(isEn?'Body Composition':'Σωματομετρικά / Body Composition', [
     [isEn?'Weight':'Βάρος', S.weight ? `${S.weight} kg` : ''],
     [isEn?'Height':'Ύψος', S.height ? `${S.height} cm` : ''],
-    ['BMI', S.bmi ? `${S.bmi.toFixed(1)}${S.bmiCat ? ' · '+S.bmiCat : ''}` : ''],
+    ['BMI', S.bmi ? `${S.bmi.toFixed(1)}${' · '+getBmiCategoryLabel(S.bmi, !isEn)}` : ''],
     [isEn?'Body fat %':'Λίπος σώματος %', bf ? `${bf}%` : ''],
     [isEn?'Fat mass':'Μάζα λίπους', fatmass ? `${fatmass} kg` : ''],
     [isEn?'Fat-free mass':'Άλιπη μάζα', ffm ? `${ffm} kg` : ''],
@@ -16029,7 +16033,7 @@ function buildReport(){
   const headerSummaryRows=[
     [isEn?'Target kcal':'Στόχος kcal', S.goalKcal ? `${Math.round(S.goalKcal)} ${dayUnit}` : '—'],
     [isEn?'Weight':'Βάρος', S.weight ? `${S.weight} kg` : '—'],
-    ['BMI', S.bmi ? `${S.bmi.toFixed(1)}${S.bmiCat ? ' · '+S.bmiCat : ''}` : '—'],
+    ['BMI', S.bmi ? `${S.bmi.toFixed(1)}${' · '+getBmiCategoryLabel(S.bmi, !isEn)}` : '—'],
     [isEn?'Primary condition':'Κύρια κατάσταση', condNames || '—'],
   ];
   const reportPqEx=S.ex, reportPqM=S.exMeta;
