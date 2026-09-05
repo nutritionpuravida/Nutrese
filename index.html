@@ -2627,9 +2627,8 @@ table th,
           </div>
         </div>
 
-        <div style="margin-top:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-          <button class="btn primary" onclick="saveBodyComp()"><i class="ti ti-device-floppy" aria-hidden="true"></i> <span class="i18n" data-en="Save Measurements" data-gr="Αποθήκευση Μετρήσεων">Save Measurements</span></button>
-          <span style="font-size:11px;color:var(--text-muted)"><span class="i18n" data-en="↳ Logs this visit — click Save Client above to keep it permanently" data-gr="↳ Καταγράφει την επίσκεψη — πατήστε Αποθήκευση Πελάτη επάνω για μόνιμη αποθήκευση">↳ Logs this visit — click Save Client above to keep it permanently</span></span>
+        <div style="margin-top:14px;padding:10px 14px;background:var(--bg-page);border:1px solid var(--border);border-radius:8px;font-size:13px;color:var(--text-secondary)">
+          <i class="ti ti-info-circle" aria-hidden="true"></i> <span class="i18n" data-en="To log a new visit's measurements, use &quot;Log Visit&quot; on the Follow-up tab — it captures the complete visit in one step and this page will show it as the current values below." data-gr="Για την καταγραφή νέας επίσκεψης, χρησιμοποιήστε «Καταγραφή Επίσκεψης» στην καρτέλα Παρακολούθηση — καταγράφει ολόκληρη την επίσκεψη σε ένα βήμα και αυτή η σελίδα θα την εμφανίσει ως τρέχουσες τιμές παρακάτω.">To log a new visit's measurements, use "Log Visit" on the Follow-up tab — it captures the complete visit in one step and this page will show it as the current values below.</span>
         </div>
       </div>
     </div>
@@ -2900,10 +2899,16 @@ table th,
         <div class="field-note" style="margin-bottom:10px"><i class="ti ti-info-circle" aria-hidden="true"></i> <span class="i18n" data-en="Load the client, add today's visit below, then Save Client in the top bar to keep it." data-gr="Φορτώστε τον πελάτη, προσθέστε τη σημερινή επίσκεψη παρακάτω, μετά Αποθήκευση Πελάτη επάνω για μόνιμη διατήρηση.">Load the client, add today's visit below, then Save Client in the top bar to keep it.</span></div>
         <div class="form-grid three" style="margin-bottom:10px">
           <div class="form-field"><label><span class="i18n" data-en="Visit Date" data-gr="Ημερομηνία Επίσκεψης">Visit Date</span></label><input type="date" id="t-date"></div>
-          <div class="form-field"><label><span class="i18n" data-en="Weight (kg)" data-gr="Βάρος (κιλά)">Weight (kg)</span></label><input type="number" id="t-weight" step="0.1" placeholder="—"></div>
-          <div class="form-field"><label><span class="i18n" data-en="Body Fat %" data-gr="Ποσοστό Λίπους %">Body Fat %</span></label><input type="number" id="t-bf" step="0.1" placeholder="—"></div>
+          <div class="form-field"><label><span class="i18n" data-en="Weight (kg)" data-gr="Βάρος (κιλά)">Weight (kg)</span></label><input type="number" id="t-weight" step="0.1" placeholder="—" oninput="updateVisitDerivedFields()"></div>
+          <div class="form-field"><label><span class="i18n" data-en="Body Fat %" data-gr="Ποσοστό Λίπους %">Body Fat %</span></label><input type="number" id="t-bf" step="0.1" placeholder="—" oninput="updateVisitDerivedFields()"></div>
           <div class="form-field"><label><span class="i18n" data-en="Muscle Mass (kg)" data-gr="Μυϊκή Μάζα (κιλά)">Muscle Mass (kg)</span></label><input type="number" id="t-muscle" step="0.1" placeholder="—"></div>
           <div class="form-field"><label><span class="i18n" data-en="Visceral Fat" data-gr="Σπλαχνικό Λίπος">Visceral Fat</span></label><input type="number" id="t-visceral" placeholder="—"></div>
+          <div class="form-field"><label><span class="i18n" data-en="Body Water %" data-gr="Ποσοστό Νερού %">Body Water %</span></label><input type="number" id="t-water" step="0.1" placeholder="—"></div>
+          <div class="form-field"><label><span class="i18n" data-en="Metabolic Age" data-gr="Μεταβολική Ηλικία">Metabolic Age</span></label><input type="number" id="t-metage" placeholder="—"></div>
+          <div class="form-field"><label><span class="i18n" data-en="Physique Rating (1–9)" data-gr="Βαθμολογία Σωματότυπου (1–9)">Physique Rating (1–9)</span></label><input type="number" id="t-physique" min="1" max="9" placeholder="—"></div>
+          <div class="form-field"><label><span class="i18n" data-en="Bone Mass (kg)" data-gr="Οστική Μάζα (κιλά)">Bone Mass (kg)</span></label><input type="number" id="t-bone" step="0.1" placeholder="—"></div>
+          <div class="form-field"><label><span class="i18n" data-en="Fat Mass (kg, auto)" data-gr="Λιπώδης Μάζα (κιλά, αυτόματο)">Fat Mass (kg, auto)</span></label><input type="text" id="t-fatmass-display" disabled placeholder="—" style="background:var(--bg-page)"></div>
+          <div class="form-field"><label><span class="i18n" data-en="Fat-Free Mass (kg, auto)" data-gr="Άλιπη Μάζα (κιλά, αυτόματο)">Fat-Free Mass (kg, auto)</span></label><input type="text" id="t-ffm-display" disabled placeholder="—" style="background:var(--bg-page)"></div>
           <div class="form-field"><label><span class="i18n" data-en="Notes" data-gr="Σημειώσεις">Notes</span></label><input type="text" id="t-notes" class="i18n-ph" data-en-ph="Session notes…" data-gr-ph="Σημειώσεις συνεδρίας…" placeholder="Session notes…"></div>
         </div>
         <button class="btn primary" onclick="addTracking()">+ <span class="i18n" data-en="Log Visit" data-gr="Καταγραφή Επίσκεψης">Log Visit</span></button>
@@ -11845,19 +11850,40 @@ function calcBodyComp(){
   const targetLabel=isLossGoal ? (isGr?'Στόχος βάρους (-5% αρχικό)':'Target weight (-5% initial)') : isGainGoal ? (isGr?'Στόχος βάρους (+5% αρχικό)':'Target weight (+5% initial)') : (isGr?'Στόχος βάρους':'Target weight');
   setEl('bc-targets',`<div class="form-grid"><div class="metric"><div class="m-label">${targetLabel}</div><div class="m-value" style="font-size:20px">${targetWt}</div></div><div class="metric"><div class="m-label">${isGr?'Στόχος ΔΜΣ (μακροπρόθεσμα)':'Target BMI (long-term)'}</div><div class="m-value" style="font-size:20px">22–27</div><div class="m-sub">${isGr?'Κλινική ζώνη αναφοράς':'Clinical reference zone'}</div></div></div>${bmiVisualScaleHtml(S.bmi,isGr)}`);
   renderFoldMeasurementSummary(folds, isGr);
-  setEl('d-bf',bf?bf.toFixed(1)+'%':'—');
+  const latestVisit = (typeof getLatestVisit==='function') ? getLatestVisit() : null;
+  // Body-comp-specific metrics prefer the latest logged VISIT (the new,
+  // complete record) -- but fall back to the existing bc-* field values
+  // when no visit history exists at all, so a legacy client never suddenly
+  // shows an empty Current Status merely because they predate this feature.
+  const statusBf = latestVisit && latestVisit.bf!=='' && latestVisit.bf!=null ? parseFloat(latestVisit.bf) : bf;
+  const statusMuscle = latestVisit && latestVisit.muscle!=='' && latestVisit.muscle!=null ? parseFloat(latestVisit.muscle) : muscle;
+  const statusVisceral = latestVisit && latestVisit.visceral!=='' && latestVisit.visceral!=null ? latestVisit.visceral : visceral;
+  const statusWater = latestVisit && latestVisit.water!=='' && latestVisit.water!=null ? latestVisit.water : water;
+  const statusMetage = latestVisit && latestVisit.metage!=='' && latestVisit.metage!=null ? latestVisit.metage : metage;
+  const statusFatmass = latestVisit && latestVisit.fatmass!=null ? latestVisit.fatmass : fatmass;
+  const statusFfm = latestVisit && latestVisit.ffm!=null ? latestVisit.ffm : ffm;
+  setEl('d-bf',statusBf?Number(statusBf).toFixed(1)+'%':'—');
   // Current Status hero (new) — same underlying values as above, just
   // surfaced prominently instead of buried in the flat field grid.
+  // Weight and BMI intentionally remain tied to Profile weight (S.weight,
+  // S.bmi) -- historical visit weight is deliberately never used here,
+  // per the explicit requirement that it stays historical-only.
   setEl('bc-status-weight', w?w.toFixed(1)+' kg':'—');
   setEl('bc-status-bmi', S.bmi?S.bmi.toFixed(1):'—');
   setEl('bc-status-bmi-cat', S.bmiCat||'—');
-  setEl('bc-status-bf', bf!=null?bf.toFixed(1)+'%':'—');
+  setEl('bc-status-bf', statusBf!=null?Number(statusBf).toFixed(1)+'%':'—');
   const bfNoteEl=document.getElementById('bc-bf-note');
   setEl('bc-status-bf-note', bfNoteEl ? bfNoteEl.innerHTML : '—');
-  setEl('bc-status-muscle', muscle!=null?muscle.toFixed(1)+' kg':'—');
+  setEl('bc-status-muscle', statusMuscle!=null?Number(statusMuscle).toFixed(1)+' kg':'—');
   const bmiScaleEl=document.getElementById('bc-status-bmi-scale');
   if(bmiScaleEl) bmiScaleEl.innerHTML = S.bmi ? bmiVisualScaleHtml(S.bmi, isGrBc) : '';
   if(typeof renderBodyCompTrendCharts==='function') renderBodyCompTrendCharts();
+}
+// Called after logging a new visit -- re-runs the same Current Status
+// derivation above so Body Comp immediately reflects the just-logged
+// visit without requiring a page navigation.
+function renderBodyCompCurrentFromLatestVisit(){
+  if(typeof calcBodyComp==='function') calcBodyComp();
 }
 
 function bmiVisualScaleHtml(bmi, isGr=false){
@@ -16400,14 +16426,73 @@ async function updatePracticeOverview(){
   }
 }
 
+// Handles both formats seen in existing S.tracking entries: ISO
+// "YYYY-MM-DD" (from the <input type="date"> used by Log Visit) and el-GR
+// locale strings like "5/9/2026" (the legacy default used by the old,
+// separate Body Comp save action). Returns null if neither pattern matches,
+// so callers can safely fall back rather than sorting on a bad date.
+function parseVisitDate(dateStr){
+  if(!dateStr) return null;
+  const iso = String(dateStr).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if(iso) return new Date(Number(iso[1]), Number(iso[2])-1, Number(iso[3])).getTime();
+  const elGr = String(dateStr).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if(elGr) return new Date(Number(elGr[3]), Number(elGr[2])-1, Number(elGr[1])).getTime();
+  return null;
+}
+// The latest visit by ACTUAL DATE, not array position -- S.tracking[0] is
+// only guaranteed to be the most recently LOGGED entry (both writers use
+// unshift()), not necessarily the chronologically latest one (a dietitian
+// could log a backdated visit after a more recent one already exists).
+// Falls back to array position 0 only when no entry has a parseable date.
+function getLatestVisit(){
+  if(!Array.isArray(S.tracking) || !S.tracking.length) return null;
+  let best=null, bestTime=-Infinity, anyParsed=false;
+  S.tracking.forEach(entry=>{
+    const t=parseVisitDate(entry.date);
+    if(t!==null){ anyParsed=true; if(t>bestTime){ bestTime=t; best=entry; } }
+  });
+  return anyParsed ? best : S.tracking[0];
+}
+// Computes Fat Mass/FFM live as the Log Visit form is filled in, using
+// ONLY this form's own weight + body-fat inputs -- reuses the exact same
+// formula as calcBodyComp() (weight*bf/100), but deliberately never reads
+// Profile weight, since this is what will be stored for THIS visit only.
+function updateVisitDerivedFields(){
+  const w=parseFloat(v('t-weight')), bf=parseFloat(v('t-bf'));
+  const fatmassEl=document.getElementById('t-fatmass-display');
+  const ffmEl=document.getElementById('t-ffm-display');
+  if(Number.isFinite(w) && Number.isFinite(bf) && w>0){
+    const fatmass=w*bf/100, ffm=w-fatmass;
+    if(fatmassEl) fatmassEl.value=fatmass.toFixed(1);
+    if(ffmEl) ffmEl.value=ffm.toFixed(1);
+  } else {
+    if(fatmassEl) fatmassEl.value='';
+    if(ffmEl) ffmEl.value='';
+  }
+}
 function addTracking(){
-  S.tracking.unshift({date:v('t-date')||new Date().toLocaleDateString('el-GR'),weight:v('t-weight'),bf:v('t-bf'),muscle:v('t-muscle'),visceral:v('t-visceral'),notes:v('t-notes')});
+  const w=parseFloat(v('t-weight')), bf=parseFloat(v('t-bf'));
+  // Fat mass/FFM computed and stored ONCE, at logging time, from this
+  // visit's own weight -- never recomputed later against a different
+  // (e.g. current Profile) weight. A visit missing weight or body fat
+  // simply has no derived values, rather than being computed against an
+  // unrelated number.
+  const hasDerivable = Number.isFinite(w) && Number.isFinite(bf) && w>0;
+  const fatmass = hasDerivable ? +(w*bf/100).toFixed(1) : null;
+  const ffm = hasDerivable ? +(w-fatmass).toFixed(1) : null;
+  S.tracking.unshift({
+    date:v('t-date')||new Date().toLocaleDateString('el-GR'),
+    weight:v('t-weight'), bf:v('t-bf'), muscle:v('t-muscle'), visceral:v('t-visceral'),
+    water:v('t-water'), metage:v('t-metage'), physique:v('t-physique'), bone:v('t-bone'),
+    fatmass, ffm, notes:v('t-notes'),
+  });
   if(!S_isHydrating){
     S_isDirty=true;
     _traceDirtyProd('addTracking', S_isDirty, true);
   }
   if(typeof updateSaveStatusUI==='function') updateSaveStatusUI();
   renderTracking();
+  if(typeof renderBodyCompCurrentFromLatestVisit==='function') renderBodyCompCurrentFromLatestVisit();
 }
 function renderTracking(){
   const el=document.getElementById('tracking-table'); if(!el) return;
@@ -16418,10 +16503,10 @@ function renderTracking(){
     return;
   }
   const th = isGr
-    ? ['Ημερομηνία','Βάρος (κιλά)','Ποσοστό Λίπους %','Μυϊκή Μάζα (κιλά)','Σπλαχνικό','Σημειώσεις','']
-    : ['Date','Weight (kg)','Body Fat %','Muscle (kg)','Visceral','Notes',''];
-  el.innerHTML=`<table><thead><tr><th>${th[0]}</th><th>${th[1]}</th><th>${th[2]}</th><th>${th[3]}</th><th>${th[4]}</th><th>${th[5]}</th><th>${th[6]}</th></tr></thead><tbody>`+
-    S.tracking.map((e,i)=>`<tr><td>${e.date}</td><td>${e.weight||'—'}</td><td>${e.bf||'—'}</td><td>${e.muscle||'—'}</td><td>${e.visceral||'—'}</td><td style="font-size:12px">${e.notes||'—'}</td><td><button class="btn" style="padding:3px 8px;font-size:11px" onclick="S.tracking.splice(${i},1);renderTracking()"><i class="ti ti-x" aria-hidden="true"></i></button></td></tr>`).join('')+
+    ? ['Ημερομηνία','Βάρος (κιλά)','Ποσοστό Λίπους %','Μυϊκή Μάζα (κιλά)','Σπλαχνικό','Νερό %','Μεταβ. Ηλικία','Σωματότυπος','Οστική Μάζα','Λιπώδης Μάζα','Άλιπη Μάζα','Σημειώσεις','']
+    : ['Date','Weight (kg)','Body Fat %','Muscle (kg)','Visceral','Water %','Metabolic Age','Physique','Bone Mass','Fat Mass','FFM','Notes',''];
+  el.innerHTML=`<table><thead><tr>${th.map(t=>`<th>${t}</th>`).join('')}</tr></thead><tbody>`+
+    S.tracking.map((e,i)=>`<tr><td>${e.date}</td><td>${e.weight||'—'}</td><td>${e.bf||'—'}</td><td>${e.muscle||'—'}</td><td>${e.visceral||'—'}</td><td>${e.water||'—'}</td><td>${e.metage||'—'}</td><td>${e.physique||'—'}</td><td>${e.bone||'—'}</td><td>${e.fatmass!=null?e.fatmass:'—'}</td><td>${e.ffm!=null?e.ffm:'—'}</td><td style="font-size:12px">${e.notes||'—'}</td><td><button class="btn" style="padding:3px 8px;font-size:11px" onclick="S.tracking.splice(${i},1);renderTracking()"><i class="ti ti-x" aria-hidden="true"></i></button></td></tr>`).join('')+
     '</tbody></table>';
   renderTrackingChart();
 }
