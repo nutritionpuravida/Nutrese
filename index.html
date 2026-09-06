@@ -1646,10 +1646,10 @@ table th,
 /* Compact, low-emphasis save action. Deliberately NOT `.btn primary` — in
    the header it must read as a contextual affordance, not a permanent CTA
    competing with navigation and status. */
-.btn-save-inline { padding:4px 11px; font-size:11.5px; font-weight:600; border-radius:999px;
-  background:var(--bg-surface); color:var(--teal-700); border:1px solid var(--teal-100); box-shadow:none; }
-.btn-save-inline:hover { background:var(--teal-50); border-color:var(--teal-400); color:var(--teal-800); box-shadow:var(--shadow-xs); }
-.btn-save-inline i { font-size:13px; }
+.btn-save-inline { padding:7px 16px; font-size:13px; font-weight:700; border-radius:8px;
+  background:var(--teal-600); color:#fff; border:1px solid var(--teal-600); box-shadow:0 1px 2px rgba(11,107,72,.24), 0 2px 8px rgba(11,107,72,.16); }
+.btn-save-inline:hover { background:var(--teal-800); border-color:var(--teal-800); color:#fff; box-shadow:0 2px 5px rgba(11,107,72,.28), 0 6px 16px rgba(11,107,72,.2); transform:translateY(-.5px); }
+.btn-save-inline i { font-size:14px; }
 @media (max-width: 760px) { .save-state-slot { min-width:0; } }
 /* Contextual save row — sits with the editable content on editing screens,
    so the answer to "what am I saving?" is always visible. */
@@ -18318,7 +18318,7 @@ function buildWorkspaceReport(){
   const slots = [
     {key:'brk', label:isEn?'Breakfast':'Πρωινό'}, {key:'snk1', label:isEn?'Snack 1':'Σνακ 1'},
     {key:'lun', label:isEn?'Lunch':'Μεσημεριανό'}, {key:'snk2', label:isEn?'Snack 2':'Σνακ 2'},
-    {key:'din', label:isEn?'Dinner':'Βραδινό'}, {key:'sleep', label:isEn?'Before sleep':'Πριν ύπνο'},
+    {key:'din', label:isEn?'Dinner':'Βραδινό'}, {key:'sleep', label:isEn?'Before sleep':'Πριν τον ύπνο'},
   ];
   const clientName = v('p-name') || '';
   const today = formatDateDMY(new Date());
