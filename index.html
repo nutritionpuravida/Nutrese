@@ -15053,21 +15053,19 @@ function renderManualScratchNavButton(){
   const elWorkspace=document.getElementById('manual-scratch-nav-button-workspace');
   if(!el && !elWorkspace) return;
   const isGr = window.appLang==='gr';
-  let html='', htmlWorkspace='';
-  // On the Workspace page specifically, these actions modify S.weekPlans --
-  // which the Workspace page never displays at all, so a legitimate click
-  // for a genuine legacy client looked like "nothing happened." Navigating
-  // to the 7-Day Plan page afterward (where the restored plan IS visible)
-  // is the smallest fix -- the 7-Day Plan page's own button is unaffected.
+  let html='';
+  // Per explicit request: this legacy manual-scratch navigation is no
+  // longer exposed on the Workspace page at all (neither variant) --
+  // Workspace is now the single intended manual workflow. The 7-Day
+  // Plan page's own button ('el'/'html' below) is completely unaffected
+  // and still works exactly as before for genuine legacy clients.
   if(S.inManualScratchMode && S.preManualScratchSnapshot){
     html = `<button class="btn" onclick="viewGeneratedPlanFromManualScratch()"><i class="ti ti-arrow-left" aria-hidden="true"></i> ${isGr?'Επιστροφή στο Δημιουργημένο Πλάνο':'Back to Generated Plan'}</button>`;
-    htmlWorkspace = `<button class="btn" onclick="viewGeneratedPlanFromManualScratch(); nav('sevenday');"><i class="ti ti-arrow-left" aria-hidden="true"></i> ${isGr?'Επιστροφή στο Δημιουργημένο Πλάνο':'Back to Generated Plan'}</button>`;
   } else if(!S.inManualScratchMode && S.manualScratchInProgressSnapshot){
     html = `<button class="btn" onclick="viewManualScratchPlan()"><i class="ti ti-arrow-right" aria-hidden="true"></i> ${isGr?'Επιστροφή στο Χειροκίνητο Πλάνο':'Back to Manual Plan'}</button>`;
-    htmlWorkspace = `<button class="btn" onclick="viewManualScratchPlan(); nav('sevenday');"><i class="ti ti-arrow-right" aria-hidden="true"></i> ${isGr?'Επιστροφή στο Χειροκίνητο Πλάνο':'Back to Manual Plan'}</button>`;
   }
   if(el) el.innerHTML = html;
-  if(elWorkspace) elWorkspace.innerHTML = htmlWorkspace;
+  if(elWorkspace) elWorkspace.innerHTML = ''; // intentionally never populated -- see comment above
 }
 function buildSevenDay(){
   traceDecision('buildSevenDay','entry',{definition:'buildSevenDay#2', mealLanguage:S.mealLanguage, sevenDayView:S.sevenDayView, activeIndex:S.sevenDayActiveIndex});
