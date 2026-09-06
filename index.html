@@ -2786,6 +2786,7 @@ table th,
         <button class="btn primary" onclick="nav('workspace')"><i class="ti ti-plus" aria-hidden="true"></i> <span class="i18n" data-en="New Meal Plan" data-gr="Νέο Πλάνο Γευμάτων">New Meal Plan</span></button>
       </div>
       <div class="card-body">
+        <div class="field-note i18n" style="margin-top:-4px;margin-bottom:12px" data-en="Automatically generated weekly meal plan." data-gr="Αυτόματα δημιουργημένο εβδομαδιαίο πλάνο γευμάτων.">Automatically generated weekly meal plan.</div>
         <div id="existing-client-snack-suggestion"></div>
         <div id="plan-quality-summary" style="margin-bottom:16px"></div>
         <div id="rebalance-preview" style="margin-bottom:16px"></div>
@@ -15047,14 +15048,21 @@ function renderManualScratchNavButton(){
   const elWorkspace=document.getElementById('manual-scratch-nav-button-workspace');
   if(!el && !elWorkspace) return;
   const isGr = window.appLang==='gr';
-  let html='';
+  let html='', htmlWorkspace='';
+  // On the Workspace page specifically, these actions modify S.weekPlans --
+  // which the Workspace page never displays at all, so a legitimate click
+  // for a genuine legacy client looked like "nothing happened." Navigating
+  // to the 7-Day Plan page afterward (where the restored plan IS visible)
+  // is the smallest fix -- the 7-Day Plan page's own button is unaffected.
   if(S.inManualScratchMode && S.preManualScratchSnapshot){
     html = `<button class="btn" onclick="viewGeneratedPlanFromManualScratch()"><i class="ti ti-arrow-left" aria-hidden="true"></i> ${isGr?'Επιστροφή στο Δημιουργημένο Πλάνο':'Back to Generated Plan'}</button>`;
+    htmlWorkspace = `<button class="btn" onclick="viewGeneratedPlanFromManualScratch(); nav('sevenday');"><i class="ti ti-arrow-left" aria-hidden="true"></i> ${isGr?'Επιστροφή στο Δημιουργημένο Πλάνο':'Back to Generated Plan'}</button>`;
   } else if(!S.inManualScratchMode && S.manualScratchInProgressSnapshot){
     html = `<button class="btn" onclick="viewManualScratchPlan()"><i class="ti ti-arrow-right" aria-hidden="true"></i> ${isGr?'Επιστροφή στο Χειροκίνητο Πλάνο':'Back to Manual Plan'}</button>`;
+    htmlWorkspace = `<button class="btn" onclick="viewManualScratchPlan(); nav('sevenday');"><i class="ti ti-arrow-right" aria-hidden="true"></i> ${isGr?'Επιστροφή στο Χειροκίνητο Πλάνο':'Back to Manual Plan'}</button>`;
   }
   if(el) el.innerHTML = html;
-  if(elWorkspace) elWorkspace.innerHTML = html;
+  if(elWorkspace) elWorkspace.innerHTML = htmlWorkspace;
 }
 function buildSevenDay(){
   traceDecision('buildSevenDay','entry',{definition:'buildSevenDay#2', mealLanguage:S.mealLanguage, sevenDayView:S.sevenDayView, activeIndex:S.sevenDayActiveIndex});
@@ -18350,7 +18358,10 @@ function buildWorkspaceReport(){
           <th style="padding:4px;width:8%">${isEn?'Daily Kcal':'Ημ. Θερμίδες'}</th>
         </tr></thead>
         <tbody>
-        ${S.workspaceCells.map((day,i)=>`<tr style="background:${i%2===0?'var(--bg-surface)':'var(--teal-50)'};border-bottom:1px solid var(--border)">
+        ${S.workspaceCells.map((day,i)=>({day,i})).filter(({i})=>{
+          const selectedDays = S.reportOptions?.days;
+          return !Array.isArray(selectedDays) || !selectedDays.length || selectedDays.includes(i);
+        }).map(({day,i})=>`<tr style="background:${i%2===0?'var(--bg-surface)':'var(--teal-50)'};border-bottom:1px solid var(--border)">
           <td style="padding:6px;font-weight:700;vertical-align:top">${safeHtml(dayLabels[i])}</td>
           ${slots.map(s=>`<td style="padding:6px;vertical-align:top">${cellHtml(day[s.key]||{text:'',structuredFoods:[]})}</td>`).join('')}
           <td style="padding:6px;vertical-align:top;text-align:center">${dailyKcalHtml(day)}</td>
