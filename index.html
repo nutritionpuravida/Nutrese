@@ -21076,6 +21076,7 @@ function applyLanguage(lang){
   if(document.getElementById('page-profile')?.classList.contains('active')) calcAll();
   if(document.getElementById('page-labs')?.classList.contains('active')) { const labDateEl=document.getElementById('lab-date'); if(labDateEl) labDateEl.value=S.labDate||''; renderClientDocuments(); renderLabsTable(); }
   if(document.getElementById('page-sevenday')?.classList.contains('active')) renderMicronutrientCoverage();
+  if(document.getElementById('page-workspace')?.classList.contains('active')) renderMealPlanWorkspace();
   if(document.getElementById('page-report')?.classList.contains('active')){ buildReport(); renderMicronutrientCoverage(); }
   if(document.getElementById('page-recipes')?.classList.contains('active')){ renderRecipeTemplates(); renderRecipeDraft(); renderRecipesList(); }
   const rebalEl=document.getElementById('rebalance-preview');
