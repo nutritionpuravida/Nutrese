@@ -15970,29 +15970,82 @@ function reportSkinfoldMeasurementsHtml(isEn){
     ${notes?`<div style="margin-top:5px;font-size:10px;color:var(--text-muted)"><strong>${isEn?'Notes':'Σημειώσεις'}:</strong> ${safeHtml(notes)}</div>`:''}
   </div>`;
 }
+function reportLatestFollowUpHtml(isEn){
+  const latest = (typeof getLatestVisit==='function') ? getLatestVisit() : null;
+  if(!latest){
+    // Zero visits ever logged for this client -- fall back to legacy bc-*
+    // snapshot values if any exist, so a pre-transition client's data
+    // remains visible rather than showing an empty section for no reason.
+    const bf=v('bc-bf'), fatmass=v('bc-fatmass')||(S.bc?.fatmass!=null?Number(S.bc.fatmass).toFixed(1):''),
+      ffm=v('bc-ffm')||(S.bc?.ffm!=null?Number(S.bc.ffm).toFixed(1):''), muscle=v('bc-muscle'),
+      bone=v('bc-bone'), visceral=v('bc-visceral'), water=v('bc-water'), metage=v('bc-metage'), physique=v('bc-physique');
+    const hasLegacy = bf||fatmass||ffm||muscle||bone||visceral||water||metage||physique;
+    if(!hasLegacy){
+      return `<div class="report-section-compact" style="margin:10px 0"><div style="font-size:12px;font-weight:700;color:var(--teal-800);margin:0 0 5px">${isEn?'Latest Follow-up Visit':'Τελευταία Επίσκεψη Παρακολούθησης'}</div><div style="font-size:11px;color:var(--text-muted)">${isEn?'No visits logged yet.':'Δεν έχουν καταγραφεί επισκέψεις ακόμη.'}</div></div>`;
+    }
+    return reportMetricGridHtml(isEn?'Latest Follow-up Visit':'Τελευταία Επίσκεψη Παρακολούθησης', [
+      [isEn?'Body fat %':'Λίπος σώματος %', bf?`${bf}%`:''],
+      [isEn?'Fat mass':'Μάζα λίπους', fatmass?`${fatmass} kg`:''],
+      [isEn?'Fat-free mass':'Άλιπη μάζα', ffm?`${ffm} kg`:''],
+      [isEn?'Muscle mass':'Μυϊκή μάζα', muscle?`${muscle} kg`:''],
+      [isEn?'Bone mass':'Οστική μάζα', bone?`${bone} kg`:''],
+      [isEn?'Visceral fat rating':'Σπλαχνικό λίπος', visceral||''],
+      [isEn?'Body water %':'Νερό σώματος %', water?`${water}%`:''],
+      [isEn?'Metabolic age':'Μεταβολική ηλικία', metage||''],
+      [isEn?'Physique rating':'Σωματότυπος', physique||''],
+    ]);
+  }
+  return reportMetricGridHtml(isEn?'Latest Follow-up Visit':'Τελευταία Επίσκεψη Παρακολούθησης', [
+    [isEn?'Visit date':'Ημερομηνία επίσκεψης', latest.date||''],
+    [isEn?'Weight':'Βάρος', latest.weight?`${latest.weight} kg`:''],
+    [isEn?'Body fat %':'Λίπος σώματος %', latest.bf?`${latest.bf}%`:''],
+    [isEn?'Fat mass':'Μάζα λίπους', latest.fatmass!=null?`${latest.fatmass} kg`:''],
+    [isEn?'Fat-free mass':'Άλιπη μάζα', latest.ffm!=null?`${latest.ffm} kg`:''],
+    [isEn?'Muscle mass':'Μυϊκή μάζα', latest.muscle?`${latest.muscle} kg`:''],
+    [isEn?'Visceral fat':'Σπλαχνικό λίπος', latest.visceral||''],
+    [isEn?'Body water %':'Νερό σώματος %', latest.water?`${latest.water}%`:''],
+    [isEn?'Metabolic age':'Μεταβολική ηλικία', latest.metage||''],
+    [isEn?'Physique rating':'Σωματότυπος', latest.physique||''],
+    [isEn?'Bone mass':'Οστική μάζα', latest.bone?`${latest.bone} kg`:''],
+    [isEn?'Notes':'Σημειώσεις', latest.notes||''],
+  ]);
+}
+function reportVisitHistoryHtml(isEn){
+  if(!Array.isArray(S.tracking) || !S.tracking.length) return '';
+  const th = isEn
+    ? ['Date','Weight','Body Fat %','Muscle','Visceral','Water %','Met. Age','Fat Mass','FFM']
+    : ['Ημερ/νία','Βάρος','Λίπος %','Μυϊκή','Σπλαχ.','Νερό %','Μετ. Ηλικία','Λιπ. Μάζα','Άλιπη'];
+  const rows = S.tracking.map(e=>`<tr>
+    <td style="padding:3px 5px;border-bottom:1px solid var(--border)">${safeHtml(e.date||'—')}</td>
+    <td style="padding:3px 5px;border-bottom:1px solid var(--border)">${e.weight||'—'}</td>
+    <td style="padding:3px 5px;border-bottom:1px solid var(--border)">${e.bf||'—'}</td>
+    <td style="padding:3px 5px;border-bottom:1px solid var(--border)">${e.muscle||'—'}</td>
+    <td style="padding:3px 5px;border-bottom:1px solid var(--border)">${e.visceral||'—'}</td>
+    <td style="padding:3px 5px;border-bottom:1px solid var(--border)">${e.water||'—'}</td>
+    <td style="padding:3px 5px;border-bottom:1px solid var(--border)">${e.metage||'—'}</td>
+    <td style="padding:3px 5px;border-bottom:1px solid var(--border)">${e.fatmass!=null?e.fatmass:'—'}</td>
+    <td style="padding:3px 5px;border-bottom:1px solid var(--border)">${e.ffm!=null?e.ffm:'—'}</td>
+  </tr>`).join('');
+  return `<div class="report-section-compact" style="margin:10px 0;break-inside:avoid">
+    <div style="font-size:12px;font-weight:700;color:var(--teal-800);margin:0 0 5px">${isEn?'Visit History':'Ιστορικό Επισκέψεων'}</div>
+    <table style="width:100%;border-collapse:collapse;font-size:10px"><thead><tr>${th.map(t=>`<th style="padding:3px 5px;text-align:left;border-bottom:2px solid var(--border);color:var(--text-muted)">${t}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>
+  </div>`;
+}
 function reportBodyCompositionHtml(isEn){
-  const bf=v('bc-bf');
-  const fatmass=v('bc-fatmass') || (S.bc?.fatmass!=null ? Number(S.bc.fatmass).toFixed(1) : '');
-  const ffm=v('bc-ffm') || (S.bc?.ffm!=null ? Number(S.bc.ffm).toFixed(1) : '');
-  const muscle=v('bc-muscle');
-  const bone=v('bc-bone');
-  const visceral=v('bc-visceral');
   const deficit=(S.tdee && S.goalKcal) ? Math.round(Number(S.tdee)-Number(S.goalKcal)) : '';
-  return reportMetricGridHtml(isEn?'Body Composition':'Σωματομετρικά / Body Composition', [
+  // SECTION 1 -- Current Profile / Treatment: unchanged, still exclusively
+  // Profile weight/BMI/targets. Historical visit weight never reaches
+  // this section, exactly as required.
+  const currentProfileHtml = reportMetricGridHtml(isEn?'Current Profile':'Τρέχον Προφίλ', [
     [isEn?'Weight':'Βάρος', S.weight ? `${S.weight} kg` : ''],
     [isEn?'Height':'Ύψος', S.height ? `${S.height} cm` : ''],
     ['BMI', S.bmi ? `${S.bmi.toFixed(1)}${' · '+getBmiCategoryLabel(S.bmi, !isEn)}` : ''],
-    [isEn?'Body fat %':'Λίπος σώματος %', bf ? `${bf}%` : ''],
-    [isEn?'Fat mass':'Μάζα λίπους', fatmass ? `${fatmass} kg` : ''],
-    [isEn?'Fat-free mass':'Άλιπη μάζα', ffm ? `${ffm} kg` : ''],
-    [isEn?'Muscle mass':'Μυϊκή μάζα', muscle ? `${muscle} kg` : ''],
-    [isEn?'Bone mass':'Οστική μάζα', bone ? `${bone} kg` : ''],
-    [isEn?'Visceral fat rating':'Σπλαχνικό λίπος', visceral || ''],
     [isEn?'BMR':'Βασικός μεταβολισμός BMR', S.bmr ? `${Math.round(S.bmr)} kcal` : ''],
     [isEn?'TDEE':'Συνολικές ενεργειακές ανάγκες TDEE', S.tdee ? `${Math.round(S.tdee)} kcal` : ''],
     [isEn?'Energy deficit':'Ενεργειακό έλλειμμα', deficit!=='' ? `${deficit} kcal` : ''],
     [isEn?'Goal kcal/day':'Στόχος kcal/ημέρα', S.goalKcal ? `${Math.round(S.goalKcal)} kcal` : ''],
-  ]) + reportSkinfoldMeasurementsHtml(isEn);
+  ]);
+  return currentProfileHtml + reportLatestFollowUpHtml(isEn) + reportVisitHistoryHtml(isEn) + reportSkinfoldMeasurementsHtml(isEn);
 }
 
 function buildReport(){
@@ -16657,10 +16710,15 @@ async function saveClientIntake(){
   saveNotes();
   const note=document.getElementById('intake-save-note');
   if(note) note.textContent='Saving...';
-  await saveCurrentClient({source:'intake'});
+  const ok=await saveCurrentClient({source:'intake'});
   if(note){
-    note.textContent='Intake saved';
-    setTimeout(()=>{ if(note.textContent==='Intake saved') note.textContent=''; }, 2500);
+    // Only claim success when the save genuinely succeeded -- saveCurrentClient()
+    // already showed an accurate alert() describing exactly what happened
+    // (including the local-fallback case), so this note just needs to avoid
+    // contradicting that by claiming "saved" when it wasn't.
+    note.textContent = ok ? 'Intake saved' : 'Save did not complete — see the message above';
+    const finalText=note.textContent;
+    setTimeout(()=>{ if(note.textContent===finalText) note.textContent=''; }, 2500);
   }
 }
 function onMacroManualInput(){
@@ -16675,10 +16733,11 @@ async function saveMacroTargets(){
   calcMacros();
   const note=document.getElementById('macro-save-note');
   if(note) note.textContent='Saving...';
-  await saveCurrentClient({source:'macros'});
+  const ok=await saveCurrentClient({source:'macros'});
   if(note){
-    note.textContent='Macro targets saved';
-    setTimeout(()=>{ if(note.textContent==='Macro targets saved') note.textContent=''; }, 2500);
+    note.textContent = ok ? 'Macro targets saved' : 'Save did not complete — see the message above';
+    const finalText=note.textContent;
+    setTimeout(()=>{ if(note.textContent===finalText) note.textContent=''; }, 2500);
   }
 }
 function resetMacroExplanation(){
@@ -18567,23 +18626,24 @@ const DIET_IMPORT_DAY_PATTERNS = [
 ];
 const DIET_IMPORT_MEAL_PATTERNS = [
   {key:'brk', patterns:['breakfast','πρωινο']},
-  {key:'snk1', patterns:['snack 1','snack1','δεκατιανο']},
+  {key:'snk1', patterns:['snack 1','snack1','morning snack','δεκατιανο']},
   {key:'lun', patterns:['lunch','μεσημεριανο']},
-  {key:'snk2', patterns:['snack 2','snack2','απογευματινο']},
+  {key:'snk2', patterns:['snack 2','snack2','afternoon snack','απογευματινο']},
   {key:'din', patterns:['dinner','δειπνο']},
-  {key:'sleep', patterns:['before sleep','πριν τον υπνο','πριν υπνο']},
+  {key:'sleep', patterns:['before sleep','before bed','evening snack','πριν τον υπνο','πριν υπνο']},
 ];
 // Diacritic-insensitive, case-insensitive normalization for heading matching
 // only -- never applied to the actual diet content itself, which is always
 // preserved character-for-character exactly as pasted.
 function normalizeForDietMatch(str){
-  return String(str||'').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  return String(str||'').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[:\/(),.]/g,' ').replace(/\s+/g,' ').trim();
 }
 function matchDietImportDay(line){
   const norm = normalizeForDietMatch(line);
   if(!norm) return null;
   for(const d of DIET_IMPORT_DAY_PATTERNS){
-    if(d.patterns.some(p=>norm===normalizeForDietMatch(p))) return d.key;
+    if(d.patterns.some(p=>norm.includes(normalizeForDietMatch(p)))) return d.key;
   }
   return null;
 }
@@ -18591,7 +18651,7 @@ function matchDietImportMeal(line){
   const norm = normalizeForDietMatch(line);
   if(!norm) return null;
   for(const m of DIET_IMPORT_MEAL_PATTERNS){
-    if(m.patterns.some(p=>norm===normalizeForDietMatch(p))) return m.key;
+    if(m.patterns.some(p=>norm.includes(normalizeForDietMatch(p)))) return m.key;
   }
   return null;
 }
@@ -20033,6 +20093,13 @@ async function handleUnsavedChangesSave(){
   let ok=false;
   try{ ok = await saveCurrentClient({silent:true}); }catch(e){ ok=false; }
   if(ok){
+    // Reset the button back to its normal label BEFORE closing -- confirmed
+    // missing on this success path (only the failure branch below reset
+    // it), which otherwise left it showing "Saving..." the next time this
+    // modal opened, exactly matching the already-fixed confirmSaveClient()
+    // defect.
+    if(saveBtn) saveBtn.innerHTML='<i class="ti ti-device-floppy" aria-hidden="true"></i> '+(isGr?'Αποθήκευση & Συνέχεια':'Save & Continue');
+    ['unsaved-save-btn','unsaved-discard-btn','unsaved-cancel-btn'].forEach(id=>{ const b=document.getElementById(id); if(b) b.disabled=false; });
     resolveUnsavedChangesModal('save');
   } else {
     if(statusEl){ statusEl.className='feedback-status error'; statusEl.innerHTML='<i class="ti ti-alert-triangle" aria-hidden="true"></i> '+(isGr?'Η αποθήκευση απέτυχε. Δοκιμάστε ξανά.':'Save failed. Please try again.'); }
@@ -20082,7 +20149,15 @@ async function confirmSaveClient(){
   }
   if(ok){
     if(statusEl){ statusEl.className='feedback-status success'; statusEl.innerHTML='<i class="ti ti-circle-check" aria-hidden="true"></i> '+(isGr?'Ο πελάτης αποθηκεύτηκε επιτυχώς.':'Client saved successfully.'); }
-    setTimeout(closeSaveConfirmModal, 1400);
+    setTimeout(()=>{
+      closeSaveConfirmModal();
+      // Reset the button back to its normal label for the NEXT time this
+      // modal opens -- confirmed missing on the success path (only the
+      // failure branch below reset it), which otherwise left it showing
+      // "Saving..." even before the next save attempt begins.
+      if(saveBtn){ saveBtn.disabled=false; saveBtn.innerHTML='<i class="ti ti-device-floppy" aria-hidden="true"></i> '+(isGr?'Αποθήκευση Πελάτη':'Save Client'); }
+      if(cancelBtn) cancelBtn.disabled=false;
+    }, 1400);
   } else {
     if(statusEl){ statusEl.className='feedback-status error'; statusEl.innerHTML='<i class="ti ti-alert-triangle" aria-hidden="true"></i> '+(isGr?'Η αποθήκευση απέτυχε. Δοκιμάστε ξανά.':'Save failed. Please try again.'); }
     if(saveBtn){ saveBtn.disabled=false; saveBtn.innerHTML='<i class="ti ti-device-floppy" aria-hidden="true"></i> '+(isGr?'Αποθήκευση Πελάτη':'Save Client'); }
