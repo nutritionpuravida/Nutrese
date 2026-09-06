@@ -18432,36 +18432,46 @@ function renderMealPlanWorkspace(){
   const dayLabels = isGr
     ? ['Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο','Κυριακή']
     : ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
-  let html = '<table style="border-collapse:collapse;width:100%;min-width:900px"><thead><tr>';
-  html += `<th style="padding:8px;border:1px solid var(--border);text-align:left">${isGr?'Ημέρα':'Day'}</th>`;
-  slots.forEach(s=>{ html += `<th style="padding:8px;border:1px solid var(--border);text-align:left;min-width:150px">${safeHtml(s.label)}</th>`; });
-  html += `<th style="padding:8px;border:1px solid var(--border);text-align:left;min-width:110px">${isGr?'Ημερήσιες Θερμίδες':'Daily Kcal'}</th>`;
+  let html = '<div style="border:1px solid var(--border);border-radius:14px;overflow:hidden;background:var(--bg-surface)"><table style="border-collapse:collapse;width:100%;min-width:900px">';
+  html += `<thead><tr style="background:var(--bg-page)">`;
+  html += `<th style="padding:14px 12px;text-align:left;font-size:12px;font-weight:700;color:var(--text-secondary);letter-spacing:.02em">${isGr?'Ημέρα':'Day'}</th>`;
+  slots.forEach(s=>{ html += `<th style="padding:14px 12px;text-align:left;font-size:12px;font-weight:700;color:var(--text-secondary);letter-spacing:.02em;min-width:160px">${safeHtml(s.label)}</th>`; });
+  html += `<th style="padding:14px 12px;text-align:left;font-size:12px;font-weight:700;color:var(--text-secondary);letter-spacing:.02em;min-width:110px">${isGr?'Ημερήσιες Θερμίδες':'Daily Kcal'}</th>`;
   html += '</tr></thead><tbody>';
   S.workspaceCells.forEach((day,dayIndex)=>{
-    html += `<tr><td style="padding:8px;border:1px solid var(--border);font-weight:700;vertical-align:top">${safeHtml(dayLabels[dayIndex])}</td>`;
+    html += `<tr class="ws-row" style="border-top:1px solid var(--border)"><td style="padding:18px 12px;font-weight:700;vertical-align:top;color:var(--text-secondary)">${safeHtml(dayLabels[dayIndex])}</td>`;
     slots.forEach(s=>{
       const cell = day[s.key] || {text:'', structuredFoods:[]};
       const totals = calcWorkspaceCellTotals(cell);
-      html += `<td style="padding:6px;border:1px solid var(--border);vertical-align:top">
-        <textarea id="ws-text-${dayIndex}-${s.key}" oninput="updateWorkspaceCellText(${dayIndex},'${s.key}',this.value)" style="width:100%;min-height:60px;border:1px solid var(--border);border-radius:6px;padding:6px;font-size:12px;resize:vertical" placeholder="${isGr?'Ελεύθερο κείμενο...':'Free text...'}">${safeHtml(cell.text||'')}</textarea>
-        <div id="ws-foods-${dayIndex}-${s.key}" style="margin-top:4px;display:flex;flex-wrap:wrap;gap:4px">${renderWorkspaceFoodChips(dayIndex, s.key, cell)}</div>
-        <div style="margin-top:4px;display:flex;gap:6px;font-size:11px">
+      html += `<td style="padding:18px 12px;vertical-align:top">
+        <textarea id="ws-text-${dayIndex}-${s.key}" oninput="updateWorkspaceCellText(${dayIndex},'${s.key}',this.value)" style="width:100%;min-height:40px;border:1px solid transparent;background:transparent;border-radius:6px;padding:4px;font-size:13px;line-height:1.4;color:var(--text-primary);resize:vertical;transition:border-color .15s ease" onfocus="this.style.borderColor='var(--teal-400,#7cc7c0)'" onblur="this.style.borderColor='transparent'" placeholder="${isGr?'—':'—'}">${safeHtml(cell.text||'')}</textarea>
+        <div id="ws-foods-${dayIndex}-${s.key}" style="margin-top:2px;display:flex;flex-wrap:wrap;gap:4px">${renderWorkspaceFoodChips(dayIndex, s.key, cell)}</div>
+        <div class="ws-secondary-actions" style="margin-top:6px;display:flex;gap:12px;font-size:11px;opacity:0;transition:opacity .15s ease">
           <a href="javascript:void(0)" onclick="openWorkspaceFoodSearch(${dayIndex},'${s.key}')" style="color:var(--teal-600)">+ ${isGr?'Τροφή':'Add food'}</a>
           <a href="javascript:void(0)" onclick="openWorkspaceDuplicate(${dayIndex},'${s.key}')" style="color:var(--text-muted)">${isGr?'Αντιγραφή σε...':'Duplicate to...'}</a>
         </div>
         ${totals ? `<div id="ws-totals-${dayIndex}-${s.key}" style="margin-top:4px;font-size:11px;font-weight:700;color:var(--teal-700)">${Math.round(totals.totals.kcal)} kcal · ${formatFoodNumber(totals.totals.carbohydrate_g,'g')}C · ${formatFoodNumber(totals.totals.protein_g,'g')}P · ${formatFoodNumber(totals.totals.fat_g,'g')}F</div>` : `<div id="ws-totals-${dayIndex}-${s.key}"></div>`}
       </td>`;
     });
-    html += `<td style="padding:6px;border:1px solid var(--border);vertical-align:top">
+    html += `<td style="padding:18px 12px;vertical-align:top">
       <div id="ws-kcal-display-${dayIndex}" style="margin-bottom:4px"></div>
-      <input type="number" id="ws-kcal-input-${dayIndex}" placeholder="${isGr?'kcal':'kcal'}" style="width:100%;font-size:12px;border:1px solid var(--border);border-radius:6px;padding:4px;margin-bottom:3px" value="${day.dailyKcal?.source==='manual'||day.dailyKcal?.source==='imported' ? (day.dailyKcal.value??'') : ''}" onchange="updateWorkspaceDailyKcal(${dayIndex},this.value)">
-      <input type="number" id="ws-kcal-addition-${dayIndex}" placeholder="${isGr?'+kcal':'+kcal'}" title="${isGr?'Χειροκίνητη προσθήκη στις υπολογισμένες θερμίδες':'Manual addition on top of calculated kcal'}" style="width:100%;font-size:11px;border:1px dashed var(--border);border-radius:6px;padding:3px;color:var(--text-secondary)" value="${day.manualKcalAddition || ''}" onchange="updateWorkspaceManualKcalAddition(${dayIndex},this.value)">
+      <input type="number" id="ws-kcal-input-${dayIndex}" placeholder="${isGr?'kcal':'kcal'}" style="width:100%;font-size:12px;border:1px solid transparent;background:var(--bg-page);border-radius:6px;padding:4px;margin-bottom:3px" value="${day.dailyKcal?.source==='manual'||day.dailyKcal?.source==='imported' ? (day.dailyKcal.value??'') : ''}" onchange="updateWorkspaceDailyKcal(${dayIndex},this.value)">
+      <input type="number" id="ws-kcal-addition-${dayIndex}" placeholder="${isGr?'+kcal':'+kcal'}" title="${isGr?'Χειροκίνητη προσθήκη στις υπολογισμένες θερμίδες':'Manual addition on top of calculated kcal'}" style="width:100%;font-size:11px;border:1px dashed var(--border);background:transparent;border-radius:6px;padding:3px;color:var(--text-secondary)" value="${day.manualKcalAddition || ''}" onchange="updateWorkspaceManualKcalAddition(${dayIndex},this.value)">
     </td>`;
     html += '</tr>';
   });
-  html += '</tbody></table>';
+  html += '</tbody></table></div>';
   el.innerHTML = html;
   for(let i=0;i<7;i++) refreshWorkspaceDayKcalDisplay(i);
+  // Row hover reveals secondary actions for that row only -- kept as plain
+  // JS event listeners rather than a new CSS block, since a :hover rule
+  // would need `!important` to override the inline opacity:0 above; this
+  // achieves the identical visual result without touching any shared
+  // stylesheet or other page's styling.
+  el.querySelectorAll('.ws-row').forEach(row=>{
+    row.addEventListener('mouseenter', ()=>row.querySelectorAll('.ws-secondary-actions').forEach(a=>a.style.opacity='1'));
+    row.addEventListener('mouseleave', ()=>row.querySelectorAll('.ws-secondary-actions').forEach(a=>a.style.opacity='0'));
+  });
 }
 // Reuses the existing household-measure engine functions directly -- no
 // second measurement system. Returns null for foods that should remain
