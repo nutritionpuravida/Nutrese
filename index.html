@@ -3062,10 +3062,15 @@ table th,
       <div class="card-body">
         <div id="diet-import-paste-step">
           <p class="field-note i18n" data-en="Paste the complete diet copied from Excel, Word, or a plain text file. Recognized day and meal headings (English or Greek) will be detected automatically -- wording is preserved exactly, nothing is translated or converted to structured foods." data-gr="Επικολλήστε την πλήρη διατροφή αντιγραμμένη από Excel, Word ή αρχείο κειμένου. Οι επικεφαλίδες ημερών και γευμάτων (Ελληνικά ή Αγγλικά) θα εντοπιστούν αυτόματα -- η διατύπωση διατηρείται ακριβώς, χωρίς μετάφραση ή μετατροπή σε δομημένες τροφές.">Paste the complete diet copied from Excel, Word, or a plain text file. Recognized day and meal headings (English or Greek) will be detected automatically -- wording is preserved exactly, nothing is translated or converted to structured foods.</p>
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;padding:10px;background:var(--bg-page);border:1px dashed var(--border);border-radius:8px">
-            <i class="ti ti-file-spreadsheet" aria-hidden="true" style="font-size:20px;color:var(--teal-700)"></i>
-            <span style="font-size:13px" class="i18n" data-en="Or upload an Excel file directly:" data-gr="Ή ανεβάστε απευθείας αρχείο Excel:">Or upload an Excel file directly:</span>
-            <input type="file" id="diet-import-file-input" accept=".xlsx,.xls" onchange="handleDietImportFileUpload(this.files[0])" style="flex:1">
+          <div id="diet-import-dropzone" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;margin-bottom:10px;padding:28px 16px;background:var(--bg-page);border:2px dashed var(--border);border-radius:12px;text-align:center;transition:border-color .15s ease,background .15s ease">
+            <i class="ti ti-file-upload" aria-hidden="true" style="font-size:28px;color:var(--teal-700)"></i>
+            <div style="font-size:14px;font-weight:700" class="i18n" data-en="Drag & Drop your diet file here" data-gr="Σύρετε το αρχείο διατροφής σας εδώ">Drag &amp; Drop your diet file here</div>
+            <div style="font-size:12px;color:var(--text-muted)" class="i18n" data-en="or" data-gr="ή">or</div>
+            <label class="btn" style="cursor:pointer;margin:0">
+              <span class="i18n" data-en="Choose File" data-gr="Επιλογή Αρχείου">Choose File</span>
+              <input type="file" id="diet-import-file-input" accept=".xlsx,.xls,.txt" onchange="handleDietImportFileUpload(this.files[0])" style="display:none">
+            </label>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:4px" class="i18n" data-en="Supported: Excel (.xlsx, .xls) and plain text (.txt)" data-gr="Υποστηρίζονται: Excel (.xlsx, .xls) και απλό κείμενο (.txt)">Supported: Excel (.xlsx, .xls) and plain text (.txt)</div>
           </div>
           <div id="diet-import-file-status" style="font-size:12px;color:var(--text-muted);margin-bottom:8px"></div>
           <textarea id="diet-import-textarea" style="width:100%;min-height:220px;font-family:monospace;font-size:12px;border:1px solid var(--border);border-radius:8px;padding:10px" placeholder="Paste diet here..."></textarea>
@@ -18321,22 +18326,22 @@ function buildWorkspaceReport(){
   const today = formatDateDMY(new Date());
   const equivalentsGuideHtml = S.reportOptions?.includeEquivalents===true ? reportEquivalentsGuideHtml(isEn) : '';
   const cellHtml = (cell)=>{
-    const textHtml = cell.text ? `<div style="white-space:pre-wrap;font-size:12px">${safeHtml(cell.text)}</div>` : '';
     const foods = cell.structuredFoods||[];
-    let foodsHtml = '', totalsHtml = '';
-    if(foods.length){
-      const ingredients = foods.map(f=>({food_id:f.food_id, grams:f.grams, state:'n/a'}));
-      const totals = eng.recipeTotals(ingredients);
-      foodsHtml = `<ul style="margin:4px 0 0;padding-left:16px;font-size:11px">` + foods.map(f=>{
-        const food = eng.FOOD_DATABASE[f.food_id];
-        const name = f.displayName || food?.name?.clinical?.[isGr?'gr':'en'] || f.food_id;
-        const hh = workspaceHouseholdInfo(f.food_id);
-        const qtyLabel = hh ? `${+(f.grams/hh.grams_per_unit).toFixed(2)} ${isGr?(HOUSEHOLD_UNIT_LABELS_GR[hh.unit]||hh.unit):(HOUSEHOLD_UNIT_LABELS_EN[hh.unit]||hh.unit)}` : `${f.grams}${isGr?'γρ':'g'}`;
-        return `<li>${safeHtml(name)} — ${qtyLabel}</li>`;
-      }).join('') + `</ul>`;
-      totalsHtml = `<div style="margin-top:4px;font-size:11px;font-weight:700;color:var(--teal-700)">${Math.round(totals.kcal)} kcal · ${formatFoodNumber(totals.carbohydrate_g,'g')}${isEn?'C':'Υ'} · ${formatFoodNumber(totals.protein_g,'g')}${isEn?'P':'Π'} · ${formatFoodNumber(totals.fat_g,'g')}${isEn?'F':'Λ'}</div>`;
-    }
-    return (textHtml||foodsHtml) ? `${textHtml}${foodsHtml}${totalsHtml}` : `<span style="color:var(--gray-400)">—</span>`;
+    // Structured foods render as plain text lines, visually identical to
+    // ordinary free-text diet lines -- no bullet list, no separate bold
+    // totals line. Nutrition is still fully calculated via the same,
+    // unmodified eng.recipeTotals() (used for the Daily Kcal column and
+    // the Workspace grid itself) -- only this report's presentation of
+    // structured foods changes, matching the plain-diet-text appearance.
+    const foodLines = foods.map(f=>{
+      const food = eng.FOOD_DATABASE[f.food_id];
+      const name = f.displayName || food?.name?.clinical?.[isGr?'gr':'en'] || f.food_id;
+      const hh = workspaceHouseholdInfo(f.food_id);
+      const qtyLabel = hh ? `${+(f.grams/hh.grams_per_unit).toFixed(2)} ${isGr?(HOUSEHOLD_UNIT_LABELS_GR[hh.unit]||hh.unit):(HOUSEHOLD_UNIT_LABELS_EN[hh.unit]||hh.unit)}` : `${f.grams}${isGr?'γρ':'g'}`;
+      return `${safeHtml(name)} — ${qtyLabel}`;
+    });
+    const combinedLines = [cell.text||'', ...foodLines].filter(Boolean).join('\n');
+    return combinedLines ? `<div style="white-space:pre-wrap;font-size:12px">${combinedLines.split('\n').map(l=>safeHtml(l)).join('\n')}</div>` : `<span style="color:var(--gray-400)">—</span>`;
   };
   const dailyKcalHtml = (day)=>{
     const calc = calcWorkspaceDayStructuredKcal(day);
@@ -18358,14 +18363,25 @@ function buildWorkspaceReport(){
           <th style="padding:4px;width:8%">${isEn?'Daily Kcal':'Ημ. Θερμίδες'}</th>
         </tr></thead>
         <tbody>
-        ${S.workspaceCells.map((day,i)=>({day,i})).filter(({i})=>{
+        ${(()=>{
           const selectedDays = S.reportOptions?.days;
-          return !Array.isArray(selectedDays) || !selectedDays.length || selectedDays.includes(i);
-        }).map(({day,i})=>`<tr style="background:${i%2===0?'var(--bg-surface)':'var(--teal-50)'};border-bottom:1px solid var(--border)">
-          <td style="padding:6px;font-weight:700;vertical-align:top">${safeHtml(dayLabels[i])}</td>
-          ${slots.map(s=>`<td style="padding:6px;vertical-align:top">${cellHtml(day[s.key]||{text:'',structuredFoods:[]})}</td>`).join('')}
-          <td style="padding:6px;vertical-align:top;text-align:center">${dailyKcalHtml(day)}</td>
-        </tr>`).join('')}
+          const isFilteredSubset = Array.isArray(selectedDays) && selectedDays.length && selectedDays.length<7;
+          const filtered = S.workspaceCells.map((day,i)=>({day,i})).filter(({i})=>{
+            return !Array.isArray(selectedDays) || !selectedDays.length || selectedDays.includes(i);
+          });
+          // Sequential "Day N" labels only when a genuine subset is
+          // selected -- all 7 selected keeps the normal weekday names
+          // exactly as before. Chronological order is already guaranteed
+          // here since `filtered` was built by iterating workspaceCells
+          // 0-6 in order, so the Nth item in `filtered` is always the Nth
+          // chronologically-earliest selected day, regardless of the
+          // order the checkboxes happened to be selected in.
+          return filtered.map(({day,i}, seq)=>`<tr style="background:${i%2===0?'var(--bg-surface)':'var(--teal-50)'};border-bottom:1px solid var(--border)">
+            <td style="padding:6px;font-weight:700;vertical-align:top">${safeHtml(isFilteredSubset ? `${isEn?'Day':'Ημέρα'} ${seq+1}` : dayLabels[i])}</td>
+            ${slots.map(s=>`<td style="padding:6px;vertical-align:top">${cellHtml(day[s.key]||{text:'',structuredFoods:[]})}</td>`).join('')}
+            <td style="padding:6px;vertical-align:top;text-align:center">${dailyKcalHtml(day)}</td>
+          </tr>`).join('');
+        })()}
         </tbody>
       </table>
     </div>
@@ -18708,7 +18724,40 @@ function renderWorkspaceSearchResults(){
 async function handleDietImportFileUpload(file){
   const isGr = window.appLang==='gr';
   const statusEl = document.getElementById('diet-import-file-status');
+  const textarea = document.getElementById('diet-import-textarea');
   if(!file) return;
+  const name = (file.name||'').toLowerCase();
+  const isExcel = name.endsWith('.xlsx') || name.endsWith('.xls');
+  const isTxt = name.endsWith('.txt');
+  const isNotYetSupported = name.endsWith('.pdf') || name.endsWith('.docx') || name.endsWith('.doc');
+
+  // Confirmed root cause: the file input's accept attribute only hints at
+  // the OS file picker -- it does NOT block a PDF/DOCX from being selected
+  // (via "All Files" or drag-and-drop), and this function previously fed
+  // ANY file straight to XLSX.read() with no type check at all, which
+  // silently produced garbage output for non-Excel binary data. This is
+  // fixed by detecting the actual file type before doing anything else.
+  if(isNotYetSupported){
+    if(statusEl) statusEl.textContent = isGr
+      ? `Η εισαγωγή αρχείων PDF/Word δεν υποστηρίζεται ακόμη. Αντιγράψτε το κείμενο και επικολλήστε το παραπάνω.`
+      : `PDF/Word file import is not yet supported. Please copy the text and paste it above instead.`;
+    return;
+  }
+  if(isTxt){
+    if(statusEl) statusEl.textContent = isGr?'Ανάγνωση αρχείου...':'Reading file...';
+    try{
+      const text = await file.text();
+      if(textarea) textarea.value = text;
+      if(statusEl) statusEl.textContent = isGr?`Φορτώθηκε "${file.name}". Πατήστε "Προεπισκόπηση Εισαγωγής" παρακάτω.`:`Loaded "${file.name}". Click "Preview Import" below.`;
+    }catch(e){
+      if(statusEl) statusEl.textContent = isGr?`Αποτυχία ανάγνωσης του αρχείου: ${e.message||e}.`:`Failed to read the file: ${e.message||e}.`;
+    }
+    return;
+  }
+  if(!isExcel){
+    if(statusEl) statusEl.textContent = isGr?'Μη υποστηριζόμενος τύπος αρχείου. Χρησιμοποιήστε .xlsx, .xls ή .txt.':'Unsupported file type. Please use .xlsx, .xls, or .txt.';
+    return;
+  }
   if(typeof XLSX==='undefined'){
     if(statusEl) statusEl.textContent = isGr?'Η βιβλιοθήκη Excel δεν φορτώθηκε. Ελέγξτε τη σύνδεση στο διαδίκτυο και δοκιμάστε ξανά.':'Excel library failed to load. Check your internet connection and try again.';
     return;
@@ -18724,7 +18773,6 @@ async function handleDietImportFileUpload(file){
     // Excel copy/paste, so the existing parser is reused completely
     // unchanged; the file upload only ever supplies its raw text input.
     const tsv = XLSX.utils.sheet_to_csv(sheet, {FS:'\t'});
-    const textarea = document.getElementById('diet-import-textarea');
     if(textarea) textarea.value = tsv;
     if(statusEl) statusEl.textContent = isGr?`Φορτώθηκε "${file.name}" (${workbook.SheetNames.length>1?'πρώτο φύλλο':'φύλλο'}: ${firstSheetName}). Πατήστε "Προεπισκόπηση Εισαγωγής" παρακάτω.`:`Loaded "${file.name}" (sheet: ${firstSheetName}). Click "Preview Import" below.`;
   }catch(e){
@@ -18737,6 +18785,28 @@ function openDietImportModal(){
   document.getElementById('diet-import-preview-step').style.display='none';
   document.getElementById('diet-import-paste-step').style.display='block';
   const modal=document.getElementById('diet-import-modal'); if(modal) modal.style.display='flex';
+  wireDietImportDropzone();
+}
+function wireDietImportDropzone(){
+  const zone = document.getElementById('diet-import-dropzone');
+  if(!zone || zone.dataset.wired) return; // guard against attaching duplicate listeners on repeated modal opens
+  zone.dataset.wired='true';
+  const highlight = (on)=>{
+    zone.style.borderColor = on ? 'var(--teal-500,#4fb3aa)' : 'var(--border)';
+    zone.style.background = on ? 'var(--teal-50,#e6f7f5)' : 'var(--bg-page)';
+  };
+  // preventDefault() on dragover is essential -- without it the browser
+  // never fires 'drop' at all and instead performs its own default action
+  // (opening/navigating to the dropped file), which was the exact reported
+  // problem. Applies only within this specific drop zone, not globally.
+  zone.addEventListener('dragover', (e)=>{ e.preventDefault(); highlight(true); });
+  zone.addEventListener('dragleave', ()=>highlight(false));
+  zone.addEventListener('drop', (e)=>{
+    e.preventDefault();
+    highlight(false);
+    const file = e.dataTransfer?.files?.[0];
+    if(file) handleDietImportFileUpload(file); // exact same, unchanged handler the "Choose File" input already uses
+  });
 }
 function closeDietImportModal(){
   // Cancel: S.workspaceCells was never touched by anything up to this
