@@ -1871,6 +1871,7 @@ table th,
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body>
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
@@ -2218,7 +2219,7 @@ table th,
             <div class="dashboard-onboard-icon"><i class="ti ti-clipboard-list" aria-hidden="true"></i></div>
             <div class="dashboard-onboard-text">
               <div class="dashboard-onboard-title"><span class="i18n" data-en="Build your first meal plan" data-gr="Δημιουργήστε το πρώτο διατροφικό πλάνο">Build your first meal plan</span></div>
-              <div class="dashboard-onboard-sub"><span class="i18n" data-en="Generate Automatically for an instant starting point, or Build Manually From Scratch for full control — both use the same exchange system and calculations." data-gr="Αυτόματη Δημιουργία για άμεση αφετηρία, ή Χειροκίνητη Δημιουργία από την Αρχή για πλήρη έλεγχο — και τα δύο χρησιμοποιούν το ίδιο σύστημα ισοδυνάμων και υπολογισμών.">Generate Automatically for an instant starting point, or Build Manually From Scratch for full control — both use the same exchange system and calculations.</span></div>
+              <div class="dashboard-onboard-sub"><span class="i18n" data-en="A 7-day plan is generated automatically — use Meal Plan Workspace for full manual control with free text, structured foods, and calculations." data-gr="Ένα πλάνο 7 ημερών δημιουργείται αυτόματα — χρησιμοποιήστε τον Χώρο Εργασίας Πλάνου Γευμάτων για πλήρη χειροκίνητο έλεγχο με ελεύθερο κείμενο, δομημένες τροφές και υπολογισμούς.">A 7-day plan is generated automatically — use Meal Plan Workspace for full manual control with free text, structured foods, and calculations.</span></div>
             </div>
             <i class="ti ti-chevron-right" aria-hidden="true"></i>
           </div>
@@ -2782,7 +2783,7 @@ table th,
       <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
         <span class="card-title"><i class="ti ti-calendar" aria-hidden="true"></i> <span class="i18n" data-en="7-Day Meal Plan" data-gr="Πλάνο Γευμάτων 7 Ημερών">7-Day Meal Plan</span></span>
         <div id="manual-scratch-nav-button"></div>
-        <button class="btn primary" onclick="openNewMealPlanChoice()"><i class="ti ti-plus" aria-hidden="true"></i> <span class="i18n" data-en="New Meal Plan" data-gr="Νέο Πλάνο Γευμάτων">New Meal Plan</span></button>
+        <button class="btn primary" onclick="nav('workspace')"><i class="ti ti-plus" aria-hidden="true"></i> <span class="i18n" data-en="New Meal Plan" data-gr="Νέο Πλάνο Γευμάτων">New Meal Plan</span></button>
       </div>
       <div class="card-body">
         <div id="existing-client-snack-suggestion"></div>
@@ -2794,24 +2795,6 @@ table th,
   </div>
 
   <!-- NEW MEAL PLAN CHOICE MODAL -->
-  <div class="feedback-modal no-print" id="new-meal-plan-modal" role="dialog" aria-modal="true" aria-labelledby="new-meal-plan-title">
-    <div class="feedback-card" style="max-width:480px;padding:20px">
-      <h3 id="new-meal-plan-title" class="i18n" data-en="Create a new meal plan" data-gr="Δημιουργία νέου πλάνου γευμάτων">Create a new meal plan</h3>
-      <p class="field-note i18n" data-en="Choose how you'd like to build this client's 7-day plan." data-gr="Επιλέξτε πώς θέλετε να δημιουργήσετε το πλάνο 7 ημερών του πελάτη.">Choose how you'd like to build this client's 7-day plan.</p>
-      <div style="display:flex;flex-direction:column;gap:10px;margin-top:14px">
-        <button class="btn" style="justify-content:flex-start;padding:14px 16px" onclick="startManualPlanFromScratch()">
-          <div style="text-align:left">
-            <div style="font-weight:600">✏️ <span class="i18n" data-en="Build Manually From Scratch" data-gr="Χειροκίνητη Δημιουργία από την Αρχή">Build Manually From Scratch</span></div>
-            <div style="font-weight:400;font-size:12.5px;opacity:0.85" class="i18n" data-en="Start with an empty week and build each Breakfast, Lunch, and Dinner yourself using the food and recipe search." data-gr="Ξεκινήστε με μια κενή εβδομάδα και δημιουργήστε κάθε Πρωινό, Μεσημεριανό και Βραδινό μόνοι σας με αναζήτηση τροφίμων και συνταγών.">Start with an empty week and build each Breakfast, Lunch, and Dinner yourself using the food and recipe search.</div>
-          </div>
-        </button>
-      </div>
-      <div style="display:flex;justify-content:flex-end;margin-top:16px">
-        <button class="btn" onclick="closeNewMealPlanChoice()"><span class="i18n" data-en="Cancel" data-gr="Ακύρωση">Cancel</span></button>
-      </div>
-    </div>
-  </div>
-
   <!-- MEAL PLAN WORKSPACE -->
   <div class="page" id="page-workspace">
     <div class="card">
@@ -2819,9 +2802,16 @@ table th,
         <span class="card-title"><i class="ti ti-table" aria-hidden="true"></i> <span class="i18n" data-en="Meal Plan Workspace" data-gr="Χώρος Εργασίας Πλάνου">Meal Plan Workspace</span></span>
         <div id="manual-scratch-nav-button-workspace"></div>
         <button class="btn primary" onclick="openDietImportModal()"><i class="ti ti-clipboard-text" aria-hidden="true"></i> <span class="i18n" data-en="Paste / Import Diet" data-gr="Επικόλληση / Εισαγωγή Διατροφής">Paste / Import Diet</span></button>
+        <button class="btn" onclick="toggleWorkspaceQuickCheck()"><i class="ti ti-search" aria-hidden="true"></i> <span class="i18n" data-en="Quick Nutrition Check" data-gr="Γρήγορος Έλεγχος Διατροφής">Quick Nutrition Check</span></button>
       </div>
       <div class="card-body">
-        <p class="field-note i18n" data-en="Free-form notes and instructions per cell. Add structured foods explicitly to calculate nutrition -- typed text is never scanned or converted automatically." data-gr="Ελεύθερες σημειώσεις και οδηγίες ανά κελί. Προσθέστε δομημένες τροφές ρητά για υπολογισμό διατροφής -- το κείμενο δεν σαρώνεται ή μετατρέπεται αυτόματα.">Free-form notes and instructions per cell. Add structured foods explicitly to calculate nutrition -- typed text is never scanned or converted automatically.</p>
+        <div id="workspace-quick-check-panel" style="display:none;margin-bottom:16px;padding:12px;background:var(--bg-page);border:1px solid var(--border);border-radius:10px">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <input type="text" id="quick-check-search" class="i18n-ph" data-en-ph="Search foods..." data-gr-ph="Αναζήτηση τροφίμων..." placeholder="Search foods..." style="flex:1;min-width:180px" oninput="renderQuickCheckResults()">
+          </div>
+          <div id="quick-check-results" style="margin-top:8px"></div>
+        </div>
+        <p class="field-note i18n" data-en="Free-form notes and instructions per cell. Add structured foods explicitly to calculate nutrition -- typed text is never scanned or converted automatically." data-gr="Ελεύθερες σημειώσεις και οδηγίες ανά πεδίο. Προσθέστε δομημένες τροφές ρητά για υπολογισμό διατροφής -- το κείμενο δεν σαρώνεται ή μετατρέπεται αυτόματα.">Free-form notes and instructions per cell. Add structured foods explicitly to calculate nutrition -- typed text is never scanned or converted automatically.</p>
         <div id="workspace-grid" style="overflow-x:auto"></div>
       </div>
     </div>
@@ -3071,6 +3061,12 @@ table th,
       <div class="card-body">
         <div id="diet-import-paste-step">
           <p class="field-note i18n" data-en="Paste the complete diet copied from Excel, Word, or a plain text file. Recognized day and meal headings (English or Greek) will be detected automatically -- wording is preserved exactly, nothing is translated or converted to structured foods." data-gr="Επικολλήστε την πλήρη διατροφή αντιγραμμένη από Excel, Word ή αρχείο κειμένου. Οι επικεφαλίδες ημερών και γευμάτων (Ελληνικά ή Αγγλικά) θα εντοπιστούν αυτόματα -- η διατύπωση διατηρείται ακριβώς, χωρίς μετάφραση ή μετατροπή σε δομημένες τροφές.">Paste the complete diet copied from Excel, Word, or a plain text file. Recognized day and meal headings (English or Greek) will be detected automatically -- wording is preserved exactly, nothing is translated or converted to structured foods.</p>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;padding:10px;background:var(--bg-page);border:1px dashed var(--border);border-radius:8px">
+            <i class="ti ti-file-spreadsheet" aria-hidden="true" style="font-size:20px;color:var(--teal-700)"></i>
+            <span style="font-size:13px" class="i18n" data-en="Or upload an Excel file directly:" data-gr="Ή ανεβάστε απευθείας αρχείο Excel:">Or upload an Excel file directly:</span>
+            <input type="file" id="diet-import-file-input" accept=".xlsx,.xls" onchange="handleDietImportFileUpload(this.files[0])" style="flex:1">
+          </div>
+          <div id="diet-import-file-status" style="font-size:12px;color:var(--text-muted);margin-bottom:8px"></div>
           <textarea id="diet-import-textarea" style="width:100%;min-height:220px;font-family:monospace;font-size:12px;border:1px solid var(--border);border-radius:8px;padding:10px" placeholder="Paste diet here..."></textarea>
           <div style="margin-top:12px;text-align:right">
             <button class="btn primary" onclick="previewDietImport()"><span class="i18n" data-en="Preview Import" data-gr="Προεπισκόπηση Εισαγωγής">Preview Import</span></button>
@@ -8880,12 +8876,16 @@ function ensureWorkspaceCells(){
       lun:{text:'', structuredFoods:[]}, snk2:{text:'', structuredFoods:[]},
       din:{text:'', structuredFoods:[]}, sleep:{text:'', structuredFoods:[]},
       dailyKcal:{value:null, source:null}, // source: 'calculated' | 'manual' | 'imported' -- never conflated
+      manualKcalAddition:0, // ADDITIVE on top of structured/calculated kcal -- never inferred from text, always explicit
     }));
   }
   // Backward-compat: a client saved before dailyKcal existed still has 7
   // valid day objects (the array-length check above already passed), just
   // missing this one field on each -- add it without touching anything else.
-  S.workspaceCells.forEach(day=>{ if(!day.dailyKcal) day.dailyKcal={value:null, source:null}; });
+  S.workspaceCells.forEach(day=>{
+    if(!day.dailyKcal) day.dailyKcal={value:null, source:null};
+    if(typeof day.manualKcalAddition!=='number') day.manualKcalAddition=0;
+  });
 }
 function freshWeekPlans(){
   const plans = JSON.parse(JSON.stringify(WEEK_PLANS));
@@ -15136,6 +15136,22 @@ function buildSevenDay(){
       }).join('')}
     </div>`;
   }
+  // Item 3: per-meal kcal summary -- reuses dt's already-computed per-slot
+  // totals directly, no new calculation logic. Only shows slots with real
+  // content (non-zero kcal), so an unused optional slot doesn't clutter it.
+  const mealKcalRows = [
+    [lang==='EN'?'Breakfast':'Πρωινό', dt.brkKcal],
+    [lang==='EN'?'Snack 1':'Σνακ 1', dt.snk1Kcal],
+    [lang==='EN'?'Lunch':'Μεσημεριανό', dt.lunKcal],
+    [lang==='EN'?'Snack 2':'Σνακ 2', dt.snk2Kcal],
+    [lang==='EN'?'Dinner':'Βραδινό', dt.dinKcal],
+    [lang==='EN'?'Before Sleep':'Πριν τον ύπνο', dt.slpKcal],
+  ].filter(([,kcal])=>kcal>0);
+  if(mealKcalRows.length){
+    html = `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">` +
+      mealKcalRows.map(([label,kcal])=>`<div style="background:var(--bg-page);border:1px solid var(--border);border-radius:8px;padding:5px 10px;font-size:12px"><strong>${safeHtml(label)}</strong> — ${kcal} kcal</div>`).join('') +
+      `</div>` + html;
+  }
   const sevenBody=document.getElementById('sevenday-body');
   if(sevenBody) sevenBody.textContent='';
   setEl('sevenday-body', html);
@@ -15343,6 +15359,7 @@ function renderSevenDayMealCard(dayPlan, dt, slot, lang, dayIndex, oneDayMode=fa
       ${foodRowsHtml ? `<div class="seven-day-food-list">${foodRowsHtml}</div>` : `<div class="seven-day-meal-desc">${isEmptySlot ? (lang==='EN'?'No foods added yet.':'Δεν έχουν προστεθεί τρόφιμα ακόμη.') : (data.text||'—')}</div>`}
       <button class="btn primary seven-day-add-food-btn" onclick="openCustomMealBuilder(${builderContext})"><i class="ti ti-plus" aria-hidden="true"></i> ${lang==='EN'?'Add food':'Προσθήκη τροφίμου'}</button>
       ${['brk','lun','din'].includes(slot.key) ? `<button class="btn seven-day-add-food-btn" onclick="openMealLibrary(${builderContext})"><i class="ti ti-bookmarks" aria-hidden="true"></i> ${lang==='EN'?'Choose from Library':'Επιλογή από Βιβλιοθήκη'}</button>` : ''}
+      ${!isEmptySlot ? `<button class="btn seven-day-add-food-btn" onclick="promptCopyMealToWorkspace(${dayIndex},'${dayPlan[slot.key]}','${slot.key}')" title="${lang==='EN'?'Copy this meal into Meal Plan Workspace':'Αντιγραφή αυτού του γεύματος στον Χώρο Εργασίας'}"><i class="ti ti-table-export" aria-hidden="true"></i> ${lang==='EN'?'Copy to Workspace':'Αντιγραφή στον Χώρο Εργασίας'}</button>` : ''}
       <div class="seven-day-secondary-actions">${secondaryActions}</div>
       <details class="seven-day-more-options"><summary>${lang==='EN'?'More options':'Περισσότερες επιλογές'}</summary>
         ${selectHtml ? `<div class="seven-day-control"><div class="seven-day-control-label">${lang==='EN'?'Replace entire meal':'Αντικατάσταση ολόκληρου γεύματος'}</div>${selectHtml}</div>` : ''}
@@ -15973,27 +15990,13 @@ function reportSkinfoldMeasurementsHtml(isEn){
 function reportLatestFollowUpHtml(isEn){
   const latest = (typeof getLatestVisit==='function') ? getLatestVisit() : null;
   if(!latest){
-    // Zero visits ever logged for this client -- fall back to legacy bc-*
-    // snapshot values if any exist, so a pre-transition client's data
-    // remains visible rather than showing an empty section for no reason.
-    const bf=v('bc-bf'), fatmass=v('bc-fatmass')||(S.bc?.fatmass!=null?Number(S.bc.fatmass).toFixed(1):''),
-      ffm=v('bc-ffm')||(S.bc?.ffm!=null?Number(S.bc.ffm).toFixed(1):''), muscle=v('bc-muscle'),
-      bone=v('bc-bone'), visceral=v('bc-visceral'), water=v('bc-water'), metage=v('bc-metage'), physique=v('bc-physique');
-    const hasLegacy = bf||fatmass||ffm||muscle||bone||visceral||water||metage||physique;
-    if(!hasLegacy){
-      return `<div class="report-section-compact" style="margin:10px 0"><div style="font-size:12px;font-weight:700;color:var(--teal-800);margin:0 0 5px">${isEn?'Latest Follow-up Visit':'Τελευταία Επίσκεψη Παρακολούθησης'}</div><div style="font-size:11px;color:var(--text-muted)">${isEn?'No visits logged yet.':'Δεν έχουν καταγραφεί επισκέψεις ακόμη.'}</div></div>`;
-    }
-    return reportMetricGridHtml(isEn?'Latest Follow-up Visit':'Τελευταία Επίσκεψη Παρακολούθησης', [
-      [isEn?'Body fat %':'Λίπος σώματος %', bf?`${bf}%`:''],
-      [isEn?'Fat mass':'Μάζα λίπους', fatmass?`${fatmass} kg`:''],
-      [isEn?'Fat-free mass':'Άλιπη μάζα', ffm?`${ffm} kg`:''],
-      [isEn?'Muscle mass':'Μυϊκή μάζα', muscle?`${muscle} kg`:''],
-      [isEn?'Bone mass':'Οστική μάζα', bone?`${bone} kg`:''],
-      [isEn?'Visceral fat rating':'Σπλαχνικό λίπος', visceral||''],
-      [isEn?'Body water %':'Νερό σώματος %', water?`${water}%`:''],
-      [isEn?'Metabolic age':'Μεταβολική ηλικία', metage||''],
-      [isEn?'Physique rating':'Σωματότυπος', physique||''],
-    ]);
+    // Zero actual Follow-up Visits logged -- always show the empty state.
+    // Confirmed genuine defect: previously fell back to the legacy bc-*
+    // Body Composition fields here, which fabricated a "Latest Follow-up
+    // Visit" label for data that was never actually logged as a visit.
+    // Current Profile / Body Composition page data is untouched -- it is
+    // simply no longer mislabeled as a follow-up visit in this section.
+    return `<div class="report-section-compact" style="margin:10px 0"><div style="font-size:12px;font-weight:700;color:var(--teal-800);margin:0 0 5px">${isEn?'Latest Follow-up Visit':'Τελευταία Επίσκεψη Παρακολούθησης'}</div><div style="font-size:11px;color:var(--text-muted)">${isEn?'No visits logged yet.':'Δεν έχουν καταγραφεί επισκέψεις ακόμη.'}</div></div>`;
   }
   return reportMetricGridHtml(isEn?'Latest Follow-up Visit':'Τελευταία Επίσκεψη Παρακολούθησης', [
     [isEn?'Visit date':'Ημερομηνία επίσκεψης', latest.date||''],
@@ -18318,7 +18321,7 @@ function buildWorkspaceReport(){
       const totals = eng.recipeTotals(ingredients);
       foodsHtml = `<ul style="margin:4px 0 0;padding-left:16px;font-size:11px">` + foods.map(f=>{
         const food = eng.FOOD_DATABASE[f.food_id];
-        const name = food?.name?.clinical?.[isGr?'gr':'en'] || f.food_id;
+        const name = f.displayName || food?.name?.clinical?.[isGr?'gr':'en'] || f.food_id;
         const hh = workspaceHouseholdInfo(f.food_id);
         const qtyLabel = hh ? `${+(f.grams/hh.grams_per_unit).toFixed(2)} ${isGr?(HOUSEHOLD_UNIT_LABELS_GR[hh.unit]||hh.unit):(HOUSEHOLD_UNIT_LABELS_EN[hh.unit]||hh.unit)}` : `${f.grams}${isGr?'γρ':'g'}`;
         return `<li>${safeHtml(name)} — ${qtyLabel}</li>`;
@@ -18377,13 +18380,27 @@ function updateWorkspaceDailyKcal(dayIndex, value){
   S.workspaceCells[dayIndex].dailyKcal = { value:num, source: num===null?null:'manual' };
   refreshWorkspaceDayKcalDisplay(dayIndex);
 }
+function updateWorkspaceManualKcalAddition(dayIndex, value){
+  ensureWorkspaceCells();
+  const num = value===''||value===null||value===undefined ? 0 : Math.max(0, Number(value)||0);
+  S.workspaceCells[dayIndex].manualKcalAddition = num;
+  refreshWorkspaceDayKcalDisplay(dayIndex);
+}
 function refreshWorkspaceDayKcalDisplay(dayIndex){
   const day=S.workspaceCells[dayIndex]; if(!day) return;
   const el=document.getElementById(`ws-kcal-display-${dayIndex}`); if(!el) return;
   const isGr=window.appLang==='gr';
   const calc=calcWorkspaceDayStructuredKcal(day);
+  const addition = day.manualKcalAddition||0;
   if(calc!==null){
-    el.innerHTML = `<span style="color:var(--teal-700);font-weight:800">${Math.round(calc)} kcal</span><br><span style="font-size:10px;color:var(--text-muted)">${isGr?'υπολογισμένο':'calculated'}</span>`;
+    // Structured/calculated kcal PLUS an explicit manual addition -- always
+    // shown as two distinct numbers plus their sum, never merged into one
+    // "calculated" figure, per the explicit distinction requirement.
+    const total = Math.round(calc) + addition;
+    const additionLine = addition>0
+      ? `<br><span style="font-size:10px;color:var(--text-muted)">${isGr?'Δομημένες':'Structured'}: ${Math.round(calc)} · ${isGr?'Χειροκίνητη':'Manual'}: +${addition} · ${isGr?'Σύνολο':'Total'}: ${total} kcal</span>`
+      : `<br><span style="font-size:10px;color:var(--text-muted)">${isGr?'υπολογισμένο':'calculated'}</span>`;
+    el.innerHTML = `<span style="color:var(--teal-700);font-weight:800">${total} kcal</span>${additionLine}`;
   } else if(day.dailyKcal?.value){
     const srcLabel = day.dailyKcal.source==='imported' ? (isGr?'εισαγόμενο':'imported') : (isGr?'χειροκίνητο':'manual');
     el.innerHTML = `<span style="font-weight:800">${day.dailyKcal.value} kcal</span><br><span style="font-size:10px;color:var(--text-muted)">${srcLabel}</span>`;
@@ -18426,7 +18443,8 @@ function renderMealPlanWorkspace(){
     });
     html += `<td style="padding:6px;border:1px solid var(--border);vertical-align:top">
       <div id="ws-kcal-display-${dayIndex}" style="margin-bottom:4px"></div>
-      <input type="number" id="ws-kcal-input-${dayIndex}" placeholder="${isGr?'kcal':'kcal'}" style="width:100%;font-size:12px;border:1px solid var(--border);border-radius:6px;padding:4px" value="${day.dailyKcal?.source==='manual'||day.dailyKcal?.source==='imported' ? (day.dailyKcal.value??'') : ''}" onchange="updateWorkspaceDailyKcal(${dayIndex},this.value)">
+      <input type="number" id="ws-kcal-input-${dayIndex}" placeholder="${isGr?'kcal':'kcal'}" style="width:100%;font-size:12px;border:1px solid var(--border);border-radius:6px;padding:4px;margin-bottom:3px" value="${day.dailyKcal?.source==='manual'||day.dailyKcal?.source==='imported' ? (day.dailyKcal.value??'') : ''}" onchange="updateWorkspaceDailyKcal(${dayIndex},this.value)">
+      <input type="number" id="ws-kcal-addition-${dayIndex}" placeholder="${isGr?'+kcal':'+kcal'}" title="${isGr?'Χειροκίνητη προσθήκη στις υπολογισμένες θερμίδες':'Manual addition on top of calculated kcal'}" style="width:100%;font-size:11px;border:1px dashed var(--border);border-radius:6px;padding:3px;color:var(--text-secondary)" value="${day.manualKcalAddition || ''}" onchange="updateWorkspaceManualKcalAddition(${dayIndex},this.value)">
     </td>`;
     html += '</tr>';
   });
@@ -18451,7 +18469,10 @@ function renderWorkspaceFoodChips(dayIndex, slot, cell){
   const isGr = window.appLang==='gr';
   return (cell.structuredFoods||[]).map(f=>{
     const food = eng.FOOD_DATABASE[f.food_id];
-    const name = food?.name?.clinical?.[isGr?'gr':'en'] || f.food_id;
+    // Custom wording (if the dietitian has set one) takes precedence over
+    // the database-derived clinical name -- food_id/grams, and therefore
+    // nutrition, are never affected by this field at all.
+    const name = f.displayName || food?.name?.clinical?.[isGr?'gr':'en'] || f.food_id;
     const kcal = Math.round(eng.recipeTotals([{food_id:f.food_id, grams:f.grams, state:'n/a'}]).kcal);
     const hh = workspaceHouseholdInfo(f.food_id);
     // Quantity input shows/accepts the HOUSEHOLD unit when one genuinely
@@ -18462,9 +18483,63 @@ function renderWorkspaceFoodChips(dayIndex, slot, cell){
     const unitLabel = hh ? (isGr ? (HOUSEHOLD_UNIT_LABELS_GR[hh.unit]||hh.unit) : (HOUSEHOLD_UNIT_LABELS_EN[hh.unit]||hh.unit)) : (isGr?'γρ':'g');
     return `<span style="display:inline-flex;align-items:center;gap:4px;background:var(--teal-50,#e6f7f5);border:1px solid var(--teal-200,#b2e5df);border-radius:12px;padding:2px 8px;font-size:11px">
       🥗 <input type="number" value="${qtyValue}" min="0.1" step="0.1" style="width:44px;border:none;background:transparent;font-size:11px;padding:0" onchange="updateWorkspaceFoodQty(${dayIndex},'${slot}','${f.id}',this.value)"> ${safeHtml(unitLabel)} ${safeHtml(name)} · ${kcal}kcal
+      <a href="javascript:void(0)" onclick="editWorkspaceFoodDisplayName(${dayIndex},'${slot}','${f.id}')" title="${isGr?'Επεξεργασία διατύπωσης':'Edit wording'}" style="color:var(--teal-700);margin-left:2px">✎</a>
       <a href="javascript:void(0)" onclick="removeWorkspaceStructuredFood(${dayIndex},'${slot}','${f.id}')" style="color:#c0392b;font-weight:700;margin-left:2px">×</a>
     </span>`;
   }).join('');
+}
+function promptCopyMealToWorkspace(dayIndex, mealKey, slotKey){
+  const isGr = window.appLang==='gr';
+  const dayNames = isGr ? ['Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο','Κυριακή'] : ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+  const input = prompt(isGr?`Αντιγραφή σε ποια ημέρα του Χώρου Εργασίας; (1-7, προεπιλογή: ${dayIndex+1} - ${dayNames[dayIndex]})`:`Copy into which Workspace day? (1-7, default: ${dayIndex+1} - ${dayNames[dayIndex]})`, String(dayIndex+1));
+  if(input===null) return; // cancelled
+  const targetDay = Math.min(6, Math.max(0, (parseInt(input,10)||dayIndex+1)-1));
+  const ok = copyGeneratedMealToWorkspace(targetDay, mealKey, slotKey);
+  if(ok) alert(isGr?`Αντιγράφηκε στον Χώρο Εργασίας — ${dayNames[targetDay]}.`:`Copied to Meal Plan Workspace — ${dayNames[targetDay]}.`);
+}
+function copyGeneratedMealToWorkspace(dayIndex, mealKey, targetSlot){
+  ensureWorkspaceCells();
+  const eng = window.NutreseEngine;
+  const lang = window.appLang==='gr' ? 'GR' : 'EN';
+  let ingredients = null, displayText = '';
+  if(isCustomMealKey(mealKey)){
+    const meal = getCustomMealByKey(mealKey);
+    if(meal?.instance?.ingredients){
+      ingredients = meal.instance.ingredients;
+      displayText = customMealText(mealKey, lang);
+    }
+  } else if(isMigratedMeal(mealKey)){
+    try{
+      const frozen = eng.freezeMealInstance(mealKey, {servingsUsed:1});
+      ingredients = frozen?.ingredients || null;
+      displayText = mealCatalogRenderText(mealKey, S.ex||{}, {}, lang, 'clinical');
+    }catch(e){ ingredients = null; }
+  }
+  if(!ingredients || !ingredients.length) return false; // nothing to copy -- legacy/unsupported key, left untouched
+  const cell = S.workspaceCells[dayIndex][targetSlot];
+  cell.structuredFoods = cell.structuredFoods||[];
+  ingredients.forEach(ing=>{
+    cell.structuredFoods.push({id:'wsf_'+Date.now()+'_'+Math.random().toString(36).slice(2,7), food_id:ing.food_id, grams:ing.grams});
+  });
+  if(!cell.text) cell.text = displayText; // only pre-fill if the cell's free text is genuinely empty -- never overwrites existing dietitian wording
+  refreshWorkspaceCell(dayIndex, targetSlot);
+  return true;
+}
+function editWorkspaceFoodDisplayName(dayIndex, slot, itemId){
+  const cell = S.workspaceCells[dayIndex][slot];
+  const item = (cell.structuredFoods||[]).find(f=>f.id===itemId);
+  if(!item) return;
+  const isGr = window.appLang==='gr';
+  const eng = window.NutreseEngine;
+  const food = eng.FOOD_DATABASE[item.food_id];
+  const currentName = item.displayName || food?.name?.clinical?.[isGr?'gr':'en'] || item.food_id;
+  const next = prompt(isGr?'Διατύπωση εμφάνισης (η θρεπτική αξία παραμένει ίδια):':'Display wording (nutrition stays the same):', currentName);
+  if(next===null) return; // cancelled
+  const trimmed = next.trim();
+  // Empty input reverts to the database name rather than storing a blank
+  // display string -- food_id/grams are never touched by any outcome here.
+  item.displayName = trimmed ? trimmed : null;
+  refreshWorkspaceCell(dayIndex, slot);
 }
 function updateWorkspaceCellText(dayIndex, slot, value){
   ensureWorkspaceCells();
@@ -18528,9 +18603,64 @@ function searchWorkspaceFoods(query){
   }).slice(0,15);
   return matches.map(([id,food])=>({id, name:food.name?.clinical?.[isGr?'gr':'en']||id}));
 }
+function toggleWorkspaceQuickCheck(){
+  const panel = document.getElementById('workspace-quick-check-panel');
+  if(!panel) return;
+  const willShow = panel.style.display==='none';
+  panel.style.display = willShow ? 'block' : 'none';
+  if(willShow){
+    document.getElementById('quick-check-search').value='';
+    document.getElementById('quick-check-results').innerHTML='';
+    setTimeout(()=>document.getElementById('quick-check-search')?.focus(), 50);
+  }
+}
+function renderQuickCheckResults(){
+  const query = v('quick-check-search');
+  const el = document.getElementById('quick-check-results'); if(!el) return;
+  const isGr = window.appLang==='gr';
+  const results = searchWorkspaceFoods(query); // exact same search function Add Food already uses
+  if(!results.length){ el.innerHTML = query ? `<div class="field-note">${isGr?'Δεν βρέθηκαν τροφές.':'No foods found.'}</div>` : ''; return; }
+  const eng = window.NutreseEngine;
+  el.innerHTML = results.map((r,i)=>{
+    const hh = workspaceHouseholdInfo(r.id);
+    const unitLabel = hh ? (isGr ? (HOUSEHOLD_UNIT_LABELS_GR[hh.unit]||hh.unit) : (HOUSEHOLD_UNIT_LABELS_EN[hh.unit]||hh.unit)) : (isGr?'γρ':'g');
+    const defaultQty = hh ? 1 : 100;
+    return `<div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid var(--border)">
+      <span style="flex:1;font-size:13px">${safeHtml(r.name)}</span>
+      <input type="number" id="qc-qty-${i}" value="${defaultQty}" min="0.1" step="0.1" style="width:55px" oninput="updateQuickCheckKcal(${i},'${r.id}')">
+      <span style="font-size:11px;color:var(--text-muted);min-width:32px">${safeHtml(unitLabel)}</span>
+      <span id="qc-kcal-${i}" style="font-size:12px;font-weight:700;min-width:70px;text-align:right"></span>
+      <button class="btn" style="padding:3px 8px;font-size:11px" onclick="quickCheckAddToWorkspace('${r.id}',${i})"><i class="ti ti-plus" aria-hidden="true"></i> ${isGr?'Προσθήκη':'Add'}</button>
+    </div>`;
+  }).join('');
+  results.forEach((r,i)=>updateQuickCheckKcal(i, r.id));
+}
+function updateQuickCheckKcal(i, foodId){
+  const eng = window.NutreseEngine;
+  const hh = workspaceHouseholdInfo(foodId);
+  const qty = Number(document.getElementById(`qc-qty-${i}`)?.value)||0;
+  const grams = hh ? qty*hh.grams_per_unit : qty;
+  const kcal = Math.round(eng.recipeTotals([{food_id:foodId, grams, state:'n/a'}]).kcal); // same calculation function Add Food already uses
+  const el = document.getElementById(`qc-kcal-${i}`);
+  if(el) el.textContent = `${kcal} kcal`;
+}
+function quickCheckAddToWorkspace(foodId, i){
+  const isGr = window.appLang==='gr';
+  const dayNames = isGr ? ['Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο','Κυριακή'] : ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+  const slotNames = isGr ? {brk:'Πρωινό',snk1:'Σνακ 1',lun:'Μεσημεριανό',snk2:'Σνακ 2',din:'Βραδινό',sleep:'Πριν τον ύπνο'} : {brk:'Breakfast',snk1:'Snack 1',lun:'Lunch',snk2:'Snack 2',din:'Dinner',sleep:'Before Sleep'};
+  const dayInput = prompt(isGr?'Ποια ημέρα; (1-7)':'Which day? (1-7)', '1');
+  if(dayInput===null) return;
+  const slotInput = prompt(isGr?`Ποιο γεύμα; (${Object.keys(slotNames).join('/')})`:`Which meal? (${Object.keys(slotNames).join('/')})`, 'brk');
+  if(slotInput===null || !slotNames[slotInput]) return;
+  const dayIndex = Math.min(6, Math.max(0, (parseInt(dayInput,10)||1)-1));
+  const qty = Number(document.getElementById(`qc-qty-${i}`)?.value)||1;
+  addWorkspaceStructuredFood(dayIndex, slotInput, foodId, qty); // exact same function the regular Add Food workflow uses
+  alert(isGr?`Προστέθηκε: ${dayNames[dayIndex]} — ${slotNames[slotInput]}.`:`Added to ${dayNames[dayIndex]} — ${slotNames[slotInput]}.`);
+}
 function openWorkspaceFoodSearch(dayIndex, slot){
   S.workspaceFoodSearchTarget = {dayIndex, slot};
-  setEl('workspace-search-input','');
+  const input = document.getElementById('workspace-search-input');
+  if(input) input.value=''; // setEl() sets innerHTML, which has no effect on an <input>'s actual value -- confirmed root cause of the stale-search-term bug
   document.getElementById('workspace-search-results').innerHTML='';
   const modal = document.getElementById('workspace-search-modal'); if(modal) modal.style.display='flex';
   setTimeout(()=>document.getElementById('workspace-search-input')?.focus(), 50);
@@ -18553,6 +18683,33 @@ function renderWorkspaceSearchResults(){
     <button class="btn primary" style="padding:4px 10px;font-size:12px" onclick="addWorkspaceStructuredFood(S.workspaceFoodSearchTarget.dayIndex, S.workspaceFoodSearchTarget.slot, '${r.id}', v('workspace-search-grams-${i}')); closeWorkspaceFoodSearch();">${isGr?'Προσθήκη':'Add'}</button>
   </div>`;
   }).join('');
+}
+async function handleDietImportFileUpload(file){
+  const isGr = window.appLang==='gr';
+  const statusEl = document.getElementById('diet-import-file-status');
+  if(!file) return;
+  if(typeof XLSX==='undefined'){
+    if(statusEl) statusEl.textContent = isGr?'Η βιβλιοθήκη Excel δεν φορτώθηκε. Ελέγξτε τη σύνδεση στο διαδίκτυο και δοκιμάστε ξανά.':'Excel library failed to load. Check your internet connection and try again.';
+    return;
+  }
+  if(statusEl) statusEl.textContent = isGr?'Ανάγνωση αρχείου...':'Reading file...';
+  try{
+    const buffer = await file.arrayBuffer();
+    const workbook = XLSX.read(buffer, {type:'array'});
+    const firstSheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[firstSheetName];
+    // Tab-separated grid (tabs=columns, newlines=rows) -- the EXACT
+    // convention parseImportedDietText() already expects from a normal
+    // Excel copy/paste, so the existing parser is reused completely
+    // unchanged; the file upload only ever supplies its raw text input.
+    const tsv = XLSX.utils.sheet_to_csv(sheet, {FS:'\t'});
+    const textarea = document.getElementById('diet-import-textarea');
+    if(textarea) textarea.value = tsv;
+    if(statusEl) statusEl.textContent = isGr?`Φορτώθηκε "${file.name}" (${workbook.SheetNames.length>1?'πρώτο φύλλο':'φύλλο'}: ${firstSheetName}). Πατήστε "Προεπισκόπηση Εισαγωγής" παρακάτω.`:`Loaded "${file.name}" (sheet: ${firstSheetName}). Click "Preview Import" below.`;
+  }catch(e){
+    console.error('[Nutrese diet import] Excel file read failed', e);
+    if(statusEl) statusEl.textContent = isGr?`Αποτυχία ανάγνωσης του αρχείου: ${e.message||e}. Δοκιμάστε αντιγραφή/επικόλληση αντ' αυτού.`:`Failed to read the file: ${e.message||e}. Try copy/paste instead.`;
+  }
 }
 function openDietImportModal(){
   document.getElementById('diet-import-textarea').value='';
