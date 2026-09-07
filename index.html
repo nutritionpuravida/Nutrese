@@ -2867,6 +2867,15 @@ table th,
               <button class="btn primary" onclick="printPage()" id="report-print-btn" style="align-self:flex-start"><i class="ti ti-printer" aria-hidden="true"></i> Print Full Report</button>
               <div class="field-note" style="margin:0" id="report-days-note">Select one or more days to print from the weekly plan. Single-day print hides the weekday name.</div>
             </div>
+            <div style="margin-top:14px;padding:10px;border:2px dashed #c0392b;border-radius:8px;background:#fff5f5">
+              <div style="font-weight:700;color:#c0392b;font-size:12px;margin-bottom:6px">🔧 TEMPORARY DIAGNOSTIC — Print Layout Dimensions (QA only, does NOT print or alter anything)</div>
+              <button class="btn" type="button" onclick="handlePrintLayoutDiagnostic()">Run Print Layout Diagnostic</button>
+              <div id="diag-print-status" style="font-size:12px;color:var(--text-muted);margin-top:4px"></div>
+              <div id="diag-print-copy-row" style="display:none;margin-top:8px">
+                <button class="btn" type="button" onclick="copyPrintLayoutDiagnostic()"><i class="ti ti-copy" aria-hidden="true"></i> Copy diagnostic data</button>
+              </div>
+              <textarea id="diag-print-output" readonly style="width:100%;min-height:220px;margin-top:8px;font-family:monospace;font-size:11px;display:none"></textarea>
+            </div>
           </div>
           <div style="border:1px solid var(--border);border-radius:10px;padding:12px">
             <div id="report-days-title" style="font-size:12px;font-weight:800;color:var(--text-secondary);margin-bottom:8px">Print days from 7-day plan:</div>
@@ -9057,6 +9066,99 @@ function printHtmlDocument({html,title,orientation='portrait'}){
   }, 500);
 }
 
+// ── TEMPORARY DIAGNOSTIC (QA only) — print layout inspection, zero side effects ──
+// Never calls printPage()/window.print()/printHtmlDocument() -- purely reads
+// already-rendered computed styles/dimensions from #report-body in place.
+// Safe to remove entirely once the real Android print-layout data has been
+// captured and the root cause confirmed.
+function handlePrintLayoutDiagnostic(){
+  const statusEl = document.getElementById('diag-print-status');
+  const outputEl = document.getElementById('diag-print-output');
+  const copyRow = document.getElementById('diag-print-copy-row');
+  outputEl.style.display='none'; copyRow.style.display='none';
+
+  const withWeekEl = document.querySelector('#report-body .report-page-one.with-week') || document.querySelector('#report-body .report-page-one');
+  const titleEl = document.querySelector('#report-body .report-print-title');
+  const summaryEl = document.querySelector('#report-body .report-header-summary');
+
+  if(!withWeekEl){
+    statusEl.textContent = 'No report currently rendered in #report-body -- generate a report first (select 7-Day Meal Plan or Workspace source), then run this diagnostic.';
+    return;
+  }
+
+  const dumpBox = (label, el) => {
+    if(!el) return `${label}: NOT FOUND IN DOM\n`;
+    const cs = getComputedStyle(el);
+    const rect = el.getBoundingClientRect();
+    return [
+      `${label}:`,
+      `  tag=${el.tagName} class="${el.className}"`,
+      `  rendered rect: width=${rect.width.toFixed(1)}px height=${rect.height.toFixed(1)}px top=${rect.top.toFixed(1)} left=${rect.left.toFixed(1)}`,
+      `  scrollHeight=${el.scrollHeight}px offsetHeight=${el.offsetHeight}px`,
+      `  computed: display=${cs.display} position=${cs.position}`,
+      `  computed: break-before=${cs.breakBefore||cs.getPropertyValue('break-before')} break-after=${cs.breakAfter||cs.getPropertyValue('break-after')} break-inside=${cs.breakInside||cs.getPropertyValue('break-inside')}`,
+      `  computed: page-break-before=${cs.pageBreakBefore} page-break-after=${cs.pageBreakAfter} page-break-inside=${cs.pageBreakInside}`,
+      `  computed: min-height=${cs.minHeight} height=${cs.height}`,
+      `  computed: margin=${cs.margin} padding=${cs.padding}`,
+      `  computed CSS 'page' property=${cs.getPropertyValue('page')||'(not directly readable via getComputedStyle in this browser)'}`,
+      ''
+    ].join('\n');
+  };
+
+  let lines = [];
+  lines.push('=== PRINT LAYOUT DIAGNOSTIC (QA only) ===');
+  lines.push(`Timestamp: ${new Date().toISOString()}`);
+  lines.push(`User agent: ${navigator.userAgent}`);
+  lines.push(`Viewport: ${window.innerWidth}x${window.innerHeight}  Device pixel ratio: ${window.devicePixelRatio}`);
+  lines.push(`Screen: ${screen.width}x${screen.height}`);
+  lines.push('');
+
+  // Relevant @media print rules currently in effect, read directly from the
+  // dynamically-injected print stylesheet if present (it only exists while
+  // printHtmlDocument() is mid-flight, so it will usually be absent here --
+  // reported for completeness, not expected to be populated in this
+  // pre-print inspection).
+  const printStyleEl = document.getElementById('nutriflow-print-only-style');
+  lines.push(`Dynamic print <style> tag currently present: ${!!printStyleEl}`);
+  if(printStyleEl){
+    lines.push('--- Dynamic print stylesheet content ---');
+    lines.push(printStyleEl.textContent);
+  }
+  lines.push('');
+
+  lines.push('--- DOM NESTING CHECK ---');
+  const titleInsideWithWeek = withWeekEl && titleEl ? withWeekEl.contains(titleEl) : null;
+  const summaryInsideWithWeek = withWeekEl && summaryEl ? withWeekEl.contains(summaryEl) : null;
+  lines.push(`Header title element found inside .report-page-one(.with-week) container: ${titleInsideWithWeek}`);
+  lines.push(`Client Profile summary element found inside .report-page-one(.with-week) container: ${summaryInsideWithWeek}`);
+  lines.push('');
+
+  lines.push('--- 1. .report-page-one.with-week CONTAINER ---');
+  lines.push(dumpBox('.report-page-one(.with-week)', withWeekEl));
+
+  lines.push('--- 2. "Clinical Nutrition Report" HEADER ---');
+  lines.push(dumpBox('.report-print-title', titleEl));
+
+  lines.push('--- 3. CLIENT PROFILE CONTENT (.report-header-summary) ---');
+  lines.push(dumpBox('.report-header-summary', summaryEl));
+
+  const dump = lines.join('\n');
+  outputEl.value = dump;
+  outputEl.style.display='block';
+  copyRow.style.display='block';
+  statusEl.textContent = 'Done -- diagnostic data below. Tap "Copy diagnostic data".';
+}
+function copyPrintLayoutDiagnostic(){
+  const outputEl = document.getElementById('diag-print-output');
+  if(!outputEl) return;
+  outputEl.select();
+  try{
+    navigator.clipboard.writeText(outputEl.value).then(()=>{
+      const statusEl = document.getElementById('diag-print-status');
+      if(statusEl) statusEl.textContent = 'Copied to clipboard -- paste it back in chat.';
+    }).catch(()=>{ document.execCommand('copy'); });
+  }catch(e){ document.execCommand('copy'); }
+}
 function printPage(){
   const activePage = document.querySelector('.page.active');
   const pageId = activePage ? activePage.id : '';
