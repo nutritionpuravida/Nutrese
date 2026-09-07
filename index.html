@@ -1647,9 +1647,14 @@ table th,
    the header it must read as a contextual affordance, not a permanent CTA
    competing with navigation and status. */
 .btn-save-inline { padding:7px 16px; font-size:13px; font-weight:700; border-radius:8px;
-  background:var(--teal-600); color:#fff; border:1px solid var(--teal-600); box-shadow:0 1px 2px rgba(11,107,72,.24), 0 2px 8px rgba(11,107,72,.16); }
-.btn-save-inline:hover { background:var(--teal-800); border-color:var(--teal-800); color:#fff; box-shadow:0 2px 5px rgba(11,107,72,.28), 0 6px 16px rgba(11,107,72,.2); transform:translateY(-.5px); }
+  background:var(--teal-600); color:#fff; border:1px solid var(--teal-600); box-shadow:0 1px 2px rgba(11,107,72,.24), 0 2px 8px rgba(11,107,72,.16);
+  animation: btn-save-pulse 2.2s ease-in-out infinite; }
+.btn-save-inline:hover { background:var(--teal-800); border-color:var(--teal-800); color:#fff; box-shadow:0 2px 5px rgba(11,107,72,.28), 0 6px 16px rgba(11,107,72,.2); transform:translateY(-.5px); animation-play-state:paused; }
 .btn-save-inline i { font-size:14px; }
+@keyframes btn-save-pulse {
+  0%, 100% { box-shadow:0 1px 2px rgba(11,107,72,.24), 0 2px 8px rgba(11,107,72,.16); }
+  50% { box-shadow:0 1px 2px rgba(11,107,72,.24), 0 2px 16px rgba(11,107,72,.42); }
+}
 @media (max-width: 760px) { .save-state-slot { min-width:0; } }
 /* Contextual save row — sits with the editable content on editing screens,
    so the answer to "what am I saving?" is always visible. */
@@ -1872,6 +1877,13 @@ table th,
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
+<script>
+  if(typeof pdfjsLib!=='undefined'){
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+  }
+</script>
 </head>
 <body>
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
@@ -2782,8 +2794,6 @@ table th,
     <div class="card">
       <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
         <span class="card-title"><i class="ti ti-calendar" aria-hidden="true"></i> <span class="i18n" data-en="7-Day Meal Plan" data-gr="Πλάνο Γευμάτων 7 Ημερών">7-Day Meal Plan</span></span>
-        <div id="manual-scratch-nav-button"></div>
-        <button class="btn primary" onclick="nav('workspace')"><i class="ti ti-plus" aria-hidden="true"></i> <span class="i18n" data-en="New Meal Plan" data-gr="Νέο Πλάνο Γευμάτων">New Meal Plan</span></button>
       </div>
       <div class="card-body">
         <div class="field-note i18n" style="margin-top:-4px;margin-bottom:12px" data-en="Automatically generated weekly meal plan." data-gr="Αυτόματα δημιουργημένο εβδομαδιαίο πλάνο γευμάτων.">Automatically generated weekly meal plan.</div>
@@ -2920,7 +2930,28 @@ table th,
         <div class="alert info"><i class="ti ti-info-circle" aria-hidden="true"></i> <span class="i18n" data-en="Enter available lab values. Reference ranges are general adult ranges — always confirm against the lab's own reference range. Status updates live as you type." data-gr="Εισάγετε τις διαθέσιμες εργαστηριακές τιμές. Τα εύρη αναφοράς είναι γενικά για ενήλικες — πάντα επιβεβαιώνετε με το εύρος αναφοράς του εργαστηρίου. Η κατάσταση ενημερώνεται ζωντανά καθώς πληκτρολογείτε.">Enter available lab values. Reference ranges are general adult ranges — always confirm against the lab's own reference range. Status updates live as you type.</span></div>
         <div class="form-grid two" style="margin:12px 0 14px">
           <div class="form-field"><label><span class="i18n" data-en="Laboratory date" data-gr="Ημερομηνία εργαστηριακών">Laboratory date</span></label><input type="date" id="lab-date" onchange="saveLabDate()"></div>
-          <div class="form-field"><label><span class="i18n" data-en="Doctor report / lab PDF" data-gr="Ιατρική αναφορά / PDF εξετάσεων">Doctor report / lab PDF</span></label><input type="file" id="client-document-input" accept="application/pdf,image/png,image/jpeg" onchange="handleClientDocumentUpload(this)"><div class="field-note"><span class="i18n" data-en="PDF, PNG or JPG, max 3 MB. Saved with this client record." data-gr="PDF, PNG ή JPG, έως 3 MB. Αποθηκεύεται με τον φάκελο του πελάτη.">PDF, PNG or JPG, max 3 MB. Saved with this client record.</span></div><button class="btn" type="button" onclick="saveClientDocumentsNow(event)" style="margin-top:8px"><i class="ti ti-device-floppy" aria-hidden="true"></i> <span class="i18n" data-en="Save documents" data-gr="Αποθήκευση εγγράφων">Save documents</span></button></div>
+          <div class="form-field"><label><span class="i18n" data-en="Doctor report / lab PDF" data-gr="Ιατρική αναφορά / PDF εξετάσεων">Doctor report / lab PDF</span></label><input type="file" id="client-document-input" accept="application/pdf,image/png,image/jpeg" onchange="handleClientDocumentUpload(this)"><div class="field-note"><span class="i18n" data-en="PDF, PNG or JPG, max 3 MB. Saved with this client record." data-gr="PDF, PNG ή JPG, έως 3 MB. Αποθηκεύεται με τον φάκελο του πελάτη.">PDF, PNG or JPG, max 3 MB. Saved with this client record.</span></div><button class="btn" type="button" onclick="saveClientDocumentsNow(event)" style="margin-top:8px"><i class="ti ti-device-floppy" aria-hidden="true"></i> <span class="i18n" data-en="Save documents" data-gr="Αποθήκευση εγγράφων">Save documents</span></button>
+            <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+              <input type="file" id="lab-extract-file-input" accept="application/pdf" onchange="handleLabPdfExtraction(this.files[0])" style="display:none">
+              <button class="btn" type="button" onclick="document.getElementById('lab-extract-file-input').click()"><i class="ti ti-scan" aria-hidden="true"></i> <span class="i18n" data-en="Extract Lab Results from PDF" data-gr="Εξαγωγή Αποτελεσμάτων από PDF">Extract Lab Results from PDF</span></button>
+              <div class="field-note i18n" data-en="Text-based PDF only. Detected values are shown for your review before anything is applied." data-gr="Μόνο PDF με αναγνώσιμο κείμενο. Οι εντοπισμένες τιμές εμφανίζονται για έλεγχο πριν εφαρμοστούν.">Text-based PDF only. Detected values are shown for your review before anything is applied.</div>
+              <div id="lab-extract-status" style="font-size:12px;color:var(--text-muted);margin-top:4px"></div>
+            </div>
+          </div>
+
+          <div class="feedback-modal no-print" id="lab-extract-review-modal" role="dialog" aria-modal="true" style="display:none">
+            <div class="feedback-card" style="max-width:640px;padding:20px;max-height:85vh;overflow-y:auto">
+              <h3 class="i18n" data-en="Review Extracted Lab Results" data-gr="Έλεγχος Εξαγόμενων Αποτελεσμάτων">Review Extracted Lab Results</h3>
+              <p class="field-note i18n" data-en="This is assistive data entry only -- Nutrese does not interpret or diagnose these results. Review each value before applying." data-gr="Πρόκειται μόνο για βοηθητική καταχώρηση δεδομένων -- η Nutrese δεν ερμηνεύει ούτε διαγιγνώσκει τα αποτελέσματα. Ελέγξτε κάθε τιμή πριν την εφαρμογή.">This is assistive data entry only -- Nutrese does not interpret or diagnose these results. Review each value before applying.</p>
+              <div id="lab-extract-date-row" style="margin:10px 0"></div>
+              <div id="lab-extract-matched-list" style="margin:10px 0"></div>
+              <div id="lab-extract-unrecognized-list" style="margin:10px 0"></div>
+              <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">
+                <button class="btn" onclick="closeLabExtractReview()"><span class="i18n" data-en="Cancel" data-gr="Ακύρωση">Cancel</span></button>
+                <button class="btn primary" onclick="applyLabExtractResults()"><span class="i18n" data-en="Apply Selected" data-gr="Εφαρμογή Επιλεγμένων">Apply Selected</span></button>
+              </div>
+            </div>
+          </div>
         </div>
         <details class="client-documents-panel" open><summary class="client-documents-header"><strong><i class="ti ti-files" aria-hidden="true"></i> <span class="i18n" data-en="Uploaded clinical documents" data-gr="Ανεβασμένα κλινικά έγγραφα">Uploaded clinical documents</span></strong><span id="client-document-status" class="field-note"></span></summary><div id="client-documents-list" class="client-documents-list"></div></details>
         <div id="labs-table"></div>
@@ -3068,9 +3099,9 @@ table th,
             <div style="font-size:12px;color:var(--text-muted)" class="i18n" data-en="or" data-gr="ή">or</div>
             <label class="btn" style="cursor:pointer;margin:0">
               <span class="i18n" data-en="Choose File" data-gr="Επιλογή Αρχείου">Choose File</span>
-              <input type="file" id="diet-import-file-input" accept=".xlsx,.xls,.txt" onchange="handleDietImportFileUpload(this.files[0])" style="display:none">
+              <input type="file" id="diet-import-file-input" accept=".xlsx,.xls,.txt,.pdf,.docx" onchange="handleDietImportFileUpload(this.files[0])" style="display:none">
             </label>
-            <div style="font-size:11px;color:var(--text-muted);margin-top:4px" class="i18n" data-en="Supported: Excel (.xlsx, .xls) and plain text (.txt)" data-gr="Υποστηρίζονται: Excel (.xlsx, .xls) και απλό κείμενο (.txt)">Supported: Excel (.xlsx, .xls) and plain text (.txt)</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:4px" class="i18n" data-en="Supported: Excel (.xlsx, .xls), text (.txt), PDF, and Word (.docx)" data-gr="Υποστηρίζονται: Excel (.xlsx, .xls), κείμενο (.txt), PDF και Word (.docx)">Supported: Excel (.xlsx, .xls), text (.txt), PDF, and Word (.docx)</div>
           </div>
           <div id="diet-import-file-status" style="font-size:12px;color:var(--text-muted);margin-bottom:8px"></div>
           <textarea id="diet-import-textarea" style="width:100%;min-height:220px;font-family:monospace;font-size:12px;border:1px solid var(--border);border-radius:8px;padding:10px" placeholder="Paste diet here..."></textarea>
@@ -16786,6 +16817,79 @@ function applyConditionMacros(){
 
 // ── BLOOD ANALYSIS — reference ranges (general adult ranges; always check
 // the lab's own reference range, which can vary by method/population) ──
+// ── LABS PDF EXTRACTION (isolated layer -- maps ONLY to existing LAB_TESTS keys) ──
+// Deliberately separate from LAB_TESTS itself: this is presentation-layer
+// alias matching for extraction only, never a second lab-field database.
+const LAB_EXTRACTION_ALIASES = {
+  glucose: ['glucose','fasting glucose','σακχαρο','σάκχαρο','γλυκοζη','γλυκόζη','γλυκοζη νηστειας','γλυκόζη νηστείας'],
+  hba1c: ['hba1c','glycated haemoglobin','glycated hemoglobin','γλυκοζυλιωμενη αιμοσφαιρινη','γλυκοζυλιωμένη αιμοσφαιρίνη'],
+  totalchol: ['total cholesterol','χοληστερολη','χοληστερόλη','ολικη χοληστερολη','ολική χοληστερόλη'],
+  ldl: ['ldl','ldl cholesterol','ldl χοληστερολη','ldl χοληστερόλη'],
+  hdl: ['hdl','hdl cholesterol','hdl χοληστερολη','hdl χοληστερόλη'],
+  trig: ['triglycerides','τριγλυκεριδια','τριγλυκερίδια'],
+  egfr: ['egfr'],
+  creatinine: ['creatinine','κρεατινινη','κρεατινίνη'],
+  urea: ['urea','bun','ουρια','ουρία'],
+  albumin: ['albumin','αλβουμινη','αλβουμίνη'],
+  sodium: ['sodium','na','νατριο','νάτριο'],
+  potassium: ['potassium','k','καλιο','κάλιο'],
+  uric: ['uric acid','ουρικο οξυ','ουρικό οξύ'],
+  calcium: ['calcium','ασβεστιο','ασβέστιο'],
+  magnesium: ['magnesium','μαγνησιο','μαγνήσιο'],
+  hgb: ['hgb','hemoglobin','haemoglobin','αιμοσφαιρινη','αιμοσφαιρίνη'],
+  ferritin: ['ferritin','φερριτινη','φερριτίνη'],
+  iron: ['iron','serum iron','σιδηρος','σίδηρος','σιδηρος ορου','σίδηρος (ορού)'],
+  b12: ['vitamin b12','b12','βιταμινη b12','βιταμίνη b12'],
+  folate: ['folate','φολικο οξυ','φολικό οξύ'],
+  vitd: ['vitamin d','25-oh','βιταμινη d','βιταμίνη d'],
+  tsh: ['tsh'],
+  ft4: ['free t4','ft4','ελευθερη τ4','ελεύθερη τ4'],
+  pth: ['pth','parathyroid hormone'],
+};
+function stripGreekAccents(s){
+  // Same normalization approach already used elsewhere in the app for
+  // accent-insensitive matching (e.g. diet import heading detection) --
+  // reused here rather than reinventing a second normalization routine.
+  return (s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+}
+function extractLabResultsFromText(text){
+  const lines = (text||'').split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+  const matched = []; // [{key, value, unit, rawLine}]
+  const unrecognized = [];
+  const numberPattern = /(-?\d+(?:[.,]\d+)?)/;
+  lines.forEach(line=>{
+    const normalized = stripGreekAccents(line);
+    let bestKey = null, bestAliasLen = 0;
+    for(const [key, aliases] of Object.entries(LAB_EXTRACTION_ALIASES)){
+      for(const alias of aliases){
+        const normAlias = stripGreekAccents(alias);
+        if(normalized.includes(normAlias) && normAlias.length>bestAliasLen){
+          bestKey = key; bestAliasLen = normAlias.length;
+        }
+      }
+    }
+    if(bestKey){
+      const numMatch = line.match(numberPattern);
+      if(numMatch){
+        const value = parseFloat(numMatch[1].replace(',','.'));
+        // Unit is whatever alphabetic/unit-like text follows the number on
+        // the same line -- shown for review only, never authoritative over
+        // the existing field's own established unit.
+        const afterNumber = line.slice(numMatch.index + numMatch[0].length).trim();
+        const unitMatch = afterNumber.match(/^([a-zA-Zμ%\/³².]+)/);
+        matched.push({key: bestKey, value, unit: unitMatch ? unitMatch[1] : '', rawLine: line});
+      } else {
+        unrecognized.push(line); // test name recognized but no number found -- do not guess a value
+      }
+    }
+  });
+  // A lab report date, where present, commonly appears near a dd/mm/yyyy or
+  // dd-mm-yyyy pattern -- captured only as a candidate for the review
+  // screen, never applied without the dietitian's confirmation.
+  const dateMatch = text.match(/(\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{2,4})/);
+  return { matched, unrecognized, dateCandidate: dateMatch ? dateMatch[1] : null };
+}
+
 const LAB_TESTS = [
   {key:'glucose',  gr:'Γλυκόζη νηστείας', en:'Fasting Glucose', unit:'mg/dL', low:70, high:100, highMsg:'Πιθανή προδιαβητική/διαβητική εικόνα — έλεγχος HbA1c', cat:'Μεταβολισμός & Σάκχαρο', catEn:'Metabolic & Glucose'},
   {key:'hba1c',    gr:'HbA1c (Γλυκοζυλιωμένη Αιμοσφαιρίνη)', en:'HbA1c (Glycated Haemoglobin)', unit:'%', low:4.0, high:5.6, highMsg:'5.7–6.4% προδιαβήτης, ≥6.5% συνάδει με διαβήτη', cat:'Μεταβολισμός & Σάκχαρο', catEn:'Metabolic & Glucose'},
@@ -16913,6 +17017,131 @@ function labStatus(test, val){
   return 'normal';
 }
 
+let labExtractPendingResult = null;
+async function handleLabPdfExtraction(file){
+  const isGr = window.appLang==='gr';
+  const statusEl = document.getElementById('lab-extract-status');
+  if(!file) return;
+  if(typeof pdfjsLib==='undefined'){
+    if(statusEl) statusEl.textContent = isGr?'Η βιβλιοθήκη PDF δεν φορτώθηκε. Ελέγξτε τη σύνδεση στο διαδίκτυο και δοκιμάστε ξανά.':'PDF library failed to load. Check your internet connection and try again.';
+    return;
+  }
+  if(statusEl) statusEl.textContent = isGr?'Εξαγωγή κειμένου από το PDF...':'Extracting text from PDF...';
+  try{
+    // Reuses the exact same PDF.js text-extraction approach already
+    // implemented and tested for the Workspace diet importer -- no second
+    // PDF-extraction system for Labs.
+    const buffer = await file.arrayBuffer();
+    const pdfDoc = await pdfjsLib.getDocument({data: buffer}).promise;
+    let fullText = '';
+    for(let pageNum=1; pageNum<=pdfDoc.numPages; pageNum++){
+      const page = await pdfDoc.getPage(pageNum);
+      const content = await page.getTextContent();
+      fullText += content.items.map(item=>item.str).join('\n') + '\n';
+    }
+    fullText = fullText.trim();
+    if(!fullText){
+      if(statusEl) statusEl.textContent = isGr
+        ? 'Δεν βρέθηκε αναγνώσιμο κείμενο σε αυτό το PDF -- μπορεί να είναι σαρωμένη εικόνα. Το OCR δεν υποστηρίζεται ακόμη.'
+        : 'No readable text found in this PDF -- it may be a scanned image. OCR is not yet supported.';
+      return;
+    }
+    const result = extractLabResultsFromText(fullText);
+    if(!result.matched.length && !result.unrecognized.length){
+      if(statusEl) statusEl.textContent = isGr?'Δεν εντοπίστηκαν αναγνωρίσιμα αποτελέσματα εξετάσεων σε αυτό το έγγραφο.':'No recognizable lab results were detected in this document.';
+      return;
+    }
+    labExtractPendingResult = result;
+    if(statusEl) statusEl.textContent = '';
+    openLabExtractReview();
+  }catch(e){
+    console.error('[Nutrese labs] PDF extraction failed', e);
+    if(statusEl) statusEl.textContent = isGr?`Αποτυχία ανάγνωσης του PDF: ${e.message||e}.`:`Failed to read the PDF: ${e.message||e}.`;
+  }
+}
+function openLabExtractReview(){
+  if(!labExtractPendingResult) return;
+  const isGr = window.appLang==='gr';
+  const {matched, unrecognized, dateCandidate} = labExtractPendingResult;
+
+  const dateRow = document.getElementById('lab-extract-date-row');
+  dateRow.innerHTML = dateCandidate
+    ? `<label style="display:flex;align-items:center;gap:8px;font-size:13px"><input type="checkbox" id="lab-extract-apply-date" checked> ${isGr?'Ημερομηνία εξέτασης:':'Lab date:'} <strong>${safeHtml(dateCandidate)}</strong></label>`
+    : '';
+
+  const matchedList = document.getElementById('lab-extract-matched-list');
+  if(matched.length){
+    matchedList.innerHTML = `<div style="font-weight:700;font-size:13px;margin-bottom:6px">${isGr?'Αναγνωρισμένα αποτελέσματα':'Recognized results'}</div>` +
+      matched.map((m,i)=>{
+        const test = LAB_TESTS.find(t=>t.key===m.key);
+        const testName = isGr ? test.gr : test.en;
+        const existingValue = S.labValues?.[m.key];
+        const hasExisting = existingValue!==null && existingValue!==undefined && existingValue!=='';
+        // Never silently overwrite: unchecked by default whenever an
+        // existing value is already present -- the dietitian must
+        // actively opt in to replace it.
+        const checkedAttr = hasExisting ? '' : 'checked';
+        const overwriteWarning = hasExisting
+          ? `<span style="color:#c0392b;font-size:11px">${isGr?`θα αντικαταστήσει: ${existingValue}`:`will replace existing: ${existingValue}`}</span>`
+          : '';
+        return `<label style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:13px;border-bottom:1px solid var(--border)">
+          <input type="checkbox" class="lab-extract-match-checkbox" data-key="${m.key}" data-value="${m.value}" ${checkedAttr}>
+          <span style="flex:1">${safeHtml(testName)}</span>
+          <strong>${m.value} ${safeHtml(m.unit||test.unit)}</strong>
+          ${overwriteWarning}
+        </label>`;
+      }).join('');
+  } else {
+    matchedList.innerHTML = `<div class="field-note">${isGr?'Δεν βρέθηκαν αντιστοιχισμένα αποτελέσματα.':'No mapped results found.'}</div>`;
+  }
+
+  const unrecognizedList = document.getElementById('lab-extract-unrecognized-list');
+  unrecognizedList.innerHTML = unrecognized.length
+    ? `<div style="font-weight:700;font-size:13px;margin:10px 0 6px;color:var(--text-muted)">${isGr?'Μη αντιστοιχισμένες γραμμές (δεν εφαρμόζονται)':'Unmapped lines (not applied)'}</div>` +
+      unrecognized.map(line=>`<div style="font-size:12px;color:var(--text-muted);padding:2px 0">${safeHtml(line)}</div>`).join('')
+    : '';
+
+  const modal = document.getElementById('lab-extract-review-modal');
+  if(modal) modal.style.display='flex';
+}
+function closeLabExtractReview(){
+  labExtractPendingResult = null;
+  const modal = document.getElementById('lab-extract-review-modal');
+  if(modal) modal.style.display='none';
+  const fileInput = document.getElementById('lab-extract-file-input');
+  if(fileInput) fileInput.value='';
+}
+function applyLabExtractResults(){
+  // Writes only explicitly checked fields, using the exact same
+  // S.labValues[key]=value mechanism the manual Labs entry form already
+  // uses -- no new persistence path, no new data model. Existing, saved
+  // Labs values remain the source of truth for everything not checked.
+  document.querySelectorAll('.lab-extract-match-checkbox:checked').forEach(cb=>{
+    const key = cb.dataset.key;
+    const value = parseFloat(cb.dataset.value);
+    S.labValues[key] = value;
+    const input = document.getElementById('lab-'+key);
+    if(input) input.value = value;
+  });
+  const applyDateCb = document.getElementById('lab-extract-apply-date');
+  if(applyDateCb && applyDateCb.checked){
+    const dateInput = document.getElementById('lab-date');
+    const rawDate = document.querySelector('#lab-extract-date-row strong')?.textContent || '';
+    // #lab-date is <input type="date">, which requires ISO (YYYY-MM-DD) --
+    // silently rejects any other format. Convert the detected dd/mm/yyyy
+    // (or dd-mm-yyyy, dd.mm.yyyy) candidate before applying it.
+    const dateParts = rawDate.match(/(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/);
+    if(dateInput && dateParts){
+      const [, day, month, yearRaw] = dateParts;
+      const year = yearRaw.length===2 ? '20'+yearRaw : yearRaw;
+      const isoDate = `${year}-${month.padStart(2,'0')}-${day.padStart(2,'0')}`;
+      dateInput.value = isoDate;
+      S.labDate = isoDate;
+    }
+  }
+  renderLabsTable(); // existing, unmodified render/status refresh
+  closeLabExtractReview();
+}
 function renderLabsTable(){
   const isGr = window.appLang!=='en';
   let html=`<div class="table-wrap"><table><thead><tr><th>${isGr?'Εξέταση':'Test'}</th><th>${isGr?'Τιμή':'Value'}</th><th>${isGr?'Μονάδα':'Unit'}</th><th>${isGr?'Εύρος αναφοράς':'Reference range'}</th><th>${isGr?'Κατάσταση':'Status'}</th><th>${isGr?'Σημείωση':'Note'}</th></tr></thead><tbody>`;
@@ -18438,19 +18667,27 @@ function renderMealPlanWorkspace(){
   renderManualScratchNavButton();
   const el = document.getElementById('workspace-grid'); if(!el) return;
   const isGr = window.appLang==='gr';
+  // Greek table headers specifically: a global CSS rule (th{text-transform:
+  // uppercase}, unmodified here since it applies app-wide) preserves tonos
+  // marks when case-converting mixed-case strings, producing incorrect
+  // accented-uppercase Greek (e.g. "ΠΡΩΪΝΌ"). Providing the correct,
+  // already-uppercase, unaccented forms directly here is a no-op for that
+  // CSS rule and displays exactly as required -- scoped ONLY to this
+  // grid's own header row, not the day/meal content, the report, or any
+  // other Greek string in the app.
   const slots = [
-    {key:'brk', label:isGr?'Πρωινό':'Breakfast'}, {key:'snk1', label:isGr?'Σνακ 1':'Snack 1'},
-    {key:'lun', label:isGr?'Μεσημεριανό':'Lunch'}, {key:'snk2', label:isGr?'Σνακ 2':'Snack 2'},
-    {key:'din', label:isGr?'Βραδινό':'Dinner'}, {key:'sleep', label:isGr?'Πριν τον ύπνο':'Before sleep'},
+    {key:'brk', label:isGr?'ΠΡΩΙΝΟ':'Breakfast'}, {key:'snk1', label:isGr?'ΣΝΑΚ 1':'Snack 1'},
+    {key:'lun', label:isGr?'ΜΕΣΗΜΕΡΙΑΝΟ':'Lunch'}, {key:'snk2', label:isGr?'ΣΝΑΚ 2':'Snack 2'},
+    {key:'din', label:isGr?'ΒΡΑΔΙΝΟ':'Dinner'}, {key:'sleep', label:isGr?'ΠΡΙΝ ΤΟΝ ΥΠΝΟ':'Before sleep'},
   ];
   const dayLabels = isGr
     ? ['Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο','Κυριακή']
     : ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
   let html = '<div style="border:1px solid var(--border);border-radius:14px;overflow:hidden;background:var(--bg-surface)"><table style="border-collapse:collapse;width:100%;min-width:900px">';
   html += `<thead><tr style="background:var(--bg-page)">`;
-  html += `<th style="padding:14px 12px;text-align:left;font-size:12px;font-weight:700;color:var(--text-secondary);letter-spacing:.02em">${isGr?'Ημέρα':'Day'}</th>`;
+  html += `<th style="padding:14px 12px;text-align:left;font-size:12px;font-weight:700;color:var(--text-secondary);letter-spacing:.02em">${isGr?'ΗΜΕΡΑ':'Day'}</th>`;
   slots.forEach(s=>{ html += `<th style="padding:14px 12px;text-align:left;font-size:12px;font-weight:700;color:var(--text-secondary);letter-spacing:.02em;min-width:160px">${safeHtml(s.label)}</th>`; });
-  html += `<th style="padding:14px 12px;text-align:left;font-size:12px;font-weight:700;color:var(--text-secondary);letter-spacing:.02em;min-width:110px">${isGr?'Ημερήσιες Θερμίδες':'Daily Kcal'}</th>`;
+  html += `<th style="padding:14px 12px;text-align:left;font-size:12px;font-weight:700;color:var(--text-secondary);letter-spacing:.02em;min-width:110px">${isGr?'ΗΜΕΡΗΣΙΕΣ ΘΕΡΜΙΔΕΣ':'Daily Kcal'}</th>`;
   html += '</tr></thead><tbody>';
   S.workspaceCells.forEach((day,dayIndex)=>{
     html += `<tr class="ws-row" style="border-top:1px solid var(--border)"><td style="padding:18px 12px;font-weight:700;vertical-align:top;color:var(--text-secondary)">${safeHtml(dayLabels[dayIndex])}</td>`;
@@ -18727,7 +18964,9 @@ async function handleDietImportFileUpload(file){
   const name = (file.name||'').toLowerCase();
   const isExcel = name.endsWith('.xlsx') || name.endsWith('.xls');
   const isTxt = name.endsWith('.txt');
-  const isNotYetSupported = name.endsWith('.pdf') || name.endsWith('.docx') || name.endsWith('.doc');
+  const isPdf = name.endsWith('.pdf');
+  const isDocx = name.endsWith('.docx');
+  const isNotYetSupported = name.endsWith('.doc'); // legacy binary .doc -- mammoth.js only supports .docx
 
   // Confirmed root cause: the file input's accept attribute only hints at
   // the OS file picker -- it does NOT block a PDF/DOCX from being selected
@@ -18737,8 +18976,70 @@ async function handleDietImportFileUpload(file){
   // fixed by detecting the actual file type before doing anything else.
   if(isNotYetSupported){
     if(statusEl) statusEl.textContent = isGr
-      ? `Η εισαγωγή αρχείων PDF/Word δεν υποστηρίζεται ακόμη. Αντιγράψτε το κείμενο και επικολλήστε το παραπάνω.`
-      : `PDF/Word file import is not yet supported. Please copy the text and paste it above instead.`;
+      ? `Η εισαγωγή παλαιότερων αρχείων .doc δεν υποστηρίζεται. Αποθηκεύστε το ως .docx ή αντιγράψτε το κείμενο και επικολλήστε το παραπάνω.`
+      : `Legacy .doc file import is not supported. Please save as .docx or copy the text and paste it above instead.`;
+    return;
+  }
+  if(isPdf){
+    if(typeof pdfjsLib==='undefined'){
+      if(statusEl) statusEl.textContent = isGr?'Η βιβλιοθήκη PDF δεν φορτώθηκε. Ελέγξτε τη σύνδεση στο διαδίκτυο και δοκιμάστε ξανά.':'PDF library failed to load. Check your internet connection and try again.';
+      return;
+    }
+    if(statusEl) statusEl.textContent = isGr?'Εξαγωγή κειμένου από το PDF...':'Extracting text from PDF...';
+    try{
+      const buffer = await file.arrayBuffer();
+      const pdfDoc = await pdfjsLib.getDocument({data: buffer}).promise;
+      let fullText = '';
+      for(let pageNum=1; pageNum<=pdfDoc.numPages; pageNum++){
+        const page = await pdfDoc.getPage(pageNum);
+        const content = await page.getTextContent();
+        // Joining with '\n' preserves each text fragment as its own line --
+        // matching the same line-based structure parseImportedDietText()
+        // already expects from a pasted plain-text diet, with zero new
+        // parsing logic needed for PDF-sourced text specifically.
+        fullText += content.items.map(item=>item.str).join('\n') + '\n';
+      }
+      fullText = fullText.trim();
+      if(!fullText){
+        // No usable text layer -- most likely a scanned/image PDF. Per the
+        // explicit requirement, this must be clearly reported rather than
+        // silently showing an empty/garbage preview. OCR for this case is
+        // an explicitly separate, later phase -- not implemented here.
+        if(statusEl) statusEl.textContent = isGr
+          ? 'Δεν βρέθηκε αναγνώσιμο κείμενο σε αυτό το PDF -- μπορεί να είναι σαρωμένη εικόνα. Δοκιμάστε αντιγραφή/επικόλληση αντ\' αυτού.'
+          : 'No readable text found in this PDF -- it may be a scanned image. Try copy/paste instead.';
+        return;
+      }
+      if(textarea) textarea.value = fullText;
+      if(statusEl) statusEl.textContent = isGr?`Φορτώθηκε "${file.name}" (${pdfDoc.numPages} ${pdfDoc.numPages===1?'σελίδα':'σελίδες'}). Πατήστε "Προεπισκόπηση Εισαγωγής" παρακάτω.`:`Loaded "${file.name}" (${pdfDoc.numPages} page${pdfDoc.numPages===1?'':'s'}). Click "Preview Import" below.`;
+    }catch(e){
+      console.error('[Nutrese diet import] PDF text extraction failed', e);
+      if(statusEl) statusEl.textContent = isGr?`Αποτυχία ανάγνωσης του PDF: ${e.message||e}. Δοκιμάστε αντιγραφή/επικόλληση αντ' αυτού.`:`Failed to read the PDF: ${e.message||e}. Try copy/paste instead.`;
+    }
+    return;
+  }
+  if(isDocx){
+    if(typeof mammoth==='undefined'){
+      if(statusEl) statusEl.textContent = isGr?'Η βιβλιοθήκη Word δεν φορτώθηκε. Ελέγξτε τη σύνδεση στο διαδίκτυο και δοκιμάστε ξανά.':'Word library failed to load. Check your internet connection and try again.';
+      return;
+    }
+    if(statusEl) statusEl.textContent = isGr?'Εξαγωγή κειμένου από το Word...':'Extracting text from Word document...';
+    try{
+      const buffer = await file.arrayBuffer();
+      const result = await mammoth.extractRawText({arrayBuffer: buffer});
+      const fullText = (result.value||'').trim();
+      if(!fullText){
+        if(statusEl) statusEl.textContent = isGr
+          ? 'Δεν βρέθηκε κείμενο σε αυτό το αρχείο Word. Δοκιμάστε αντιγραφή/επικόλληση αντ\' αυτού.'
+          : 'No text found in this Word document. Try copy/paste instead.';
+        return;
+      }
+      if(textarea) textarea.value = fullText;
+      if(statusEl) statusEl.textContent = isGr?`Φορτώθηκε "${file.name}". Πατήστε "Προεπισκόπηση Εισαγωγής" παρακάτω.`:`Loaded "${file.name}". Click "Preview Import" below.`;
+    }catch(e){
+      console.error('[Nutrese diet import] DOCX text extraction failed', e);
+      if(statusEl) statusEl.textContent = isGr?`Αποτυχία ανάγνωσης του αρχείου Word: ${e.message||e}. Δοκιμάστε αντιγραφή/επικόλληση αντ' αυτού.`:`Failed to read the Word file: ${e.message||e}. Try copy/paste instead.`;
+    }
     return;
   }
   if(isTxt){
