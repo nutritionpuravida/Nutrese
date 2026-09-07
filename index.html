@@ -9023,7 +9023,7 @@ function buildPrintCssRules(pageSize, pageMargin){
       #nutriflow-print-only .report-week-table tbody tr:last-child { height:8mm !important; }
       #nutriflow-print-only .no-print, #nutriflow-print-only button, #nutriflow-print-only input, #nutriflow-print-only select { display:none !important; }`;
 }
-function printHtmlDocument({html,title,orientation='portrait'}){
+function printHtmlDocument({html,title,orientation='portrait',landscapeAsOrientationOnly=false}){
   const oldTitle=document.title;
   // Defensive: remove any leftover orientation override from the OTHER print
   // path (Equivalents/7-Day Plan/etc.) — @page rules resolve by document
@@ -9043,7 +9043,7 @@ function printHtmlDocument({html,title,orientation='portrait'}){
     styleEl.id='nutriflow-print-only-style';
     document.head.appendChild(styleEl);
   }
-  const pageSize=orientation==='landscape' ? 'A4 landscape' : 'A4 portrait';
+  const pageSize = (orientation==='landscape' && landscapeAsOrientationOnly) ? 'landscape' : (orientation==='landscape' ? 'A4 landscape' : 'A4 portrait');
   const pageMargin=orientation==='landscape' ? '4mm' : '1cm';
   styleEl.textContent=`
     @media screen { #nutriflow-print-only { display:none; } }
@@ -9297,7 +9297,13 @@ function printPage(){
     printHtmlDocument({
       html: body ? body.innerHTML : '<div>Report content not found.</div>',
       title:`Nutrese - Client Report - ${S.name||'Client'}`,
-      orientation: reportHasSevenDay ? 'landscape' : 'portrait'
+      orientation: reportHasSevenDay ? 'landscape' : 'portrait',
+      // Experimental, scoped ONLY to the 7-Day Plan Client Report source
+      // (not Workspace, even though it shares this same call site) --
+      // requests the narrower "size: landscape" form instead of the
+      // combined "size: A4 landscape", per evidence that Chromium-based
+      // mobile browsers more reliably honor the bare orientation keyword.
+      landscapeAsOrientationOnly: S.reportSource!=='workspace'
     });
     return;
   }
