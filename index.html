@@ -8991,31 +8991,8 @@ function weekDayLabel(plan, index, lang='GR'){
 
 // Smart print: portrait for Client Report (client handout),
 // landscape for all clinical/working pages (more data fits)
-function printHtmlDocument({html,title,orientation='portrait'}){
-  const oldTitle=document.title;
-  // Defensive: remove any leftover orientation override from the OTHER print
-  // path (Equivalents/7-Day Plan/etc.) — @page rules resolve by document
-  // order across ALL stylesheets, so a stale rule left behind by that path
-  // can silently outrank this document's own orientation set below.
-  document.getElementById('print-orientation-override')?.remove();
-  const oldArea=document.getElementById('nutriflow-print-only');
-  if(oldArea) oldArea.remove();
-  const area=document.createElement('div');
-  area.id='nutriflow-print-only';
-  area.innerHTML=html;
-  document.body.appendChild(area);
-
-  let styleEl=document.getElementById('nutriflow-print-only-style');
-  if(!styleEl){
-    styleEl=document.createElement('style');
-    styleEl.id='nutriflow-print-only-style';
-    document.head.appendChild(styleEl);
-  }
-  const pageSize=orientation==='landscape' ? 'A4 landscape' : 'A4 portrait';
-  const pageMargin=orientation==='landscape' ? '4mm' : '1cm';
-  styleEl.textContent=`
-    @media screen { #nutriflow-print-only { display:none; } }
-    @media print {
+function buildPrintCssRules(pageSize, pageMargin){
+  return `
       @page { size: ${pageSize}; margin: ${pageMargin}; }
       @page landscape-page { size: ${pageSize}; margin: ${pageMargin}; }
       html, body { margin:0 !important; padding:0 !important; width:100% !important; }
@@ -9048,7 +9025,33 @@ function printHtmlDocument({html,title,orientation='portrait'}){
       #nutriflow-print-only .report-week-full .report-week-table tbody tr:not(:last-child) { height:auto !important; min-height:15mm !important; }
       #nutriflow-print-only .report-week-partial .report-week-table tbody tr:not(:last-child) { height:auto !important; }
       #nutriflow-print-only .report-week-table tbody tr:last-child { height:8mm !important; }
-      #nutriflow-print-only .no-print, #nutriflow-print-only button, #nutriflow-print-only input, #nutriflow-print-only select { display:none !important; }
+      #nutriflow-print-only .no-print, #nutriflow-print-only button, #nutriflow-print-only input, #nutriflow-print-only select { display:none !important; }`;
+}
+function printHtmlDocument({html,title,orientation='portrait'}){
+  const oldTitle=document.title;
+  // Defensive: remove any leftover orientation override from the OTHER print
+  // path (Equivalents/7-Day Plan/etc.) — @page rules resolve by document
+  // order across ALL stylesheets, so a stale rule left behind by that path
+  // can silently outrank this document's own orientation set below.
+  document.getElementById('print-orientation-override')?.remove();
+  const oldArea=document.getElementById('nutriflow-print-only');
+  if(oldArea) oldArea.remove();
+  const area=document.createElement('div');
+  area.id='nutriflow-print-only';
+  area.innerHTML=html;
+  document.body.appendChild(area);
+
+  let styleEl=document.getElementById('nutriflow-print-only-style');
+  if(!styleEl){
+    styleEl=document.createElement('style');
+    styleEl.id='nutriflow-print-only-style';
+    document.head.appendChild(styleEl);
+  }
+  const pageSize=orientation==='landscape' ? 'A4 landscape' : 'A4 portrait';
+  const pageMargin=orientation==='landscape' ? '4mm' : '1cm';
+  styleEl.textContent=`
+    @media screen { #nutriflow-print-only { display:none; } }
+    @media print {${buildPrintCssRules(pageSize, pageMargin)}
     }`;
   document.title=title||oldTitle;
   // window.print() now fires synchronously, directly within this
@@ -9077,76 +9080,138 @@ function handlePrintLayoutDiagnostic(){
   const copyRow = document.getElementById('diag-print-copy-row');
   outputEl.style.display='none'; copyRow.style.display='none';
 
-  const withWeekEl = document.querySelector('#report-body .report-page-one.with-week') || document.querySelector('#report-body .report-page-one');
-  const titleEl = document.querySelector('#report-body .report-print-title');
-  const summaryEl = document.querySelector('#report-body .report-header-summary');
-
-  if(!withWeekEl){
-    statusEl.textContent = 'No report currently rendered in #report-body -- generate a report first (select 7-Day Meal Plan or Workspace source), then run this diagnostic.';
+  const reportPage = document.getElementById('page-report');
+  const reportActive = reportPage && reportPage.classList.contains('active');
+  if(!reportActive){
+    statusEl.textContent = 'Not currently on the Client Report page -- navigate to Client Report (Print) and generate a report first, then run this diagnostic.';
     return;
   }
+  buildReport(); // exact same call printPage() makes -- ensures #report-body reflects current options
+  const body = document.getElementById('report-body');
+  if(!body || !body.innerHTML.trim()){
+    statusEl.textContent = 'No report content found in #report-body -- generate a report first.';
+    return;
+  }
+  const reportHasSevenDay = S.reportOptions?.sevenDay!==false;
+  const orientation = reportHasSevenDay ? 'landscape' : 'portrait';
+  const pageSize = orientation==='landscape' ? 'A4 landscape' : 'A4 portrait';
+  const pageMargin = orientation==='landscape' ? '4mm' : '1cm';
+
+  // Build the diagnostic clone: identical HTML, identical CSS rules (via the
+  // same shared helper printHtmlDocument() itself uses), but rendered
+  // immediately under normal screen viewing (positioned far off-screen, not
+  // display:none, so real layout/measurement occurs) since there is no JS
+  // API to force @media print activation without an actual print dialog.
+  // window.print() is never called anywhere in this function.
+  document.getElementById('diag-print-clone')?.remove();
+  document.getElementById('diag-print-clone-style')?.remove();
+  const clone = document.createElement('div');
+  clone.id = 'diag-print-clone';
+  const mmToPxEarly = mm => mm * 96 / 25.4;
+  const pageWidthMm = orientation==='landscape' ? 297 : 210; // A4 long/short edge
+  const marginMmEarly = parseFloat(pageMargin) || (orientation==='landscape' ? 4 : 10);
+  const contentWidthPx = mmToPxEarly(pageWidthMm - marginMmEarly*2);
+  // Constrained to the actual print page's content width (not the full
+  // viewport) -- otherwise text wraps less at a wider width, producing
+  // inaccurate (too-short) height measurements versus the real printed page.
+  clone.style.cssText = `position:fixed;top:-99999px;left:-99999px;visibility:visible;width:${contentWidthPx}px !important;`;
+  clone.innerHTML = body.innerHTML;
+  document.body.appendChild(clone);
+  const cloneStyleEl = document.createElement('style');
+  cloneStyleEl.id = 'diag-print-clone-style';
+  // Reuses the exact real print CSS text, only swapping the #nutriflow-print-only
+  // selector for #diag-print-clone and removing the @media print wrapper --
+  // the declarations themselves are byte-identical to the real print path.
+  cloneStyleEl.textContent = buildPrintCssRules(pageSize, pageMargin).split('#nutriflow-print-only').join('#diag-print-clone');
+  document.head.appendChild(cloneStyleEl);
+
+  const withWeekEl = clone.querySelector('.report-page-one.with-week') || clone.querySelector('.report-page-one');
+  const titleEl = clone.querySelector('.report-print-title');
+  const summaryEl = clone.querySelector('.report-header-summary');
+  const avoidBoxes = clone.querySelectorAll('.report-header-summary > div');
 
   const dumpBox = (label, el) => {
-    if(!el) return `${label}: NOT FOUND IN DOM\n`;
+    if(!el) return `${label}: NOT FOUND IN CLONE\n`;
     const cs = getComputedStyle(el);
     const rect = el.getBoundingClientRect();
     return [
       `${label}:`,
-      `  tag=${el.tagName} class="${el.className}"`,
-      `  rendered rect: width=${rect.width.toFixed(1)}px height=${rect.height.toFixed(1)}px top=${rect.top.toFixed(1)} left=${rect.left.toFixed(1)}`,
-      `  scrollHeight=${el.scrollHeight}px offsetHeight=${el.offsetHeight}px`,
-      `  computed: display=${cs.display} position=${cs.position}`,
-      `  computed: break-before=${cs.breakBefore||cs.getPropertyValue('break-before')} break-after=${cs.breakAfter||cs.getPropertyValue('break-after')} break-inside=${cs.breakInside||cs.getPropertyValue('break-inside')}`,
+      `  rendered rect: width=${rect.width.toFixed(1)}px height=${rect.height.toFixed(1)}px top=${rect.top.toFixed(1)} left=${rect.left.toFixed(1)} bottom=${rect.bottom.toFixed(1)}`,
+      `  computed: break-before=${cs.breakBefore} break-after=${cs.breakAfter} break-inside=${cs.breakInside}`,
       `  computed: page-break-before=${cs.pageBreakBefore} page-break-after=${cs.pageBreakAfter} page-break-inside=${cs.pageBreakInside}`,
-      `  computed: min-height=${cs.minHeight} height=${cs.height}`,
-      `  computed: margin=${cs.margin} padding=${cs.padding}`,
-      `  computed CSS 'page' property=${cs.getPropertyValue('page')||'(not directly readable via getComputedStyle in this browser)'}`,
+      `  computed: min-height=${cs.minHeight} height=${cs.height} margin=${cs.margin} padding=${cs.padding}`,
       ''
     ].join('\n');
   };
 
+  // Convert the configured @page size to CSS px (96px/inch, 25.4mm/inch) so
+  // it can be compared directly against the clone's rendered pixel heights.
+  const mmToPx = mm => mm * 96 / 25.4;
+  const pageHeightMm = orientation==='landscape' ? 210 : 297; // A4 short/long edge
+  const marginMm = parseFloat(pageMargin) || (orientation==='landscape' ? 4 : 10);
+  const printableHeightPx = mmToPx(pageHeightMm - marginMm*2);
+
   let lines = [];
-  lines.push('=== PRINT LAYOUT DIAGNOSTIC (QA only) ===');
+  lines.push('=== PRINT-CLONE LAYOUT DIAGNOSTIC (QA only -- window.print() NEVER called) ===');
   lines.push(`Timestamp: ${new Date().toISOString()}`);
   lines.push(`User agent: ${navigator.userAgent}`);
   lines.push(`Viewport: ${window.innerWidth}x${window.innerHeight}  Device pixel ratio: ${window.devicePixelRatio}`);
-  lines.push(`Screen: ${screen.width}x${screen.height}`);
   lines.push('');
-
-  // Relevant @media print rules currently in effect, read directly from the
-  // dynamically-injected print stylesheet if present (it only exists while
-  // printHtmlDocument() is mid-flight, so it will usually be absent here --
-  // reported for completeness, not expected to be populated in this
-  // pre-print inspection).
-  const printStyleEl = document.getElementById('nutriflow-print-only-style');
-  lines.push(`Dynamic print <style> tag currently present: ${!!printStyleEl}`);
-  if(printStyleEl){
-    lines.push('--- Dynamic print stylesheet content ---');
-    lines.push(printStyleEl.textContent);
-  }
+  lines.push(`Configured orientation: ${orientation}  @page size: ${pageSize}  margin: ${pageMargin}`);
+  lines.push(`Calculated printable height (page height minus top+bottom margins), converted to CSS px: ${printableHeightPx.toFixed(1)}px`);
   lines.push('');
 
   lines.push('--- DOM NESTING CHECK ---');
-  const titleInsideWithWeek = withWeekEl && titleEl ? withWeekEl.contains(titleEl) : null;
-  const summaryInsideWithWeek = withWeekEl && summaryEl ? withWeekEl.contains(summaryEl) : null;
-  lines.push(`Header title element found inside .report-page-one(.with-week) container: ${titleInsideWithWeek}`);
-  lines.push(`Client Profile summary element found inside .report-page-one(.with-week) container: ${summaryInsideWithWeek}`);
+  lines.push(`Header title inside .report-page-one(.with-week): ${withWeekEl && titleEl ? withWeekEl.contains(titleEl) : null}`);
+  lines.push(`Client Profile summary inside .report-page-one(.with-week): ${withWeekEl && summaryEl ? withWeekEl.contains(summaryEl) : null}`);
   lines.push('');
 
-  lines.push('--- 1. .report-page-one.with-week CONTAINER ---');
+  lines.push('--- 1. .report-page-one.with-week CONTAINER (in print clone) ---');
   lines.push(dumpBox('.report-page-one(.with-week)', withWeekEl));
-
-  lines.push('--- 2. "Clinical Nutrition Report" HEADER ---');
+  lines.push('--- 2. "Clinical Nutrition Report" HEADER (in print clone) ---');
   lines.push(dumpBox('.report-print-title', titleEl));
-
-  lines.push('--- 3. CLIENT PROFILE CONTENT (.report-header-summary) ---');
+  lines.push('--- 3. CLIENT PROFILE CONTENT .report-header-summary (in print clone) ---');
   lines.push(dumpBox('.report-header-summary', summaryEl));
+
+  lines.push(`--- 4. INDIVIDUAL PROFILE SUMMARY BOXES (break-inside:avoid) -- ${avoidBoxes.length} found ---`);
+  avoidBoxes.forEach((box,i)=>{
+    const rect = box.getBoundingClientRect();
+    const cs = getComputedStyle(box);
+    const cloneRect = clone.getBoundingClientRect();
+    const relativeTop = rect.top - cloneRect.top;
+    const relativeBottom = rect.bottom - cloneRect.top;
+    lines.push(`  Box[${i}]: top=${relativeTop.toFixed(1)}px bottom=${relativeBottom.toFixed(1)}px height=${rect.height.toFixed(1)}px break-inside=${cs.breakInside}`);
+    lines.push(`    -> Would this box's BOTTOM edge exceed the printable page height (${printableHeightPx.toFixed(1)}px)? ${relativeBottom > printableHeightPx}`);
+  });
+  lines.push('');
+
+  if(titleEl && summaryEl){
+    const cloneRect = clone.getBoundingClientRect();
+    const titleBottom = titleEl.getBoundingClientRect().bottom - cloneRect.top;
+    const summaryTop = summaryEl.getBoundingClientRect().top - cloneRect.top;
+    const summaryBottom = summaryEl.getBoundingClientRect().bottom - cloneRect.top;
+    lines.push('--- 5/6. HEADER + PROFILE POSITION vs PRINTABLE HEIGHT ---');
+    lines.push(`Header bottom edge (relative to container top): ${titleBottom.toFixed(1)}px`);
+    lines.push(`Client Profile summary: top=${summaryTop.toFixed(1)}px bottom=${summaryBottom.toFixed(1)}px`);
+    lines.push(`Printable page height available: ${printableHeightPx.toFixed(1)}px`);
+    lines.push(`Does the Client Profile summary's bottom edge exceed the printable height (i.e. would it be pushed to page 2)? ${summaryBottom > printableHeightPx}`);
+    lines.push(`Does the Client Profile summary's TOP edge already exceed the printable height (i.e. the ENTIRE block would be pushed)? ${summaryTop > printableHeightPx}`);
+  }
+  lines.push('');
+  lines.push('--- 7. EXPLICIT BREAK/FRAGMENTATION RULES ---');
+  lines.push(`.report-page-one.with-week break-after: ${withWeekEl?getComputedStyle(withWeekEl).breakAfter:'n/a'} (page-break-after: ${withWeekEl?getComputedStyle(withWeekEl).pageBreakAfter:'n/a'})`);
+  lines.push(`.report-print-title break-before/after: ${titleEl?getComputedStyle(titleEl).breakBefore:'n/a'} / ${titleEl?getComputedStyle(titleEl).breakAfter:'n/a'}`);
+  lines.push(`.report-header-summary break-before/after: ${summaryEl?getComputedStyle(summaryEl).breakBefore:'n/a'} / ${summaryEl?getComputedStyle(summaryEl).breakAfter:'n/a'}`);
 
   const dump = lines.join('\n');
   outputEl.value = dump;
   outputEl.style.display='block';
   copyRow.style.display='block';
-  statusEl.textContent = 'Done -- diagnostic data below. Tap "Copy diagnostic data".';
+  statusEl.textContent = 'Done -- diagnostic data below (print clone measured, then removed; nothing was printed). Tap "Copy diagnostic data".';
+
+  // Clean up immediately -- this clone must never linger or affect anything else.
+  clone.remove();
+  cloneStyleEl.remove();
 }
 function copyPrintLayoutDiagnostic(){
   const outputEl = document.getElementById('diag-print-output');
