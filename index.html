@@ -9202,6 +9202,69 @@ function handlePrintLayoutDiagnostic(){
   lines.push(`.report-page-one.with-week break-after: ${withWeekEl?getComputedStyle(withWeekEl).breakAfter:'n/a'} (page-break-after: ${withWeekEl?getComputedStyle(withWeekEl).pageBreakAfter:'n/a'})`);
   lines.push(`.report-print-title break-before/after: ${titleEl?getComputedStyle(titleEl).breakBefore:'n/a'} / ${titleEl?getComputedStyle(titleEl).breakAfter:'n/a'}`);
   lines.push(`.report-header-summary break-before/after: ${summaryEl?getComputedStyle(summaryEl).breakBefore:'n/a'} / ${summaryEl?getComputedStyle(summaryEl).breakAfter:'n/a'}`);
+  lines.push('');
+
+  lines.push('--- 8. ANCESTOR CHAIN (clone up to <html>) ---');
+  // getComputedStyle() cannot read the CSS 'page' property directly in any
+  // browser -- checking every ancestor's own box-model properties instead,
+  // since an unexpected wrapper (fixed height, transform, unusual
+  // positioning) could itself introduce a fragmentation boundary.
+  let ancestor = clone;
+  let depth = 0;
+  while(ancestor && depth<10){
+    const cs = getComputedStyle(ancestor);
+    lines.push(`[depth ${depth}] <${ancestor.tagName.toLowerCase()}${ancestor.id?'#'+ancestor.id:''}${ancestor.className?'.'+String(ancestor.className).replace(/\s+/g,'.'):''}>`);
+    lines.push(`    position=${cs.position} display=${cs.display} transform=${cs.transform}`);
+    lines.push(`    margin=${cs.margin} padding=${cs.padding} height=${cs.height} min-height=${cs.minHeight} max-height=${cs.maxHeight}`);
+    ancestor = ancestor.parentElement;
+    depth++;
+  }
+  lines.push('');
+
+  lines.push('--- 9. MATCHED CSS RULES CONTAINING A "page:" DECLARATION ---');
+  // Directly scans every stylesheet rule for a selector that matches
+  // .report-page-one.with-week (in the clone) AND whose own rule text
+  // declares the CSS 'page' property -- this is the only way to confirm
+  // whether "page: landscape-page" is genuinely being assigned to this
+  // exact element, versus merely existing somewhere in a stylesheet
+  // without actually matching/applying here.
+  let matchedPageRules = [];
+  try{
+    const scanRules = (rules) => {
+      if(!rules) return;
+      for(const rule of rules){
+        if(rule.selectorText && /\bpage\s*:/i.test(rule.cssText||'') && withWeekEl){
+          try{
+            if(withWeekEl.matches(rule.selectorText)){
+              matchedPageRules.push(`Selector="${rule.selectorText}"  Rule="${rule.cssText}"`);
+            }
+          }catch(e){ /* invalid selector for .matches(), skip */ }
+        }
+        // Recurse into @media (and other grouping) rules -- checked AFTER
+        // the selectorText check above, and guarded by a genuine non-empty
+        // nested rule list, since rule.cssRules is truthy (an empty-but-
+        // present CSSRuleList) even for ordinary CSSStyleRule objects in
+        // this browser -- an earlier version of this check recursed into
+        // that empty list first and skipped the selectorText check
+        // entirely for every normal rule, missing real matches completely.
+        if(rule.cssRules && rule.cssRules.length>0 && !rule.selectorText){
+          scanRules(rule.cssRules);
+        }
+      }
+    };
+    for(const sheet of document.styleSheets){
+      let rules;
+      try{ rules = sheet.cssRules || sheet.rules; }catch(e){ continue; } // cross-origin sheets throw -- skip safely
+      scanRules(rules);
+    }
+  }catch(e){ lines.push(`(stylesheet scan failed: ${e.message})`); }
+  if(matchedPageRules.length){
+    matchedPageRules.forEach(r=>lines.push(r));
+  } else {
+    lines.push('No matching rule with a "page:" declaration found for .report-page-one.with-week in this clone (note: the clone\'s stylesheet uses #diag-print-clone instead of #nutriflow-print-only -- if the real print-time selector differs, this may not detect it perfectly).');
+  }
+  lines.push('');
+  lines.push('IMPORTANT LIMITATION: this diagnostic measures CONTINUOUS-FLOW layout (element positions/heights as rendered on screen). It cannot directly observe how the browser\'s PRINT-TIME PAGINATION engine fragments content across pages -- that process only happens during an actual print/PDF render and has no JS-observable equivalent outside of it. A named @page assignment (like "page: landscape-page") can force a page-context transition at print time WITHOUT changing any element\'s position/height in normal flow -- which is why this diagnostic correctly shows everything fitting, while the actual printed PDF can still split differently.');
 
   const dump = lines.join('\n');
   outputEl.value = dump;
