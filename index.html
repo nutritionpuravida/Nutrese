@@ -17142,6 +17142,143 @@ function applyLabExtractResults(){
   renderLabsTable(); // existing, unmodified render/status refresh
   closeLabExtractReview();
 }
+function tryExtractClientReportTable(items){
+  // items: [{str, x, y}] in original document emission order, across all pages.
+  const DAY_HEADER_KEYWORDS = { en: /^day$/i, gr: /^ημερα$/i };
+  const COLUMN_KEYWORDS = [
+    { key:'brk', en: /^breakfast$/i, gr: /^πρωινο$/i },
+    { key:'snk1', en: /^snack$/i, gr: /^σνακ$/i }, // followed by a separate "1" item
+    { key:'lun', en: /^lunch$/i, gr: /^μεσημεριανο$/i },
+    { key:'snk2', en: /^snack$/i, gr: /^σνακ$/i }, // followed by a separate "2" item
+    { key:'din', en: /^dinner$/i, gr: /^βραδινο$/i },
+  ];
+  const DAY_NAMES = {
+    en: ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'],
+    gr: ['Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο','Κυριακή'],
+  };
+  const MEAL_LABELS = {
+    en: {brk:'Breakfast', snk1:'Snack 1', lun:'Lunch', snk2:'Snack 2', din:'Dinner'},
+    gr: {brk:'Πρωινό', snk1:'Σνακ 1', lun:'Μεσημεριανό', snk2:'Σνακ 2', din:'Βραδινό'},
+  };
+  const norm = s => stripGreekAccents((s||'').trim());
+
+  // 1) Find the header row: DAY, then in x-increasing order, the 5 meal
+  // column keywords, all confidently matched -- if any is missing, this is
+  // NOT the Client Report table shape and we return null immediately,
+  // never guessing a partial match.
+  let dayHeaderIdx = -1, lang = null;
+  for(let i=0;i<items.length;i++){
+    const t = norm(items[i].str);
+    if(DAY_HEADER_KEYWORDS.en.test(t)){ dayHeaderIdx=i; lang='en'; break; }
+    if(DAY_HEADER_KEYWORDS.gr.test(t)){ dayHeaderIdx=i; lang='gr'; break; }
+  }
+  if(dayHeaderIdx<0) return null;
+
+  const dayColX = items[dayHeaderIdx].x;
+  const columnX = {}; // key -> x position of that column's header word
+  let searchFrom = dayHeaderIdx+1;
+  for(const col of COLUMN_KEYWORDS){
+    let found=null;
+    for(let i=searchFrom;i<items.length && i<searchFrom+40;i++){ // header words are close together -- bounded search, never scans the whole document
+      const t = norm(items[i].str);
+      if((lang==='en' && col.en.test(t)) || (lang==='gr' && col.gr.test(t))){ found=i; break; }
+    }
+    if(found===null) return null; // any missing column keyword -- not a confident match, fall back to existing behavior
+    columnX[col.key] = items[found].x;
+    searchFrom = found+1;
+  }
+  // Two columns share the same header word ("Snack") for different meals --
+  // disambiguate by x-position order once both are found (snk1 must be
+  // left of lun, which must be left of snk2).
+  if(!(columnX.snk1 < columnX.lun && columnX.lun < columnX.snk2)) return null;
+
+  const columnKeys = ['brk','snk1','lun','snk2','din'];
+  const columnStartX = columnKeys.map(k=>columnX[k]);
+  // Kcal is a distinct trailing column, not a meal slot -- if present,
+  // its x-position bounds Dinner's column so the kcal number is correctly
+  // excluded rather than absorbed into Dinner's diet text.
+  const KCAL_KEYWORD = { en: /^(daily)?kcal$/i, gr: /^(ημερησιεσ)?θερμιδεσ$/i };
+  let kcalColX = Infinity;
+  for(let i=searchFrom;i<items.length && i<searchFrom+20;i++){
+    const t = norm(items[i].str);
+    if((lang==='en' && KCAL_KEYWORD.en.test(t)) || (lang==='gr' && KCAL_KEYWORD.gr.test(t))){ kcalColX = items[i].x; break; }
+  }
+  const columnEndX = columnKeys.map((k,ci)=> ci+1<columnKeys.length ? columnStartX[ci+1] : kcalColX);
+
+  // 2) Find every day-row start: a recognized day name sitting at the Day
+  // column's x-position (small tolerance for sub-pixel/font variation).
+  const dayNames = DAY_NAMES[lang];
+  const rowStarts = [];
+  for(let i=searchFrom;i<items.length;i++){
+    const t = (items[i].str||'').trim();
+    if(dayNames.includes(t) && Math.abs(items[i].x - dayColX) < 6){
+      rowStarts.push({idx:i, dayName:t});
+    }
+  }
+  if(!rowStarts.length) return null; // header found but no day rows followed -- not confidently this table
+
+  // 3) For each day row, bucket every word between this row's start and the
+  // next row's start (or end of items) into the meal column whose x-start
+  // it is closest to (without overshooting past the next column's start) --
+  // preserving original emission order within each bucket, which already
+  // reconstructs correct top-to-bottom reading order per column (confirmed
+  // via direct inspection: PDF.js/PDF text runs emit each visual line's
+  // columns left-to-right, then the next visual line, for this table).
+  const dayBlocks = [];
+  for(let r=0;r<rowStarts.length;r++){
+    const start = rowStarts[r].idx+1;
+    let end = r+1<rowStarts.length ? rowStarts[r+1].idx : items.length;
+    if(r+1>=rowStarts.length){
+      // Last row has no "next day" marker to bound it. A new, different
+      // label appearing at the SAME x-position as the Day column, that is
+      // NOT itself a recognized day name, reliably signals a new report
+      // section has begun (e.g. a "Target/day" summary line below the
+      // table) -- this is a structural signal, not wording-specific, and
+      // correctly works regardless of which PDF page it falls on.
+      let cappedEnd = end;
+      for(let i=start;i<end;i++){
+        const atDayColumn = Math.abs(items[i].x-dayColX)<6;
+        if(atDayColumn && !dayNames.includes((items[i].str||'').trim())){ cappedEnd = i; break; }
+      }
+      end = cappedEnd;
+    }
+    const buckets = {brk:[], snk1:[], lun:[], snk2:[], din:[]};
+    for(let i=start;i<end;i++){
+      const x = items[i].x;
+      if(x < dayColX-4) continue; // stray text left of the table (shouldn't normally occur)
+      let bestKey=null, bestDist=Infinity;
+      columnKeys.forEach((key,ci)=>{
+        // A word belongs to a column if it's at or past that column's start,
+        // and not yet past the next column's start (or the Kcal column's
+        // start, for Dinner specifically).
+        const colStart = columnStartX[ci];
+        const nextStart = columnEndX[ci];
+        if(x >= colStart-4 && x < nextStart-4){
+          const dist = Math.abs(x-colStart);
+          if(dist<bestDist){ bestDist=dist; bestKey=key; }
+        }
+      });
+      if(bestKey) buckets[bestKey].push(items[i].str);
+    }
+    dayBlocks.push({dayName: rowStarts[r].dayName, buckets});
+  }
+
+  // 4) Convert to the existing labelled-sequential format -- empty cells
+  // stay genuinely empty (never fabricated), and this converted text is
+  // handed to the UNCHANGED parseImportedDietText() exactly as a normal
+  // pasted diet would be.
+  let converted = '';
+  dayBlocks.forEach(block=>{
+    converted += block.dayName + '\n';
+    columnKeys.forEach(key=>{
+      const text = block.buckets[key].join(' ').replace(/\s+([.,)])/g,'$1').trim();
+      if(text){
+        converted += MEAL_LABELS[lang][key] + '\n' + text + '\n';
+      }
+    });
+  });
+  return converted.trim();
+}
 function renderLabsTable(){
   const isGr = window.appLang!=='en';
   let html=`<div class="table-wrap"><table><thead><tr><th>${isGr?'Εξέταση':'Test'}</th><th>${isGr?'Τιμή':'Value'}</th><th>${isGr?'Μονάδα':'Unit'}</th><th>${isGr?'Εύρος αναφοράς':'Reference range'}</th><th>${isGr?'Κατάσταση':'Status'}</th><th>${isGr?'Σημείωση':'Note'}</th></tr></thead><tbody>`;
@@ -18990,16 +19127,29 @@ async function handleDietImportFileUpload(file){
       const buffer = await file.arrayBuffer();
       const pdfDoc = await pdfjsLib.getDocument({data: buffer}).promise;
       let fullText = '';
+      let positionedItems = [];
       for(let pageNum=1; pageNum<=pdfDoc.numPages; pageNum++){
         const page = await pdfDoc.getPage(pageNum);
         const content = await page.getTextContent();
         // Joining with '\n' preserves each text fragment as its own line --
         // matching the same line-based structure parseImportedDietText()
         // already expects from a pasted plain-text diet, with zero new
-        // parsing logic needed for PDF-sourced text specifically.
+        // parsing logic needed for PDF-sourced text specifically. This
+        // remains the exact existing behavior, used whenever the table
+        // extractor below doesn't confidently detect a different shape.
         fullText += content.items.map(item=>item.str).join('\n') + '\n';
+        content.items.forEach(item=>{
+          positionedItems.push({str:item.str, x:item.transform[4], y:item.transform[5], page:pageNum});
+        });
       }
       fullText = fullText.trim();
+      // Client Report table shape detection: only activates on confident
+      // structural evidence (header row + day rows at matching column
+      // positions) -- returns null and changes nothing for every other
+      // PDF shape, so Excel/TXT/DOCX/paste and clean sequential PDFs are
+      // completely unaffected.
+      const tableExtraction = tryExtractClientReportTable(positionedItems);
+      if(tableExtraction) fullText = tableExtraction;
       if(!fullText){
         // No usable text layer -- most likely a scanned/image PDF. Per the
         // explicit requirement, this must be clearly reported rather than
