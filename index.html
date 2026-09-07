@@ -9031,14 +9031,19 @@ function printHtmlDocument({html,title,orientation='portrait'}){
       #nutriflow-print-only .no-print, #nutriflow-print-only button, #nutriflow-print-only input, #nutriflow-print-only select { display:none !important; }
     }`;
   document.title=title||oldTitle;
+  // window.print() now fires synchronously, directly within this
+  // user-triggered call stack -- the previous setTimeout(...,250) deferral
+  // is the confirmed root cause of the reported mobile issue: many mobile
+  // browsers silently block print/dialog APIs not called directly within
+  // a user-gesture handler, with no error and no visible feedback. The
+  // print-only area/stylesheet are already synchronously in the DOM above,
+  // so no delay is needed for them to take effect before printing.
+  window.print();
   setTimeout(()=>{
-    window.print();
-    setTimeout(()=>{
-      area.remove();
-      styleEl.remove();
-      document.title=oldTitle;
-    }, 500);
-  }, 250);
+    area.remove();
+    styleEl.remove();
+    document.title=oldTitle;
+  }, 500);
 }
 
 function printPage(){
