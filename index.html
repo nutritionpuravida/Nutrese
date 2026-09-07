@@ -3104,6 +3104,16 @@ table th,
             <div style="font-size:11px;color:var(--text-muted);margin-top:4px" class="i18n" data-en="Supported: Excel (.xlsx, .xls), text (.txt), PDF, and Word (.docx)" data-gr="Υποστηρίζονται: Excel (.xlsx, .xls), κείμενο (.txt), PDF και Word (.docx)">Supported: Excel (.xlsx, .xls), text (.txt), PDF, and Word (.docx)</div>
           </div>
           <div id="diet-import-file-status" style="font-size:12px;color:var(--text-muted);margin-bottom:8px"></div>
+
+          <div style="margin-top:14px;padding:10px;border:2px dashed #c0392b;border-radius:8px;background:#fff5f5">
+            <div style="font-weight:700;color:#c0392b;font-size:12px;margin-bottom:6px">🔧 TEMPORARY DIAGNOSTIC — Dump Raw PDF.js Items (QA only, not part of normal import)</div>
+            <input type="file" id="diag-pdf-file-input" accept="application/pdf" onchange="handleDiagnosticPdfDump(this.files[0])">
+            <div id="diag-pdf-status" style="font-size:12px;color:var(--text-muted);margin-top:4px"></div>
+            <div id="diag-pdf-copy-row" style="display:none;margin-top:8px">
+              <button class="btn" type="button" onclick="copyDiagnosticPdfDump()"><i class="ti ti-copy" aria-hidden="true"></i> Copy diagnostic data</button>
+            </div>
+            <textarea id="diag-pdf-output" readonly style="width:100%;min-height:200px;margin-top:8px;font-family:monospace;font-size:11px;display:none"></textarea>
+          </div>
           <textarea id="diet-import-textarea" style="width:100%;min-height:220px;font-family:monospace;font-size:12px;border:1px solid var(--border);border-radius:8px;padding:10px" placeholder="Paste diet here..."></textarea>
           <div style="margin-top:12px;text-align:right">
             <button class="btn primary" onclick="previewDietImport()"><span class="i18n" data-en="Preview Import" data-gr="Προεπισκόπηση Εισαγωγής">Preview Import</span></button>
@@ -19121,6 +19131,62 @@ function renderWorkspaceSearchResults(){
     <button class="btn primary" style="padding:4px 10px;font-size:12px" onclick="addWorkspaceStructuredFood(S.workspaceFoodSearchTarget.dayIndex, S.workspaceFoodSearchTarget.slot, '${r.id}', v('workspace-search-grams-${i}')); closeWorkspaceFoodSearch();">${isGr?'Προσθήκη':'Add'}</button>
   </div>`;
   }).join('');
+}
+// ── TEMPORARY DIAGNOSTIC (QA only) — dumps raw PDF.js items, zero processing ──
+// Fully isolated from the real import path: never calls
+// tryExtractClientReportTable() or parseImportedDietText(), never touches
+// S.workspaceCells or any other app state. Safe to remove entirely once the
+// real Android PDF.js output has been captured and the root cause confirmed.
+async function handleDiagnosticPdfDump(file){
+  const statusEl = document.getElementById('diag-pdf-status');
+  const outputEl = document.getElementById('diag-pdf-output');
+  const copyRow = document.getElementById('diag-pdf-copy-row');
+  if(!file) return;
+  if(typeof pdfjsLib==='undefined'){
+    if(statusEl) statusEl.textContent = 'PDF library not loaded -- cannot run diagnostic.';
+    return;
+  }
+  if(statusEl) statusEl.textContent = 'Reading raw PDF.js items...';
+  outputEl.style.display='none'; copyRow.style.display='none';
+  try{
+    const buffer = await file.arrayBuffer();
+    const pdfDoc = await pdfjsLib.getDocument({data: buffer}).promise;
+    let lines = [];
+    lines.push(`PDF.js version: ${pdfjsLib.version || 'unknown'}`);
+    lines.push(`Total pages: ${pdfDoc.numPages}`);
+    lines.push('='.repeat(60));
+    for(let pageNum=1; pageNum<=pdfDoc.numPages; pageNum++){
+      const page = await pdfDoc.getPage(pageNum);
+      const content = await page.getTextContent();
+      lines.push(`\n--- PAGE ${pageNum} (${content.items.length} raw items) ---`);
+      content.items.forEach((item, idx)=>{
+        // Raw dump only -- no normalization, no reordering, no filtering.
+        const x = item.transform ? item.transform[4] : 'n/a';
+        const y = item.transform ? item.transform[5] : 'n/a';
+        const w = item.width!==undefined ? item.width : 'n/a';
+        const h = item.height!==undefined ? item.height : 'n/a';
+        lines.push(`[${idx}] str=${JSON.stringify(item.str)} x=${x} y=${y} w=${w} h=${h}`);
+      });
+    }
+    const dump = lines.join('\n');
+    outputEl.value = dump;
+    outputEl.style.display='block';
+    copyRow.style.display='block';
+    if(statusEl) statusEl.textContent = `Done -- ${pdfDoc.numPages} page(s) dumped below. Tap "Copy diagnostic data".`;
+  }catch(e){
+    if(statusEl) statusEl.textContent = `Diagnostic failed: ${e.message||e}`;
+  }
+}
+function copyDiagnosticPdfDump(){
+  const outputEl = document.getElementById('diag-pdf-output');
+  if(!outputEl) return;
+  outputEl.select();
+  try{
+    navigator.clipboard.writeText(outputEl.value).then(()=>{
+      const statusEl = document.getElementById('diag-pdf-status');
+      if(statusEl) statusEl.textContent = 'Copied to clipboard -- paste it back in chat.';
+    }).catch(()=>{ document.execCommand('copy'); });
+  }catch(e){ document.execCommand('copy'); }
 }
 async function handleDietImportFileUpload(file){
   const isGr = window.appLang==='gr';
