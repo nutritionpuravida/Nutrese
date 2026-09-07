@@ -17163,9 +17163,9 @@ function tryExtractClientReportTable(items){
   const DAY_HEADER_KEYWORDS = { en: /^day$/i, gr: /^ημερα$/i };
   const COLUMN_KEYWORDS = [
     { key:'brk', en: /^breakfast$/i, gr: /^πρωινο$/i },
-    { key:'snk1', en: /^snack$/i, gr: /^σνακ$/i }, // followed by a separate "1" item
+    { key:'snk1', en: /^snack\s*1?$/i, gr: /^σνακ\s*1?$/i }, // "SNACK 1" may be one combined item, or "SNACK" alone followed by a separate "1" item
     { key:'lun', en: /^lunch$/i, gr: /^μεσημεριανο$/i },
-    { key:'snk2', en: /^snack$/i, gr: /^σνακ$/i }, // followed by a separate "2" item
+    { key:'snk2', en: /^snack\s*2?$/i, gr: /^σνακ\s*2?$/i }, // "SNACK 2" may be one combined item, or "SNACK" alone followed by a separate "2" item
     { key:'din', en: /^dinner$/i, gr: /^βραδινο$/i },
   ];
   const DAY_NAMES = {
