@@ -17157,8 +17157,8 @@ function tryExtractClientReportTable(items){
     gr: ['Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο','Κυριακή'],
   };
   const MEAL_LABELS = {
-    en: {brk:'Breakfast', snk1:'Snack 1', lun:'Lunch', snk2:'Snack 2', din:'Dinner'},
-    gr: {brk:'Πρωινό', snk1:'Σνακ 1', lun:'Μεσημεριανό', snk2:'Σνακ 2', din:'Βραδινό'},
+    en: {brk:'Breakfast', snk1:'Snack 1', lun:'Lunch', snk2:'Snack 2', din:'Dinner', sleep:'Before Sleep'},
+    gr: {brk:'Πρωινό', snk1:'Σνακ 1', lun:'Μεσημεριανό', snk2:'Σνακ 2', din:'Βραδινό', sleep:'Πριν τον ύπνο'},
   };
   const norm = s => stripGreekAccents((s||'').trim());
 
@@ -17192,16 +17192,39 @@ function tryExtractClientReportTable(items){
   // left of lun, which must be left of snk2).
   if(!(columnX.snk1 < columnX.lun && columnX.lun < columnX.snk2)) return null;
 
-  const columnKeys = ['brk','snk1','lun','snk2','din'];
+  // "Before Sleep" is an OPTIONAL 7th table column (some reports include
+  // it, some don't -- confirmed both shapes occur in real Client Reports).
+  // Searched for specifically between Dinner and Kcal; if not found, every
+  // existing 6-column report continues to work exactly as before.
+  const BEFORE_SLEEP_KEYWORD = { en: /^before$/i, gr: /^πριν$/i };
+  let sleepColX = null;
+  for(let i=searchFrom;i<items.length && i<searchFrom+20;i++){
+    const t = norm(items[i].str);
+    if((lang==='en' && BEFORE_SLEEP_KEYWORD.en.test(t)) || (lang==='gr' && BEFORE_SLEEP_KEYWORD.gr.test(t))){ sleepColX = items[i].x; searchFrom = i+1; break; }
+  }
+
+  const columnKeys = sleepColX!==null ? ['brk','snk1','lun','snk2','din','sleep'] : ['brk','snk1','lun','snk2','din'];
+  if(sleepColX!==null) columnX.sleep = sleepColX;
   const columnStartX = columnKeys.map(k=>columnX[k]);
   // Kcal is a distinct trailing column, not a meal slot -- if present,
-  // its x-position bounds Dinner's column so the kcal number is correctly
-  // excluded rather than absorbed into Dinner's diet text.
+  // its x-position bounds the last meal column (Dinner, or Before Sleep
+  // when present) so the kcal number is correctly excluded rather than
+  // absorbed into that column's diet text.
   const KCAL_KEYWORD = { en: /^(daily)?kcal$/i, gr: /^(ημερησιεσ)?θερμιδεσ$/i };
+  const KCAL_PREFIX_KEYWORD = { en: /^daily$/i, gr: /^ημερησιεσ$/i };
   let kcalColX = Infinity;
   for(let i=searchFrom;i<items.length && i<searchFrom+20;i++){
     const t = norm(items[i].str);
-    if((lang==='en' && KCAL_KEYWORD.en.test(t)) || (lang==='gr' && KCAL_KEYWORD.gr.test(t))){ kcalColX = items[i].x; break; }
+    if((lang==='en' && KCAL_KEYWORD.en.test(t)) || (lang==='gr' && KCAL_KEYWORD.gr.test(t))){
+      // "Daily Kcal" is sometimes two separate items ("Daily" then "Kcal") --
+      // the column's true visual start is the leading word's x-position,
+      // not the trailing "Kcal" word's, so a value sitting between the two
+      // words is never mistakenly treated as belonging to the prior column.
+      const prevT = i>0 ? norm(items[i-1].str) : '';
+      const hasPrefix = (lang==='en' && KCAL_PREFIX_KEYWORD.en.test(prevT)) || (lang==='gr' && KCAL_PREFIX_KEYWORD.gr.test(prevT));
+      kcalColX = hasPrefix ? items[i-1].x : items[i].x;
+      break;
+    }
   }
   const columnEndX = columnKeys.map((k,ci)=> ci+1<columnKeys.length ? columnStartX[ci+1] : kcalColX);
 
@@ -17242,7 +17265,7 @@ function tryExtractClientReportTable(items){
       }
       end = cappedEnd;
     }
-    const buckets = {brk:[], snk1:[], lun:[], snk2:[], din:[]};
+    const buckets = {}; columnKeys.forEach(k=>buckets[k]=[]);
     for(let i=start;i<end;i++){
       const x = items[i].x;
       if(x < dayColX-4) continue; // stray text left of the table (shouldn't normally occur)
