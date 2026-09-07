@@ -1396,10 +1396,6 @@ html[data-theme="dark"] .week-summary-table td:last-child {
   .report-page-one.with-week { break-after: page; page-break-after: always; }
   .report-page-one .report-section-compact { break-inside: avoid; page-break-inside: avoid; }
   .report-page-one { page: auto; }
-  /* The 7-day week plan needs landscape width to fit its columns on one
-     page; apply the landscape named page to that variant specifically.
-     (Non-week reports remain on the default portrait page.) */
-  .report-page-one.with-week { page: landscape-page; }
   .report-header-summary { display: grid !important; grid-template-columns: repeat(4, 1fr) !important; gap: 6px !important; margin: 0 0 10px !important; }
   .report-clinical-box { background: #fff8e1 !important; color: #1f2937 !important; border: 1px solid #f3d27a !important; border-left: 4px solid #d97706 !important; }
   .report-clinical-box * { color: #1f2937 !important; }
