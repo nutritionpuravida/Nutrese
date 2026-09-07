@@ -8998,6 +8998,7 @@ function printHtmlDocument({html,title,orientation='portrait'}){
     @media screen { #nutriflow-print-only { display:none; } }
     @media print {
       @page { size: ${pageSize}; margin: ${pageMargin}; }
+      @page landscape-page { size: ${pageSize}; margin: ${pageMargin}; }
       html, body { margin:0 !important; padding:0 !important; width:100% !important; }
       body > *:not(#nutriflow-print-only) { display:none !important; }
       #nutriflow-print-only { display:block !important; width:100% !important; max-width:none !important; margin:0 !important; padding:0 !important; background:#fff !important; color:#111 !important; font-family:Arial,sans-serif !important; font-size:13px !important; line-height:1.42 !important; }
