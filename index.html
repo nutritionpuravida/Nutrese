@@ -17105,7 +17105,13 @@ function extractLabResultsFromText(text){
   const matched = []; // [{key, value, unit, rawLine}]
   const unrecognized = [];
   const numberPattern = /(-?\d+(?:[.,]\d+)?)/;
-  lines.forEach(line=>{
+  // A line that looks like a reference range (e.g. "3.5-5.5" or "70 - 100")
+  // rather than a single result value -- never treated as the test's own
+  // result, even if it's the first number encountered during lookahead.
+  const referenceRangePattern = /-?\d+(?:[.,]\d+)?\s*[-–]\s*-?\d+(?:[.,]\d+)?/;
+  const referenceWordPattern = /reference|normal|φυσιολογικ|αναφορα|αναφοράς/i;
+  const datePattern = /\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{2,4}/;
+  const findKeywordInLine = (line) => {
     const normalized = stripGreekAccents(line);
     let bestKey = null, bestAliasLen = 0;
     for(const [key, aliases] of Object.entries(LAB_EXTRACTION_ALIASES)){
@@ -17116,21 +17122,45 @@ function extractLabResultsFromText(text){
         }
       }
     }
-    if(bestKey){
-      const numMatch = line.match(numberPattern);
-      if(numMatch){
-        const value = parseFloat(numMatch[1].replace(',','.'));
-        // Unit is whatever alphabetic/unit-like text follows the number on
-        // the same line -- shown for review only, never authoritative over
-        // the existing field's own established unit.
-        const afterNumber = line.slice(numMatch.index + numMatch[0].length).trim();
-        const unitMatch = afterNumber.match(/^([a-zA-Zμ%\/³².]+)/);
-        matched.push({key: bestKey, value, unit: unitMatch ? unitMatch[1] : '', rawLine: line});
-      } else {
-        unrecognized.push(line); // test name recognized but no number found -- do not guess a value
+    return bestKey;
+  };
+  const extractValueFromLine = (line) => {
+    if(referenceRangePattern.test(line) || referenceWordPattern.test(line) || datePattern.test(line)) return null;
+    const numMatch = line.match(numberPattern);
+    if(!numMatch) return null;
+    const value = parseFloat(numMatch[1].replace(',','.'));
+    // Unit is whatever alphabetic/unit-like text follows the number on
+    // the same line -- shown for review only, never authoritative over
+    // the existing field's own established unit.
+    const afterNumber = line.slice(numMatch.index + numMatch[0].length).trim();
+    const unitMatch = afterNumber.match(/^([a-zA-Zμ%\/³².]+)/);
+    return { value, unit: unitMatch ? unitMatch[1] : '' };
+  };
+  for(let i=0;i<lines.length;i++){
+    const line = lines[i];
+    const bestKey = findKeywordInLine(line);
+    if(!bestKey) continue;
+    let result = extractValueFromLine(line);
+    let rawLine = line;
+    if(!result){
+      // Bounded lookahead (max 3 lines) for the confirmed real-world case
+      // where the test name and its value are separate PDF text lines --
+      // stops immediately if a DIFFERENT test name appears first, and
+      // skips reference-range/date-looking lines rather than guessing.
+      for(let ahead=1; ahead<=3 && i+ahead<lines.length; ahead++){
+        const nextLine = lines[i+ahead];
+        const nextKeyword = findKeywordInLine(nextLine);
+        if(nextKeyword && nextKeyword!==bestKey) break; // a different test started -- stop, do not skip past it
+        const candidate = extractValueFromLine(nextLine);
+        if(candidate){ result = candidate; rawLine = `${line} ${nextLine}`; break; }
       }
     }
-  });
+    if(result){
+      matched.push({key: bestKey, value: result.value, unit: result.unit, rawLine});
+    } else {
+      unrecognized.push(line); // test name recognized but no unambiguous value found nearby -- do not guess
+    }
+  }
   // A lab report date, where present, commonly appears near a dd/mm/yyyy or
   // dd-mm-yyyy pattern -- captured only as a candidate for the review
   // screen, never applied without the dietitian's confirmation.
