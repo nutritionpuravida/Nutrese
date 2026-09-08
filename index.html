@@ -17117,7 +17117,26 @@ function extractLabResultsFromText(text){
     for(const [key, aliases] of Object.entries(LAB_EXTRACTION_ALIASES)){
       for(const alias of aliases){
         const normAlias = stripGreekAccents(alias);
-        if(normalized.includes(normAlias) && normAlias.length>bestAliasLen){
+        const idx = normalized.indexOf(normAlias);
+        if(idx<0) continue;
+        if(normAlias.length<=2){
+          // Short, bare aliases (e.g. potassium's 'k', sodium's 'na') are
+          // dangerously easy to match as a substring inside unrelated
+          // content -- confirmed directly: 'k' matches inside "K/uL" (a
+          // standard hematology unit), 'na' matches inside ordinary words
+          // like "National"/"Analysis". Require a genuine boundary --
+          // start/end of string, whitespace, or parentheses/brackets --
+          // not merely "not a letter/digit", since connecting punctuation
+          // like "/" (as in "K/uL") is not a true isolating boundary and
+          // was confirmed, via direct tracing, to incorrectly pass a
+          // naive non-alphanumeric check. Genuine cases like "(K)" or
+          // "Na " still match; "K/uL" or "National" do not.
+          const isBoundary = (ch) => ch==='' || /[\s()\[\]]/.test(ch);
+          const before = idx>0 ? normalized[idx-1] : '';
+          const after = idx+normAlias.length<normalized.length ? normalized[idx+normAlias.length] : '';
+          if(!isBoundary(before) || !isBoundary(after)) continue;
+        }
+        if(normAlias.length>bestAliasLen){
           bestKey = key; bestAliasLen = normAlias.length;
         }
       }
