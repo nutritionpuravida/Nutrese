@@ -366,7 +366,13 @@ i.ti-circle-x { color: var(--red-text); }
 .mk-story-row { display:grid; grid-template-columns:200px 1fr; gap:32px; padding:30px 0; border-top:1px solid var(--mk-line); align-items:baseline; }
 .mk-story-row:last-child { border-bottom:1px solid var(--mk-line); }
 .mk-story-num { font-family:var(--mk-serif); font-size:24px; font-weight:500; color:var(--mk-deep); }
-.mk-story-text p { margin:0; color:var(--mk-ink-soft); font-size:17px; line-height:1.65; max-width:560px; }
+.mk-story-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:0; }
+.mk-story-col { padding:4px 28px; border-left:1px solid var(--mk-line); }
+.mk-story-col:first-child { padding-left:0; border-left:none; }
+.mk-story-col p { margin:10px 0 0; color:var(--mk-ink-soft); font-size:15px; line-height:1.6; }
+.mk-value-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:0; margin-top:36px; text-align:left; }
+.mk-value-grid p { margin:0; padding:4px 28px; border-left:1px solid var(--mk-line); color:var(--mk-deep); font-family:var(--mk-serif); font-size:17px; font-style:italic; line-height:1.55; }
+.mk-value-grid p:first-child { padding-left:0; border-left:none; }
 .mk-price-grid { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:18px; max-width:860px; }
 .mk-price { padding:28px; border-radius:20px; border:1px solid var(--border); background:var(--bg-surface); box-shadow:0 1px 2px rgba(45,42,34,.04), 0 8px 20px rgba(45,42,34,.05); transition:transform .28s cubic-bezier(.16,.84,.44,1), box-shadow .28s cubic-bezier(.16,.84,.44,1); }
 .mk-price:hover { transform:translateY(-3px); box-shadow:0 2px 6px rgba(16,24,20,.06), 0 22px 44px rgba(16,24,20,.09); }
@@ -468,6 +474,11 @@ body:has(.app:not(.hidden)) .mk-cookie-banner { display:none !important; }
   .mk-phone { position:relative; right:auto; bottom:auto; margin:18px auto 0; }
   .mk-card-grid, .mk-faq, .mk-price-grid { grid-template-columns:1fr; }
   .mk-story-row { grid-template-columns:1fr; gap:8px; }
+  .mk-story-grid { grid-template-columns:repeat(2, 1fr); row-gap:24px; }
+  .mk-story-col:nth-child(2) { border-left:1px solid var(--mk-line); padding-left:28px; }
+  .mk-story-col:nth-child(3) { border-left:none; padding-left:0; }
+  .mk-value-grid { grid-template-columns:1fr; row-gap:20px; }
+  .mk-value-grid p { border-left:none; padding-left:0; }
   .mk-section-head { display:block; }
 }
 @media (max-width: 640px){
@@ -479,6 +490,8 @@ body:has(.app:not(.hidden)) .mk-cookie-banner { display:none !important; }
   .mk-preview-sidebar { display:none; }
   .mk-preview-grid { grid-template-columns:1fr; }
   .mk-h1 { font-size:42px; }
+  .mk-story-grid { grid-template-columns:1fr; row-gap:20px; }
+  .mk-story-col { border-left:none !important; padding-left:0 !important; }
 }
 @media (prefers-reduced-motion: reduce){
   .marketing-site *, .marketing-site *::before, .marketing-site *::after { transition:none !important; animation:none !important; scroll-behavior:auto !important; }
@@ -1939,23 +1952,22 @@ table th,
     </div>
     <div class="mk-shell mk-section" id="product">
       <div class="mk-story-head"><h2 class="mk-h2">One workspace, from first visit to final report.</h2></div>
-      <div class="mk-story-row">
-        <div class="mk-story-text"><span class="mk-story-num">Plan</span><p>Set a client's targets once, then build their week around real exchange servings &mdash; not a generic calorie tracker guessing at portions.</p></div>
-      </div>
-      <div class="mk-story-row">
-        <div class="mk-story-text"><span class="mk-story-num">Build</span><p>Work meal by meal in Workspace, drawing on a real food database, or bring in a diet a client already has and adjust it from there.</p></div>
-      </div>
-      <div class="mk-story-row">
-        <div class="mk-story-text"><span class="mk-story-num">Track</span><p>Client profile, follow-up visits, notes and labs stay together &mdash; so context isn't scattered across separate files each visit.</p></div>
-      </div>
-      <div class="mk-story-row">
-        <div class="mk-story-text"><span class="mk-story-num">Share</span><p>Produce a client-facing report straight from the plan, with your own logo, ready to print or hand over.</p></div>
+      <div class="mk-story-grid">
+        <div class="mk-story-col"><span class="mk-story-num">Plan</span><p>Set a client's targets once, then build their week around real exchange servings &mdash; not a generic calorie tracker guessing at portions.</p></div>
+        <div class="mk-story-col"><span class="mk-story-num">Build</span><p>Work meal by meal in Workspace, drawing on a real food database, or bring in a diet a client already has and adjust it from there.</p></div>
+        <div class="mk-story-col"><span class="mk-story-num">Track</span><p>Client profile, follow-up visits, notes and labs stay together &mdash; so context isn't scattered across separate files each visit.</p></div>
+        <div class="mk-story-col"><span class="mk-story-num">Share</span><p>Produce a client-facing report straight from the plan, with your own logo, ready to print or hand over.</p></div>
       </div>
     </div>
     <div class="mk-shell mk-section" id="testimonials-preview" style="text-align:center;padding-top:0">
-      <h2 class="mk-h2" style="font-size:clamp(22px,2.6vw,30px)">What dietitians are saying &mdash; coming soon.</h2>
-      <p style="max-width:520px;margin:14px auto 0;color:var(--mk-ink-soft)">We're building relationships with a small number of early nutrition professionals. Their genuine feedback will appear here once shared &mdash; not before.</p>
+      <h2 class="mk-h2" style="font-size:clamp(22px,2.6vw,30px)">Built for the way dietitians work.</h2>
+      <div class="mk-value-grid">
+        <p>A much simpler way to move from client information to a complete nutrition plan.</p>
+        <p>Meal planning, food data and reporting in one workspace &mdash; the kind of workflow modern nutrition practice needs.</p>
+        <p>Built around exchange servings and real client context, not a generic calorie tracker guessing at portions.</p>
+      </div>
     </div>
+
 
     <div class="mk-shell mk-section" id="pricing-preview"><div class="mk-section-head"><h2 class="mk-h2">Simple pricing for professional use.</h2><p>Start with the existing Nutrese free-trial flow. Billing remains handled by the current Stripe subscription system.</p></div><div class="mk-price-grid"><article class="mk-price"><h3>Monthly</h3><strong>&euro;29</strong><span>/month</span><ul><li>Full Nutrese workspace</li><li>Client reports and planning tools</li><li>Cancel through billing management</li></ul><button class="mk-btn mk-btn-primary" type="button" onclick="marketingOpenAuth('signup')">Start Free Trial</button></article><article class="mk-price"><h3>Yearly</h3><strong>&euro;249</strong><span>/year</span><ul><li>Same professional workspace</li><li>Lower annual price</li><li>Best for established practices</li></ul><button class="mk-btn mk-btn-light" type="button" onclick="marketingOpenAuth('signup')">Start Free Trial</button></article></div></div>
     <div class="mk-shell mk-section"><div class="mk-section-head"><h2 class="mk-h2">FAQ</h2><p>Short answers for dietitians evaluating Nutrese.</p></div><div class="mk-faq"><details><summary>Is Nutrese for independent dietitians?</summary><p>Yes. Nutrese is built for independent clinicians and small or growing nutrition practices.</p></details><details><summary>How is my client data handled?</summary><p>Client data is entered and controlled by you, stored behind authenticated access, and never sold or used for advertising. See our Privacy Policy for full details.</p></details><details><summary>How are nutrition plans created?</summary><p>You build plans around each client's exchange-based targets. Nutrese renders the meal text and calculations for you, while you stay in control of every portion and swap.</p></details><details><summary>What is the exchange system?</summary><p>Nutrese uses standard food exchange lists (starch, protein, fat, fruit, vegetable, dairy) as the basis for meal planning — the same system dietitians already use, just calculated and rendered automatically.</p></details><details><summary>Can I generate client reports?</summary><p>Yes. One-day and 7-day reports are generated directly from a client's active plan, with your own logo applied automatically, ready to print or share.</p></details><details><summary>Does Nutrese fit an existing professional workflow?</summary><p>Nutrese keeps client profiles, planning, appointments and reports in one authenticated workspace, reducing the admin usually spread across separate files and spreadsheets — without replacing your clinical judgement.</p></details><details><summary>How does Nutrese approach security and privacy?</summary><p>Access requires authentication, professional and trial access are handled separately from billing, and only necessary cookies are used. See Security & Privacy and our Privacy Policy for details.</p></details><details><summary>Does the public site change my existing app?</summary><p>No. Signed-in users continue into the existing authenticated Nutrese workspace.</p></details><details><summary>How does the free trial start?</summary><p>Use the existing registration and subscription flow. Nutrese does not create a separate checkout implementation here.</p></details><details><summary>Can I contact support?</summary><p>Yes. Email <a href="mailto:support@nutrese.eu">support@nutrese.eu</a> for product support and <a href="mailto:privacy@nutrese.eu">privacy@nutrese.eu</a> for privacy questions.</p></details></div></div>    <div class="mk-shell mk-final"><h2 class="mk-h2">A calmer way to run clinical nutrition work.</h2><p class="mk-lead">Spend more time with clients. Less time on admin.</p><div class="mk-hero-actions" style="justify-content:center"><button class="mk-btn mk-btn-primary" type="button" onclick="marketingOpenAuth('signup')">Start Free Trial</button><button class="mk-btn" type="button" onclick="marketingOpenAuth('signin')">Sign in</button></div></div>
