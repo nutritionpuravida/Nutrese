@@ -1381,6 +1381,7 @@ html[data-theme="dark"] .week-summary-table td:last-child {
   .report-week-full .report-week-table tbody tr:not(:last-child) { height: auto !important; min-height: 17mm !important; }
   .report-week-partial .report-week-table tbody tr:not(:last-child) { height: auto !important; }
   .report-week-table tbody tr:last-child { height: 8mm !important; }
+  .report-week-full .report-week-plain.report-week-table tbody tr { height: auto !important; min-height: 13mm !important; }
   .report-week-table td:last-child, .report-week-table th:last-child { white-space: nowrap !important; word-break: normal !important; }
   .report-week-table th:first-child, .report-week-table td:first-child {
     width: 7.5% !important;
@@ -1402,6 +1403,8 @@ html[data-theme="dark"] .week-summary-table td:last-child {
   .report-week-table tbody tr:nth-child(odd) td { background: #f8fffe !important; }
   .report-week-table tbody tr:nth-child(even) td { background: #f0faf6 !important; }
   .report-week-table tbody tr:last-child td { background: #e1f5ee !important; font-weight: 700 !important; border-top: 2px solid #0f6e56 !important; }
+  .report-week-plain.report-week-table tbody tr:nth-child(odd) td { background: #f8fffe !important; font-weight: 400 !important; border-top: 0 !important; }
+  .report-week-plain.report-week-table tbody tr:nth-child(even) td { background: #f0faf6 !important; font-weight: 400 !important; border-top: 0 !important; }
   .report-week-section {
     width: 100% !important;
     max-width: none !important;
@@ -9271,6 +9274,9 @@ function buildPrintCssRules(pageSize, pageMargin){
       #nutriflow-print-only .report-week-full .report-week-table tbody tr:not(:last-child) { height:auto !important; min-height:15mm !important; }
       #nutriflow-print-only .report-week-partial .report-week-table tbody tr:not(:last-child) { height:auto !important; }
       #nutriflow-print-only .report-week-table tbody tr:last-child { height:8mm !important; }
+      #nutriflow-print-only .report-week-full .report-week-plain.report-week-table tbody tr { height:auto !important; min-height:12mm !important; }
+      #nutriflow-print-only .report-week-plain.report-week-table tbody tr:nth-child(odd) td { background:#f8fffe !important; font-weight:400 !important; border-top:1px solid #cfded7 !important; }
+      #nutriflow-print-only .report-week-plain.report-week-table tbody tr:nth-child(even) td { background:#f0faf6 !important; font-weight:400 !important; border-top:1px solid #cfded7 !important; }
       #nutriflow-print-only .no-print, #nutriflow-print-only button, #nutriflow-print-only input, #nutriflow-print-only select { display:none !important; }`;
 }
 function printHtmlDocument({html,title,orientation='portrait',landscapeAsOrientationOnly=false}){
@@ -19213,7 +19219,7 @@ function buildWorkspaceReport(){
     <div class="report-week-section report-week-full">
       <div style="font-size:16px;font-weight:800;color:var(--teal-800);margin:0 0 4px;border-bottom:2px solid var(--teal-600);padding-bottom:4px"><i class="ti ti-table" aria-hidden="true"></i> ${isEn?'Meal Plan Workspace':'Χώρος Εργασίας Πλάνου'}</div>
       <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px">${safeHtml(clientName)} · ${today}</div>
-      <table class="report-week-table" style="width:100%;table-layout:fixed;border-collapse:collapse;font-size:13px;line-height:1.3;background:var(--bg-surface);border:1px solid var(--border);color:var(--text-primary)">
+      <table class="report-week-table report-week-plain" style="width:100%;table-layout:fixed;border-collapse:collapse;font-size:13px;line-height:1.3;background:var(--bg-surface);border:1px solid var(--border);color:var(--text-primary)">
         <thead><tr style="background:var(--teal-600);color:#fff">
           <th style="padding:4px;width:6%">${isEn?'Day':'Ημέρα'}</th>
           ${slots.map(s=>`<th style="padding:4px">${safeHtml(s.label)}</th>`).join('')}
