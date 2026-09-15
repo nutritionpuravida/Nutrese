@@ -13720,7 +13720,7 @@ function populateDefaultSnacksForDay(day, dayIndex, force=false){
   const caps=S.effCaps || getEffectiveCaps(S.conditions);
   const manualMeals=day.manualMeals||{};
   const isHidden=(slot)=> S.optionalSlotsVisible?.[slot]===false;
-  const isEligible=(slot)=> !manualMeals[slot] && !isHidden(slot);
+  const isEligible=(slot)=> (!manualMeals[slot] || (force && (slot==='snk1'||slot==='snk2'))) && !isHidden(slot);
   const alloc=getDayMealAllocation(day, lang); // frozen, unchanged -- S.ex never exceeds the safe 2-meal ceiling, so this never triggers the frozen overflow behavior
   const priorTargetAwareCtx1=S._targetAwareDay;
   S._targetAwareDay=day;
@@ -13845,19 +13845,42 @@ function populateDefaultSnacksForDay(day, dayIndex, force=false){
       }
     }
   }
-  // The client's fruit target can genuinely be 2 full exchanges, not just
-  // "some" fruit -- the checks above only ever place one fruit-based item.
-  // When a second exchange truly remains and a slot is still open, offer a
-  // second, distinct fruit (banana, for variety against the apple already
-  // used above) as a candidate -- the unchanged overshoot guard below still
-  // decides whether it actually fits; this never forces anything.
-  if(leftoverFruit>=2 && remainingSlots.length){
+  // The client's fruit target can genuinely exceed 2 exchanges (any amount
+  // up to the clinician's actual S.ex.fruit setting) -- the checks above
+  // only ever place one fruit-based item. This loop places as many
+  // additional single-exchange fruit portions as leftoverFruit actually
+  // requires (previously capped at exactly one extra, silently dropping
+  // anything beyond 2 total exchanges), filling any still-open slot first
+  // and, once slots run out, folding further portions into the last
+  // fruit-containing assignment already made -- exactly the same
+  // fold-safely-under-the-overshoot-guard pattern already used for
+  // almonds elsewhere in this function. Never forces anything: the
+  // unchanged overshoot guard below still decides what actually survives.
+  let fruitExchangesPlaced = assignments.reduce((sum,a)=>sum+a.ingredients.reduce((s,i)=>{
+    const poolFood=SNACK_FRUIT_ROTATION_POOL.find(f=>f.food_id===i.food_id);
+    return poolFood ? s+(i.grams/poolFood.grams) : s;
+  },0), 0);
+  let extraFruitAttempts=0;
+  while(leftoverFruit>fruitExchangesPlaced && extraFruitAttempts<20){
+    extraFruitAttempts++;
     const alreadyUsedFruitIds = new Set(assignments.flatMap(a=>a.ingredients.map(i=>i.food_id)).filter(id=>SNACK_FRUIT_ROTATION_POOL.some(f=>f.food_id===id)));
-    let secondFruit = pickRotatingFruit(dayIndex+1);
-    if(alreadyUsedFruitIds.has(secondFruit.food_id)){
-      secondFruit = SNACK_FRUIT_ROTATION_POOL.find(f=>!alreadyUsedFruitIds.has(f.food_id)) || secondFruit;
+    let nextFruit = pickRotatingFruit(dayIndex+fruitExchangesPlaced);
+    if(alreadyUsedFruitIds.has(nextFruit.food_id) && SNACK_FRUIT_ROTATION_POOL.some(f=>!alreadyUsedFruitIds.has(f.food_id))){
+      nextFruit = SNACK_FRUIT_ROTATION_POOL.find(f=>!alreadyUsedFruitIds.has(f.food_id)) || nextFruit;
     }
-    assignments.push({slot:remainingSlots.shift(), label:secondFruit.label, ingredients:[{food_id:secondFruit.food_id, grams:secondFruit.grams, state:'raw'}]});
+    if(remainingSlots.length){
+      assignments.push({slot:remainingSlots.shift(), label:nextFruit.label, ingredients:[{food_id:nextFruit.food_id, grams:nextFruit.grams, state:'raw'}]});
+      fruitExchangesPlaced++;
+    } else {
+      const lastFruitAssignment=[...assignments].reverse().find(a=>a.ingredients.some(i=>SNACK_FRUIT_ROTATION_POOL.some(f=>f.food_id===i.food_id)));
+      if(!lastFruitAssignment) break; // no fruit-bearing slot exists at all -- nothing safe to fold into
+      const fruitIngredient={food_id:nextFruit.food_id, grams:nextFruit.grams, state:'raw'};
+      const combinedKcal=eng.recipeTotals([...lastFruitAssignment.ingredients, fruitIngredient]).kcal;
+      if(runningTotal+combinedKcal > target*overshootTolerance) break; // would overshoot -- stop here, exactly like the existing almonds-fold guard
+      lastFruitAssignment.ingredients.push(fruitIngredient);
+      lastFruitAssignment.label = lastFruitAssignment.label + ' + ' + nextFruit.label;
+      fruitExchangesPlaced++;
+    }
   }
   if(leftoverDairy>0 && isEligible('sleep')) assignments.push({slot:'sleep', label:'Milk', ingredients:[{food_id:'milk_lowfat', grams:240, state:'n/a'}]});
 
