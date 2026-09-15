@@ -2203,7 +2203,7 @@ table th,
 
   <div class="trial-banner no-print" id="trial-banner">
     <span id="trial-banner-text"><i class="ti ti-gift" aria-hidden="true"></i> Free trial — 0 days remaining. Subscribe to continue after your trial.</span>
-    <button onclick="openTrialSubscribe()"><span class="i18n" data-en="Subscribe now" data-gr="Εγγραφή τώρα">Subscribe now</span></button>
+    <button onclick="openTrialSubscribe()" id="trial-banner-btn"><span class="i18n" data-en="Subscribe now" data-gr="Εγγραφή τώρα">Subscribe now</span></button>
   </div>
 
   <div class="client-tabbar no-print" id="client-tabbar">
@@ -7225,14 +7225,14 @@ function subscriptionIsActive(row){
 async function ensureUserProfile(){
   if(!currentUser) return {data:null,error:null};
   let {data,error}=await supabaseClient.from('profiles')
-    .select('id,email,trial_start,trial_end,subscription_status,current_period_end,stripe_customer_id,stripe_subscription_id')
+    .select('id,email,trial_start,trial_end,subscription_status,current_period_end,stripe_customer_id,stripe_subscription_id,cancel_at_period_end')
     .eq('id', currentUser.id)
     .maybeSingle();
   if(error) return {data:null,error};
   if(!data){
     const insert=await supabaseClient.from('profiles')
       .insert({id:currentUser.id,email:currentUser.email,subscription_status:'none',trial_start:null,trial_end:null})
-      .select('id,email,trial_start,trial_end,subscription_status,current_period_end,stripe_customer_id,stripe_subscription_id')
+      .select('id,email,trial_start,trial_end,subscription_status,current_period_end,stripe_customer_id,stripe_subscription_id,cancel_at_period_end')
       .maybeSingle();
     data=insert.data;
     error=insert.error;
@@ -7294,19 +7294,38 @@ async function fetchSubscriptionStatus(){
     complimentaryTrialEnd:accessTrialEnd,
     currentPeriodEnd:accessTrialEnd || (data&&(data.current_period_end||data.current_period_end_at||data.trial_end)),
     stripeCustomerId:data&&data.stripe_customer_id,
+    cancelAtPeriodEnd:!!(data && data.cancel_at_period_end),
   };
 }
 function updateTrialBanner(){
   const banner=document.getElementById('trial-banner');
   const text=document.getElementById('trial-banner-text');
+  const btn=document.getElementById('trial-banner-btn');
   if(!banner) return;
   const isGr = window.appLang==='gr';
   const days=subscriptionState.trialDaysRemaining;
   const show=subscriptionState.trialActive && days<=10;
   banner.style.display=show ? 'flex' : 'none';
-  if(show && text) text.innerHTML=isGr
-    ? `<i class="ti ti-gift" aria-hidden="true"></i> Δωρεάν δοκιμή — απομένουν ${days} ημέρ${days===1?'α':'ες'}. Εγγραφείτε για να συνεχίσετε μετά τη δοκιμή.`
-    : `<i class="ti ti-gift" aria-hidden="true"></i> Free trial — ${days} day${days===1?'':'s'} remaining. Subscribe to continue after your trial.`;
+  if(!show) return;
+  const isStripeBackedTrial = !subscriptionState.isComplimentaryTrial;
+  const isScheduledToCancel = isStripeBackedTrial && subscriptionState.cancelAtPeriodEnd;
+  const cancelDate = subscriptionState.currentPeriodEnd ? formatDateDMY(subscriptionState.currentPeriodEnd) : '';
+  if(text) text.innerHTML = isStripeBackedTrial
+    ? (isScheduledToCancel
+        ? (isGr
+            ? `<i class="ti ti-gift" aria-hidden="true"></i> Η συνδρομή σας ακυρώθηκε και δεν θα ανανεωθεί. Μπορείτε να συνεχίσετε να χρησιμοποιείτε το Nutrese μέχρι τις ${cancelDate}.`
+            : `<i class="ti ti-gift" aria-hidden="true"></i> Your subscription has been cancelled and will not renew. You can continue using Nutrese until ${cancelDate}.`)
+        : (isGr
+            ? `<i class="ti ti-gift" aria-hidden="true"></i> Δωρεάν δοκιμή — απομένουν ${days} ημέρ${days===1?'α':'ες'}. Η συνδρομή σας θα συνεχίσει αυτόματα μετά τη δοκιμή.`
+            : `<i class="ti ti-gift" aria-hidden="true"></i> Free trial — ${days} day${days===1?'':'s'} remaining. Your subscription will continue automatically after your trial.`))
+    : (isGr
+        ? `<i class="ti ti-gift" aria-hidden="true"></i> Δωρεάν δοκιμή — απομένουν ${days} ημέρ${days===1?'α':'ες'}. Εγγραφείτε για να συνεχίσετε μετά τη δοκιμή.`
+        : `<i class="ti ti-gift" aria-hidden="true"></i> Free trial — ${days} day${days===1?'':'s'} remaining. Subscribe to continue after your trial.`);
+  if(btn){
+    const label = isStripeBackedTrial ? (isGr?'Διαχείριση χρέωσης':'Manage billing') : (isGr?'Εγγραφή τώρα':'Subscribe now');
+    const span = btn.querySelector('span');
+    if(span) span.textContent = label; else btn.textContent = label;
+  }
 }
 function updateSubscriptionCheckoutButtons(){
   const isGr = window.appLang==='gr';
@@ -7367,6 +7386,10 @@ function loadSubscriptionCache(){
   }
 }
 function openTrialSubscribe(){
+  if(subscriptionState.trialActive && !subscriptionState.isComplimentaryTrial){
+    openBillingPortal();
+    return;
+  }
   const days=subscriptionState.trialDaysRemaining;
   const msg=subscriptionState.trialActive
     ? `Your free trial ends in ${days} day${days===1?'':'s'}.`
