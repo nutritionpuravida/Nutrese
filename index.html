@@ -13777,9 +13777,9 @@ function populateDefaultSnacksForDay(day, dayIndex, force=false){
   // calorie-target-driven snack bonus (returns the original {2,2,2} for any
   // client within the existing ceiling -- see calorieBasedSnackBonus()).
   const snackBonus=calorieBasedSnackBonus();
-  const extraStarch=Math.min(snackBonus.starch, Math.max(0, (rawNeeded.starch||0)-caps.starchDailyMax));
-  const extraProtein=Math.min(snackBonus.protein, Math.max(0, (rawNeeded.protein||0)-caps.proteinDailyMax));
-  const extraFat=Math.min(snackBonus.fat, Math.max(0, (rawNeeded.fat||0)-caps.fatDailyMax));
+  const extraStarch=Math.min(snackBonus.starch, Math.max(0, (S.ex.starch||0)-(alloc.allocated.starch||0)));
+  const extraProtein=Math.min(snackBonus.protein, Math.max(0, (S.ex.protein||0)-(alloc.allocated.protein||0)));
+  const extraFat=Math.min(snackBonus.fat, Math.max(0, (S.ex.fat||0)-(alloc.allocated.fat||0)));
 
   // Slot-specific assignment, matching the existing SNACK_EXTRAS convention:
   // Before Sleep is reserved for dairy only. Snack 1/Snack 2 carry fruit and
