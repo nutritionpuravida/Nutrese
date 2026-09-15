@@ -4562,7 +4562,7 @@ const FOOD_DATABASE = {
     version: FOOD_DB_VERSION
   },
   raspberries: {
-    food_id: 'raspberries', name: { en: 'Raspberries, raw', gr: 'Σμέουρα, ωμά', clinical: { en: 'Raspberries, raw', gr: 'Σμέουρα, ωμά' }, patient: { en: 'Raspberries', gr: 'Σμέουρα' } },
+    food_id: 'raspberries', name: { en: 'Raspberries, raw', gr: 'Μούρα, ωμά', clinical: { en: 'Raspberries, raw', gr: 'Μούρα, ωμά' }, patient: { en: 'Raspberries', gr: 'Μούρα' } },
     state: 'raw', fdc_id: null, source: 'USDA FoodData Central (SR Legacy) — standard raspberry values (SPOT-VERIFY fdc_id before production)',
     kcal100: 52, protein100: 1.2, carbs100: 11.9, fat100: 0.65, fiber100: 6.5, fat_role: 'intrinsic',
     exchange: { category: 'fruit', grams_per_exchange: 120, note: '1 fruit exchange ≈ 1 cup (~120g) raspberries' },
@@ -6263,7 +6263,13 @@ const STATE_LABELS = {
   drained: { en: 'drained', gr: 'στραγγισμένο' },
 };
 function renderMealText(instance, lang = 'en') {
-  const parts = instance.ingredients.map(i => {
+  // Consolidate ingredients that are the same food in the same state (e.g.
+  // two separate 120g apple entries from an exchange top-up) into one
+  // clean, quantified line instead of showing each as its own "+"-joined
+  // segment -- see groupDuplicateIngredientsForDisplay() below.
+  const groups = groupDuplicateIngredientsForDisplay(instance.ingredients);
+  const parts = groups.map(g => {
+    const i = g.first;
     const name = getClinicalName(i.food_name, lang);
     const stateLabel = STATE_LABELS[i.state];
     // Suppress the structured state suffix when the authored clinical name
@@ -6274,6 +6280,9 @@ function renderMealText(instance, lang = 'en') {
     const stateTxt = (stateLabel && !nameStatesPreparation(name, lang))
       ? ` (${stateLabel[lang] || stateLabel.en})`
       : '';
+    if(g.count>1){
+      return `${name}${stateTxt} (${g.count} × ${Math.round(g.totalGrams/g.count)}g)`;
+    }
     // CLINICAL VIEW: household measure + grams, so the dietitian sees the
     // practical portion AND the exact calculation weight.
     const hh = formatHouseholdMeasure(i.household, i.grams, lang);
@@ -6281,6 +6290,28 @@ function renderMealText(instance, lang = 'en') {
     return `${name}${stateTxt} — ${qty}`;
   });
   return parts.join(' + ');
+}
+// Groups ingredients sharing the same food_id and preparation state, in
+// first-seen order, for clean consolidated display (e.g. "Apple (2 x
+// 240g)" instead of two separate "Apple — 1 (120g)" segments). Purely a
+// display-time grouping -- does not alter instance.ingredients itself, so
+// exchange/kcal calculations elsewhere (which iterate the original array)
+// are completely unaffected.
+function groupDuplicateIngredientsForDisplay(ingredients){
+  const groups=[];
+  const indexByKey={};
+  (ingredients||[]).forEach(ing=>{
+    const key=ing.food_id+'|'+ing.state;
+    if(indexByKey[key]===undefined){
+      indexByKey[key]=groups.length;
+      groups.push({first:ing, count:1, totalGrams:Number(ing.grams)||0});
+    } else {
+      const g=groups[indexByKey[key]];
+      g.count++;
+      g.totalGrams+=Number(ing.grams)||0;
+    }
+  });
+  return groups;
 }
 
 function renderMealTextPatient(instance, lang = 'en') {
@@ -6596,7 +6627,7 @@ window.NutreseEngine = {
   // these rather than reading food_name fields directly, so historical
   // snapshot shapes stay handled in one place.
   getClinicalName, getPatientName, getFoodName, getNameSnapshot,
-  formatHouseholdMeasure, getHouseholdSnapshot,
+  formatHouseholdMeasure, getHouseholdSnapshot, groupDuplicateIngredientsForDisplay,
 };
 })();
 
@@ -8421,7 +8452,7 @@ const GENERATOR_SNACK_LABEL_TRANSLATIONS={
   'Crackers':'Κράκερ',
   'Milk':'Γάλα',
   'Banana':'Μπανάνα',
-  'Raspberries':'Σμέουρα',
+  'Raspberries':'Μούρα',
 };
 function customMealText(key, lang='GR'){
   const meal=getCustomMealByKey(key);
@@ -8432,14 +8463,15 @@ function customMealText(key, lang='GR'){
       ? GENERATOR_SNACK_LABEL_TRANSLATIONS[meal.name]
       : (meal.name||'Custom meal');
     const renderedText = window.NutreseEngine.renderMealText(meal.instance, engineLang);
-    const hasMultipleIngredients = (meal.instance.ingredients||[]).length > 1;
-    // Only suppress the label when it's genuinely redundant -- the meal's
-    // own name is actually a prefix of what renderMealText() already shows
-    // (e.g. "Apple" before "Apple, whole, raw"). A custom, distinct name
-    // the dietitian chose (e.g. "Week View Chicken Lunch" for a chicken
-    // ingredient) is never redundant and must always be shown.
-    const isRedundantLabel = !hasMultipleIngredients && renderedText.toLowerCase().startsWith(String(displayName||'').toLowerCase());
-    return (hasMultipleIngredients || !isRedundantLabel) ? `${safeHtml(displayName)}: ${renderedText}` : renderedText;
+    // Suppress the label whenever it's genuinely redundant -- the meal's own
+    // name is actually a prefix of what renderMealText() already shows (e.g.
+    // "Apple" before "Apple, whole, raw (2 x 240g)"), regardless of how many
+    // ingredients are in the meal. A custom, distinct name the dietitian
+    // chose (e.g. "Week View Chicken Lunch") or a genuinely descriptive
+    // multi-food combo name (e.g. "Fruit with Rice Cakes, Tahini and
+    // Almonds") is never a prefix of its own rendered text and is always shown.
+    const isRedundantLabel = renderedText.toLowerCase().startsWith(String(displayName||'').toLowerCase());
+    return isRedundantLabel ? renderedText : `${safeHtml(displayName)}: ${renderedText}`;
   }
   // LEGACY PATH — old-shape meal (ingredients: loose array, no food_id).
   // Kept solely so previously-saved meals remain readable; never used for
@@ -13878,11 +13910,10 @@ function populateDefaultSnacksForDay(day, dayIndex, force=false){
       const combinedKcal=eng.recipeTotals([...lastFruitAssignment.ingredients, fruitIngredient]).kcal;
       if(runningTotal+combinedKcal > target*overshootTolerance) break; // would overshoot -- stop here, exactly like the existing almonds-fold guard
       lastFruitAssignment.ingredients.push(fruitIngredient);
-      lastFruitAssignment.label = lastFruitAssignment.label + ' + ' + nextFruit.label;
       fruitExchangesPlaced++;
     }
   }
-  if(leftoverDairy>0 && isEligible('sleep')) assignments.push({slot:'sleep', label:'Milk', ingredients:[{food_id:'milk_lowfat', grams:240, state:'n/a'}]});
+  if(leftoverDairy>0 && isEligible('sleep')) assignments.push({slot:'sleep', label:'Milk', ingredients:[{food_id:'milk_lowfat', grams:Math.round(240*leftoverDairy), state:'n/a'}]});
 
   const warnings=[];
   const placedSlots=new Set();
@@ -13932,6 +13963,28 @@ function populateDefaultSnacksForDay(day, dayIndex, force=false){
     }
     runningTotal+=snackKcal;
     placedSlots.add(item.slot);
+  });
+
+  // Generic clearing fix (confirmed root cause: this function previously
+  // only ever ADDED content when a category's leftover was > 0, with no
+  // corresponding path to remove content once nothing needs that slot
+  // anymore -- e.g. Dairy 2->0 left a stale 480g milk in `sleep`
+  // indefinitely). A slot is cleared here only when ALL of the following
+  // hold: it received no assignment in this pass (still-needed content
+  // for any other active category is always in placedSlots and is never
+  // touched here); it is eligible under the exact same isEligible() check
+  // used above (so a manually-protected slot -- manualMeals[slot]===true
+  // -- is never touched, identical protection rule as assignment); and
+  // its current content was created by this same auto-generator (the
+  // 'cm_default_' id prefix stamped above), never a manually-picked
+  // "Choose from Library" selection or anything else.
+  ['snk1','snk2','sleep'].forEach(slot=>{
+    if(placedSlots.has(slot)) return;
+    if(!isEligible(slot)) return;
+    const currentKey=day[slot];
+    if(currentKey && isCustomMealKey(currentKey) && customMealIdFromKey(currentKey).startsWith('cm_default_')){
+      day[slot]=null;
+    }
   });
 
   if(leftoverFruit>0 && !assignments.some(a=>placedSlots.has(a.slot) && (a.label==='Apple'||a.label==='Fruit with Crackers and Cottage Cheese'||a.label==='Fruit with Rice Cakes, Tahini and Almonds'))) warnings.push('Remaining fruit exchange(s) could not be realistically placed.');
@@ -15792,9 +15845,14 @@ function renderSevenDayMealCard(dayPlan, dt, slot, lang, dayIndex, oneDayMode=fa
       : `{type:'week', dayIndex:${dayIndex}, key:'${slot.key}'}`;
     const ingredients = mealSlotIngredientsForPreview(dayPlan, slot.key, slot.ai);
     const foodRowsHtml = ingredients
-      ? ingredients.map(i=>{
+      ? window.NutreseEngine.groupDuplicateIngredientsForDisplay(ingredients).map(g=>{
+          const i=g.first;
           const food=window.NutreseEngine.FOOD_DATABASE[i.food_id];
           const name=food ? window.NutreseEngine.getClinicalName(food.name, lang==='EN'?'en':'gr') : i.food_id;
+          if(g.count>1){
+            const qtyDisplay = `${g.count} × <span class="seven-day-food-grams-sub">${Math.round(g.totalGrams/g.count)}g</span>`;
+            return `<div class="seven-day-food-row"><span class="seven-day-food-name">${safeHtml(name)}</span><span class="seven-day-food-grams">${qtyDisplay}</span></div>`;
+          }
           const hh=food ? window.NutreseEngine.formatHouseholdMeasure(i.household||window.NutreseEngine.getHouseholdSnapshot(food), i.grams, lang==='EN'?'en':'gr') : '';
           const qtyDisplay = hh
             ? `${safeHtml(hh)} <span class="seven-day-food-grams-sub">(${Math.round(i.grams)}g)</span>`
