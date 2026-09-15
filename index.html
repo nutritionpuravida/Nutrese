@@ -11990,7 +11990,7 @@ function refreshExchangePlansNow(){
   updateDashMetrics();
   autoPopulateSnacksFromExchanges();
   if(document.getElementById('page-oneday')) buildOneDayPlan();
-  if(document.getElementById('page-sevenday')) buildSevenDay();
+  if(document.getElementById('page-sevenday')) buildSevenDay(true);
   if(document.getElementById('page-report')) buildReport();
   // Brief visual confirmation
   const btn=document.querySelector('button[onclick="refreshExchangePlansNow()"]');
@@ -13688,7 +13688,7 @@ function halfPortionFruit(fruit){
   // slots for variety and Snack 2 consistency instead of concentrated in one.
   return {food_id:fruit.food_id, grams:Math.round(fruit.grams/2), state:'raw', label:fruit.label};
 }
-function populateDefaultSnacksForDay(day, dayIndex){
+function populateDefaultSnacksForDay(day, dayIndex, force=false){
   // generatorVersion===current is normally sufficient proof this day's
   // snacks are already correct -- but it can also predate a fix elsewhere
   // (e.g. the persistCustomMealsLocal() gap fixed earlier this session) that
@@ -13705,7 +13705,7 @@ function populateDefaultSnacksForDay(day, dayIndex){
     return isCustomMealKey(key) && !manualMealsForDangleCheck[slot] && !getCustomMealByKey(key);
   };
   const hasDanglingSnack = isDangling('snk1') || isDangling('snk2');
-  if(day.generatorVersion === NUTRESE_GENERATOR_VERSION && !hasDanglingSnack) return;
+  if(!force && day.generatorVersion === NUTRESE_GENERATOR_VERSION && !hasDanglingSnack) return;
   if(hasDanglingSnack){
     if(isDangling('snk1')) day.snk1 = null;
     if(isDangling('snk2')) day.snk2 = null;
@@ -13983,7 +13983,7 @@ function dismissExistingClientSnackSuggestion(){
   scheduleAutosave();
 }
 
-function ensureWeekPlans(){
+function ensureWeekPlans(force=false){
   // REGRESSION NOTE (found during Plan Quality unification testing): a test
   // or script that directly mutates S.weekPlans[i].brk/lun/din WITHOUT also
   // setting the matching manualMeals[key]=true flag is not a valid
@@ -14016,7 +14016,7 @@ function ensureWeekPlans(){
       if(!p.manualMeals.din && p.generatorVersion===undefined) p.din=strict.din;
     }
   });
-  const anyDayNeedsMigration=S.weekPlans.some(p=>p.generatorVersion!==NUTRESE_GENERATOR_VERSION);
+  const anyDayNeedsMigration=force || S.weekPlans.some(p=>p.generatorVersion!==NUTRESE_GENERATOR_VERSION);
   if(anyDayNeedsMigration && !S.existingClientSnackSuggestionPending){
     selectWeeklyMainMeals(S.weekPlans);
   }
@@ -14031,8 +14031,8 @@ function ensureWeekPlans(){
     // stayed genuinely null until the dietitian noticed and answered the
     // separate main-meal-improvement banner.
     const needsSnackPopulation = (!p.snk1 || !p.snk2) && !p.snacksGeneratedOnce;
-    if(needsSnackPopulation || !S.existingClientSnackSuggestionPending){
-      populateDefaultSnacksForDay(p, index);
+    if(needsSnackPopulation || !S.existingClientSnackSuggestionPending || force){
+      populateDefaultSnacksForDay(p, index, force);
       p.snacksGeneratedOnce = true;
     }
     if(wasStaleVersion && !S.existingClientSnackSuggestionPending && !p.weeklySelectionApplied) computeTargetAwareGeneratorBonus(p, index);
@@ -15492,10 +15492,10 @@ function renderManualScratchNavButton(){
   if(el) el.innerHTML = html;
   if(elWorkspace) elWorkspace.innerHTML = ''; // intentionally never populated -- see comment above
 }
-function buildSevenDay(){
+function buildSevenDay(force=false){
   traceDecision('buildSevenDay','entry',{definition:'buildSevenDay#2', mealLanguage:S.mealLanguage, sevenDayView:S.sevenDayView, activeIndex:S.sevenDayActiveIndex});
   updateMealLanguageButtons();
-  ensureWeekPlans();
+  ensureWeekPlans(force);
   renderManualScratchNavButton();
   const lang=S.mealLanguage||'GR';
   const active=Math.min(Math.max(Number(S.sevenDayActiveIndex||0),0),6);
