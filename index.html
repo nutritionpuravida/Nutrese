@@ -8243,6 +8243,117 @@ function findStarchAnchor(ingredients){
   });
   return anchor;
 }
+// Patch 2 multi-contributor support: unlike findStarchAnchor() above (which
+// is restricted to STARCH_ANCHOR_ALLOWLIST and used only by the pre-existing,
+// untouched Generator v6 calorie-bonus mechanism), this identifies EVERY
+// ingredient contributing to the starch category via exchange.category
+// directly -- correctly including legume-based recipes (lentils, chickpeas,
+// beans) that the allowlist deliberately excludes. Used ONLY by
+// computeDayLevelExchangeAllocation() and the new Patch 2 rendering block
+// below; STARCH_ANCHOR_ALLOWLIST itself is never read or modified here.
+function findAllStarchContributors(ingredients){
+  const db=window.NutreseEngine.FOOD_DATABASE;
+  return (ingredients||[]).map((ing,idx)=>({idx, food_id:ing.food_id, grams:ing.grams, food:db[ing.food_id]}))
+    .filter(i=>i.food && i.food.exchange && i.food.exchange.category==='starch');
+}
+function findAllVegContributors(ingredients){
+  const db=window.NutreseEngine.FOOD_DATABASE;
+  return (ingredients||[]).map((ing,idx)=>({idx, food_id:ing.food_id, grams:ing.grams, food:db[ing.food_id]}))
+    .filter(i=>i.food && i.food.exchange && i.food.exchange.category==='veg');
+}
+// Parallel to findAllStarchContributors()/findAllVegContributors() above, for
+// the new Protein TOTAL-target allocation: identifies every ingredient
+// contributing to the protein category, correctly catching the 3 confirmed
+// multi-contributor recipes (chicken+egg, cheese+turkey, egg+cheese).
+function findAllProteinContributors(ingredients){
+  const db=window.NutreseEngine.FOOD_DATABASE;
+  return (ingredients||[]).map((ing,idx)=>({idx, food_id:ing.food_id, grams:ing.grams, food:db[ing.food_id]}))
+    .filter(i=>i.food && i.food.exchange && i.food.exchange.category==='protein');
+}
+// olive_oil is the only exchange.category==='fat' food in the entire
+// database (confirmed by direct audit) -- this will always resolve to at
+// most one contributor, but uses the same category-based pattern as the
+// other finders for consistency, not a hardcoded food_id lookup.
+function findAllFatContributors(ingredients){
+  const db=window.NutreseEngine.FOOD_DATABASE;
+  return (ingredients||[]).map((ing,idx)=>({idx, food_id:ing.food_id, grams:ing.grams, food:db[ing.food_id]}))
+    .filter(i=>i.food && i.food.exchange && i.food.exchange.category==='fat');
+}
+// Parallel to findStarchAnchor() above, for Patch 2's day-level veg
+// allocation: picks the single ingredient contributing the most veg
+// exchanges, identified directly by exchange.category==='veg' (no
+// allowlist needed, since veg foods are already correctly categorized).
+function findVegAnchor(ingredients){
+  const db=window.NutreseEngine.FOOD_DATABASE;
+  let anchor=null, best=-1;
+  (ingredients||[]).forEach(i=>{
+    const food=db[i.food_id];
+    if(!food || food.exchange?.category!=='veg') return;
+    const contrib=i.grams/(Number(food.exchange.grams_per_exchange)||90);
+    if(contrib>best){ best=contrib; anchor=i.food_id; }
+  });
+  return anchor;
+}
+// Patch 2: the single, once-per-day computation of the authoritative
+// Starch/Veg TOTAL exchange allocation across Breakfast+Lunch+Dinner.
+// Deliberately reads S.ex[category] (the clinician's real day-level
+// target) -- never portions.starch/portions.veg, which are the frozen
+// allocator's residual "extra beyond baseline" output and cannot
+// distinguish "target=0" from "baseline already exceeds target" (the
+// confirmed root cause of the earlier, reverted attempt).
+function computeDayLevelExchangeAllocation(dayPlan, category){
+  const eng=window.NutreseEngine;
+  const contributorFinder = category==='starch' ? findAllStarchContributors
+    : category==='veg' ? findAllVegContributors
+    : category==='protein' ? findAllProteinContributors
+    : findAllFatContributors;
+  const fallbackGpe = category==='starch' ? 60 : category==='veg' ? 90 : category==='protein' ? 30 : 5;
+  const meals=[{key:'brk', recipeKey:dayPlan?.brk}, {key:'lun', recipeKey:dayPlan?.lun}, {key:'din', recipeKey:dayPlan?.din}];
+  const baselines=meals.map(m=>{
+    if(!isMigratedMeal(m.recipeKey)) return {key:m.key, baseline:0, anchor:null};
+    let base;
+    try{ base=eng.freezeMealInstance(m.recipeKey); }catch(e){ return {key:m.key, baseline:0, anchor:null}; }
+    const contributors=contributorFinder(base.ingredients);
+    if(!contributors.length) return {key:m.key, baseline:0, anchor:null};
+    const baseline=contributors.reduce((sum,c)=>{
+      const gpe=Number(c.food?.exchange?.grams_per_exchange)||fallbackGpe;
+      return sum + c.grams/gpe;
+    },0);
+    return {key:m.key, baseline, anchor:contributors[0].food_id};
+  });
+  // Clinical safety clamp: Protein/Fat's daily-max caps are evidence-cited
+  // safety limits (unlike Starch/Veg's softer algorithmic per-meal caps),
+  // so the day-level allocation must never exceed them regardless of what
+  // the clinician typed into S.ex. S.ex itself is left untouched -- only
+  // the value used for THIS allocation is clamped -- so the dietitian's
+  // own entered number remains visible and unmodified in the UI.
+  const caps=getEffectiveCaps(S.conditions);
+  const dailyMax = category==='protein' ? Number(caps?.proteinDailyMax)
+    : category==='fat' ? Number(caps?.fatDailyMax)
+    : Infinity;
+  const rawTarget=Number(S.ex?.[category]||0);
+  const target=Math.min(rawTarget, dailyMax);
+  const perMealMax = category==='protein' ? Number(caps?.proteinPerMealMax)
+    : category==='fat' ? Number(caps?.fatPerMealMax)
+    : Infinity;
+  const totalBaseline=baselines.reduce((s,b)=>s+b.baseline,0);
+  const eligible=baselines.filter(b=>b.anchor);
+  const result={};
+  baselines.forEach(b=>{ result[b.key]=0; });
+  if(!eligible.length || target<=0) return result;
+  let runningSum=0;
+  eligible.forEach((b,idx)=>{
+    if(idx===eligible.length-1){
+      result[b.key]=Math.min(Math.round((target-runningSum)*2)/2, perMealMax);
+    } else {
+      const raw=totalBaseline>0 ? target*(b.baseline/totalBaseline) : target/eligible.length;
+      const rounded=Math.min(Math.round(raw*2)/2, perMealMax);
+      result[b.key]=rounded;
+      runningSum+=rounded;
+    }
+  });
+  return result;
+}
 function targetAwareBonusForSlot(key){
   // Looks up the per-slot starch bonus (kcal) already computed and stored
   // by computeTargetAwareGeneratorBonus() during ensureWeekPlans(), via a
@@ -8256,56 +8367,109 @@ function targetAwareBonusForSlot(key){
   if(day.brk===key) return Number(day.breakfastBonusKcal||0);
   return 0;
 }
-function getStructuredInstanceForSlot(key, portions, _slotCtx){
-  if(_slotCtx && _slotCtx.dayIndex!=null && _slotCtx.slot){
-    const stored = S.weekPlans && S.weekPlans[_slotCtx.dayIndex] && S.weekPlans[_slotCtx.dayIndex].structuredInstances;
-    if(stored && stored[_slotCtx.slot] && stored[_slotCtx.slot].recipe_id===key){
-      return stored[_slotCtx.slot];
-    }
-  }
-  const extraProt=Number(portions?.prot||0);
-  const extraFat=Number(portions?.fat||0);
+function getStructuredInstanceForSlot(key, portions, starchAllocation, vegAllocation, proteinAllocation, fatAllocation){
   const bonusKcal=targetAwareBonusForSlot(key);
-  if(!extraProt && !extraFat && !bonusKcal){
+  const hasStarchAllocation = starchAllocation!==undefined;
+  const hasVegAllocation = vegAllocation!==undefined;
+  const hasProteinAllocation = proteinAllocation!==undefined;
+  const hasFatAllocation = fatAllocation!==undefined;
+  if(!bonusKcal && !hasStarchAllocation && !hasVegAllocation && !hasProteinAllocation && !hasFatAllocation){
     return window.NutreseEngine.freezeMealInstance(key);
   }
   const base=window.NutreseEngine.freezeMealInstance(key);
   const db=window.NutreseEngine.FOOD_DATABASE;
   const scaled=base.ingredients.map(i=>({food_id:i.food_id, grams:i.grams, state:i.state}));
-  const addTo=(food_id, extraGrams, fallbackState)=>{
-    const existing=scaled.find(i=>i.food_id===food_id);
-    if(existing) existing.grams+=extraGrams;
-    else scaled.push({food_id, grams:extraGrams, state:fallbackState});
-  };
-  if(extraProt>0){
-    let proteinAnchor=null, bestProteinContrib=-1;
-    scaled.forEach(i=>{
-      const food=db[i.food_id];
-      if(!food) return;
-      const contrib=(food.protein100||0)*i.grams/100;
-      if(contrib>bestProteinContrib){ bestProteinContrib=contrib; proteinAnchor=i.food_id; }
-    });
-    if(proteinAnchor){
-      const proPerEx=(S.exMeta && S.exMeta.protein && S.exMeta.protein.pro) || 7;
-      const gramsPerProteinEx=Math.round(30*(proPerEx/7));
-      const proteinCaps=getEffectiveCaps(S.conditions);
-      const proteinCapExchanges=Number(proteinCaps?.proteinPerMealMax)||4;
-      const existingProteinExchanges=window.NutreseEngine.deriveExchanges(scaled).protein||0;
-      const proteinRoomLeftExchanges=Math.max(0, proteinCapExchanges-existingProteinExchanges);
-      const proteinRequestedGrams=extraProt*gramsPerProteinEx;
-      const proteinRoomLeftGrams=proteinRoomLeftExchanges*gramsPerProteinEx;
-      addTo(proteinAnchor, Math.min(proteinRequestedGrams, proteinRoomLeftGrams), 'cooked');
+  // Patch 2: Starch/Veg TOTAL-exchange allocation -- SET semantics, never
+  // additive. Runs first, before the existing protein/fat logic below,
+  // so the day-level authoritative target becomes the baseline everything
+  // downstream (including Generator v6's own calorie-matching bonusKcal,
+  // which reads whatever this function returns) measures against.
+  if(hasStarchAllocation){
+    const contributors=findAllStarchContributors(scaled);
+    if(contributors.length){
+      const currentTotal=contributors.reduce((s,c)=>{
+        const gpe=Number(c.food?.exchange?.grams_per_exchange)||60;
+        return s+c.grams/gpe;
+      },0);
+      const target=Number(starchAllocation);
+      if(target<=0){
+        [...contributors].sort((a,b)=>b.idx-a.idx).forEach(c=>{ scaled.splice(c.idx,1); });
+      } else if(currentTotal>0){
+        const ratio=target/currentTotal;
+        contributors.forEach(c=>{ scaled[c.idx].grams=c.grams*ratio; });
+      } else {
+        // Defensive: contributors exist but sum to 0 exchanges (e.g. 0g
+        // entries) -- distribute the target equally rather than divide by
+        // zero, so a positive target is never silently lost.
+        contributors.forEach(c=>{
+          const gpe=Number(c.food?.exchange?.grams_per_exchange)||60;
+          scaled[c.idx].grams=(target/contributors.length)*gpe;
+        });
+      }
     }
   }
-  if(extraFat>0){
-    const gramsPerFatEx=Number(db.olive_oil?.household?.grams_per_unit)||5;
-    const caps=getEffectiveCaps(S.conditions);
-    const fatCapTsp=Number(caps?.fatPerMealMax)||6;
-    const fatCapGrams=fatCapTsp*gramsPerFatEx;
-    const existingOilGrams=(scaled.find(i=>i.food_id==='olive_oil')||{grams:0}).grams;
-    const roomLeftGrams=Math.max(0, fatCapGrams-existingOilGrams);
-    const requestedGrams=extraFat*gramsPerFatEx;
-    addTo('olive_oil', Math.min(requestedGrams, roomLeftGrams), 'n/a');
+  if(hasVegAllocation){
+    const contributors=findAllVegContributors(scaled);
+    if(contributors.length){
+      const currentTotal=contributors.reduce((s,c)=>{
+        const gpe=Number(c.food?.exchange?.grams_per_exchange)||90;
+        return s+c.grams/gpe;
+      },0);
+      const target=Number(vegAllocation);
+      if(target<=0){
+        [...contributors].sort((a,b)=>b.idx-a.idx).forEach(c=>{ scaled.splice(c.idx,1); });
+      } else if(currentTotal>0){
+        const ratio=target/currentTotal;
+        contributors.forEach(c=>{ scaled[c.idx].grams=c.grams*ratio; });
+      } else {
+        contributors.forEach(c=>{
+          const gpe=Number(c.food?.exchange?.grams_per_exchange)||90;
+          scaled[c.idx].grams=(target/contributors.length)*gpe;
+        });
+      }
+    }
+  }
+  if(hasProteinAllocation){
+    const contributors=findAllProteinContributors(scaled);
+    if(contributors.length){
+      const currentTotal=contributors.reduce((s,c)=>{
+        const gpe=Number(c.food?.exchange?.grams_per_exchange)||30;
+        return s+c.grams/gpe;
+      },0);
+      const target=Number(proteinAllocation);
+      if(target<=0){
+        [...contributors].sort((a,b)=>b.idx-a.idx).forEach(c=>{ scaled.splice(c.idx,1); });
+      } else if(currentTotal>0){
+        const ratio=target/currentTotal;
+        contributors.forEach(c=>{ scaled[c.idx].grams=c.grams*ratio; });
+      } else {
+        contributors.forEach(c=>{
+          const gpe=Number(c.food?.exchange?.grams_per_exchange)||30;
+          scaled[c.idx].grams=(target/contributors.length)*gpe;
+        });
+      }
+    }
+  }
+  if(hasFatAllocation){
+    const contributors=findAllFatContributors(scaled);
+    if(contributors.length){
+      const currentTotal=contributors.reduce((s,c)=>{
+        const gpe=Number(c.food?.exchange?.grams_per_exchange)||5;
+        return s+c.grams/gpe;
+      },0);
+      const target=Number(fatAllocation);
+      if(target<=0){
+        [...contributors].sort((a,b)=>b.idx-a.idx).forEach(c=>{ scaled.splice(c.idx,1); });
+      } else if(currentTotal>0){
+        const ratio=target/currentTotal;
+        contributors.forEach(c=>{ scaled[c.idx].grams=c.grams*ratio; });
+      } else {
+        contributors.forEach(c=>{
+          const gpe=Number(c.food?.exchange?.grams_per_exchange)||5;
+          scaled[c.idx].grams=(target/contributors.length)*gpe;
+        });
+      }
+    }
   }
   if(bonusKcal>0){
     // Target-aware starch bonus: verify-recalculate-adjust against the
@@ -11893,6 +12057,14 @@ function calcExchanges(){
     starchCapped: starchNeeded > caps.starchDailyMax,
     proteinCapped: proteinNeeded > caps.proteinDailyMax,
     fatCapped: fatNeeded > caps.fatDailyMax,
+    // New: checks the clinician's actual typed S.ex value directly (not the
+    // macro-derived need above), so a manual-mode target above the safety
+    // ceiling is genuinely surfaced -- the proteinCapped/fatCapped fields
+    // above cannot detect this case, since they compare the macro-driven
+    // need, which can be well under the cap even when the clinician's own
+    // manual entry exceeds it.
+    proteinTargetExceedsCap: Number(ex.protein||0) > caps.proteinDailyMax,
+    fatTargetExceedsCap: Number(ex.fat||0) > caps.fatDailyMax,
   };
   // FIX: previously, fruit/dairy snack suggestions only populated after the
   // dietitian visited Exchange System and clicked Apply, or edited an
@@ -12770,6 +12942,29 @@ function customMealHasFoodInSet(key, foodIdSet){
   const ingredients=meal?.instance?.ingredients;
   if(!Array.isArray(ingredients)) return false; // legacy-shape custom meal, no structured ingredients to check
   return ingredients.some(i=>foodIdSet.has(i.food_id));
+}
+// Micronutrient signal integrity fix: for a migrated main meal, checks the
+// ACTUAL final rendered ingredients (after exchange scaling) against a food
+// ID set, instead of the recipe-key membership checks previously used
+// (FISH_MEAL_KEYS.has(key) etc.), which could report a food as "present"
+// even after the TOTAL exchange engine genuinely removed it (e.g. Protein=0
+// removing all chicken). Reuses the exact same, unmodified
+// getStructuredInstanceForSlot() call and day-level allocation values
+// (dt.starchAllocation/vegAllocation/proteinAllocation/fatAllocation) that
+// the real 7-Day/1-Day renderer already uses, so this reflects precisely
+// what the dietitian actually sees. legacyMealKeySetCheck is the pre-existing
+// recipe-key-based fallback, used only for legacy/unmigrated recipes where
+// no structured ingredient list is available to inspect.
+function mealFoodSetMatch(key, foodIdSet, dt, slot, legacyMealKeySetCheck){
+  if(isCustomMealKey(key)) return customMealHasFoodInSet(key, foodIdSet);
+  if(!isMigratedMeal(key)) return legacyMealKeySetCheck.has(key);
+  try{
+    const portions = slot==='lun' ? dt.portions.lunch : slot==='din' ? dt.portions.dinner : undefined;
+    const inst=getStructuredInstanceForSlot(key, portions, dt.starchAllocation?.[slot], dt.vegAllocation?.[slot], dt.proteinAllocation?.[slot], dt.fatAllocation?.[slot]);
+    const ingredients=inst?.ingredients;
+    if(!Array.isArray(ingredients)) return legacyMealKeySetCheck.has(key);
+    return ingredients.some(i=>foodIdSet.has(i.food_id));
+  }catch(e){ return legacyMealKeySetCheck.has(key); }
 }
 
 const SEVEN_DAY_SLOTS=[
@@ -14477,6 +14672,10 @@ function calcDayTotalsForPlanDisplay(dayPlan, lang='GR', dayIndex=0){
     if(target && totalKcal < target-50 && Number(slots.lun.fat||0)>=visibleOilCap && Number(slots.din.fat||0)>=visibleOilCap){
       result.warnings.push(`Calorie target remains ${Math.abs(totalKcal-target)} kcal below target after realistic visible-oil allocation. Review exchanges or add appropriate whole-food fat options; Nutrese did not add oil above ${visibleOilCap} tsp per main meal.`);
     }
+    result.starchAllocation=computeDayLevelExchangeAllocation(dayPlan, 'starch');
+    result.vegAllocation=computeDayLevelExchangeAllocation(dayPlan, 'veg');
+    result.proteinAllocation=computeDayLevelExchangeAllocation(dayPlan, 'protein');
+    result.fatAllocation=computeDayLevelExchangeAllocation(dayPlan, 'fat');
     traceDecision('calcDayTotalsForPlanDisplay','return-strict',{dayIndex, lang, result});
     return result;
   }
@@ -14484,6 +14683,10 @@ function calcDayTotalsForPlanDisplay(dayPlan, lang='GR', dayIndex=0){
   S._targetAwareDay=dayPlan;
   const result=calcDayTotalsForPlan(dayPlan, lang, dayIndex);
   S._targetAwareDay=priorTargetAwareCtx2;
+  result.starchAllocation=computeDayLevelExchangeAllocation(dayPlan, 'starch');
+  result.vegAllocation=computeDayLevelExchangeAllocation(dayPlan, 'veg');
+  result.proteinAllocation=computeDayLevelExchangeAllocation(dayPlan, 'protein');
+  result.fatAllocation=computeDayLevelExchangeAllocation(dayPlan, 'fat');
   traceDecision('calcDayTotalsForPlanDisplay','return-fallback',{dayIndex, lang, result});
   return result;
 }
@@ -15327,17 +15530,29 @@ function weekMicronutrientSignals(){
   const plans=S.weekPlans||WEEK_PLANS;
   let fishCount=0, fattyFishCount=0, legumeCount=0, redMeatCount=0, highSodiumCount=0, nutsCount=0;
   plans.forEach(p=>{
-    [p.lun, p.din].forEach(key=>{
-      if(FISH_MEAL_KEYS.has(key) || customMealHasFoodInSet(key, FISH_FOOD_IDS)) fishCount++;
-      if(FATTY_FISH_MEAL_KEYS.has(key) || customMealHasFoodInSet(key, FATTY_FISH_FOOD_IDS)) fattyFishCount++;
-      if(LEGUME_MEAL_KEYS.has(key) || customMealHasFoodInSet(key, LEGUME_FOOD_IDS)) legumeCount++;
-      if(RED_MEAT_MEAL_KEYS.has(key) || customMealHasFoodInSet(key, RED_MEAT_FOOD_IDS)) redMeatCount++;
-      if(HIGH_SODIUM_MEAL_KEYS.has(key) || customMealHasFoodInSet(key, HIGH_SODIUM_FOOD_IDS)) highSodiumCount++;
+    let dt;
+    try{ dt=calcDayTotalsForPlanDisplay(p, S.mealLanguage||'GR', 0); }catch(e){ dt=null; }
+    [{key:p.lun, slot:'lun'}, {key:p.din, slot:'din'}].forEach(({key, slot})=>{
+      if(!dt){
+        if(FISH_MEAL_KEYS.has(key)) fishCount++;
+        if(FATTY_FISH_MEAL_KEYS.has(key)) fattyFishCount++;
+        if(LEGUME_MEAL_KEYS.has(key)) legumeCount++;
+        if(RED_MEAT_MEAL_KEYS.has(key)) redMeatCount++;
+        if(HIGH_SODIUM_MEAL_KEYS.has(key)) highSodiumCount++;
+        return;
+      }
+      if(mealFoodSetMatch(key, FISH_FOOD_IDS, dt, slot, FISH_MEAL_KEYS)) fishCount++;
+      if(mealFoodSetMatch(key, FATTY_FISH_FOOD_IDS, dt, slot, FATTY_FISH_MEAL_KEYS)) fattyFishCount++;
+      if(mealFoodSetMatch(key, LEGUME_FOOD_IDS, dt, slot, LEGUME_MEAL_KEYS)) legumeCount++;
+      if(mealFoodSetMatch(key, RED_MEAT_FOOD_IDS, dt, slot, RED_MEAT_MEAL_KEYS)) redMeatCount++;
+      if(mealFoodSetMatch(key, HIGH_SODIUM_FOOD_IDS, dt, slot, HIGH_SODIUM_MEAL_KEYS)) highSodiumCount++;
     });
     const snk1=p.snk1Extras||p.snack1Extras||[], snk2=p.snk2Extras||p.snack2Extras||[], sleep=p.sleepExtras||[];
     const hasNutsExtra=[snk1,snk2,sleep].some(arr=>Array.isArray(arr)&&arr.includes('nuts'));
-    const hasNutsInCustomMeal=[p.brk,p.lun,p.din].some(key=>customMealHasFoodInSet(key, NUTS_FOOD_IDS));
-    if(hasNutsExtra || hasNutsInCustomMeal) nutsCount++;
+    const hasNutsInMeal = dt
+      ? [{key:p.brk, slot:'brk'}, {key:p.lun, slot:'lun'}, {key:p.din, slot:'din'}].some(({key,slot})=>mealFoodSetMatch(key, NUTS_FOOD_IDS, dt, slot, new Set()))
+      : [p.brk,p.lun,p.din].some(key=>customMealHasFoodInSet(key, NUTS_FOOD_IDS));
+    if(hasNutsExtra || hasNutsInMeal) nutsCount++;
   });
   return {fishCount, fattyFishCount, legumeCount, redMeatCount, highSodiumCount, nutsCount, days:plans.length||7};
 }
@@ -15351,18 +15566,25 @@ function weekMicronutrientSignals(){
 // precision, not real information — deliberately not shown per-day.
 function dayMicronutrientSignals(dayPlan){
   if(!dayPlan) return null;
-  const mainMealKeys=[dayPlan.lun, dayPlan.din];
-  const allMealKeys=[dayPlan.brk, dayPlan.lun, dayPlan.din];
-  const hasFish=mainMealKeys.some(k=>FISH_MEAL_KEYS.has(k) || customMealHasFoodInSet(k, FISH_FOOD_IDS));
-  const hasFattyFish=mainMealKeys.some(k=>FATTY_FISH_MEAL_KEYS.has(k) || customMealHasFoodInSet(k, FATTY_FISH_FOOD_IDS));
-  const hasEgg=allMealKeys.some(k=>EGG_MEAL_KEYS.has(k) || customMealHasFoodInSet(k, EGG_FOOD_IDS));
-  const hasLegume=mainMealKeys.some(k=>LEGUME_MEAL_KEYS.has(k) || customMealHasFoodInSet(k, LEGUME_FOOD_IDS));
-  const hasRedMeat=mainMealKeys.some(k=>RED_MEAT_MEAL_KEYS.has(k) || customMealHasFoodInSet(k, RED_MEAT_FOOD_IDS));
-  const hasHighSodium=mainMealKeys.some(k=>HIGH_SODIUM_MEAL_KEYS.has(k) || customMealHasFoodInSet(k, HIGH_SODIUM_FOOD_IDS));
+  let dt;
+  try{ dt=calcDayTotalsForPlanDisplay(dayPlan, S.mealLanguage||'GR', 0); }catch(e){ dt=null; }
+  const mainMealSlots=[{key:dayPlan.lun, slot:'lun'}, {key:dayPlan.din, slot:'din'}];
+  const allMealSlots=[{key:dayPlan.brk, slot:'brk'}, {key:dayPlan.lun, slot:'lun'}, {key:dayPlan.din, slot:'din'}];
+  const matches=(slots, foodIds, legacySet)=> dt
+    ? slots.some(({key,slot})=>mealFoodSetMatch(key, foodIds, dt, slot, legacySet))
+    : slots.some(({key})=>legacySet.has(key));
+  const hasFish=matches(mainMealSlots, FISH_FOOD_IDS, FISH_MEAL_KEYS);
+  const hasFattyFish=matches(mainMealSlots, FATTY_FISH_FOOD_IDS, FATTY_FISH_MEAL_KEYS);
+  const hasEgg=matches(allMealSlots, EGG_FOOD_IDS, EGG_MEAL_KEYS);
+  const hasLegume=matches(mainMealSlots, LEGUME_FOOD_IDS, LEGUME_MEAL_KEYS);
+  const hasRedMeat=matches(mainMealSlots, RED_MEAT_FOOD_IDS, RED_MEAT_MEAL_KEYS);
+  const hasHighSodium=matches(mainMealSlots, HIGH_SODIUM_FOOD_IDS, HIGH_SODIUM_MEAL_KEYS);
   const snk1=dayPlan.snk1Extras||dayPlan.snack1Extras||[], snk2=dayPlan.snk2Extras||dayPlan.snack2Extras||[], sleep=dayPlan.sleepExtras||[];
   const hasNutsExtra=[snk1,snk2,sleep].some(arr=>Array.isArray(arr)&&arr.includes('nuts'));
-  const hasNutsInCustomMeal=allMealKeys.some(k=>customMealHasFoodInSet(k, NUTS_FOOD_IDS));
-  const hasNuts=hasNutsExtra || hasNutsInCustomMeal;
+  const hasNutsInMeal = dt
+    ? allMealSlots.some(({key,slot})=>mealFoodSetMatch(key, NUTS_FOOD_IDS, dt, slot, new Set()))
+    : allMealSlots.some(({key})=>customMealHasFoodInSet(key, NUTS_FOOD_IDS));
+  const hasNuts=hasNutsExtra || hasNutsInMeal;
   return {
     ironSource: hasRedMeat ? 'redMeat' : hasLegume ? 'legume' : hasFish ? 'fish' : 'none',
     vitaminDSource: hasFattyFish ? 'fattyFish' : hasEgg ? 'egg' : 'none',
@@ -15789,7 +16011,7 @@ function toggleOneDaySnackExtra(extrasKey, extraValue, checked){
 }
 // Resolves a slot's real ingredient list for the food-preview card, across
 // all three meal sources -- reuses existing, already-proven functions only.
-function mealSlotIngredientsForPreview(dayPlan, slotKey, slotAiKey){
+function mealSlotIngredientsForPreview(dayPlan, slotKey, slotAiKey, portions, starchAllocation, vegAllocation, proteinAllocation, fatAllocation){
   const aiMeal = dayPlan?.aiMeals?.[slotAiKey];
   if(aiMeal && Array.isArray(aiMeal.resolved_ingredients) && aiMeal.resolved_ingredients.length) return aiMeal.resolved_ingredients;
   const rawKey = dayPlan?.[slotKey];
@@ -15799,8 +16021,8 @@ function mealSlotIngredientsForPreview(dayPlan, slotKey, slotAiKey){
   }
   if(isMigratedMeal(rawKey)){
     try{
-      const frozen=window.NutreseEngine.freezeMealInstance(rawKey, {servingsUsed:1});
-      if(frozen?.ingredients?.length) return frozen.ingredients;
+      const inst=getStructuredInstanceForSlot(rawKey, portions, starchAllocation, vegAllocation, proteinAllocation, fatAllocation);
+      if(inst?.ingredients?.length) return inst.ingredients;
     }catch(e){ /* legacy/non-structured template — no ingredient list available */ }
   }
   return null;
@@ -15843,7 +16065,12 @@ function renderSevenDayMealCard(dayPlan, dt, slot, lang, dayIndex, oneDayMode=fa
     const builderContext = oneDayMode
       ? `{type:'oneday', slot:'${slot.ai}'}`
       : `{type:'week', dayIndex:${dayIndex}, key:'${slot.key}'}`;
-    const ingredients = mealSlotIngredientsForPreview(dayPlan, slot.key, slot.ai);
+    const slotPortions = slot.key==='lun' ? dt.portions.lunch : slot.key==='din' ? dt.portions.dinner : undefined;
+    const slotStarchAllocation = dt.starchAllocation?.[slot.key];
+    const slotVegAllocation = dt.vegAllocation?.[slot.key];
+    const slotProteinAllocation = dt.proteinAllocation?.[slot.key];
+    const slotFatAllocation = dt.fatAllocation?.[slot.key];
+    const ingredients = mealSlotIngredientsForPreview(dayPlan, slot.key, slot.ai, slotPortions, slotStarchAllocation, slotVegAllocation, slotProteinAllocation, slotFatAllocation);
     const foodRowsHtml = ingredients
       ? window.NutreseEngine.groupDuplicateIngredientsForDisplay(ingredients).map(g=>{
           const i=g.first;
