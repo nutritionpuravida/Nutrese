@@ -6331,7 +6331,7 @@ function renderMealTextPatient(instance, lang = 'en') {
     // as the Clinical Presentation Specification requires. The 10% rounding
     // guard inside the formatter falls back to grams rather than mislead.
     const hh = formatHouseholdMeasure(i.household, i.grams, lang);
-    const qty = hh || `${i.grams} g`;
+    const qty = hh || `${Math.round(i.grams)} g`;
     return `${shortName}${drainedTxt} – ${qty}`;
   });
 }
@@ -9056,8 +9056,9 @@ function adjustOliveOilText(text, delta, lang='GR'){
   return normalizeOilMeasureText(without, lang);
 }
 function mealTextWithOilBalance(key, portions, lang='GR', oilDelta=0, allocations){
-  const text=adjustOliveOilText(mealText(key, portions, lang, allocations), oilDelta, lang);
-  traceDecision('mealTextWithOilBalance','return',{key, lang, oilDelta, portions, text});
+  const effectiveOilDelta = (allocations && allocations.fatAllocation===0) ? 0 : oilDelta;
+  const text=adjustOliveOilText(mealText(key, portions, lang, allocations), effectiveOilDelta, lang);
+  traceDecision('mealTextWithOilBalance','return',{key, lang, oilDelta:effectiveOilDelta, portions, text});
   return text;
 }
 
@@ -13292,7 +13293,7 @@ function migratedSlotText(dayPlan, slotKey, lang, opts){
     starchAllocation: opts?.starchAllocation, vegAllocation: opts?.vegAllocation,
     proteinAllocation: opts?.proteinAllocation, fatAllocation: opts?.fatAllocation,
   });
-  const oilDelta=Number(opts && opts.oilDelta || 0);
+  const oilDelta=(opts && opts.fatAllocation===0) ? 0 : Number(opts && opts.oilDelta || 0);
   return oilDelta ? adjustOliveOilText(base, oilDelta, lang) : base;
 }
 
@@ -13754,7 +13755,7 @@ function resolveDayMainMeals(day, dayIndex, lang, target, toleranceCeiling, dail
     const scratch={...day, lun:lunKey, din:dinKey,
       starchBonusLunKcal: lunR>0 ? -lunR : 0, starchBonusDinKcal: dinR>0 ? -dinR : 0,
       weeklySelectionApplied:true, generatorVersion:undefined, snk1:null, snk2:null, sleep:null};
-    populateDefaultSnacksForDay(scratch, dayIndex);
+    populateDefaultSnacksForDay(scratch, dayIndex, false, true);
     return !!scratch.snk1 && !!scratch.snk2;
   }
 
@@ -13919,7 +13920,7 @@ function halfPortionFruit(fruit){
   // slots for variety and Snack 2 consistency instead of concentrated in one.
   return {food_id:fruit.food_id, grams:Math.round(fruit.grams/2), state:'raw', label:fruit.label};
 }
-function populateDefaultSnacksForDay(day, dayIndex, force=false){
+function populateDefaultSnacksForDay(day, dayIndex, force=false, dryRun=false){
   // generatorVersion===current is normally sufficient proof this day's
   // snacks are already correct -- but it can also predate a fix elsewhere
   // (e.g. the persistCustomMealsLocal() gap fixed earlier this session) that
@@ -14129,7 +14130,7 @@ function populateDefaultSnacksForDay(day, dayIndex, force=false){
     // otherwise every future version bump would leave an orphaned,
     // never-referenced customMeal behind.
     const existingKey=day[item.slot];
-    if(existingKey && isCustomMealKey(existingKey)){
+    if(!dryRun && existingKey && isCustomMealKey(existingKey)){
       const existingId=String(existingKey).replace('CUSTOM_','');
       const existingMeal=(S.customMeals||[]).find(m=>String(m.id)===existingId);
       if(existingMeal && existingMeal.source==='default-generator'){
@@ -14150,14 +14151,22 @@ function populateDefaultSnacksForDay(day, dayIndex, force=false){
     const instance={ingredients:hydratedIngredients, totals, exchanges};
     const id='cm_default_'+Date.now()+'_'+item.slot;
     const meal={id, name:item.label, instance, updated_at:new Date().toISOString(), localOnly:true, source:'default-generator'};
-    S.customMeals=[meal, ...(S.customMeals||[])];
-    persistCustomMealsLocal(); // keep localStorage in sync immediately -- otherwise the next loadCustomMeals() call (any nav to sevenday/oneday/report) unconditionally overwrites S.customMeals with a stale cached snapshot that predates this newly-generated snack, silently discarding it
+    // Dry-run mode (Generator v6's realSnackCheck() scoring, on a disposable
+    // scratch day): the scratch day still needs day[item.slot] set below, so
+    // its own in-memory boolean check works exactly as before -- but the
+    // meal object itself must never be committed to the real, shared,
+    // persisted S.customMeals library, since the scratch day is discarded
+    // right after this call and nothing would ever reference it again.
+    if(!dryRun){
+      S.customMeals=[meal, ...(S.customMeals||[])];
+      persistCustomMealsLocal(); // keep localStorage in sync immediately -- otherwise the next loadCustomMeals() call (any nav to sevenday/oneday/report) unconditionally overwrites S.customMeals with a stale cached snapshot that predates this newly-generated snack, silently discarding it
+    }
     day[item.slot]='CUSTOM_'+id;
     // FIX: generated snacks were never actually visible in the real UI --
     // S.optionalSlotsVisible was never set, unlike the equivalent AI-plan
     // path (applyAiSevenDayPlan), so the dietitian saw an "Add Snack"
     // placeholder button instead of the real, generated card underneath it.
-    if(S.optionalSlotsVisible?.[item.slot]!==true){
+    if(!dryRun && S.optionalSlotsVisible?.[item.slot]!==true){
       S.optionalSlotsVisible={...(S.optionalSlotsVisible||{}), [item.slot]:true};
     }
     runningTotal+=snackKcal;
