@@ -12513,17 +12513,26 @@ function buildOneDayPlan(){
   const allocation=getDayMealAllocation(S.mealSel, lang);
   const portions=allocation.portions;
   const day=calcDayTotals();
+  // Minimal fix: reuse the existing, unmodified calcDayTotalsForPlanDisplay()
+  // -- the same function the corrected Week view already calls -- purely to
+  // get its day-level Starch/Veg/Protein/Fat TOTAL-exchange allocation for
+  // this S.mealSel-shaped day (which already has the brk/lun/din keys this
+  // function expects). This does not replace or duplicate calcDayTotals()
+  // or allocation/portions above; it only supplies the four allocation
+  // values so the existing mealText() calls below can render the same
+  // final, exchange-adjusted ingredients the Week view already renders.
+  const oneDayAlloc=calcDayTotalsForPlanDisplay(S.mealSel, lang, 0);
   const snk1Built=allocation.snacks.snk1Built;
   const snk2Built=allocation.snacks.snk2Built;
   const sleepBuilt=allocation.snacks.sleepBuilt;
   const strictTextPlan=day.strictPlan||{brk,lun,din,snk1Extras,snk2Extras,sleepExtras};
   const strictActive=!!day.strictSlots;
   const meals=[
-    {slot:'brk', time:lang==='EN'?'Breakfast':'Πρωινό',      en:'Breakfast',     text:strictActive?strictSlotText(strictTextPlan,'brk',lang,0):mealText(brk,null,lang),              kcal:day.brkKcal},
+    {slot:'brk', time:lang==='EN'?'Breakfast':'Πρωινό',      en:'Breakfast',     text:strictActive?strictSlotText(strictTextPlan,'brk',lang,0):mealText(brk,null,lang,{starchAllocation:oneDayAlloc.starchAllocation?.brk, vegAllocation:oneDayAlloc.vegAllocation?.brk, proteinAllocation:oneDayAlloc.proteinAllocation?.brk, fatAllocation:oneDayAlloc.fatAllocation?.brk}),              kcal:day.brkKcal},
     {slot:'snk1', time:lang==='EN'?'Snack 1':'Σνακ 1',        en:'Snack 1',       text:strictActive?strictSlotText(strictTextPlan,'snk1',lang,0):(dayUsesUnifiedSnackModel(S.mealSel)?mealText(S.mealSel.snk1,null,lang):snk1Built.text),                       kcal:day.snk1Kcal},
-    {slot:'lun', time:lang==='EN'?'Lunch':'Μεσημεριανό',     en:'Lunch',         text:(strictActive?strictSlotText(strictTextPlan,'lun',lang,0):mealText(lun,portions.lunch,lang))+mainMealSnackAdjustmentHtml(day.snackReplacementLog,'lun',lang),    kcal:day.lunKcal},
+    {slot:'lun', time:lang==='EN'?'Lunch':'Μεσημεριανό',     en:'Lunch',         text:(strictActive?strictSlotText(strictTextPlan,'lun',lang,0):mealText(lun,portions.lunch,lang,{starchAllocation:oneDayAlloc.starchAllocation?.lun, vegAllocation:oneDayAlloc.vegAllocation?.lun, proteinAllocation:oneDayAlloc.proteinAllocation?.lun, fatAllocation:oneDayAlloc.fatAllocation?.lun}))+mainMealSnackAdjustmentHtml(day.snackReplacementLog,'lun',lang),    kcal:day.lunKcal},
     {slot:'snk2', time:lang==='EN'?'Snack 2':'Σνακ 2',        en:'Snack 2',       text:strictActive?strictSlotText(strictTextPlan,'snk2',lang,0):(dayUsesUnifiedSnackModel(S.mealSel)?mealText(S.mealSel.snk2,null,lang):snk2Built.text),                       kcal:day.snk2Kcal},
-    {slot:'din', time:lang==='EN'?'Dinner':'Βραδινό',        en:'Dinner',        text:(strictActive?strictSlotText(strictTextPlan,'din',lang,0):mealText(din,portions.dinner,lang))+mainMealSnackAdjustmentHtml(day.snackReplacementLog,'din',lang),   kcal:day.dinKcal},
+    {slot:'din', time:lang==='EN'?'Dinner':'Βραδινό',        en:'Dinner',        text:(strictActive?strictSlotText(strictTextPlan,'din',lang,0):mealText(din,portions.dinner,lang,{starchAllocation:oneDayAlloc.starchAllocation?.din, vegAllocation:oneDayAlloc.vegAllocation?.din, proteinAllocation:oneDayAlloc.proteinAllocation?.din, fatAllocation:oneDayAlloc.fatAllocation?.din}))+mainMealSnackAdjustmentHtml(day.snackReplacementLog,'din',lang),   kcal:day.dinKcal},
     {slot:'sleep', time:lang==='EN'?'Before sleep':'Πριν τον ύπνο',en:'Before sleep', text:strictActive?strictSlotText(strictTextPlan,'sleep',lang,0):(dayUsesUnifiedSnackModel(S.mealSel)?mealText(S.mealSel.sleep,null,lang):sleepBuilt.text),                   kcal:day.slpKcal},
   ];
   const visibleMeals=meals.filter(m=>m.text&&m.text!=='—');
