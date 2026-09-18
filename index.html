@@ -6286,7 +6286,7 @@ function renderMealText(instance, lang = 'en') {
     // CLINICAL VIEW: household measure + grams, so the dietitian sees the
     // practical portion AND the exact calculation weight.
     const hh = formatHouseholdMeasure(i.household, i.grams, lang);
-    const qty = hh ? `${hh} (${i.grams}g)` : `${i.grams}g`;
+    const qty = hh ? `${hh} (${round1(i.grams)}g)` : `${round1(i.grams)}g`;
     return `${name}${stateTxt} — ${qty}`;
   });
   return parts.join(' + ');
@@ -14999,7 +14999,25 @@ function applyMealPlanTemplate(templateKey){
   // If the client profile is incomplete, keep the current exchange prescription
   // instead of replacing it with a partial/low-kcal fallback.
   const canSuggestExchanges = !!(S.goalKcal && Number.isFinite(S.carbG) && Number.isFinite(S.protG) && Number.isFinite(S.fatG));
-  if(canSuggestExchanges) applySuggestedExchangeServings();
+  if(canSuggestExchanges){
+    // Confirmed root cause of a real template-workflow bug: applySuggestedExchangeServings()
+    // unconditionally resets Starch/Protein/Fat to auto and recalculates them from the
+    // macro split -- correct when the dietitian explicitly clicks "Suggested servings",
+    // but wrong here, where it silently discarded an explicit manual override (including
+    // an explicit 0) whenever a template was applied. Snapshot each category the
+    // dietitian has genuinely, manually set (S.exAuto[cat]===false) before the call,
+    // then restore exactly those afterward -- any category still in auto mode is left
+    // to receive the template-triggered suggestion exactly as before.
+    const manualOverrides={};
+    ['starch','protein','fat'].forEach(cat=>{
+      if(S.exAuto && S.exAuto[cat]===false) manualOverrides[cat]=S.ex[cat];
+    });
+    applySuggestedExchangeServings();
+    Object.keys(manualOverrides).forEach(cat=>{
+      S.ex[cat]=manualOverrides[cat];
+      S.exAuto[cat]=false;
+    });
+  }
   // 4. Fill all 7 days from the template's meal pool (varied, avoiding same-day
   //    and consecutive-day repeats) + default snacks
   ensureWeekPlans();
