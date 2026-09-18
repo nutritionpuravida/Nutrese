@@ -14713,6 +14713,33 @@ function calcDayTotalsForPlanDisplay(dayPlan, lang='GR', dayIndex=0){
   result.vegAllocation=computeDayLevelExchangeAllocation(dayPlan, 'veg');
   result.proteinAllocation=computeDayLevelExchangeAllocation(dayPlan, 'protein');
   result.fatAllocation=computeDayLevelExchangeAllocation(dayPlan, 'fat');
+  // Kcal-display fix: calcDayTotalsForPlan() (frozen) computes brk/lun/dinKcal
+  // via migratedMealKcal(key, portions) -- which calls getStructuredInstanceForSlot()
+  // WITHOUT the four allocation arguments above, so it always reflects the
+  // unscaled recipe baseline, never the actual live Starch/Veg/Protein/Fat
+  // scaling that already correctly drives the rendered ingredients/exchanges.
+  // Corrected here, outside the frozen function, by applying only the
+  // SCALING DELTA onto the frozen function's own value -- any extraKcal
+  // contribution already baked into that value (manual/extra-food additions
+  // to this slot) is preserved untouched, since delta never includes it.
+  ['brk','lun','din'].forEach(slot=>{
+    const key=dayPlan[slot];
+    if(!isMigratedMeal(key)) return; // legacy/custom/AI/none: leave exactly as computed
+    const portions = slot==='lun' ? result.portions.lunch : slot==='din' ? result.portions.dinner : undefined;
+    let oldUnscaledKcal, newScaledKcal;
+    try{
+      oldUnscaledKcal = migratedMealKcal(key, portions);
+      const inst = getStructuredInstanceForSlot(key, portions, result.starchAllocation[slot], result.vegAllocation[slot], result.proteinAllocation[slot], result.fatAllocation[slot]);
+      newScaledKcal = inst.totals.kcal;
+    }catch(e){ return; } // any failure: leave the frozen function's original kcal untouched
+    const delta = newScaledKcal - oldUnscaledKcal;
+    if(!delta) return;
+    const kcalKey = slot+'Kcal';
+    result[kcalKey] = Math.round((result[kcalKey]||0) + delta);
+  });
+  result.totalKcal = (result.brkKcal||0)+(result.lunKcal||0)+(result.dinKcal||0)+(result.snk1Kcal||0)+(result.snk2Kcal||0)+(result.slpKcal||0);
+  if(typeof result.gap === 'number' && typeof result.target === 'number') result.gap = result.totalKcal - result.target;
+  if(typeof result.exchangeGap === 'number' && typeof result.exchangeTotalKcal === 'number') result.exchangeGap = result.totalKcal - result.exchangeTotalKcal;
   traceDecision('calcDayTotalsForPlanDisplay','return-fallback',{dayIndex, lang, result});
   return result;
 }
