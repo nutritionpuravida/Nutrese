@@ -3880,22 +3880,24 @@ const FOOD_SCHEMA_VERSION = 'food-object-v1';
 const FOOD_DATABASE = {
   chicken_breast_cooked: {
     food_id: 'chicken_breast_cooked', name: { en: 'Chicken breast, cooked, skinless', gr: 'Στήθος κοτόπουλου, μαγειρεμένο, χωρίς πέτσα', clinical: { en: 'Chicken breast, cooked, skinless', gr: 'Στήθος κοτόπουλου, μαγειρεμένο, χωρίς πέτσα' }, patient: { en: 'Chicken breast', gr: 'Στήθος κοτόπουλου' } },
-    state: 'cooked', fdc_id: 171077, source: 'USDA FoodData Central (SR Legacy)',
+    state: 'cooked', fdc_id: 171477, source: 'USDA FoodData Central (SR Legacy) — standardized representation, corrected from prior raw-state FDC 171077',
     kcal100: 165, protein100: 31.0, carbs100: 0, fat100: 3.6, fat_role: 'intrinsic',
     exchange: { category: 'protein', grams_per_exchange: 30, note: 'ADA standard: 1 lean-protein exchange ≈ 1oz (30g) cooked skinless poultry' },
     aliases: ["chicken breast, cooked, skinless","chicken breast","στήθος κοτόπουλου, μαγειρεμένο, χωρίς πέτσα","στήθος κοτόπουλου","chicken breast cooked"],
-    provenance_tier: 'usda_exact',
+    provenance_tier: 'usda_approximate',
     fiber100: 0,
+    micronutrients: { fiber: { value: 0, unit: 'g' }, calcium: { value: 15, unit: 'mg' }, iron: { value: 1.04, unit: 'mg' }, potassium: { value: 256, unit: 'mg' }, sodium: { value: 74, unit: 'mg' }, magnesium: { value: 29, unit: 'mg' }, vitc: { value: 0, unit: 'mg' }, vitd: { value: 5, unit: 'IU' }, b12: { value: 0.34, unit: 'µg' } },
     version: FOOD_DB_VERSION
   },
   cod_baked: {
     food_id: 'cod_baked', name: { en: 'Cod fillet, baked', gr: 'Φιλέτο μπακαλιάρου, ψητό', clinical: { en: 'Cod fillet, baked', gr: 'Φιλέτο μπακαλιάρου, ψητό' }, patient: { en: 'Cod', gr: 'Μπακαλιάρος' } },
-    state: 'cooked', fdc_id: 173687, source: 'USDA FoodData Central (SR Legacy)',
+    state: 'cooked', fdc_id: 171956, source: 'USDA FoodData Central (SR Legacy) — Atlantic cod, cooked, dry heat; standardized representation, corrected from prior unrelated-food FDC 173687',
     kcal100: 105, protein100: 23.0, carbs100: 0, fat100: 0.9, fat_role: 'intrinsic',
     exchange: { category: 'protein', grams_per_exchange: 35, note: 'Lean fish; ADA lists commonly use a slightly higher gram equivalent than meat for the same protein exchange' },
     aliases: ["cod fillet, baked","cod fillet","φιλέτο μπακαλιάρου, ψητό","φιλέτο μπακαλιάρου","cod baked","ψάρι","ψάρι φιλέτο"],
-    provenance_tier: 'usda_exact',
+    provenance_tier: 'usda_approximate',
     fiber100: 0,
+    micronutrients: { fiber: { value: 0, unit: 'g' }, calcium: { value: 14, unit: 'mg' }, iron: { value: 0.49, unit: 'mg' }, potassium: { value: 244, unit: 'mg' }, sodium: { value: 78, unit: 'mg' }, magnesium: { value: 42, unit: 'mg' }, vitc: { value: 1, unit: 'mg' }, vitd: { value: 1.2, unit: 'µg' }, b12: { value: 1.05, unit: 'µg' } },
     version: FOOD_DB_VERSION
   },
   rice_white_cooked: {
@@ -3906,26 +3908,29 @@ const FOOD_DATABASE = {
     aliases: ["white rice, cooked","white rice","λευκό ρύζι, βρασμένο","λευκό ρύζι","rice white cooked"],
     provenance_tier: 'usda_exact',
     household: { unit: 'cup', grams_per_unit: 158 },
+    micronutrients: { fiber: { value: 0.4, unit: 'g' }, calcium: { value: 10, unit: 'mg' }, iron: { value: 1.2, unit: 'mg' }, potassium: { value: 35, unit: 'mg' }, sodium: { value: 1, unit: 'mg' }, magnesium: { value: 12, unit: 'mg' }, vitc: { value: 0, unit: 'mg' }, vitd: { value: 0, unit: 'IU' }, b12: { value: 0, unit: 'µg' } },
     version: FOOD_DB_VERSION
   },
   potato_boiled: {
     food_id: 'potato_boiled', name: { en: 'Potato, boiled, without skin', gr: 'Πατάτα, βραστή, χωρίς φλούδα', clinical: { en: 'Potato, boiled, without skin', gr: 'Πατάτα, βραστή, χωρίς φλούδα' }, patient: { en: 'Potato', gr: 'Πατάτα' } },
-    state: 'cooked', fdc_id: 170093, source: 'USDA FoodData Central (SR Legacy)',
+    state: 'cooked', fdc_id: 170440, source: 'USDA FoodData Central (SR Legacy) — standardized representation, corrected from prior baked-state FDC 170093',
     kcal100: 87, protein100: 1.9, carbs100: 20.1, fat100: 0.1, fiber100: 1.8, fat_role: 'intrinsic',
     exchange: { category: 'starch', grams_per_exchange: 90, note: '1 starch exchange ≈ 1 small potato (~90g)' },
     aliases: ["potato, boiled, without skin","potato","πατάτα, βραστή, χωρίς φλούδα","πατάτα","potato boiled"],
-    provenance_tier: 'usda_exact',
+    provenance_tier: 'usda_approximate',
     household: { unit: 'sized_piece', sizes: { small: 90, medium: 150, large: 200 } },
+    micronutrients: { fiber: { value: 1.8, unit: 'g' }, calcium: { value: 8, unit: 'mg' }, iron: { value: 0.31, unit: 'mg' }, potassium: { value: 328, unit: 'mg' }, sodium: { value: 5, unit: 'mg' }, magnesium: { value: 20, unit: 'mg' }, vitc: { value: 7.4, unit: 'mg' }, vitd: { value: 0, unit: 'IU' }, b12: { value: 0, unit: 'µg' } },
     version: FOOD_DB_VERSION
   },
   lentils_cooked: {
     food_id: 'lentils_cooked', name: { en: 'Lentils, cooked', gr: 'Φακές, βρασμένες', clinical: { en: 'Lentils, cooked', gr: 'Φακές, βρασμένες' }, patient: { en: 'Lentils', gr: 'Φακές' } },
-    state: 'cooked', fdc_id: 172420, source: 'USDA FoodData Central (SR Legacy)',
+    state: 'cooked', fdc_id: 172421, source: 'USDA FoodData Central (SR Legacy) — standardized representation, corrected from prior raw-state FDC 172420',
     kcal100: 116, protein100: 9.0, carbs100: 20.1, fat100: 0.4, fiber100: 7.9, fat_role: 'intrinsic',
     exchange: { category: 'starch', grams_per_exchange: 90, note: 'ADA classifies legumes under starch; 1 exchange ≈ 1/2 cup (~90g) cooked' },
     aliases: ["lentils, cooked","lentils","φακές, βρασμένες","φακές","lentils cooked"],
-    provenance_tier: 'usda_exact',
+    provenance_tier: 'usda_approximate',
     household: { unit: 'cup', grams_per_unit: 198 },
+    micronutrients: { fiber: { value: 7.9, unit: 'g' }, calcium: { value: 19, unit: 'mg' }, iron: { value: 3.33, unit: 'mg' }, potassium: { value: 369, unit: 'mg' }, sodium: { value: 2, unit: 'mg' }, magnesium: { value: 36, unit: 'mg' }, vitc: { value: 1.5, unit: 'mg' }, vitd: { value: 0, unit: 'IU' }, b12: { value: 0, unit: 'µg' } },
     version: FOOD_DB_VERSION
   },
   olive_oil: {
@@ -3937,6 +3942,7 @@ const FOOD_DATABASE = {
     provenance_tier: 'usda_exact',
     fiber100: 0,
     household: { unit: 'tsp', grams_per_unit: 5 },
+    micronutrients: { fiber: { value: 0, unit: 'g' }, calcium: { value: 1, unit: 'mg' }, iron: { value: 0.56, unit: 'mg' }, potassium: { value: 1, unit: 'mg' }, sodium: { value: 2, unit: 'mg' }, magnesium: { value: 0, unit: 'mg' }, vitc: { value: 0, unit: 'mg' }, vitd: { value: 0, unit: 'IU' }, b12: { value: 0, unit: 'µg' } },
     version: FOOD_DB_VERSION
   },
   salad_mixed_raw: {
@@ -3968,48 +3974,52 @@ const FOOD_DATABASE = {
     provenance_tier: 'usda_exact',
     fiber100: 0,
     household: { unit: 'piece', grams_per_unit: 50 },
+    micronutrients: { fiber: { value: 0, unit: 'g' }, calcium: { value: 50, unit: 'mg' }, iron: { value: 1.19, unit: 'mg' }, potassium: { value: 126, unit: 'mg' }, sodium: { value: 124, unit: 'mg' }, magnesium: { value: 10, unit: 'mg' }, vitc: { value: 0, unit: 'mg' }, vitd: { value: 87, unit: 'IU' }, b12: { value: 0, unit: 'µg' } },
     version: FOOD_DB_VERSION
   },
   lemon_juice: {
     food_id: 'lemon_juice', name: { en: 'Lemon juice', gr: 'Χυμός λεμονιού', clinical: { en: 'Lemon juice', gr: 'Χυμός λεμονιού' }, patient: { en: 'Lemon juice', gr: 'Χυμός λεμονιού' } },
-    state: 'raw', fdc_id: 167746, source: 'USDA FoodData Central (SR Legacy)',
+    state: 'raw', fdc_id: 167747, source: 'USDA FoodData Central (SR Legacy) — standardized representation, corrected from prior whole-lemon-fruit FDC 167746',
     kcal100: 22, protein100: 0.4, carbs100: 6.9, fat100: 0.2, fat_role: 'intrinsic',
     exchange: { category: 'free', grams_per_exchange: null, note: 'Free food — negligible kcal at typical seasoning quantities' },
     aliases: ["lemon juice","χυμός λεμονιού"],
-    provenance_tier: 'usda_exact',
+    provenance_tier: 'usda_approximate',
     fiber100: 0,
     household: { unit: 'tbsp', grams_per_unit: 15 },
+    micronutrients: { fiber: { value: 0.3, unit: 'g' }, calcium: { value: 6, unit: 'mg' }, iron: { value: 0.08, unit: 'mg' }, potassium: { value: 103, unit: 'mg' }, sodium: { value: 1, unit: 'mg' }, magnesium: { value: 6, unit: 'mg' }, vitc: { value: 38.7, unit: 'mg' }, vitd: { value: 0, unit: 'IU' }, b12: { value: 0, unit: 'µg' } },
     version: FOOD_DB_VERSION
   },
   chicken_broth: {
     food_id: 'chicken_broth', name: { en: 'Chicken broth, clear', gr: 'Ζωμός κότας, διάφανος', clinical: { en: 'Chicken broth, clear', gr: 'Ζωμός κότας, διάφανος' }, patient: { en: 'Chicken broth', gr: 'Ζωμός κότας' } },
-    state: 'n/a', fdc_id: 174608, source: 'USDA FoodData Central (SR Legacy)',
+    state: 'n/a', fdc_id: 174536, source: 'USDA FoodData Central (SR Legacy) — standardized representation, corrected from prior unrelated-food FDC 174608',
     kcal100: 4, protein100: 0.9, carbs100: 0.2, fat100: 0.1, fat_role: 'intrinsic',
     exchange: { category: 'free', grams_per_exchange: null, note: 'Free food per standard exchange-list convention for clear broth' },
     aliases: ["chicken broth, clear","chicken broth","ζωμός κότας, διάφανος","ζωμός κότας"],
-    provenance_tier: 'usda_exact',
+    provenance_tier: 'usda_approximate',
     fiber100: 0,
     household: { unit: 'cup', grams_per_unit: 240 },
+    micronutrients: { fiber: { value: 0, unit: 'g' }, calcium: { value: 4, unit: 'mg' }, iron: { value: 0.07, unit: 'mg' }, potassium: { value: 18, unit: 'mg' }, sodium: { value: 371, unit: 'mg' }, magnesium: { value: 1, unit: 'mg' }, vitc: { value: 0, unit: 'mg' }, vitd: { value: 0, unit: 'IU' }, b12: { value: 0.02, unit: 'µg' } },
     version: FOOD_DB_VERSION
   },
   halloumi_cheese: {
     food_id: 'halloumi_cheese', name: { en: 'Halloumi cheese, grilled', gr: 'Χαλούμι, ψητό', clinical: { en: 'Halloumi cheese, grilled', gr: 'Χαλούμι, ψητό' }, patient: { en: 'Halloumi', gr: 'Χαλούμι' } },
-    state: 'cooked', fdc_id: 174168, source: 'USDA FoodData Central (SR Legacy) — base halloumi values; grilling assumed negligible nutrient change',
+    state: 'cooked', fdc_id: null, source: 'No defensible USDA SR Legacy 2018 match found (dataset independently searched; no halloumi record exists) — values retained as best estimate pending alternative source',
     kcal100: 321, protein100: 21.3, carbs100: 2.0, fat100: 25.0, fat_role: 'intrinsic',
     exchange: { category: 'protein', grams_per_exchange: 30, note: 'High-fat protein exchange, consistent with cheese classification under ADA meat/protein category' },
     aliases: ["halloumi cheese, grilled","halloumi cheese","χαλούμι, ψητό","χαλούμι"],
-    provenance_tier: 'usda_approximate',
+    provenance_tier: 'composite_estimate',
     fiber100: 0,
     version: FOOD_DB_VERSION
   },
   wholegrain_bread: {
     food_id: 'wholegrain_bread', name: { en: 'Wholegrain bread', gr: 'Ψωμί ολικής άλεσης', clinical: { en: 'Wholegrain bread', gr: 'Ψωμί ολικής άλεσης' }, patient: { en: 'Wholegrain bread', gr: 'Ψωμί ολικής' } },
-    state: 'n/a', fdc_id: 172686, source: 'USDA FoodData Central (SR Legacy)',
-    kcal100: 247, protein100: 9.0, carbs100: 41.0, fat100: 4.0, fiber100: 6.0, fat_role: 'intrinsic',
+    state: 'n/a', fdc_id: 172688, source: 'USDA FoodData Central (SR Legacy) — corrected from generic "Bread, wheat" FDC 172686 to genuinely exact "Bread, whole-wheat, commercially prepared"',
+    kcal100: 252, protein100: 12.4, carbs100: 42.7, fat100: 3.5, fiber100: 6.0, fat_role: 'intrinsic',
     exchange: { category: 'starch', grams_per_exchange: 30, note: '1 starch exchange = 1 slice (~30g)' },
     aliases: ["wholegrain bread","ψωμί ολικής άλεσης","ψωμί μαύρο"],
     provenance_tier: 'usda_exact',
     household: { unit: 'slice', grams_per_unit: 30 },
+    micronutrients: { fiber: { value: 6, unit: 'g' }, calcium: { value: 161, unit: 'mg' }, iron: { value: 2.47, unit: 'mg' }, potassium: { value: 254, unit: 'mg' }, sodium: { value: 455, unit: 'mg' }, magnesium: { value: 75, unit: 'mg' }, vitc: { value: 0, unit: 'mg' }, vitd: { value: 0, unit: 'µg' }, b12: { value: 0, unit: 'µg' } },
     version: FOOD_DB_VERSION
   },
   cheese_light_slice: {
@@ -4025,12 +4035,13 @@ const FOOD_DATABASE = {
   },
   ricotta_anthotyro: {
     food_id: 'ricotta_anthotyro', name: { en: 'Anthotyro (soft whey cheese)', gr: 'Ανθότυρο', clinical: { en: 'Anthotyro (soft whey cheese)', gr: 'Ανθότυρο' }, patient: { en: 'Anthotyro', gr: 'Ανθότυρο' } },
-    state: 'n/a', fdc_id: 173441, source: 'USDA FoodData Central (SR Legacy) — ricotta used as closest nutritional equivalent to anthotyro',
+    state: 'n/a', fdc_id: 171248, source: 'USDA FoodData Central (SR Legacy) — ricotta, part-skim, used as closest nutritional equivalent to anthotyro; corrected from prior unrelated-food FDC 173441',
     kcal100: 174, protein100: 11.3, carbs100: 3.0, fat100: 13.0, fat_role: 'intrinsic',
     exchange: { category: 'protein', grams_per_exchange: 40, note: 'Medium-fat protein exchange' },
     aliases: ["anthotyro (soft whey cheese)","anthotyro","ανθότυρο","ricotta anthotyro"],
     provenance_tier: 'usda_approximate',
     fiber100: 0,
+    micronutrients: { fiber: { value: 0, unit: 'g' }, calcium: { value: 272, unit: 'mg' }, iron: { value: 0.44, unit: 'mg' }, potassium: { value: 125, unit: 'mg' }, sodium: { value: 99, unit: 'mg' }, magnesium: { value: 15, unit: 'mg' }, vitc: { value: 0, unit: 'mg' }, vitd: { value: 6, unit: 'IU' }, b12: { value: 0, unit: 'µg' } },
     version: FOOD_DB_VERSION
   },
   rusk_wholegrain: {
@@ -4051,37 +4062,41 @@ const FOOD_DATABASE = {
     aliases: ["apple, whole, raw","apple","μήλο, ολόκληρο, ωμό","μήλο"],
     provenance_tier: 'usda_exact',
     household: { unit: 'piece', grams_per_unit: 120 },
+    micronutrients: { fiber: { value: 2.4, unit: 'g' }, calcium: { value: 6, unit: 'mg' }, iron: { value: 0.12, unit: 'mg' }, potassium: { value: 107, unit: 'mg' }, sodium: { value: 1, unit: 'mg' }, magnesium: { value: 5, unit: 'mg' }, vitc: { value: 4.6, unit: 'mg' }, vitd: { value: 0, unit: 'IU' }, b12: { value: 0, unit: 'µg' } },
     version: FOOD_DB_VERSION
   },
   // ---- Batch 2 additions ----
   pork_loin_cooked: {
     food_id: 'pork_loin_cooked', name: { en: 'Pork loin, lean, cooked', gr: 'Χοιρινό φιλέτο, άπαχο, μαγειρεμένο', clinical: { en: 'Pork loin, lean, cooked', gr: 'Χοιρινό φιλέτο, άπαχο, μαγειρεμένο' }, patient: { en: 'Pork loin', gr: 'Χοιρινό φιλέτο' } },
-    state: 'cooked', fdc_id: 168312, source: 'USDA FoodData Central (SR Legacy)',
+    state: 'cooked', fdc_id: 168250, source: 'USDA FoodData Central (SR Legacy) — standardized representation, corrected from prior raw-state FDC 168312',
     kcal100: 143, protein100: 26.0, carbs100: 0, fat100: 3.5, fat_role: 'intrinsic',
     exchange: { category: 'protein', grams_per_exchange: 30, note: 'Lean-protein exchange, same convention as chicken' },
     aliases: ["pork loin, lean, cooked","pork loin","χοιρινό φιλέτο, άπαχο, μαγειρεμένο","χοιρινό φιλέτο","pork loin cooked","κρέας","κρέας χοιρινό"],
-    provenance_tier: 'usda_exact',
+    provenance_tier: 'usda_approximate',
     fiber100: 0,
+    micronutrients: { fiber: { value: 0, unit: 'g' }, calcium: { value: 6, unit: 'mg' }, iron: { value: 1.15, unit: 'mg' }, potassium: { value: 421, unit: 'mg' }, sodium: { value: 57, unit: 'mg' }, magnesium: { value: 29, unit: 'mg' }, vitc: { value: 0, unit: 'mg' }, vitd: { value: 0.2, unit: 'µg' }, b12: { value: 0.57, unit: 'µg' } },
     version: FOOD_DB_VERSION
   },
   beef_mince_lean_cooked: {
     food_id: 'beef_mince_lean_cooked', name: { en: 'Beef mince, lean (90/10), cooked', gr: 'Κιμάς μοσχαρίσιος, άπαχος (90/10), μαγειρεμένος', clinical: { en: 'Beef mince, lean (90/10), cooked', gr: 'Κιμάς μοσχαρίσιος, άπαχος (90/10), μαγειρεμένος' }, patient: { en: 'Lean beef mince', gr: 'Άπαχος κιμάς' } },
-    state: 'cooked', fdc_id: 174036, source: 'USDA FoodData Central (SR Legacy)',
+    state: 'cooked', fdc_id: 171794, source: 'USDA FoodData Central (SR Legacy) — ground beef 90% lean/10% fat, crumbles, cooked, pan-browned; standardized representation, corrected from prior wrong-ratio raw FDC 174036',
     kcal100: 176, protein100: 26.0, carbs100: 0, fat100: 8.0, fat_role: 'intrinsic',
     exchange: { category: 'protein', grams_per_exchange: 30, note: 'Medium-fat protein exchange (leaner mince still carries more fat/exchange than poultry)' },
     aliases: ["beef mince, lean (90/10), cooked","beef mince","κιμάς μοσχαρίσιος, άπαχος (90/10), μαγειρεμένος","κιμάς μοσχαρίσιος","beef mince lean cooked"],
-    provenance_tier: 'usda_exact',
+    provenance_tier: 'usda_approximate',
     fiber100: 0,
+    micronutrients: { fiber: { value: 0, unit: 'g' }, calcium: { value: 16, unit: 'mg' }, iron: { value: 3.08, unit: 'mg' }, potassium: { value: 433, unit: 'mg' }, sodium: { value: 87, unit: 'mg' }, magnesium: { value: 27, unit: 'mg' }, vitc: { value: 0, unit: 'mg' }, vitd: { value: 2, unit: 'IU' }, b12: { value: 0, unit: 'µg' } },
     version: FOOD_DB_VERSION
   },
   tuna_canned_drained: {
     food_id: 'tuna_canned_drained', name: { en: 'Tuna, canned in water, drained', gr: 'Τόνος κονσέρβα σε νερό, στραγγισμένος', clinical: { en: 'Tuna, canned in water, drained', gr: 'Τόνος κονσέρβα σε νερό, στραγγισμένος' }, patient: { en: 'Tuna', gr: 'Τόνος' } },
-    state: 'drained', fdc_id: 175159, source: 'USDA FoodData Central (SR Legacy)',
+    state: 'drained', fdc_id: 171986, source: 'USDA FoodData Central (SR Legacy) — light tuna, canned in water, without salt, drained solids; standardized representation, corrected from prior fresh-raw FDC 175159',
     kcal100: 116, protein100: 25.5, carbs100: 0, fat100: 0.8, fat_role: 'intrinsic',
     exchange: { category: 'protein', grams_per_exchange: 30, note: 'Very lean protein exchange; weight is drained weight, not can weight' },
     aliases: ["tuna, canned in water, drained","tuna","τόνος κονσέρβα σε νερό, στραγγισμένος","τόνος κονσέρβα σε νερό","tuna canned drained","τονοσαλάτα"],
-    provenance_tier: 'usda_exact',
+    provenance_tier: 'usda_approximate',
     fiber100: 0,
+    micronutrients: { fiber: { value: 0, unit: 'g' }, calcium: { value: 11, unit: 'mg' }, iron: { value: 1.53, unit: 'mg' }, potassium: { value: 237, unit: 'mg' }, sodium: { value: 50, unit: 'mg' }, magnesium: { value: 27, unit: 'mg' }, vitc: { value: 0, unit: 'mg' }, vitd: null, b12: { value: 2.99, unit: 'µg' } },
     version: FOOD_DB_VERSION
   },
   beef_pork_patty_cooked: {
@@ -4096,12 +4111,13 @@ const FOOD_DATABASE = {
   },
   bulgur_cooked: {
     food_id: 'bulgur_cooked', name: { en: 'Bulgur wheat, cooked', gr: 'Πλιγούρι, βρασμένο', clinical: { en: 'Bulgur wheat, cooked', gr: 'Πλιγούρι, βρασμένο' }, patient: { en: 'Bulgur', gr: 'Πλιγούρι' } },
-    state: 'cooked', fdc_id: 169739, source: 'USDA FoodData Central (SR Legacy)',
+    state: 'cooked', fdc_id: 170287, source: 'USDA FoodData Central (SR Legacy) — standardized representation, corrected from prior unrelated-food FDC 169739',
     kcal100: 83, protein100: 3.1, carbs100: 18.6, fat100: 0.2, fiber100: 4.5, fat_role: 'intrinsic',
     exchange: { category: 'starch', grams_per_exchange: 90, note: '1 starch exchange ≈ 1/2 cup cooked bulgur' },
     aliases: ["bulgur wheat, cooked","bulgur wheat","πλιγούρι, βρασμένο","πλιγούρι","bulgur cooked","πουργούρι"],
-    provenance_tier: 'usda_exact',
+    provenance_tier: 'usda_approximate',
     household: { unit: 'cup', grams_per_unit: 182 },
+    micronutrients: { fiber: { value: 4.5, unit: 'g' }, calcium: { value: 10, unit: 'mg' }, iron: { value: 0.96, unit: 'mg' }, potassium: { value: 68, unit: 'mg' }, sodium: { value: 5, unit: 'mg' }, magnesium: { value: 32, unit: 'mg' }, vitc: { value: 0, unit: 'mg' }, vitd: { value: 0, unit: 'IU' }, b12: { value: 0, unit: 'µg' } },
     version: FOOD_DB_VERSION
   },
   green_beans_cooked: {
@@ -4116,44 +4132,48 @@ const FOOD_DATABASE = {
   },
   pasta_cooked: {
     food_id: 'pasta_cooked', name: { en: 'Pasta, cooked', gr: 'Ζυμαρικά, βρασμένα', clinical: { en: 'Pasta, cooked', gr: 'Ζυμαρικά, βρασμένα' }, patient: { en: 'Pasta', gr: 'Ζυμαρικά' } },
-    state: 'cooked', fdc_id: 168927, source: 'USDA FoodData Central (SR Legacy)',
+    state: 'cooked', fdc_id: 169737, source: 'USDA FoodData Central (SR Legacy) — pasta, cooked, enriched, without added salt; standardized representation, corrected from prior dry-state FDC 168927',
     kcal100: 131, protein100: 5.0, carbs100: 25.0, fat100: 1.1, fiber100: 1.8, fat_role: 'intrinsic',
     exchange: { category: 'starch', grams_per_exchange: 75, note: '1 starch exchange ≈ 1/2 cup cooked pasta' },
     aliases: ["pasta, cooked","pasta","ζυμαρικά, βρασμένα","ζυμαρικά","pasta cooked","μακαρόνια"],
-    provenance_tier: 'usda_exact',
+    provenance_tier: 'usda_approximate',
     household: { unit: 'cup', grams_per_unit: 140 },
+    micronutrients: { fiber: { value: 1.8, unit: 'g' }, calcium: { value: 7, unit: 'mg' }, iron: { value: 1.28, unit: 'mg' }, potassium: { value: 44, unit: 'mg' }, sodium: { value: 1, unit: 'mg' }, magnesium: { value: 18, unit: 'mg' }, vitc: { value: 0, unit: 'mg' }, vitd: { value: 0, unit: 'IU' }, b12: { value: 0, unit: 'µg' } },
     version: FOOD_DB_VERSION
   },
   pita_bread: {
     food_id: 'pita_bread', name: { en: 'Pita bread', gr: 'Πίτα', clinical: { en: 'Pita bread', gr: 'Πίτα' }, patient: { en: 'Pita', gr: 'Πίτα' } },
-    state: 'n/a', fdc_id: 172687, source: 'USDA FoodData Central (SR Legacy)',
+    state: 'n/a', fdc_id: 174916, source: 'USDA FoodData Central (SR Legacy) — bread, pita, whole-wheat; standardized representation, corrected from prior unrelated-food FDC 172687',
     kcal100: 275, protein100: 9.1, carbs100: 55.7, fat100: 1.2, fiber100: 3.0, fat_role: 'intrinsic',
     exchange: { category: 'starch', grams_per_exchange: 30, note: '1 starch exchange ≈ 1/3 pita' },
     aliases: ["pita bread","πίτα"],
-    provenance_tier: 'usda_exact',
+    provenance_tier: 'usda_approximate',
     household: { unit: 'piece', grams_per_unit: 60 },
+    micronutrients: { fiber: { value: 6.1, unit: 'g' }, calcium: { value: 15, unit: 'mg' }, iron: { value: 3.06, unit: 'mg' }, potassium: { value: 170, unit: 'mg' }, sodium: { value: 421, unit: 'mg' }, magnesium: { value: 69, unit: 'mg' }, vitc: { value: 0, unit: 'mg' }, vitd: { value: 0, unit: 'IU' }, b12: { value: 0, unit: 'µg' } },
     version: FOOD_DB_VERSION
   },
   tomato_sauce: {
     food_id: 'tomato_sauce', name: { en: 'Tomato sauce', gr: 'Σάλτσα ντομάτας', clinical: { en: 'Tomato sauce', gr: 'Σάλτσα ντομάτας' }, patient: { en: 'Tomato sauce', gr: 'Σάλτσα ντομάτας' } },
-    state: 'n/a', fdc_id: 169228, source: 'USDA FoodData Central (SR Legacy)',
+    state: 'n/a', fdc_id: 169074, source: 'USDA FoodData Central (SR Legacy) — standardized representation, corrected from prior unrelated-food FDC 169228',
     kcal100: 29, protein100: 1.4, carbs100: 6.0, fat100: 0.2, fat_role: 'intrinsic',
     exchange: { category: 'free', grams_per_exchange: null, note: 'Small quantities treated as a free-food seasoning base at typical amounts' },
     aliases: ["tomato sauce","σάλτσα ντομάτας"],
-    provenance_tier: 'usda_exact',
+    provenance_tier: 'usda_approximate',
     fiber100: 0,
     household: { unit: 'tbsp', grams_per_unit: 15 },
+    micronutrients: { fiber: { value: 1.5, unit: 'g' }, calcium: { value: 14, unit: 'mg' }, iron: { value: 0.96, unit: 'mg' }, potassium: { value: 297, unit: 'mg' }, sodium: { value: 11, unit: 'mg' }, magnesium: { value: 15, unit: 'mg' }, vitc: { value: 7, unit: 'mg' }, vitd: { value: 0, unit: 'IU' }, b12: { value: 0, unit: 'µg' } },
     version: FOOD_DB_VERSION
   },
   // ---- Batch 3 additions ----
   salmon_baked: {
     food_id: 'salmon_baked', name: { en: 'Salmon fillet, baked', gr: 'Φιλέτο σολομού, ψητό', clinical: { en: 'Salmon fillet, baked', gr: 'Φιλέτο σολομού, ψητό' }, patient: { en: 'Salmon', gr: 'Σολομός' } },
-    state: 'cooked', fdc_id: 173686, source: 'USDA FoodData Central (SR Legacy)',
+    state: 'cooked', fdc_id: 175168, source: 'USDA FoodData Central (SR Legacy) — salmon, Atlantic, farmed, cooked, dry heat; standardized representation, corrected from prior raw-state FDC 173686',
     kcal100: 206, protein100: 22.1, carbs100: 0, fat100: 12.4, fat_role: 'intrinsic',
     exchange: { category: 'protein', grams_per_exchange: 30, note: 'Higher-fat fish; still classified as protein exchange, omega-3-rich intrinsic fat' },
     aliases: ["salmon fillet, baked","salmon fillet","φιλέτο σολομού, ψητό","φιλέτο σολομού","salmon baked","σολωμός"],
-    provenance_tier: 'usda_exact',
+    provenance_tier: 'usda_approximate',
     fiber100: 0,
+    micronutrients: { fiber: { value: 0, unit: 'g' }, calcium: { value: 15, unit: 'mg' }, iron: { value: 0.34, unit: 'mg' }, potassium: { value: 384, unit: 'mg' }, sodium: { value: 61, unit: 'mg' }, magnesium: { value: 30, unit: 'mg' }, vitc: { value: 3.7, unit: 'mg' }, vitd: { value: 526, unit: 'IU' }, b12: { value: 0, unit: 'µg' } },
     version: FOOD_DB_VERSION
   },
   // ---- Batch 5 additions ----
@@ -4165,15 +4185,17 @@ const FOOD_DATABASE = {
     aliases: ["chickpeas, cooked","chickpeas","ρεβίθια, βρασμένα","ρεβίθια","chickpeas cooked"],
     provenance_tier: 'usda_exact',
     household: { unit: 'cup', grams_per_unit: 164 },
+    micronutrients: { fiber: { value: 7.6, unit: 'g' }, calcium: { value: 49, unit: 'mg' }, iron: { value: 2.89, unit: 'mg' }, potassium: { value: 291, unit: 'mg' }, sodium: { value: 7, unit: 'mg' }, magnesium: { value: 48, unit: 'mg' }, vitc: { value: 1.3, unit: 'mg' }, vitd: { value: 0, unit: 'IU' }, b12: { value: 0, unit: 'µg' } },
     version: FOOD_DB_VERSION
   },
   tofu_firm: {
     food_id: 'tofu_firm', name: { en: 'Tofu, firm', gr: 'Τόφου, σκληρό', clinical: { en: 'Tofu, firm', gr: 'Τόφου, σκληρό' }, patient: { en: 'Tofu', gr: 'Τόφου' } },
-    state: 'cooked', fdc_id: 172475, source: 'USDA FoodData Central (SR Legacy)',
+    state: 'cooked', fdc_id: 172475, source: 'USDA FoodData Central (SR Legacy) — standardized representation; USDA "raw" reflects nomenclature convention for tofu as purchased/used, not a preparation mismatch',
     kcal100: 144, protein100: 17.3, carbs100: 2.8, fat100: 8.7, fiber100: 2.3, fat_role: 'intrinsic',
     exchange: { category: 'protein', grams_per_exchange: 60, note: 'Plant protein; 1 medium-fat protein exchange ≈ 1/2 cup (~60g) firm tofu' },
     aliases: ["tofu, firm","tofu","τόφου, σκληρό","τόφου","tofu firm"],
-    provenance_tier: 'usda_exact',
+    provenance_tier: 'usda_approximate',
+    micronutrients: { fiber: { value: 2.3, unit: 'g' }, calcium: { value: 683, unit: 'mg' }, iron: { value: 2.66, unit: 'mg' }, potassium: { value: 237, unit: 'mg' }, sodium: { value: 14, unit: 'mg' }, magnesium: { value: 58, unit: 'mg' }, vitc: { value: 0.2, unit: 'mg' }, vitd: { value: 0, unit: 'IU' }, b12: { value: 0, unit: 'µg' } },
     version: FOOD_DB_VERSION
   },
   quinoa_cooked: {
@@ -4184,16 +4206,18 @@ const FOOD_DATABASE = {
     aliases: ["quinoa, cooked","quinoa","κινόα, βρασμένη","κινόα","quinoa cooked"],
     provenance_tier: 'usda_exact',
     household: { unit: 'cup', grams_per_unit: 185 },
+    micronutrients: { fiber: { value: 2.8, unit: 'g' }, calcium: { value: 17, unit: 'mg' }, iron: { value: 1.49, unit: 'mg' }, potassium: { value: 172, unit: 'mg' }, sodium: { value: 7, unit: 'mg' }, magnesium: { value: 64, unit: 'mg' }, vitc: { value: 0, unit: 'mg' }, vitd: { value: 0, unit: 'µg' }, b12: { value: 0, unit: 'µg' } },
     version: FOOD_DB_VERSION
   },
   cannellini_beans_cooked: {
     food_id: 'cannellini_beans_cooked', name: { en: 'White (cannellini) beans, cooked', gr: 'Φασόλια (κανελίνι), βρασμένα', clinical: { en: 'White (cannellini) beans, cooked', gr: 'Φασόλια (κανελίνι), βρασμένα' }, patient: { en: 'Cannellini beans', gr: 'Φασόλια κανελίνι' } },
-    state: 'cooked', fdc_id: 173745, source: 'USDA FoodData Central (SR Legacy)',
+    state: 'cooked', fdc_id: 175203, source: 'USDA FoodData Central (SR Legacy) — white beans, mature seeds, cooked, boiled, without salt; standardized representation, corrected from prior wrong-variety raw FDC 173745',
     kcal100: 139, protein100: 9.7, carbs100: 25.1, fat100: 0.5, fiber100: 6.3, fat_role: 'intrinsic',
     exchange: { category: 'starch', grams_per_exchange: 90, note: 'ADA classifies legumes under starch; 1 exchange ≈ 1/2 cup (~90g) cooked beans' },
     aliases: ["white (cannellini) beans, cooked","white","φασόλια (κανελίνι), βρασμένα","φασόλια","cannellini beans cooked"],
-    provenance_tier: 'usda_exact',
+    provenance_tier: 'usda_approximate',
     household: { unit: 'cup', grams_per_unit: 179 },
+    micronutrients: { fiber: { value: 6.3, unit: 'g' }, calcium: { value: 90, unit: 'mg' }, iron: { value: 3.7, unit: 'mg' }, potassium: { value: 561, unit: 'mg' }, sodium: { value: 6, unit: 'mg' }, magnesium: { value: 63, unit: 'mg' }, vitc: { value: 0, unit: 'mg' }, vitd: { value: 0, unit: 'IU' }, b12: { value: 0, unit: 'µg' } },
     version: FOOD_DB_VERSION
   },
   spinach_cooked: {
@@ -4204,6 +4228,7 @@ const FOOD_DATABASE = {
     aliases: ["spinach, cooked","spinach","σπανάκι, βρασμένο","σπανάκι","spinach cooked","χόρτα","χόρτα βραστά"],
     provenance_tier: 'usda_exact',
     household: { unit: 'cup', grams_per_unit: 180 },
+    micronutrients: { fiber: { value: 2.4, unit: 'g' }, calcium: { value: 136, unit: 'mg' }, iron: { value: 3.57, unit: 'mg' }, potassium: { value: 466, unit: 'mg' }, sodium: { value: 70, unit: 'mg' }, magnesium: { value: 87, unit: 'mg' }, vitc: { value: 9.8, unit: 'mg' }, vitd: { value: 0, unit: 'IU' }, b12: { value: 0, unit: 'µg' } },
     version: FOOD_DB_VERSION
   },
   feta_cheese: {
@@ -4214,26 +4239,29 @@ const FOOD_DATABASE = {
     aliases: ["feta cheese","φέτα"],
     provenance_tier: 'usda_exact',
     fiber100: 0,
+    micronutrients: { fiber: { value: 0, unit: 'g' }, calcium: { value: 493, unit: 'mg' }, iron: { value: 0.65, unit: 'mg' }, potassium: { value: 62, unit: 'mg' }, sodium: { value: 1140, unit: 'mg' }, magnesium: { value: 19, unit: 'mg' }, vitc: { value: 0, unit: 'mg' }, vitd: { value: 16, unit: 'IU' }, b12: { value: 0, unit: 'µg' } },
     version: FOOD_DB_VERSION
   },
   onion_cooked: {
     food_id: 'onion_cooked', name: { en: 'Onion, sautéed', gr: 'Κρεμμύδι, σοταρισμένο', clinical: { en: 'Onion, sautéed', gr: 'Κρεμμύδι, σοταρισμένο' }, patient: { en: 'Onion, sautéed', gr: 'Κρεμμύδι, σοταρισμένο' } },
-    state: 'cooked', fdc_id: 170000, source: 'USDA FoodData Central (SR Legacy)',
+    state: 'cooked', fdc_id: 170001, source: 'USDA FoodData Central (SR Legacy) — standardized representation, corrected from prior raw-state FDC 170000',
     kcal100: 44, protein100: 1.4, carbs100: 10.2, fat100: 0.2, fiber100: 1.4, fat_role: 'intrinsic',
     exchange: { category: 'free', grams_per_exchange: null, note: 'Aromatic base; treated as free food at typical recipe quantities' },
     aliases: ["onion, sautéed","onion","κρεμμύδι, σοταρισμένο","κρεμμύδι","onion cooked"],
-    provenance_tier: 'usda_exact',
+    provenance_tier: 'usda_approximate',
     household: { unit: 'tbsp', grams_per_unit: 10 },
+    micronutrients: { fiber: { value: 1.4, unit: 'g' }, calcium: { value: 22, unit: 'mg' }, iron: { value: 0.24, unit: 'mg' }, potassium: { value: 166, unit: 'mg' }, sodium: { value: 3, unit: 'mg' }, magnesium: { value: 11, unit: 'mg' }, vitc: { value: 5.2, unit: 'mg' }, vitd: { value: 0, unit: 'IU' }, b12: { value: 0, unit: 'µg' } },
     version: FOOD_DB_VERSION
   },
   bell_pepper_raw: {
     food_id: 'bell_pepper_raw', name: { en: 'Bell pepper (for stuffing)', gr: 'Πιπεριά (για γεμιστά)', clinical: { en: 'Bell pepper (for stuffing)', gr: 'Πιπεριά (για γεμιστά)' }, patient: { en: 'Pepper', gr: 'Πιπεριά' } },
-    state: 'raw', fdc_id: 170108, source: 'USDA FoodData Central (SR Legacy)',
+    state: 'raw', fdc_id: 170108, source: 'USDA FoodData Central (SR Legacy) — red bell pepper, standardized representation for Nutrese\'s color-generic definition',
     kcal100: 26, protein100: 1.0, carbs100: 6.0, fat100: 0.3, fiber100: 2.1, fat_role: 'intrinsic',
     exchange: { category: 'veg', grams_per_exchange: 90, note: '1 veg exchange ≈ 1 medium pepper shell' },
     aliases: ["bell pepper (for stuffing)","bell pepper","πιπεριά (για γεμιστά)","πιπεριά","bell pepper raw"],
-    provenance_tier: 'usda_exact',
+    provenance_tier: 'usda_approximate',
     household: { unit: 'cup', grams_per_unit: 90 },
+    micronutrients: { fiber: { value: 2.1, unit: 'g' }, calcium: { value: 7, unit: 'mg' }, iron: { value: 0.43, unit: 'mg' }, potassium: { value: 211, unit: 'mg' }, sodium: { value: 4, unit: 'mg' }, magnesium: { value: 12, unit: 'mg' }, vitc: { value: 128, unit: 'mg' }, vitd: { value: 0, unit: 'IU' }, b12: { value: 0, unit: 'µg' } },
     version: FOOD_DB_VERSION
   },
   tomato_raw: {
@@ -4244,27 +4272,29 @@ const FOOD_DATABASE = {
     aliases: ["tomato (for stuffing)","tomato","ντομάτα (για γεμιστά)","ντομάτα","tomato raw"],
     provenance_tier: 'usda_exact',
     household: { unit: 'piece', grams_per_unit: 120 },
+    micronutrients: { fiber: { value: 1.2, unit: 'g' }, calcium: { value: 10, unit: 'mg' }, iron: { value: 0.27, unit: 'mg' }, potassium: { value: 237, unit: 'mg' }, sodium: { value: 5, unit: 'mg' }, magnesium: { value: 11, unit: 'mg' }, vitc: { value: 13.7, unit: 'mg' }, vitd: { value: 0, unit: 'IU' }, b12: { value: 0, unit: 'µg' } },
     version: FOOD_DB_VERSION
   },
   // ---- Batch 6 additions ----
   pork_souvlaki_cooked: {
     food_id: 'pork_souvlaki_cooked', name: { en: 'Pork souvlaki, grilled', gr: 'Χοιρινό σουβλάκι, ψητό', clinical: { en: 'Pork souvlaki, grilled', gr: 'Χοιρινό σουβλάκι, ψητό' }, patient: { en: 'Pork souvlaki', gr: 'Χοιρινό σουβλάκι' } },
-    state: 'cooked', fdc_id: 168333, source: 'USDA FoodData Central (SR Legacy) — lean pork, grilled',
+    state: 'cooked', fdc_id: null, source: 'No defensible USDA SR Legacy 2018 match for the prepared "souvlaki" dish (composition-only data cannot represent this by dish name); previous FDC 168333 was confirmed to be an unrelated cured-ham record — values retained as best estimate pending alternative source',
     kcal100: 168, protein100: 27.0, carbs100: 0, fat100: 6.5, fat_role: 'intrinsic',
     exchange: { category: 'protein', grams_per_exchange: 30, note: 'Lean-protein exchange; souvlaki cut carries a little more fat than loin' },
     aliases: ["pork souvlaki, grilled","pork souvlaki","χοιρινό σουβλάκι, ψητό","χοιρινό σουβλάκι","pork souvlaki cooked"],
-    provenance_tier: 'usda_approximate',
+    provenance_tier: 'composite_estimate',
     fiber100: 0,
     version: FOOD_DB_VERSION
   },
   black_eyed_beans_cooked: {
     food_id: 'black_eyed_beans_cooked', name: { en: 'Black-eyed beans (louvi), cooked', gr: 'Λουβί (μαυρομάτικα), βρασμένα', clinical: { en: 'Black-eyed beans (louvi), cooked', gr: 'Λουβί (μαυρομάτικα), βρασμένα' }, patient: { en: 'Black-eyed beans', gr: 'Λουβί (μαυρομάτικα)' } },
-    state: 'cooked', fdc_id: 173735, source: 'USDA FoodData Central (SR Legacy)',
+    state: 'cooked', fdc_id: 173759, source: 'USDA FoodData Central (SR Legacy) — standardized representation, corrected from prior wrong-species FDC 173735 (black beans, not black-eyed peas)',
     kcal100: 116, protein100: 7.7, carbs100: 20.8, fat100: 0.5, fiber100: 6.5, fat_role: 'intrinsic',
     exchange: { category: 'starch', grams_per_exchange: 90, note: 'ADA classifies legumes under starch; 1 exchange ≈ 1/2 cup (~90g) cooked' },
     aliases: ["black-eyed beans (louvi), cooked","black-eyed beans","λουβί (μαυρομάτικα), βρασμένα","λουβί","black eyed beans cooked"],
-    provenance_tier: 'usda_exact',
+    provenance_tier: 'usda_approximate',
     household: { unit: 'cup', grams_per_unit: 172 },
+    micronutrients: { fiber: { value: 6.5, unit: 'g' }, calcium: { value: 24, unit: 'mg' }, iron: { value: 2.51, unit: 'mg' }, potassium: { value: 278, unit: 'mg' }, sodium: { value: 4, unit: 'mg' }, magnesium: { value: 53, unit: 'mg' }, vitc: { value: 0.4, unit: 'mg' }, vitd: { value: 0, unit: 'IU' }, b12: { value: 0, unit: 'µg' } },
     version: FOOD_DB_VERSION
   },
   peas_cooked: {
@@ -4275,6 +4305,7 @@ const FOOD_DATABASE = {
     aliases: ["green peas (arakas), braised","green peas","αρακάς, λαδερός","αρακάς","peas cooked"],
     provenance_tier: 'usda_exact',
     household: { unit: 'cup', grams_per_unit: 160 },
+    micronutrients: { fiber: { value: 5.5, unit: 'g' }, calcium: { value: 27, unit: 'mg' }, iron: { value: 1.54, unit: 'mg' }, potassium: { value: 271, unit: 'mg' }, sodium: { value: 3, unit: 'mg' }, magnesium: { value: 39, unit: 'mg' }, vitc: { value: 14.2, unit: 'mg' }, vitd: { value: 0, unit: 'IU' }, b12: { value: 0, unit: 'µg' } },
     version: FOOD_DB_VERSION
   },
   trachanas_soup: {
@@ -4290,22 +4321,23 @@ const FOOD_DATABASE = {
   // ---- Batch 7 additions ----
   chicken_mince_cooked: {
     food_id: 'chicken_mince_cooked', name: { en: 'Chicken mince, cooked', gr: 'Κιμάς κοτόπουλου, μαγειρεμένος', clinical: { en: 'Chicken mince, cooked', gr: 'Κιμάς κοτόπουλου, μαγειρεμένος' }, patient: { en: 'Chicken mince', gr: 'Κιμάς κοτόπουλου' } },
-    state: 'cooked', fdc_id: 171478, source: 'USDA FoodData Central (SR Legacy) — ground chicken, cooked',
+    state: 'cooked', fdc_id: 171117, source: 'USDA FoodData Central (SR Legacy) — ground chicken crumbles, cooked, corrected from prior stewed-breast-meat FDC 171478',
     kcal100: 189, protein100: 27.0, carbs100: 0, fat100: 8.7, fat_role: 'intrinsic',
     exchange: { category: 'protein', grams_per_exchange: 30, note: 'Lean/medium-fat protein exchange; leaner than beef mince but carries some intrinsic fat' },
     aliases: ["chicken mince, cooked","chicken mince","κιμάς κοτόπουλου, μαγειρεμένος","κιμάς κοτόπουλου","chicken mince cooked"],
-    provenance_tier: 'usda_exact',
+    provenance_tier: 'usda_approximate',
     fiber100: 0,
+    micronutrients: { fiber: { value: 0, unit: 'g' }, calcium: { value: 8, unit: 'mg' }, iron: { value: 0.93, unit: 'mg' }, potassium: { value: 677, unit: 'mg' }, sodium: { value: 75, unit: 'mg' }, magnesium: { value: 28, unit: 'mg' }, vitc: { value: 0, unit: 'mg' }, vitd: null, b12: { value: 0, unit: 'µg' } },
     version: FOOD_DB_VERSION
   },
   // ---- Batch 8 additions (breakfast catalogue) ----
   milk_lowfat: {
     food_id: 'milk_lowfat', name: { en: 'Milk, 1.5% fat', gr: 'Γάλα 1,5%', clinical: { en: 'Milk, 1.5% fat', gr: 'Γάλα 1,5%' }, patient: { en: 'Milk, 1.5% fat', gr: 'Γάλα 1,5%' } },
-    state: 'n/a', fdc_id: 746782, source: 'USDA FoodData Central (SR Legacy) — reduced-fat milk',
+    state: 'n/a', fdc_id: null, source: 'FDC 746782 confirmed not present in SR Legacy 2018 — values retained as best estimate pending alternative source',
     kcal100: 50, protein100: 3.4, carbs100: 4.8, fat100: 1.5, fiber100: 0, fat_role: 'intrinsic',
     exchange: { category: 'dairy', grams_per_exchange: 240, note: '1 dairy exchange ≈ 1 cup (~240g) milk' },
     aliases: ["milk, 1.5% fat","milk","γάλα 1,5%","γάλα 1","milk lowfat"],
-    provenance_tier: 'usda_exact',
+    provenance_tier: 'composite_estimate',
     household: { unit: 'cup', grams_per_unit: 240 },
     version: FOOD_DB_VERSION
   },
@@ -4317,21 +4349,23 @@ const FOOD_DATABASE = {
     aliases: ["fortified plant milk (almond/soy)","fortified plant milk","εμπλουτισμένο φυτικό γάλα (αμύγδαλο/σόγια)","εμπλουτισμένο φυτικό γάλα","plant milk fortified"],
     provenance_tier: 'usda_approximate',
     household: { unit: 'cup', grams_per_unit: 240 },
+    micronutrients: { fiber: { value: 0.2, unit: 'g' }, calcium: { value: 184, unit: 'mg' }, iron: { value: 0.28, unit: 'mg' }, potassium: { value: 67, unit: 'mg' }, sodium: { value: 72, unit: 'mg' }, magnesium: { value: 6, unit: 'mg' }, vitc: { value: 0, unit: 'mg' }, vitd: { value: 1, unit: 'µg' }, b12: { value: 0, unit: 'µg' } },
     version: FOOD_DB_VERSION
   },
   greek_yogurt_2pct: {
     food_id: 'greek_yogurt_2pct', name: { en: 'Greek yogurt, 2%', gr: 'Γιαούρτι στραγγιστό 2%', clinical: { en: 'Greek yogurt, 2%', gr: 'Γιαούρτι στραγγιστό 2%' }, patient: { en: 'Greek yogurt, 2%', gr: 'Γιαούρτι στραγγιστό 2%' } },
-    state: 'n/a', fdc_id: 170903, source: 'USDA FoodData Central (SR Legacy) — Greek yogurt, lowfat',
+    state: 'n/a', fdc_id: 170903, source: 'USDA FoodData Central (SR Legacy) — Greek yogurt, plain, lowfat; standardized representation (no generic plain 2% record exists in SR Legacy 2018, only branded/flavored options)',
     kcal100: 73, protein100: 9.9, carbs100: 3.9, fat100: 1.9, fiber100: 0, fat_role: 'intrinsic',
     exchange: { category: 'protein', grams_per_exchange: 60, note: 'Protein-rich dairy; counted as protein exchange (~60g per exchange for strained yogurt)' },
     aliases: ["greek yogurt, 2%","greek yogurt","γιαούρτι στραγγιστό 2%","greek yogurt 2pct"],
-    provenance_tier: 'usda_exact',
+    provenance_tier: 'usda_approximate',
     household: { unit: 'cup', grams_per_unit: 245 },
+    micronutrients: { fiber: { value: 0, unit: 'g' }, calcium: { value: 115, unit: 'mg' }, iron: { value: 0.04, unit: 'mg' }, potassium: { value: 141, unit: 'mg' }, sodium: { value: 34, unit: 'mg' }, magnesium: { value: 11, unit: 'mg' }, vitc: { value: 0.8, unit: 'mg' }, vitd: { value: 0, unit: 'IU' }, b12: { value: 0.52, unit: 'µg' } },
     version: FOOD_DB_VERSION
   },
   soy_yogurt: {
     food_id: 'soy_yogurt', name: { en: 'Soy yogurt', gr: 'Γιαούρτι σόγιας', clinical: { en: 'Soy yogurt', gr: 'Γιαούρτι σόγιας' }, patient: { en: 'Soy yogurt', gr: 'Γιαούρτι σόγιας' } },
-    state: 'n/a', fdc_id: 330512, source: 'Composite estimate — plain unsweetened soy yogurt (SPOT-VERIFY brand before production)',
+    state: 'n/a', fdc_id: null, source: 'FDC 330512 confirmed not present in SR Legacy 2018 — plain unsweetened soy yogurt, values retained as best estimate pending alternative source',
     kcal100: 66, protein100: 3.5, carbs100: 5.0, fat100: 3.0, fiber100: 0.5, fat_role: 'intrinsic',
     exchange: { category: 'dairy', grams_per_exchange: 150, note: 'Plant-based yogurt; 1 exchange ≈ small pot (~150g)' },
     aliases: ["soy yogurt","γιαούρτι σόγιας"],
@@ -4347,6 +4381,7 @@ const FOOD_DATABASE = {
     aliases: ["oats, rolled (dry)","oats","βρώμη, νιφάδες (ξηρή)","βρώμη","oats dry"],
     provenance_tier: 'usda_exact',
     household: { unit: 'tbsp', grams_per_unit: 8 },
+    micronutrients: { fiber: { value: 10.1, unit: 'g' }, calcium: { value: 52, unit: 'mg' }, iron: { value: 4.25, unit: 'mg' }, potassium: { value: 362, unit: 'mg' }, sodium: { value: 6, unit: 'mg' }, magnesium: { value: 138, unit: 'mg' }, vitc: { value: 0, unit: 'mg' }, vitd: { value: 0, unit: 'IU' }, b12: { value: 0, unit: 'µg' } },
     version: FOOD_DB_VERSION
   },
   walnuts: {
@@ -4357,6 +4392,7 @@ const FOOD_DATABASE = {
     aliases: ["walnuts","καρύδια"],
     provenance_tier: 'usda_exact',
     household: { unit: 'piece', grams_per_unit: 2 },
+    micronutrients: { fiber: { value: 6.7, unit: 'g' }, calcium: { value: 98, unit: 'mg' }, iron: { value: 2.91, unit: 'mg' }, potassium: { value: 441, unit: 'mg' }, sodium: { value: 2, unit: 'mg' }, magnesium: { value: 158, unit: 'mg' }, vitc: { value: 1.3, unit: 'mg' }, vitd: { value: 0, unit: 'IU' }, b12: { value: 0, unit: 'µg' } },
     version: FOOD_DB_VERSION
   },
   honey: {
@@ -4367,16 +4403,18 @@ const FOOD_DATABASE = {
     aliases: ["honey","μέλι"],
     provenance_tier: 'usda_exact',
     household: { unit: 'tsp', grams_per_unit: 7 },
+    micronutrients: { fiber: { value: 0.2, unit: 'g' }, calcium: { value: 6, unit: 'mg' }, iron: { value: 0.42, unit: 'mg' }, potassium: { value: 52, unit: 'mg' }, sodium: { value: 4, unit: 'mg' }, magnesium: { value: 2, unit: 'mg' }, vitc: { value: 0.5, unit: 'mg' }, vitd: { value: 0, unit: 'IU' }, b12: { value: 0, unit: 'µg' } },
     version: FOOD_DB_VERSION
   },
   tahini: {
     food_id: 'tahini', name: { en: 'Tahini (sesame paste)', gr: 'Ταχίνι', clinical: { en: 'Tahini (sesame paste)', gr: 'Ταχίνι' }, patient: { en: 'Tahini', gr: 'Ταχίνι' } },
-    state: 'n/a', fdc_id: 170188, source: 'USDA FoodData Central (SR Legacy)',
+    state: 'n/a', fdc_id: 170189, source: 'USDA FoodData Central (SR Legacy) — standardized representation, corrected from prior unrelated-food FDC 170188',
     kcal100: 595, protein100: 17.0, carbs100: 21.2, fat100: 53.8, fiber100: 9.3, fat_role: 'intrinsic',
     exchange: { category: 'fat', grams_per_exchange: 10, note: 'Seed paste; fat is intrinsic; ~10g per fat exchange' },
     aliases: ["tahini (sesame paste)","tahini","ταχίνι"],
-    provenance_tier: 'usda_exact',
+    provenance_tier: 'usda_approximate',
     household: { unit: 'tsp', grams_per_unit: 5 },
+    micronutrients: { fiber: { value: 9.3, unit: 'g' }, calcium: { value: 426, unit: 'mg' }, iron: { value: 8.95, unit: 'mg' }, potassium: { value: 414, unit: 'mg' }, sodium: { value: 115, unit: 'mg' }, magnesium: { value: 95, unit: 'mg' }, vitc: { value: 0, unit: 'mg' }, vitd: { value: 0, unit: 'IU' }, b12: { value: 0, unit: 'µg' } },
     version: FOOD_DB_VERSION
   },
   banana: {
@@ -4387,16 +4425,18 @@ const FOOD_DATABASE = {
     aliases: ["banana","μπανάνα"],
     provenance_tier: 'usda_exact',
     household: { unit: 'piece', grams_per_unit: 100 },
+    micronutrients: { fiber: { value: 2.6, unit: 'g' }, calcium: { value: 5, unit: 'mg' }, iron: { value: 0.26, unit: 'mg' }, potassium: { value: 358, unit: 'mg' }, sodium: { value: 1, unit: 'mg' }, magnesium: { value: 27, unit: 'mg' }, vitc: { value: 8.7, unit: 'mg' }, vitd: { value: 0, unit: 'IU' }, b12: { value: 0, unit: 'µg' } },
     version: FOOD_DB_VERSION
   },
   turkey_slice: {
     food_id: 'turkey_slice', name: { en: 'Turkey breast, sliced (deli)', gr: 'Γαλοπούλα, φέτες', clinical: { en: 'Turkey breast, sliced (deli)', gr: 'Γαλοπούλα, φέτες' }, patient: { en: 'Turkey breast slices', gr: 'Φέτες γαλοπούλας' } },
-    state: 'n/a', fdc_id: 171506, source: 'USDA FoodData Central (SR Legacy) — turkey breast, low-fat deli',
+    state: 'n/a', fdc_id: 172941, source: 'USDA FoodData Central (SR Legacy) — turkey breast, sliced, prepackaged; corrected from prior ground-turkey FDC 171506',
     kcal100: 104, protein100: 17.0, carbs100: 2.0, fat100: 3.0, fiber100: 0, fat_role: 'intrinsic',
     exchange: { category: 'protein', grams_per_exchange: 30, note: 'Lean protein exchange; 1 slice ≈ 30g' },
     aliases: ["turkey breast, sliced (deli)","turkey breast","γαλοπούλα, φέτες","γαλοπούλα","turkey slice"],
-    provenance_tier: 'usda_exact',
+    provenance_tier: 'usda_approximate',
     household: { unit: 'slice', grams_per_unit: 30 },
+    micronutrients: { fiber: { value: 0, unit: 'g' }, calcium: { value: 14, unit: 'mg' }, iron: { value: 0.42, unit: 'mg' }, potassium: { value: 371, unit: 'mg' }, sodium: { value: 898, unit: 'mg' }, magnesium: { value: 19, unit: 'mg' }, vitc: { value: 0, unit: 'mg' }, vitd: { value: 6, unit: 'IU' }, b12: { value: 0.37, unit: 'µg' } },
     version: FOOD_DB_VERSION
   },
   cucumber_raw: {
@@ -4407,6 +4447,7 @@ const FOOD_DATABASE = {
     aliases: ["cucumber","αγγούρι","αγγουράκι","cucumber raw"],
     provenance_tier: 'usda_exact',
     household: { unit: 'slice', grams_per_unit: 10 },
+    micronutrients: { fiber: { value: 0.5, unit: 'g' }, calcium: { value: 16, unit: 'mg' }, iron: { value: 0.28, unit: 'mg' }, potassium: { value: 147, unit: 'mg' }, sodium: { value: 2, unit: 'mg' }, magnesium: { value: 13, unit: 'mg' }, vitc: { value: 2.8, unit: 'mg' }, vitd: { value: 0, unit: 'IU' }, b12: { value: 0, unit: 'µg' } },
     version: FOOD_DB_VERSION
   },
   cherry_tomatoes: {
@@ -4422,43 +4463,47 @@ const FOOD_DATABASE = {
   // ---- Batch 9 additions ----
   white_fish_grilled: {
     food_id: 'white_fish_grilled', name: { en: 'White fish (sea bream/bass), grilled', gr: 'Λευκό ψάρι (τσιπούρα/λαβράκι), ψητό', clinical: { en: 'White fish (sea bream/bass), grilled', gr: 'Λευκό ψάρι (τσιπούρα/λαβράκι), ψητό' }, patient: { en: 'White fish (sea bream or bass)', gr: 'Λευκό ψάρι (τσιπούρα ή λαβράκι)' } },
-    state: 'cooked', fdc_id: 175176, source: 'USDA FoodData Central (SR Legacy) — sea bass, cooked',
+    state: 'cooked', fdc_id: 173694, source: 'USDA FoodData Central (SR Legacy) — sea bass, mixed species, cooked, dry heat; standardized representation (sea bream has no SR Legacy record), corrected from prior wrong-species FDC 175176',
     kcal100: 124, protein100: 23.6, carbs100: 0, fat100: 2.6, fat_role: 'intrinsic',
     exchange: { category: 'protein', grams_per_exchange: 35, note: 'Lean fish; slightly higher gram equivalent than meat per protein exchange' },
     aliases: ["white fish (sea bream/bass), grilled","white fish","λευκό ψάρι (τσιπούρα/λαβράκι), ψητό","λευκό ψάρι","white fish grilled"],
     provenance_tier: 'usda_approximate',
     fiber100: 0,
+    micronutrients: { fiber: { value: 0, unit: 'g' }, calcium: { value: 13, unit: 'mg' }, iron: { value: 0.37, unit: 'mg' }, potassium: { value: 328, unit: 'mg' }, sodium: { value: 87, unit: 'mg' }, magnesium: { value: 53, unit: 'mg' }, vitc: { value: 0, unit: 'mg' }, vitd: null, b12: { value: 0.3, unit: 'µg' } },
     version: FOOD_DB_VERSION
   },
   // ---- Batch 10 additions (snack catalogue) ----
   cottage_cheese: {
     food_id: 'cottage_cheese', name: { en: 'Cottage cheese, low-fat', gr: 'Τυρί cottage, χαμηλών λιπαρών', clinical: { en: 'Cottage cheese, low-fat', gr: 'Τυρί cottage, χαμηλών λιπαρών' }, patient: { en: 'Low-fat cottage cheese', gr: 'Τυρί cottage χαμηλών λιπαρών' } },
-    state: 'n/a', fdc_id: 173417, source: 'USDA FoodData Central (SR Legacy) — cottage cheese, lowfat 2%',
+    state: 'n/a', fdc_id: 173417, source: 'USDA FoodData Central (SR Legacy) — cottage cheese, lowfat 1% milkfat (standardized representation of Nutrese\'s generic low-fat definition; corrected stated percentage from prior text)',
     kcal100: 84, protein100: 11.0, carbs100: 4.3, fat100: 2.3, fiber100: 0, fat_role: 'intrinsic',
     exchange: { category: 'protein', grams_per_exchange: 60, note: 'Protein-rich fresh cheese; ~60g per protein exchange' },
     aliases: ["cottage cheese, low-fat","cottage cheese","τυρί cottage, χαμηλών λιπαρών","τυρί cottage","τυρί άπαχο","άπαχο τυρί"],
-    provenance_tier: 'usda_exact',
+    provenance_tier: 'usda_approximate',
     household: { unit: 'cup', grams_per_unit: 226 },
+    micronutrients: { fiber: { value: 0, unit: 'g' }, calcium: { value: 61, unit: 'mg' }, iron: { value: 0.14, unit: 'mg' }, potassium: { value: 86, unit: 'mg' }, sodium: { value: 406, unit: 'mg' }, magnesium: { value: 5, unit: 'mg' }, vitc: { value: 0, unit: 'mg' }, vitd: { value: 0, unit: 'IU' }, b12: { value: 0, unit: 'µg' } },
     version: FOOD_DB_VERSION
   },
   crackers_wholegrain: {
     food_id: 'crackers_wholegrain', name: { en: 'Wholegrain crackers', gr: 'Κράκερ ολικής', clinical: { en: 'Wholegrain crackers', gr: 'Κράκερ ολικής' }, patient: { en: 'Wholegrain crackers', gr: 'Κράκερ ολικής' } },
-    state: 'n/a', fdc_id: 174954, source: 'USDA FoodData Central (SR Legacy) — whole-wheat crackers',
+    state: 'n/a', fdc_id: 167942, source: 'USDA FoodData Central (SR Legacy) — saltine crackers, whole wheat (multi-grain); corrected from prior unrelated-food FDC 174954',
     kcal100: 424, protein100: 10.0, carbs100: 68.0, fat100: 12.0, fiber100: 9.0, fat_role: 'intrinsic',
     exchange: { category: 'starch', grams_per_exchange: 18, note: '1 starch exchange ≈ 4 crackers (~18g)' },
     aliases: ["wholegrain crackers","κράκερ ολικής","crackers wholegrain","κράκερ ολικής αλέσεως"],
-    provenance_tier: 'usda_exact',
+    provenance_tier: 'usda_approximate',
     household: { unit: 'piece', grams_per_unit: 4.5 },
+    micronutrients: { fiber: { value: 6.7, unit: 'g' }, calcium: { value: 0, unit: 'mg' }, iron: { value: 5.14, unit: 'mg' }, potassium: { value: 221, unit: 'mg' }, sodium: { value: 1210, unit: 'mg' }, magnesium: { value: 70, unit: 'mg' }, vitc: { value: 0, unit: 'mg' }, vitd: { value: 0, unit: 'IU' }, b12: { value: 0, unit: 'µg' } },
     version: FOOD_DB_VERSION
   },
   rice_cakes: {
     food_id: 'rice_cakes', name: { en: 'Rice cakes', gr: 'Ρυζογκοφρέτες', clinical: { en: 'Rice cakes', gr: 'Ρυζογκοφρέτες' }, patient: { en: 'Rice cakes', gr: 'Ρυζογκοφρέτες' } },
-    state: 'n/a', fdc_id: 174928, source: 'USDA FoodData Central (SR Legacy) — rice cakes, plain',
+    state: 'n/a', fdc_id: 170250, source: 'USDA FoodData Central (SR Legacy) — brown rice cakes, plain, unsalted; corrected from prior unrelated-food FDC 174928',
     kcal100: 387, protein100: 8.2, carbs100: 81.5, fat100: 2.8, fiber100: 4.2, fat_role: 'intrinsic',
     exchange: { category: 'starch', grams_per_exchange: 10, note: '1 starch exchange ≈ 1-2 rice cakes (~10g)' },
     aliases: ["rice cakes","ρυζογκοφρέτες"],
-    provenance_tier: 'usda_exact',
+    provenance_tier: 'usda_approximate',
     household: { unit: 'piece', grams_per_unit: 10 },
+    micronutrients: { fiber: { value: 4.2, unit: 'g' }, calcium: { value: 11, unit: 'mg' }, iron: { value: 1.49, unit: 'mg' }, potassium: { value: 290, unit: 'mg' }, sodium: { value: 26, unit: 'mg' }, magnesium: { value: 131, unit: 'mg' }, vitc: { value: 0, unit: 'mg' }, vitd: { value: 0, unit: 'µg' }, b12: { value: 0, unit: 'µg' } },
     version: FOOD_DB_VERSION
   },
   almonds: {
@@ -4469,6 +4514,7 @@ const FOOD_DATABASE = {
     aliases: ["almonds","αμύγδαλα"],
     provenance_tier: 'usda_exact',
     household: { unit: 'piece', grams_per_unit: 1.2 },
+    micronutrients: { fiber: { value: 12.5, unit: 'g' }, calcium: { value: 269, unit: 'mg' }, iron: { value: 3.71, unit: 'mg' }, potassium: { value: 733, unit: 'mg' }, sodium: { value: 1, unit: 'mg' }, magnesium: { value: 270, unit: 'mg' }, vitc: { value: 0, unit: 'mg' }, vitd: { value: 0, unit: 'µg' }, b12: { value: 0, unit: 'µg' } },
     version: FOOD_DB_VERSION
   },
   dried_fruit: {
@@ -4479,6 +4525,7 @@ const FOOD_DATABASE = {
     aliases: ["dried fruit (raisins/apricots)","dried fruit","αποξηραμένα φρούτα (σταφίδες/βερίκοκα)","αποξηραμένα φρούτα"],
     provenance_tier: 'usda_approximate',
     household: { unit: 'tbsp', grams_per_unit: 10 },
+    micronutrients: { fiber: { value: 4.5, unit: 'g' }, calcium: { value: 62, unit: 'mg' }, iron: { value: 1.79, unit: 'mg' }, potassium: { value: 744, unit: 'mg' }, sodium: { value: 26, unit: 'mg' }, magnesium: { value: 36, unit: 'mg' }, vitc: { value: 2.3, unit: 'mg' }, vitd: { value: 0, unit: 'IU' }, b12: { value: 0, unit: 'µg' } },
     version: FOOD_DB_VERSION
   },
   cocoa_powder: {
@@ -4489,6 +4536,7 @@ const FOOD_DATABASE = {
     aliases: ["cocoa powder, unsweetened","cocoa powder","κακάο σκόνη, χωρίς ζάχαρη","κακάο σκόνη"],
     provenance_tier: 'usda_exact',
     household: { unit: 'tsp', grams_per_unit: 5 },
+    micronutrients: { fiber: { value: 37, unit: 'g' }, calcium: { value: 128, unit: 'mg' }, iron: { value: 13.9, unit: 'mg' }, potassium: { value: 1520, unit: 'mg' }, sodium: { value: 21, unit: 'mg' }, magnesium: { value: 499, unit: 'mg' }, vitc: { value: 0, unit: 'mg' }, vitd: { value: 0, unit: 'IU' }, b12: { value: 0, unit: 'µg' } },
     version: FOOD_DB_VERSION
   },
   oat_biscuits: {
@@ -15664,6 +15712,183 @@ function dayMicronutrientSignals(dayPlan){
   };
 }
 
+
+
+
+// ============================================================
+// QUANTITATIVE MICRONUTRIENT ENGINE (Phase B) -- calculates real, final-
+// gram-based nutrient totals from the SAME final structured ingredient
+// data already used by the renderer, kcal fix, and the qualitative
+// dayMicronutrientSignals() above. This is a separate, additive system:
+// it does not modify, replace, or depend on the qualitative signals, and
+// it introduces no new mechanism for determining a meal's final
+// ingredients or grams -- see getFinalIngredientsForSlot() below, which
+// mirrors mealFoodSetMatch()'s existing access pattern exactly.
+// ============================================================
+const MICRONUTRIENT_KEYS=['fiber','calcium','iron','potassium','sodium','magnesium','vitc','vitd','b12'];
+const MICRONUTRIENT_DISPLAY_UNITS={fiber:'g',calcium:'mg',iron:'mg',potassium:'mg',sodium:'mg',magnesium:'mg',vitc:'mg',vitd:'µg',b12:'µg'};
+
+// Normalizes a Vitamin D value to micrograms for AGGREGATION ONLY, using
+// the standard, widely-accepted vitamin D3 factor (1 µg = 40 IU). This
+// never touches the stored FOOD_DATABASE value -- Phase A's raw
+// {value, unit} pairs remain exactly as extracted from USDA for
+// traceability, and this function is called fresh at calculation time.
+function normalizeVitaminDToMcg(value, unit){
+  if(String(unit||'').toUpperCase()==='IU') return value/40;
+  return value; // already µg, or an unrecognized unit passed through unchanged
+}
+
+// Returns the FINAL structured ingredients for one meal slot of a day
+// plan, using exactly the same three-way dispatch as the established
+// mealFoodSetMatch(): custom/snack meals read S.customMeals directly;
+// migrated meals call getStructuredInstanceForSlot() with the real
+// day-level allocations (identical to the kcal-fix call); legacy meals
+// and any slot with no structured data at all (e.g. a 1-Day snack that
+// has not been materialized into a CUSTOM_ key -- see dayUsesUnifiedSnackModel())
+// are honestly reported as unavailable rather than reconstructed via a
+// second calculation path. Returns { ingredients: [] | null, available }.
+function getFinalIngredientsForSlot(mealKey, dt, slot){
+  if(!mealKey) return {ingredients:[], available:true}; // empty slot: contributes nothing, not "unavailable"
+  if(isCustomMealKey(mealKey)){
+    const meal=getCustomMealByKey(mealKey);
+    const ingredients=meal?.instance?.ingredients;
+    return {ingredients: Array.isArray(ingredients) ? ingredients : [], available:true};
+  }
+  if(isMigratedMeal(mealKey) && dt){
+    try{
+      const portions = slot==='lun' ? dt.portions?.lunch : slot==='din' ? dt.portions?.dinner : undefined;
+      const inst=getStructuredInstanceForSlot(mealKey, portions, dt.starchAllocation?.[slot], dt.vegAllocation?.[slot], dt.proteinAllocation?.[slot], dt.fatAllocation?.[slot]);
+      const ingredients=inst?.ingredients;
+      return {ingredients: Array.isArray(ingredients) ? ingredients : [], available:true};
+    }catch(e){ return {ingredients:null, available:false}; }
+  }
+  // Legacy/unmigrated meal key with no structured ingredient array to read.
+  return {ingredients:null, available:false};
+}
+
+function makeEmptyMicronutrientAccumulator(){
+  const nutrients={};
+  MICRONUTRIENT_KEYS.forEach(key=>{ nutrients[key]={sum:0, unavailableGrams:0, unavailableFoodCount:0, contributors:[]}; });
+  return {nutrients, unmappedFoods:[]};
+}
+
+// Adds every ingredient's contribution into a running accumulator so
+// multiple meal slots can be merged into one day total. Distinguishes,
+// per the approved spec, a food with NO micronutrients object at all
+// (pushed to acc.unmappedFoods -- "no defensible quantitative USDA
+// source") from a food that HAS the object but a specific nutrient is
+// null (silently excluded from that nutrient's sum, counted in
+// unavailableGrams/unavailableFoodCount) -- missing is never treated as
+// zero in either case.
+function accumulateIngredientMicronutrients(ingredients, acc, mealLabel){
+  const db=window.NutreseEngine.FOOD_DATABASE;
+  (ingredients||[]).forEach(ing=>{
+    const food=db[ing.food_id];
+    const grams=Number(ing.grams)||0;
+    if(!grams) return;
+    if(!food){
+      // food_id not present in FOOD_DATABASE at all (e.g. a custom/manual
+      // entry with no matching database record) -- track exactly like an
+      // unmapped food for every nutrient, never silently dropped.
+      acc.unmappedFoods.push({food_id:ing.food_id, grams, meal:mealLabel});
+      MICRONUTRIENT_KEYS.forEach(key=>{
+        acc.nutrients[key].unavailableGrams+=grams;
+        acc.nutrients[key].unavailableFoodCount+=1;
+      });
+      return;
+    }
+    const hasMicroObject=!!food.micronutrients;
+    if(!hasMicroObject) acc.unmappedFoods.push({food_id:ing.food_id, grams, meal:mealLabel});
+    MICRONUTRIENT_KEYS.forEach(key=>{
+      const bucket=acc.nutrients[key];
+      const entry=hasMicroObject ? food.micronutrients[key] : null;
+      if(!entry || entry.value===null || entry.value===undefined){
+        bucket.unavailableGrams+=grams;
+        bucket.unavailableFoodCount+=1;
+        return;
+      }
+      let value=entry.value;
+      if(key==='vitd') value=normalizeVitaminDToMcg(value, entry.unit);
+      bucket.sum+=(grams/100)*value;
+      bucket.contributors.push({food_id:ing.food_id, grams, contribution:Math.round((grams/100)*value*100)/100, rawValue:entry.value, rawUnit:entry.unit, meal:mealLabel});
+    });
+  });
+}
+
+function finalizeMicronutrientAccumulator(acc){
+  const nutrients={};
+  MICRONUTRIENT_KEYS.forEach(key=>{
+    const b=acc.nutrients[key];
+    nutrients[key]={
+      value: Math.round(b.sum*100)/100,
+      unit: MICRONUTRIENT_DISPLAY_UNITS[key],
+      complete: b.unavailableFoodCount===0,
+      unavailableFoodCount: b.unavailableFoodCount,
+      unavailableGrams: Math.round(b.unavailableGrams*10)/10,
+      contributors: b.contributors,
+    };
+  });
+  return {nutrients, unmappedFoods:acc.unmappedFoods};
+}
+
+// Calculates the FINAL, quantitative micronutrient totals for one day
+// plan, consuming the exact same final-ingredient source as the existing
+// kcal fix and qualitative signal system for every slot -- no exchange,
+// generation, or kcal/macro logic is read from or modified here. dt is
+// the same calcDayTotalsForPlanDisplay() result already computed by the
+// caller (the day-level allocations it carries are reused, not
+// recomputed). Returns per-nutrient day totals, a perMeal breakdown for
+// each of the six slots, and legacySlots identifying any slot whose meal
+// has no structured ingredient data (legacy meal, or a 1-Day snack slot
+// not yet materialized into a CUSTOM_ key -- see getFinalIngredientsForSlot).
+function calcDayMicronutrientTotals(dayPlan, dt){
+  if(!dayPlan) return null;
+  const dayAcc=makeEmptyMicronutrientAccumulator();
+  const perMeal={};
+  const legacySlots=[];
+  SEVEN_DAY_SLOTS.forEach(({key:slot})=>{
+    const mealKey=dayPlan[slot];
+    const {ingredients, available}=getFinalIngredientsForSlot(mealKey, dt, slot);
+    const slotAcc=makeEmptyMicronutrientAccumulator();
+    if(available && ingredients){
+      accumulateIngredientMicronutrients(ingredients, slotAcc, slot);
+      accumulateIngredientMicronutrients(ingredients, dayAcc, slot);
+    } else if(mealKey && !available){
+      legacySlots.push(slot);
+    }
+    perMeal[slot]=finalizeMicronutrientAccumulator(slotAcc);
+  });
+  const dayResult=finalizeMicronutrientAccumulator(dayAcc);
+  dayResult.legacySlots=legacySlots;
+  dayResult.perMeal=perMeal;
+  return dayResult;
+}
+
+// Aggregates calcDayMicronutrientTotals() across all 7 stored week-plan
+// days -- each day's own already-scaled final ingredients, never a
+// separate recomputation of allocations. No RDA/adequacy/scoring logic;
+// purely daily values, 7-day total, and 7-day average per nutrient.
+function calcWeekMicronutrientTotals(weekPlans, lang){
+  const days=(weekPlans||[]).map((dayPlan, idx)=>{
+    let dt;
+    try{ dt=calcDayTotalsForPlanDisplay(dayPlan, lang||S.mealLanguage||'GR', idx); }catch(e){ dt=null; }
+    return calcDayMicronutrientTotals(dayPlan, dt);
+  });
+  const summary={};
+  MICRONUTRIENT_KEYS.forEach(key=>{
+    const dailyValues=days.map(d=>d?.nutrients?.[key]?.value ?? null);
+    const daysWithData=dailyValues.filter(v=>v!==null);
+    const total=daysWithData.reduce((s,v)=>s+v,0);
+    summary[key]={
+      unit: MICRONUTRIENT_DISPLAY_UNITS[key],
+      dailyValues,
+      total: Math.round(total*100)/100,
+      average: daysWithData.length ? Math.round((total/daysWithData.length)*100)/100 : null,
+      complete: days.every(d=>d?.nutrients?.[key]?.complete),
+    };
+  });
+  return {days, summary};
+}
 
 function assessMicronutrientQuality(){
   if(!S.ex) return null;
