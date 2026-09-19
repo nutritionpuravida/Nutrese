@@ -2901,6 +2901,7 @@ table th,
       </div>
     </div>
     <div id="micro-quality-summary" style="margin-bottom:14px"></div>
+    <div id="micro-quantitative-summary" style="margin-bottom:14px"></div>
     <div class="card">
       <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
         <span class="card-title" id="report-print-title"><i class="ti ti-file-text" aria-hidden="true"></i> Κλινική Αναφορά Διατροφής</span>
@@ -11723,7 +11724,7 @@ function nav(id) {
   }
   if(id==='oneday') buildOneDayPlan();
   if(id==='sevenday') { if(S.sevenDayView==='week') S.weekViewTheme=currentAppTheme(); buildSevenDay(); }
-  if(id==='report') { loadReportLogo().finally(()=>buildReport()); renderMicronutrientCoverage(); }
+  if(id==='report') { loadReportLogo().finally(()=>buildReport()); renderMicronutrientCoverage(); renderQuantitativeMicronutrients(); }
   if(id==='tracking') renderTracking();
 }
 
@@ -16063,6 +16064,62 @@ function renderMicronutrientCoverage(){
       ${suggestionRows}
       ${dayByDayTable}
       <div style="font-size:11px;color:var(--text-muted);margin-top:10px">${isGr?'Εκτίμηση βάσει σύνθεσης ομάδων τροφίμων (όχι εργαστηριακή ανάλυση) — υποστηρίζει την κλινική σας κρίση, δεν την αντικαθιστά.':'Estimated from food-group composition (not a lab-grade analysis) — supports your clinical judgement, doesn\'t replace it.'}</div>
+    </div>
+  </div>`;
+}
+
+// Renders the Phase B QUANTITATIVE micronutrient results (real mg/µg/g
+// values, not the qualitative "possible source" system above). Reads
+// exclusively from calcWeekMicronutrientTotals() -- introduces no new
+// calculation, no RDA/adequacy comparison, no scoring. Missing-vs-zero is
+// preserved in display: an unavailable cell renders as an em-dash, and a
+// day/nutrient with any incomplete USDA coverage is marked with an
+// asterisk rather than silently shown as a complete, precise number.
+function renderQuantitativeMicronutrients(){
+  const el=document.getElementById('micro-quantitative-summary'); if(!el) return;
+  const plans=S.weekPlans||WEEK_PLANS;
+  if(!Array.isArray(plans) || !plans.length){ el.innerHTML=''; return; }
+  const isGr = window.appLang!=='en';
+  let weekData;
+  try{ weekData=calcWeekMicronutrientTotals(plans, S.mealLanguage||'GR'); }catch(e){ el.innerHTML=''; return; }
+  const dayNamesEn=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const dayNamesGr=['Δευ','Τρι','Τετ','Πεμ','Παρ','Σαβ','Κυρ'];
+  const nutrientLabels={
+    fiber:{en:'Fibre',gr:'Ίνες'}, calcium:{en:'Calcium',gr:'Ασβέστιο'}, iron:{en:'Iron',gr:'Σίδηρος'},
+    magnesium:{en:'Magnesium',gr:'Μαγνήσιο'}, potassium:{en:'Potassium',gr:'Κάλιο'}, sodium:{en:'Sodium',gr:'Νάτριο'},
+    vitc:{en:'Vitamin C',gr:'Βιταμίνη C'}, vitd:{en:'Vitamin D',gr:'Βιταμίνη D'}, b12:{en:'B12',gr:'B12'}
+  };
+  const fmtCell=(val)=> (val===null || val===undefined) ? '<span style="color:var(--text-muted)">—</span>' : val;
+  const rows=MICRONUTRIENT_KEYS.map(key=>{
+    const s=weekData.summary[key];
+    const dayCells=s.dailyValues.map(v=>`<td style="padding:5px 6px;text-align:center">${fmtCell(v)}</td>`).join('');
+    const incompleteMark = s.complete ? '' : ` <span title="${isGr?'Ελλιπή δεδομένα USDA για ορισμένες τροφές':'Incomplete USDA data for some foods'}" style="color:var(--warn);cursor:help">*</span>`;
+    return `<tr>
+      <td style="padding:5px 8px;font-weight:600;white-space:nowrap">${isGr?nutrientLabels[key].gr:nutrientLabels[key].en}${incompleteMark}</td>
+      ${dayCells}
+      <td style="padding:5px 8px;text-align:center;font-weight:700;border-left:1px solid var(--border-color)">${fmtCell(s.total)}</td>
+      <td style="padding:5px 8px;text-align:center;font-weight:700">${fmtCell(s.average)}</td>
+      <td style="padding:5px 8px;text-align:center;color:var(--text-muted);font-size:11px">${s.unit}</td>
+    </tr>`;
+  }).join('');
+  const dayHeaders=(isGr?dayNamesGr:dayNamesEn).map(d=>`<th style="padding:5px 6px;text-align:center;font-size:11px">${d}</th>`).join('');
+  el.innerHTML=`<div class="card no-print" style="margin:0">
+    <div class="card-header"><span class="card-title"><i class="ti ti-flask" aria-hidden="true"></i> ${isGr?'Ποσοτική Ανάλυση Μικροθρεπτικών (Αυτή η Εβδομάδα)':'Quantitative Micronutrient Analysis (This Week)'}</span></div>
+    <div class="card-body">
+      <div class="field-note" style="margin-bottom:8px">${isGr?'Υπολογισμένο από τις πραγματικές τελικές τροφές και ποσότητες του πλάνου — δεν είναι σύγκριση με στόχους αναφοράς.':'Calculated from the plan\'s actual final foods and quantities — not a comparison against reference targets.'}</div>
+      <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead><tr>
+          <th style="padding:5px 8px;text-align:left;font-size:11px">${isGr?'Θρεπτικό':'Nutrient'}</th>
+          ${dayHeaders}
+          <th style="padding:5px 8px;text-align:center;font-size:11px;border-left:1px solid var(--border-color)">${isGr?'Σύνολο 7ημ':'7-Day Total'}</th>
+          <th style="padding:5px 8px;text-align:center;font-size:11px">${isGr?'Μ.Ο. 7ημ':'7-Day Avg'}</th>
+          <th style="padding:5px 8px;text-align:center;font-size:11px">${isGr?'Μονάδα':'Unit'}</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      </div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:10px">${isGr?'* Ελλιπή δεδομένα USDA για μία ή περισσότερες τροφές — η τιμή δεν περιλαμβάνει αυτές τις συνεισφορές (η έλλειψη δεν θεωρείται μηδέν).':'* Missing USDA data for one or more foods — the value excludes those contributions (missing is never treated as zero).'}</div>
     </div>
   </div>`;
 }
@@ -20442,17 +20499,17 @@ function applyDietImport(){
   scheduleAutosave();
 }
 const DIET_IMPORT_DAY_PATTERNS = [
-  {key:0, patterns:['monday','δευτερα']}, {key:1, patterns:['tuesday','τριτη']},
-  {key:2, patterns:['wednesday','τεταρτη']}, {key:3, patterns:['thursday','πεμπτη']},
-  {key:4, patterns:['friday','παρασκευη']}, {key:5, patterns:['saturday','σαββατο']},
-  {key:6, patterns:['sunday','κυριακη']},
+  {key:0, patterns:['monday','δευτερα','day 1','ημερα 1']}, {key:1, patterns:['tuesday','τριτη','day 2','ημερα 2']},
+  {key:2, patterns:['wednesday','τεταρτη','day 3','ημερα 3']}, {key:3, patterns:['thursday','πεμπτη','day 4','ημερα 4']},
+  {key:4, patterns:['friday','παρασκευη','day 5','ημερα 5']}, {key:5, patterns:['saturday','σαββατο','day 6','ημερα 6']},
+  {key:6, patterns:['sunday','κυριακη','day 7','ημερα 7']},
 ];
 const DIET_IMPORT_MEAL_PATTERNS = [
   {key:'brk', patterns:['breakfast','πρωινο']},
   {key:'snk1', patterns:['snack 1','snack1','morning snack','δεκατιανο']},
   {key:'lun', patterns:['lunch','μεσημεριανο']},
   {key:'snk2', patterns:['snack 2','snack2','afternoon snack','απογευματινο']},
-  {key:'din', patterns:['dinner','δειπνο']},
+  {key:'din', patterns:['dinner','δειπνο','βραδινο','βραδινο γευμα']},
   {key:'sleep', patterns:['before sleep','before bed','evening snack','πριν τον υπνο','πριν υπνο']},
 ];
 // Diacritic-insensitive, case-insensitive normalization for heading matching
@@ -20475,6 +20532,47 @@ function matchDietImportMeal(line){
   if(!norm) return null;
   for(const m of DIET_IMPORT_MEAL_PATTERNS){
     if(m.patterns.some(p=>norm.includes(normalizeForDietMatch(p)))) return m.key;
+  }
+  return null;
+}
+// Same matching as matchDietImportMeal() above, but also reports WHERE the
+// matched heading ends in the ORIGINAL (untouched) line, so any inline
+// content following it (e.g. "Breakfast: 2 eggs") can be recovered
+// character-for-character from the original string -- never from the
+// normalized/folded copy, which is diacritic- and case-insensitive and
+// must never be used as the actual content. Used only by the plain-text
+// branch of parseImportedDietText(); the Excel/TSV column branch continues
+// to use matchDietImportMeal() above, completely unchanged.
+function matchDietImportMealWithSplit(line){
+  const s=String(line||'');
+  let normalized='', map=[];
+  for(let i=0;i<s.length;i++){
+    const decomposed=s[i].normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    for(const dch of decomposed){
+      let out=dch.toLowerCase();
+      if(/[:\/(),.]/.test(out)) out=' ';
+      normalized+=out; map.push(i);
+    }
+  }
+  let collapsed='', collapsedMap=[], lastWasSpace=false;
+  for(let i=0;i<normalized.length;i++){
+    const c=normalized[i];
+    if(/\s/.test(c)){ if(!lastWasSpace){ collapsed+=' '; collapsedMap.push(map[i]); lastWasSpace=true; } }
+    else { collapsed+=c; collapsedMap.push(map[i]); lastWasSpace=false; }
+  }
+  const leadingTrim=collapsed.length-collapsed.replace(/^\s+/,'').length;
+  const norm=collapsed.replace(/^\s+/,'').replace(/\s+$/,'');
+  const normMap=collapsedMap.slice(leadingTrim, leadingTrim+norm.length);
+  if(!norm) return null;
+  for(const m of DIET_IMPORT_MEAL_PATTERNS){
+    for(const p of m.patterns){
+      const np=normalizeForDietMatch(p);
+      const idx=norm.indexOf(np);
+      if(idx===-1) continue;
+      const normEndIdx=idx+np.length;
+      const splitPos = normEndIdx<normMap.length ? normMap[normEndIdx] : s.length;
+      return {key:m.key, splitPos};
+    }
   }
   return null;
 }
@@ -20523,8 +20621,13 @@ function parseImportedDietText(rawText){
       if(!line) continue;
       const d=matchDietImportDay(line);
       if(d!==null){ currentDay=d; currentMeal=null; matchedAnything=true; continue; }
-      const m=matchDietImportMeal(line);
-      if(m!==null && currentDay!==null){ currentMeal=m; matchedAnything=true; continue; }
+      const mealSplit=matchDietImportMealWithSplit(line);
+      if(mealSplit!==null && currentDay!==null){
+        currentMeal=mealSplit.key; matchedAnything=true;
+        const inline=line.slice(mealSplit.splitPos).replace(/^[\s:.\-\u2013\u2014]+/, '');
+        if(inline) result[currentDay][currentMeal] += (result[currentDay][currentMeal]?'\n':'')+inline;
+        continue;
+      }
       if(currentDay!==null && currentMeal!==null){
         result[currentDay][currentMeal] += (result[currentDay][currentMeal]?'\n':'')+line;
       }
@@ -22663,9 +22766,9 @@ function applyLanguage(lang){
   if(document.getElementById('page-account')?.classList.contains('active')) updateAccountPage();
   if(document.getElementById('page-profile')?.classList.contains('active')) calcAll();
   if(document.getElementById('page-labs')?.classList.contains('active')) { const labDateEl=document.getElementById('lab-date'); if(labDateEl) labDateEl.value=S.labDate||''; renderClientDocuments(); renderLabsTable(); }
-  if(document.getElementById('page-sevenday')?.classList.contains('active')) renderMicronutrientCoverage();
+  if(document.getElementById('page-sevenday')?.classList.contains('active')) { renderMicronutrientCoverage(); renderQuantitativeMicronutrients(); }
   if(document.getElementById('page-workspace')?.classList.contains('active')) renderMealPlanWorkspace();
-  if(document.getElementById('page-report')?.classList.contains('active')){ buildReport(); renderMicronutrientCoverage(); }
+  if(document.getElementById('page-report')?.classList.contains('active')){ buildReport(); renderMicronutrientCoverage(); renderQuantitativeMicronutrients(); }
   if(document.getElementById('page-recipes')?.classList.contains('active')){ renderRecipeTemplates(); renderRecipeDraft(); renderRecipesList(); }
   const rebalEl=document.getElementById('rebalance-preview');
   if(rebalEl && rebalEl.innerHTML){ rebalEl.innerHTML=''; S._rebalancePending=null; }
