@@ -10634,7 +10634,7 @@ function updateMealLanguageButtons(){
   setEl('report-include-equivalents-label', isEn ? 'Include Equivalents Guide in report' : 'Συμπερίληψη Οδηγού Ισοδυνάμων στην αναφορά');
   setEl('report-print-btn', isEn ? '<i class="ti ti-printer" aria-hidden="true"></i> Print Full Report' : '<i class="ti ti-printer" aria-hidden="true"></i> Εκτύπωση πλήρους αναφοράς');
   setEl('report-options-note', isEn ? 'Use Print / Save PDF and choose “Save as PDF” in the browser print dialog.' : 'Χρησιμοποιήστε Εκτύπωση / Αποθήκευση PDF και επιλέξτε “Save as PDF” στο παράθυρο εκτύπωσης.');
-  setEl('report-print-title', isEn ? '<i class="ti ti-file-text" aria-hidden="true"></i> Clinical Nutrition Report' : '<i class="ti ti-file-text" aria-hidden="true"></i> Κλινική Αναφορά Διατροφής');
+  setEl('report-print-title', isEn ? '<i class="ti ti-file-text" aria-hidden="true"></i> Client Report' : '<i class="ti ti-file-text" aria-hidden="true"></i> Κλινική Αναφορά Διατροφής');
   renderReportDaySelector();
 }
 
@@ -11625,7 +11625,7 @@ const PAGE_INFO = {
   sevenday:{title:'7-Day Meal Plan',sub:'Full weekly schedule — all 7 plan variants'},
   fooddb:{title:'Food Database',sub:'USDA FoodData Central · Macros per 100g'},
   recipes:{title:'Recipes',sub:'Custom recipes · Auto-calculated nutrition'},
-  report:{title:'Client Report (Print)',sub:'PRINT — Clinical Nutrition Report'},
+  report:{title:'Client Report (Print)',sub:'PRINT — Client Report'},
   tracking:{title:'Progress Tracking',sub:'Body composition history · Visit log'},
   appointments:{title:'Calendar',sub:'Monthly and weekly practice calendar'},
   account:{title:'Account / Subscription',sub:'Billing status · Stripe subscription'},
@@ -17233,7 +17233,7 @@ function buildReport(){
     <!-- HEADER -->
     <div style="padding-bottom:12px;border-bottom:3px solid var(--teal-600);margin-bottom:14px">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px">
-        <div class="report-print-title" style="font-size:23px;font-weight:800;color:var(--teal-800);line-height:1.22;white-space:normal;overflow:visible;padding-top:1mm">${isEn?'Clinical Nutrition Report':'Κλινική Αναφορά Διατροφής'}</div>
+        <div class="report-print-title" style="font-size:23px;font-weight:800;color:var(--teal-800);line-height:1.22;white-space:normal;overflow:visible;padding-top:1mm">${isEn?'Client Report':'Κλινική Αναφορά Διατροφής'}</div>
         <div class="report-print-muted" style="font-size:13px;color:var(--text-secondary);text-align:right;line-height:1.25"><strong>${S.name||'—'}</strong> · ${today}</div>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px">
