@@ -2825,6 +2825,7 @@ table th,
         <div id="plan-quality-summary" style="margin-bottom:16px"></div>
         <div id="rebalance-preview" style="margin-bottom:16px"></div>
         <div id="sevenday-body"></div>
+        <div id="micro-quantitative-summary" style="margin-top:16px"></div>
       </div>
     </div>
   </div>
@@ -2900,8 +2901,6 @@ table th,
         <div class="field-note" id="report-options-note" style="margin-top:8px">Check/uncheck to choose which meal plan appears in the printed report. Use Print / Save PDF and choose “Save as PDF” in the browser print dialog.</div>
       </div>
     </div>
-    <div id="micro-quality-summary" style="margin-bottom:14px"></div>
-    <div id="micro-quantitative-summary" style="margin-bottom:14px"></div>
     <div class="card">
       <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
         <span class="card-title" id="report-print-title"><i class="ti ti-file-text" aria-hidden="true"></i> Κλινική Αναφορά Διατροφής</span>
@@ -11727,7 +11726,7 @@ function nav(id) {
     loadCustomMeals({render:false});
   }
   if(id==='oneday') buildOneDayPlan();
-  if(id==='sevenday') { if(S.sevenDayView==='week') S.weekViewTheme=currentAppTheme(); buildSevenDay(); }
+  if(id==='sevenday') { if(S.sevenDayView==='week') S.weekViewTheme=currentAppTheme(); buildSevenDay(); renderQuantitativeMicronutrients(); }
   if(id==='report') { loadReportLogo().finally(()=>buildReport()); renderMicronutrientCoverage(); renderQuantitativeMicronutrients(); }
   if(id==='tracking') renderTracking();
 }
@@ -16108,9 +16107,9 @@ function renderQuantitativeMicronutrients(){
   }).join('');
   const dayHeaders=(isGr?dayNamesGr:dayNamesEn).map(d=>`<th style="padding:5px 6px;text-align:center;font-size:11px">${d}</th>`).join('');
   el.innerHTML=`<div class="card no-print" style="margin:0">
-    <div class="card-header"><span class="card-title"><i class="ti ti-flask" aria-hidden="true"></i> ${isGr?'Ποσοτική Ανάλυση Μικροθρεπτικών (Αυτή η Εβδομάδα)':'Quantitative Micronutrient Analysis (This Week)'}</span></div>
+    <div class="card-header"><span class="card-title"><i class="ti ti-flask" aria-hidden="true"></i> ${isGr?'Ποσοτική Ανάλυση Μικροθρεπτικών — Αυτό το 7ήμερο Πλάνο Γευμάτων':'Quantitative Micronutrient Analysis — This 7-Day Meal Plan'}</span></div>
     <div class="card-body">
-      <div class="field-note" style="margin-bottom:8px">${isGr?'Υπολογισμένο από τις πραγματικές τελικές τροφές και ποσότητες του πλάνου — δεν είναι σύγκριση με στόχους αναφοράς.':'Calculated from the plan\'s actual final foods and quantities — not a comparison against reference targets.'}</div>
+      <div class="field-note" style="margin-bottom:8px">${isGr?'Υπολογισμένο από τις πραγματικές τελικές τροφές και ποσότητες αυτού του δημιουργημένου 7ήμερου Πλάνου Γευμάτων — δεν είναι σύγκριση με στόχους αναφοράς.':'Calculated from the actual final foods and quantities in this generated 7-Day Meal Plan — not a comparison against reference targets.'}</div>
       <div style="overflow-x:auto">
       <table style="width:100%;border-collapse:collapse;font-size:12px">
         <thead><tr>
