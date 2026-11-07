@@ -2534,6 +2534,10 @@ table th,
           <div class="form-field"><label><span class="i18n" data-en="Full Name" data-gr="Ονοματεπώνυμο">Full Name</span></label><input type="text" id="p-name" placeholder="—" oninput="calcAll()"></div>
           <div class="form-field"><label><span class="i18n" data-en="Date" data-gr="Ημερομηνία">Date</span></label><input type="date" id="p-date" oninput="calcAll()"></div>
         </div>
+        <div class="form-grid">
+          <div class="form-field"><label><span class="i18n" data-en="Email" data-gr="Email">Email</span></label><input type="email" id="p-email" placeholder="name@example.com" autocomplete="off" inputmode="email" maxlength="254" oninput="validateContactField(this)" onchange="validateContactField(this,true)"><div class="contact-hint" id="p-email-hint" style="display:none;font-size:11px;color:var(--red-text)"><span class="i18n" style="color:var(--red-text)" data-en="This does not look like a valid email address." data-gr="Αυτή δεν φαίνεται να είναι έγκυρη διεύθυνση email.">This does not look like a valid email address.</span></div></div>
+          <div class="form-field"><label><span class="i18n" data-en="Telephone" data-gr="Τηλέφωνο">Telephone</span></label><input type="tel" id="p-phone" placeholder="+357 99 123456" autocomplete="off" inputmode="tel" maxlength="30" oninput="validateContactField(this)" onchange="validateContactField(this,true)"><div class="contact-hint" id="p-phone-hint" style="display:none;font-size:11px;color:var(--red-text)"><span class="i18n" style="color:var(--red-text)" data-en="Use digits with an optional +, spaces, dashes or brackets (6–15 digits)." data-gr="Χρησιμοποιήστε ψηφία με προαιρετικό +, κενά, παύλες ή παρενθέσεις (6–15 ψηφία).">Use digits with an optional +, spaces, dashes or brackets (6–15 digits).</span></div></div>
+        </div>
         <div class="form-grid three">
           <div class="form-field"><label><span class="i18n" data-en="Age (years)" data-gr="Ηλικία (έτη)">Age (years)</span></label><input type="number" id="p-age" placeholder="—" oninput="calcAll()"></div>
           <div class="form-field"><label><span class="i18n" data-en="Sex" data-gr="Φύλο">Sex</span></label><select id="p-sex" onchange="calcAll()"><option value="M">Male</option><option value="F">Female</option></select></div>
@@ -23001,7 +23005,7 @@ function renderDashboardAppointments(){
 //  CLIENT SAVE / LOAD / PERSISTENCE
 // ═══════════════════════════════════════════
 const SAVE_FIELD_IDS = [
-  'p-id','p-name','p-date','p-age','p-sex','p-activity','p-height','p-weight','p-target-weight','p-cal-adj','p-goal','p-meat','p-dairy','p-diet','p-trimester','p-bmr-equation',
+  'p-id','p-name','p-email','p-phone','p-date','p-age','p-sex','p-activity','p-height','p-weight','p-target-weight','p-cal-adj','p-goal','p-meat','p-dairy','p-diet','p-trimester','p-bmr-equation',
   'bc-bf','bc-water','bc-fatmass','bc-ffm','bc-muscle','bc-metage','bc-visceral','bc-physique','bc-bone',
   'bc-fold-triceps','bc-fold-biceps','bc-fold-subscapular','bc-fold-suprailiac','bc-fold-abdominal','bc-fold-thigh','bc-fold-calf','bc-fold-notes',
   'm-carb','m-protein',
@@ -23010,6 +23014,27 @@ const SAVE_FIELD_IDS = [
   'n-diagnoses','n-medication','n-allergies','n-dislikes','n-adherence','n-clinician-notes',
   ...LAB_TESTS.map(t=>'lab-'+t.key)
 ];
+
+// Optional client contact fields (Email, Telephone). Validation is advisory only: a blank value is always valid and an invalid value
+// shows an inline hint but never blocks saving.
+function contactFieldIsValid(id, value){
+  const val=String(value||'').trim();
+  if(!val) return true;
+  if(id==='p-email') return val.length<=254 && /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(val);
+  if(id==='p-phone'){ const digits=val.replace(/\D/g,''); return /^\+?[0-9][0-9\s().\-]*$/.test(val) && digits.length>=6 && digits.length<=15; }
+  return true;
+}
+function validateContactField(el, trim){
+  if(!el) return true;
+  if(trim && typeof el.value==='string'){ const t=el.value.trim(); if(t!==el.value) el.value=t; }
+  const ok=contactFieldIsValid(el.id, el.value);
+  const hint=document.getElementById(el.id+'-hint');
+  if(hint) hint.style.display = ok ? 'none' : 'block';
+  el.style.borderColor = ok ? '' : 'var(--red-text)';
+  el.setAttribute('aria-invalid', ok ? 'false' : 'true');
+  return ok;
+}
+function validateContactFields(){ ['p-email','p-phone'].forEach(id=>validateContactField(document.getElementById(id))); }
 
 // Captures the entire current session into a plain JSON-able object
 function captureState(){
@@ -23041,7 +23066,9 @@ function applyState(state){
   if(!state) return;
   S.clientPhoto = validClientPhotoDataUrl(state.clientPhoto) ? state.clientPhoto : '';
   renderClientPhotoControls();
+  ['p-email','p-phone'].forEach(id=>{const el=document.getElementById(id); if(el) el.value='';}); // records saved before these fields existed must not inherit the previous client's values
   Object.entries(state.fields||{}).forEach(([id,val])=>{const el=document.getElementById(id); if(el) el.value=val;});
+  validateContactFields();
   setActiveClientIdentity(state.clientId || state.activeClientId || null, state.clientRef || state.activeClientRef || state.fields?.['p-id'] || '');
   S.weightSuggestionLocked=state.weightSuggestionLocked!==undefined ? !!state.weightSuggestionLocked : !!(state.fields&&state.fields['p-weight']);
   S.lastCalAdjGoal=undefined;
@@ -23160,6 +23187,7 @@ function resetForm(){
   });
   setPrimaryCondition('');
   setActiveClientIdentity(null, '');
+  validateContactFields();
   document.getElementById('p-date').value=new Date().toISOString().split('T')[0];
   document.getElementById('m-carb').value=45;
   document.getElementById('m-protein').value=20;
