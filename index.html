@@ -1236,6 +1236,24 @@ html[data-theme="dark"] .week-summary-table td:last-child {
   --blue-bg:#EDF7FF !important; --blue-border:#B8DDFC !important; --blue-text:#1769AA !important;
   --metric-bg:#fff !important;
 }
+/* Dark-preview readability: the internal clinician note is a fixed light panel (inline light background), so it keeps the light palette
+   inside it. Scoped to dark preview + this note only; light preview and print are untouched (the note is no-print). */
+[data-report-theme="dark"] #report-body [data-clinician-delivery-note],
+[data-report-theme="dark"] #report-body [data-clinician-delivery-note] *
+{
+  --bg-page:#fff !important; --bg-surface:#fff !important; --bg-muted:#f0faf6 !important;
+  --bg-hover:#f0faf6 !important; --bg-active:#e1f5ee !important; --bg-input:#fff !important; --bg-sidebar:#fff !important;
+  --border:#cfded7 !important; --border-strong:#b7cbc2 !important;
+  --text-primary:#111827 !important; --text-secondary:#374151 !important; --text-muted:#64748b !important;
+  --text-active:#0f6e56 !important; --text-link:#0f6e56 !important;
+  --teal-50:#e1f5ee !important; --teal-100:#c8ecdf !important; --teal-400:#1d9e75 !important;
+  --teal-600:#0f6e56 !important; --teal-700:#0f6e56 !important; --teal-800:#0f3f34 !important;
+  --amber-bg:#FFF7E6 !important; --amber-border:#EBCB86 !important; --amber-text:#A15C00 !important;
+  --red-bg:#FDEEEE !important; --red-border:#F2B8B8 !important; --red-text:#A33A3A !important; --red-badge:#D94848 !important;
+  --green-bg:#EAF7F0 !important; --green-border:#B9E6CD !important; --green-text:#16734F !important; --green-badge:#1D9E75 !important;
+  --blue-bg:#EDF7FF !important; --blue-border:#B8DDFC !important; --blue-text:#1769AA !important;
+  --metric-bg:#fff !important;
+}
 [data-report-theme="dark"] #report-body,
 [data-report-theme="dark"] #report-body * {
   --bg-page:#0A0D12 !important; --bg-surface:#171B24 !important; --bg-muted:#1D2230 !important;
@@ -2360,6 +2378,39 @@ table th,
       </div>
     </div>
 
+    <!-- Dashboard fix: account HAS clients but none is open (not an empty account) -->
+    <div id="dash-select-client-prompt" style="display:none">
+      <div class="dashboard-welcome">
+        <div class="dashboard-welcome-title" style="margin-top:4px"><span class="i18n" data-en="Select a client to begin" data-gr="Επιλέξτε πελάτη για να ξεκινήσετε">Select a client to begin</span></div>
+        <div class="dashboard-welcome-copy"><span class="i18n" data-en="Open a client from My Clients to view their profile, meal plan and reports." data-gr="Ανοίξτε έναν πελάτη από τη λίστα Πελάτες για να δείτε το προφίλ, το πλάνο και τις αναφορές του.">Open a client from My Clients to view their profile, meal plan and reports.</span></div>
+        <div class="dashboard-onboard-grid">
+          <div class="dashboard-onboard-item" onclick="navGuarded('clients')">
+            <div class="dashboard-onboard-icon"><i class="ti ti-users" aria-hidden="true"></i></div>
+            <div class="dashboard-onboard-text">
+              <div class="dashboard-onboard-title"><span class="i18n" data-en="Select a client" data-gr="Επιλέξτε πελάτη">Select a client</span></div>
+              <div class="dashboard-onboard-sub"><span class="i18n" data-en="Open My Clients and choose who to work on." data-gr="Ανοίξτε τη λίστα Πελάτες και επιλέξτε με ποιον θα δουλέψετε.">Open My Clients and choose who to work on.</span></div>
+            </div>
+            <i class="ti ti-chevron-right" aria-hidden="true"></i>
+          </div>
+          <div class="dashboard-onboard-item" onclick="navGuarded('appointments')">
+            <div class="dashboard-onboard-icon"><i class="ti ti-calendar" aria-hidden="true"></i></div>
+            <div class="dashboard-onboard-text">
+              <div class="dashboard-onboard-title"><span class="i18n" data-en="Open your calendar" data-gr="Ανοίξτε το ημερολόγιο">Open your calendar</span></div>
+              <div class="dashboard-onboard-sub"><span class="i18n" data-en="View and schedule client appointments." data-gr="Δείτε και προγραμματίστε ραντεβού πελατών.">View and schedule client appointments.</span></div>
+            </div>
+            <i class="ti ti-chevron-right" aria-hidden="true"></i>
+          </div>
+          <div class="dashboard-onboard-item" onclick="nav('help')">
+            <div class="dashboard-onboard-icon"><i class="ti ti-lifebuoy" aria-hidden="true"></i></div>
+            <div class="dashboard-onboard-text">
+              <div class="dashboard-onboard-title"><span class="i18n" data-en="Help Center" data-gr="Κέντρο Βοήθειας">Help Center</span></div>
+              <div class="dashboard-onboard-sub"><span class="i18n" data-en="Browse guides, FAQs and step-by-step tutorials." data-gr="Περιηγηθείτε σε οδηγούς, συχνές ερωτήσεις και οδηγίες βήμα προς βήμα.">Browse guides, FAQs and step-by-step tutorials.</span></div>
+            </div>
+            <i class="ti ti-chevron-right" aria-hidden="true"></i>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <div id="dash-client-section">
       <div class="dash-snapshot">
@@ -2997,13 +3048,6 @@ table th,
     <div class="card">
       <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
         <span class="card-title" id="report-print-title"><i class="ti ti-file-text" aria-hidden="true"></i> Κλινική Αναφορά Διατροφής</span>
-        <div class="no-print" style="display:flex;align-items:center;gap:6px" title="Changes only how this on-screen preview looks — the printed/PDF report is always a clean white document.">
-          <span style="font-size:11px;color:var(--text-muted);font-weight:700"><span class="i18n" data-en="Preview theme:" data-gr="Θέμα προεπισκόπησης:">Preview theme:</span></span>
-          <div class="view-toggle" aria-label="Report preview theme">
-            <button id="report-preview-light-btn" class="active" onclick="setReportPreviewTheme('light')"><i class="ti ti-sun" aria-hidden="true"></i> <span class="i18n" data-en="Light" data-gr="Φωτεινό">Light</span></button>
-            <button id="report-preview-dark-btn" onclick="setReportPreviewTheme('dark')"><i class="ti ti-moon" aria-hidden="true"></i> <span class="i18n" data-en="Dark" data-gr="Σκούρο">Dark</span></button>
-          </div>
-        </div>
       </div>
       <div class="card-body" id="report-body"><div style="color:var(--gray-400)">Navigate here after filling client profile to generate report.</div></div>
     </div>
@@ -6911,7 +6955,7 @@ const S = {
   exMeta:null, lastDairyType:'Moderate-fat', lastMeatType:'Lean', weightSuggestionLocked:false, bcManual:{fatmass:false,ffm:false,muscle:false},
   bc:{bf:null,water:null,fatmass:null,ffm:null,muscle:null,metage:null,visceral:null},
   tracking:[],intake:{},notes:{},labValues:{},labValueDates:{},labDate:'',clientDocuments:[],foodResults:[],recipes:[],recipeDraft:[],editingRecipeId:null,extraFoods:[],appointments:[],equivalentNotes:{},reportLogo:'',mealLanguage:'EN',reportOptions:{oneDay:false,sevenDay:true,includeBlood:true,includeEquivalents:false,days:[0,1,2,3,4,5,6]},
-  sevenDayView:'day', sevenDayActiveIndex:0, weekViewTheme:'light', aiPlanStatus:'',
+  sevenDayView:'day', sevenDayActiveIndex:0, aiPlanStatus:'',
   customMeals:[], customMealDraft:[], customMealContext:null,
   mealSel:{breakfast:'BRK_TOAST',lunch:'LUN_CHICKEN_RICE',dinner:'DIN_FISH_POTATO',snack1Extras:[],snack2Extras:[],sleepExtras:[],snackModelVersion:'ingredients-v2'}
 };
@@ -9743,11 +9787,13 @@ function printHtmlDocument({html,title,orientation='portrait',landscapeAsOrienta
   // a user-gesture handler, with no error and no visible feedback. The
   // print-only area/stylesheet are already synchronously in the DOM above,
   // so no delay is needed for them to take effect before printing.
+  document.documentElement.setAttribute('data-report-theme','light'); // print is always a light document
   window.print();
   setTimeout(()=>{
     area.remove();
     styleEl.remove();
     document.title=oldTitle;
+    syncReportThemeToApp();
   }, 500);
 }
 
@@ -9802,12 +9848,15 @@ function printPage(){
   // every visible, non-empty field right before printing, since textareas
   // in particular don't reliably expand to show full content via CSS alone
   // (height:auto doesn't work on native textareas in print).
+  let relightWeek=false;
+  if(pageId==='page-sevenday' && S.sevenDayView==='week' && currentAppTheme()==='dark'){ window.__printLightWeek=true; try{ buildSevenDay(); }catch(e){} relightWeek=true; } // print the week table light
   injectPrintTwins(activePage);
   setTimeout(()=>{
     window.print();
     setTimeout(()=>{
       document.title=oldTitle;
       styleEl?.remove();
+      if(relightWeek){ window.__printLightWeek=false; try{ buildSevenDay(); }catch(e){} }
     }, 500);
   }, 300);
 }
@@ -12026,7 +12075,7 @@ function nav(id) {
     loadCustomMeals({render:false});
   }
   if(id==='oneday') buildOneDayPlan();
-  if(id==='sevenday') { if(S.sevenDayView==='week') S.weekViewTheme=currentAppTheme(); buildSevenDay(); renderQuantitativeMicronutrients(); }
+  if(id==='sevenday') { buildSevenDay(); renderQuantitativeMicronutrients(); }
   if(id==='report') { loadReportLogo().finally(()=>buildReport()); renderMicronutrientCoverage(); renderQuantitativeMicronutrients(); }
   if(id==='tracking') renderTracking();
 }
@@ -17220,7 +17269,6 @@ function buildSevenDay(force=false){
   const dt=calcDayTotalsForPlanDisplay(dayPlan, lang, active);
   const dayLabel=weekDayLabel(dayPlan, active, lang);
   const isWeek=S.sevenDayView==='week';
-  const weekTheme=S.weekViewTheme==='dark'?'dark':'light';
   const dayPq = evaluatePlanQuality({kcal:dt.target, carb:0, prot:0, fat:0}, {kcal:dt.totalKcal, carb:0, prot:0, fat:0});
   const statusOk=dayPq.overall==='ok';
   const statusColor=statusOk?'var(--teal-600)':dayPq.overall==='warn'?'var(--warn)':'var(--err)';
@@ -17237,7 +17285,6 @@ function buildSevenDay(force=false){
       <span id="weekly-plan-save-status" style="font-size:13px;font-weight:800;color:var(--teal-700)"></span>
     </div>
     <div style="display:flex;gap:8px;align-items:center">
-      ${isWeek?`<button class="btn" title="${weekTheme==='dark'?'Switch week view to light mode':'Switch week view to dark mode'}" onclick="toggleWeekViewTheme()">${weekTheme==='dark'?'<i class="ti ti-sun" aria-hidden="true"></i>':'<i class="ti ti-moon" aria-hidden="true"></i>'}</button>`:''}
       <div class="view-toggle" aria-label="Plan view">
         <button class="${!isWeek?'active':''}" onclick="setSevenDayView('day')">${lang==='EN'?'Day':'Ημέρα'}</button>
         <button class="${isWeek?'active':''}" onclick="setSevenDayView('week')">${lang==='EN'?'Week':'Εβδομάδα'}</button>
@@ -17846,7 +17893,7 @@ function renderSevenDayWeekSummary(lang='GR'){
     const dt=calcDayTotalsForPlanDisplay(p, lang, i);
     return hasReportBeforeSleepSelection(p, dt, lang, i, {showRemove:false,hideTitle:true,showDbNote:false,reportMode:true});
   });
-  const weekTheme=S.weekViewTheme==='dark'?'dark':'light';
+  const weekTheme=window.__printLightWeek?'light':currentAppTheme(); // follows the global app theme (no separate week-view theme)
   const pal=weekTheme==='dark'
     ? {table:'#1e1e2e', row:'#1e1e2e', alt:'#242438', head:'#2a2a3e', border:'#3a3a4e', text:'#ffffff', body:'#f2f5f4', day:'#ffffff', kcal:'#4ECDC4', footer:'#1e1e2e'}
     : {table:'#ffffff', row:'#ffffff', alt:'#fafafa', head:'#f5f5f5', border:'#e0e0e0', text:'#1a1a1a', body:'#1a1a1a', day:'#1a1a1a', kcal:'#1A7A6E', footer:'#ffffff'};
@@ -18101,18 +18148,12 @@ function setSevenDayActive(index){ S.sevenDayActiveIndex=Number(index)||0; if(S.
 function shiftSevenDay(delta){ S.sevenDayActiveIndex=(Number(S.sevenDayActiveIndex||0)+Number(delta)+7)%7; buildSevenDay(); }
 function setSevenDayView(view){
   S.sevenDayView=view==='week'?'week':'day';
-  if(S.sevenDayView==='week') S.weekViewTheme=currentAppTheme();
-  buildSevenDay();
-}
-function toggleWeekViewTheme(){
-  S.weekViewTheme=S.weekViewTheme==='dark'?'light':'dark';
   buildSevenDay();
 }
 
 window.setSevenDayActive=setSevenDayActive;
 window.shiftSevenDay=shiftSevenDay;
 window.setSevenDayView=setSevenDayView;
-window.toggleWeekViewTheme=toggleWeekViewTheme;
 
 function collectAiMealPlanPayload(){
   const selectedCondition=getSelectedPrimaryCondition();
@@ -18389,7 +18430,6 @@ function syncReportModeControls(){
   const equivalents=document.getElementById('rep-include-equivalents');
   if(equivalents) equivalents.checked = S.reportOptions?.includeEquivalents===true;
   renderReportDaySelector();
-  updateReportPreviewThemeButtons();
 }
 function onReportOptionsChange(){
   const checked=[...document.querySelectorAll('.report-day-checkbox:checked')].map(el=>parseInt(el.value,10)).filter(n=>n>=0&&n<7);
@@ -19024,14 +19064,33 @@ function toggleBcSection(sectionId, headerEl){
   el.style.display = nowOpen ? 'block' : 'none';
   if(chevEl){ chevEl.classList.toggle('ti-chevron-down', !nowOpen); chevEl.classList.toggle('ti-chevron-up', nowOpen); }
 }
-function updateDashMetrics(){
+// Dashboard fix: the empty-account onboarding ("Welcome / Create your first client") must depend on whether the ACCOUNT has
+// clients, not on whether a client is currently open. Returns the account's client count, or null while a signed-in
+// account's list has not finished loading (so nothing misleading is shown during the async fetch).
+function dashAccountClientCount(){
+  try{
+    if(typeof currentUser!=='undefined' && currentUser){
+      const n=(S.clientListCache||[]).length;
+      return (n>0 || S.dashClientCountKnown) ? n : null;
+    }
+    return loadLocalClients().length;
+  }catch(e){ return null; }
+}
+function applyDashEmptyState(){
   const clientSection=document.getElementById('dash-client-section');
   const noClientPrompt=document.getElementById('dash-no-client-prompt');
+  const selectPrompt=document.getElementById('dash-select-client-prompt');
   const quickActions=document.getElementById('dash-quick-actions');
   const hasClient=!!(S.activeClientId || (v('p-name')||'').trim());
+  const n=dashAccountClientCount();
   if(clientSection) clientSection.style.display = hasClient ? '' : 'none';
-  if(noClientPrompt) noClientPrompt.style.display = hasClient ? 'none' : 'block';
+  if(noClientPrompt) noClientPrompt.style.display = (!hasClient && n===0) ? 'block' : 'none';   // empty account only
+  if(selectPrompt) selectPrompt.style.display = (!hasClient && n>0) ? 'block' : 'none';          // clients exist, none open
   if(quickActions) quickActions.style.display = hasClient ? 'block' : 'none';
+  return hasClient;
+}
+function updateDashMetrics(){
+  const hasClient=applyDashEmptyState();
   const clientName=(S.name||v('p-name')||'').trim();
   const isGrName = window.appLang==='gr';
   setEl('d-client-name', clientName ? safeHtml(clientName) : (isGrName?'Χωρίς όνομα':'Unnamed client'));
@@ -19135,9 +19194,11 @@ async function updatePracticeOverview(){
       count = loadLocalClients().length;
     }
     setEl('d-total-clients', String(count));
+    S.dashClientCountKnown = true; applyDashEmptyState();
   }catch(e){
     console.warn('[Nutrese dashboard] client count failed', e);
     setEl('d-total-clients', String((S.clientListCache||[]).length || loadLocalClients().length || 0));
+    S.dashClientCountKnown = true; applyDashEmptyState();
   }
 }
 
@@ -24223,30 +24284,19 @@ function toggleTheme() {
 })();
 
 // ─── CLIENT REPORT PREVIEW THEME ───
-// Deliberately independent of the app's global theme above — see the CSS
-// comment near [data-report-theme] for the reasoning. Defaults to 'light'
-// (matching print output) regardless of the app's current theme, so what
-// the dietitian sees by default always matches what will actually print.
-function setReportPreviewTheme(theme){
-  document.documentElement.setAttribute('data-report-theme', theme==='dark' ? 'dark' : 'light');
-  updateReportPreviewThemeButtons();
-  try { localStorage.setItem('nutrese-report-preview-theme', theme==='dark' ? 'dark' : 'light'); } catch(e) {}
+// The report preview and the 7-Day week table follow the global app theme (data-theme); there is no separate preview/week
+// theme setting any more. The report CSS is keyed on data-report-theme, so that attribute simply mirrors data-theme (every
+// code path that changes the app theme, including the marketing site, is covered by observing the attribute). A week view
+// that is on screen when the theme changes is redrawn so it switches immediately. Printed/PDF output is unaffected.
+function syncReportThemeToApp(){
+  const t=currentAppTheme();
+  if(document.documentElement.getAttribute('data-report-theme')!==t) document.documentElement.setAttribute('data-report-theme', t);
 }
-function updateReportPreviewThemeButtons(){
-  const current=document.documentElement.getAttribute('data-report-theme') || 'light';
-  const lightBtn=document.getElementById('report-preview-light-btn');
-  const darkBtn=document.getElementById('report-preview-dark-btn');
-  if(lightBtn) lightBtn.classList.toggle('active', current==='light');
-  if(darkBtn) darkBtn.classList.toggle('active', current==='dark');
-}
-(function() {
-  try {
-    const saved = localStorage.getItem('nutrese-report-preview-theme');
-    document.documentElement.setAttribute('data-report-theme', saved==='dark' ? 'dark' : 'light');
-  } catch(e) {
-    document.documentElement.setAttribute('data-report-theme', 'light');
-  }
-})();
+syncReportThemeToApp();
+new MutationObserver(function(){
+  syncReportThemeToApp();
+  try{ const pg=document.getElementById('page-sevenday'); if(pg && pg.classList.contains('active') && S.sevenDayView==='week') buildSevenDay(); }catch(e){}
+}).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
 
 // ─── LANGUAGE ───
 const DROPDOWN_TRANSLATIONS = {
